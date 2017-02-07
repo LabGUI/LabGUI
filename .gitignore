@@ -1,0 +1,11 @@
+*.pyc
+*.py~
+*.zip
+config.txt
+*.set
+data/
+scripts/*
+settings/*
+scratch/*
+!scratch/README.txt
+!settings/demo_dice.txt

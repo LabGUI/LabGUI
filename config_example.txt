@@ -1,0 +1,7 @@
+COOLDOWN=TEST
+SAMPLE=NONE
+DATA_PATH=C:\Users\Ben\Code\Scratch\
+SCRIPT=C:\Users\Ben\Code\g2python\Recordsweep\scripts\Script.py
+SETTINGS=C:\Users\Ben\Code\g2python\Recordsweep\settings\three_lockins.txt
+DRIVERS=C:\Users\Ben\Code\g2python\drivers
+DEBUG=True
