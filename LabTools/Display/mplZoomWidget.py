@@ -165,16 +165,6 @@ class MatplotlibZoomWidget(MatplotlibWidget):
         if setting:
             self.rescale_and_draw()
 
-    # buggy! don't call this!
-    def adjust_units(self):
-        chk = self.check_scale(self.axes)
-        if chk != 0:
-            self.left_pow += chk
-            self.axes.set_ylim(np.array(self.axes.get_ylim()) / 10 ** chk)
-            self.axes.set_ylabel("Voltage (%sV)" %
-                                 self.SI_prefixes[self.left_pow])
-            self.adjust_units()
-
     def rescale_and_draw(self):
         # self.adjust_units()
         self.autoscale_axes(axes=self.axes, scale_x=self.autoscale_x_on,
@@ -442,6 +432,201 @@ class MatplotlibZoomWidget(MatplotlibWidget):
         print("line " + str(selected) + " selected!")
 
 
+class ActionManager():
+    def __init__(self, parent):
+        self.parent = parent
+        
+        self.plotToggleControlLAction = self.create_action(parent, "Toggle &Left Axes Control", slot=self.toggleControlL, shortcut=QtGui.QKeySequence("Ctrl+L"),
+                                                              icon="toggleLeft", tip="Toggle whether the mouse adjusts Left axes pan and zoom", checkable=True)
+
+        self.plotToggleControlRAction = self.create_action(parent, "Toggle &Right Axes Control", slot=self.toggleControlR, shortcut=QtGui.QKeySequence("Ctrl+R"),
+                                                              icon="toggleRight", tip="Toggle whether the mouse adjusts right axes pan and zoom", checkable=True)
+
+        self.plotToggleXControlAction = self.create_action(parent, "Toggle &X Axes Control", slot=self.toggleXControl, shortcut=QtGui.QKeySequence("Ctrl+X"),
+                                                              icon="toggleX", tip="Toggle whether the mouse adjusts x axis pan and zoom", checkable=True)
+
+        self.plotAutoScaleXAction = self.create_action(parent, "Auto Scale X", slot=self.toggleAutoScaleX, shortcut=QtGui.QKeySequence("Ctrl+A"),
+                                                          icon="toggleAutoScaleX", tip="Turn autoscale X on or off", checkable=True)
+
+        self.plotAutoScaleLAction = self.create_action(parent, "Auto Scale L", slot=self.toggleAutoScaleL, shortcut=QtGui.QKeySequence("Ctrl+D"),
+                                                          icon="toggleAutoScaleL", tip="Turn autoscale Left Y on or off", checkable=True)
+
+        self.plotAutoScaleRAction = self.create_action(parent, "Auto Scale R", slot=self.toggleAutoScaleR, shortcut=QtGui.QKeySequence("Ctrl+E"),
+                                                          icon="toggleAutoScaleR", tip="Turn autoscale Right Y on or off", checkable=True)
+
+        self.plotDragZoomAction = self.create_action(parent, "Drag to zoom", slot=self.toggleDragZoom, shortcut=QtGui.QKeySequence("Ctrl+Z"),
+                                                        icon="zoom", tip="Turn drag to zoom on or off", checkable=True)
+
+        self.plotPanAction = self.create_action(parent, "Drag to Pan", slot=self.togglePan, shortcut=QtGui.QKeySequence("Ctrl+P"),
+                                                   icon="pan", tip="Turn drag to Pan on or off", checkable=True)
+
+        self.plotSelectAction = self.create_action(parent, "Drag to Select", slot=self.toggleSelect, shortcut=QtGui.QKeySequence("Ctrl+L"),
+                                                      icon="select", tip="Turn drag to Select on or off", checkable=True)
+
+        self.plotClearSelectAction = self.create_action(self, "Hide selection box", slot=self.hide_selection_box,
+                                                           icon="clear_select", tip="Hide Selection box", checkable=False)
+
+        self.changeXscale = self.create_action(parent, "Set X log", slot=self.setXscale, shortcut=None,
+                                                  icon="logX", tip="Set the x scale to log")
+        self.changeYscale = self.create_action(parent, "Set Y log", slot=self.setYscale, shortcut=None,
+                                                  icon="logY", tip="Set the y scale to log")
+        self.changeYRscale = self.create_action(parent, "Set YR log", slot=self.setYRscale, shortcut=None,
+                                                   icon="logY", tip="Set the yr scale to log")
+
+        self.clearPlotAction = self.create_action(parent, "Clear Plot", slot=self.clear_plot, shortcut=None,
+                                                     icon="clear_plot", tip="Clears the data arrays")
+                 
+        self.actions = [self.plotToggleControlLAction, self.plotToggleControlRAction,
+                        self.plotToggleXControlAction, self.plotAutoScaleXAction, 
+                        self.plotAutoScaleLAction, self.plotAutoScaleRAction,
+                        self.plotDragZoomAction, self.plotDragZoomAction,
+                        self.plotPanAction, self.plotSelectAction,
+                        self.plotClearSelectAction, self.plotClearSelectAction,
+                        self.changeXscale, self.changeYscale, self.changeYRscale
+                        self.clearPlotAction]
+    
+    def create_action(parent, text, slot=None, shortcut=None, icon=None, tip=None, checkable=False, signal="triggered()"):
+        action = QAction(text, parent)
+        if icon is not None:
+            action.setIcon(QIcon("./images/%s.png" % icon))
+        if shortcut is not None:
+            action.setShortcut(shortcut)
+        if tip is not None:
+            action.setToolTip(tip)
+            action.setStatusTip(tip)
+        if slot is not None:
+            parent.connect(action, SIGNAL(signal), slot)
+        if checkable:
+            action.setCheckable(True)
+        return action    
+        
+    def update_current_window(self, current_dw):
+
+        self.current_dw = current_dw
+        self.fooAction.setChecked(self.current_dw.is_foo)
+    
+    def toggleControlL(self):
+        if self.plotToggleControlLAction.isChecked():
+            self.plotAutoScaleLAction.setChecked(False)
+        self.updateZoomSettings()
+
+    def toggleControlR(self):
+        if self.plotToggleControlLAction.isChecked():
+            self.plotAutoScaleRAction.setChecked(False)
+        self.updateZoomSettings()
+
+    def toggleXControl(self):
+        if self.plotToggleXControlAction.isChecked():
+            self.plotAutoScaleXAction.setChecked(False)
+        self.updateZoomSettings()
+
+    def toggleAutoScaleX(self):
+        if self.plotAutoScaleXAction.isChecked():
+            self.plotToggleXControlAction.setChecked(False)
+        else:
+            self.plotToggleXControlAction.setChecked(True)
+        self.updateZoomSettings()
+
+    def toggleAutoScaleL(self):
+        if self.plotAutoScaleLAction.isChecked():
+            self.plotToggleControlLAction.setChecked(False)
+        else:
+            self.plotToggleControlLAction.setChecked(True)
+        self.updateZoomSettings()
+
+    def toggleAutoScaleR(self):
+        if self.plotAutoScaleRAction.isChecked():
+            self.plotToggleControlRAction.setChecked(False)
+        else:
+            self.plotToggleControlRAction.setChecked(True)
+        self.updateZoomSettings()
+
+    def toggleDragZoom(self):
+        if self.plotPanAction.isChecked():
+            self.plotPanAction.setChecked(False)
+        if self.plotSelectAction.isChecked():
+            self.plotSelectAction.setChecked(False)
+        self.updateZoomSettings()    
+
+    def togglePan(self):
+        if self.plotDragZoomAction.isChecked():
+            self.plotDragZoomAction.setChecked(False)
+        if self.plotSelectAction.isChecked():
+            self.plotSelectAction.setChecked(False)
+        self.updateZoomSettings()
+
+    def toggleSelect(self):
+        if self.plotDragZoomAction.isChecked():
+            self.plotDragZoomAction.setChecked(False)
+        if self.plotPanAction.isChecked():
+            self.plotPanAction.setChecked(False)
+        self.updateZoomSettings()
+
+    def hide_selection_box(self):
+        if self.mplwidget.selection_showing:
+            self.mplwidget.select_rectangle.remove()
+            self.mplwidget.selection_showing = False
+            self.mplwidget.figure.canvas.draw()
+            self.emit(SIGNAL("removed_selection_box()"))
+
+    def setXscale(self):
+        self.set_Xaxis_scale(self.ax)
+
+    def setYscale(self):
+        self.set_Yaxis_scale(self.ax)
+
+    def setYRscale(self):
+        self.set_Yaxis_scale(self.axR)
+
+    def clear_plot(self):
+        self.data_array = np.array([])
+        self.emit(SIGNAL("data_array_updated(PyQt_PyObject)"), self.data_array)
+
+        
+    # change the x axis scale to linear if it was log and reverse
+    def set_Xaxis_scale(self, axis):
+        curscale = axis.get_xscale()
+#        print curscale
+        if curscale == 'log':
+            axis.set_xscale('linear')
+        elif curscale == 'linear':
+            axis.set_xscale('log')
+
+
+    # change the y axis scale to linear if it was log and reverse
+    def set_Yaxis_scale(self, axis):
+        curscale = axis.get_yscale()
+#        print curscale
+        if curscale == 'log':
+            axis.set_yscale('linear')
+        elif curscale == 'linear':
+            axis.set_yscale('log')
+
+    
+    def remove_fit(self):
+        self.emit(SIGNAL("remove_fit()"))
+
+    
+
+    
+
+    def updateZoomSettings(self):
+        self.mplwidget.setActiveAxes(self.plotToggleXControlAction.isChecked(),
+                                     self.plotToggleControlLAction.isChecked(),
+                                     self.plotToggleControlRAction.isChecked())
+        if self.plotDragZoomAction.isChecked():
+            self.mplwidget.set_mouse_mode(self.mplwidget.ZOOM_MODE)
+        elif self.plotPanAction.isChecked():
+            self.mplwidget.set_mouse_mode(self.mplwidget.PAN_MODE)
+        elif self.plotSelectAction.isChecked():
+            self.mplwidget.set_mouse_mode(self.mplwidget.SELECT_MODE)
+
+        self.mplwidget.set_autoscale_x(self.plotAutoScaleXAction.isChecked())
+        self.mplwidget.set_autoscale_yL(self.plotAutoScaleLAction.isChecked())
+        self.mplwidget.set_autoscale_yR(self.plotAutoScaleRAction.isChecked())
+        
+        
+        
 def get_axis_limits(axis):
     x_min, x_max = axis.get_view_interval()
     if axis.get_scale() == 'log':
