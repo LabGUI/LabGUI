@@ -53,7 +53,6 @@ class SIAxesLabel():
 
 
 class MatplotlibZoomWidget(MatplotlibWidget):
-    #SI_prefixes = {-15: 'a', -12: 'p', -9: 'n', -6: 'u', -3: 'm', 0: '', 3: 'k', 6:'M', 9:'G'}
 
     def __init__(self, parent=None, title='', xlabel='', ylabel='',
                  xlim=None, ylim=None, xscale='linear', yscale='linear',
@@ -97,7 +96,7 @@ class MatplotlibZoomWidget(MatplotlibWidget):
         self.autoscale_y_on = True
         self.autoscale_R_on = True
 
-        # Shink current axis by 20%
+        # Shrink current axis by 20%
         #box = self.axes.get_position()
         #axes.set_position([box.x0, box.y0, box.width * 0.8, box.height])
 
@@ -105,6 +104,12 @@ class MatplotlibZoomWidget(MatplotlibWidget):
         #self.legend = self.axes.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 
     def set_mouse_mode(self, mode):
+        """ Set the mouse mode to zoom, pan or select
+        
+        Args:
+            mode: can be ZOOM_MODE, PAN_MODE or SELECT_MODE
+        """
+        
         self.mouseMode = mode
         if mode == self.ZOOM_MODE:
             self.setCursor(QtGui.QCursor(QtCore.Qt.CrossCursor))
@@ -121,6 +126,11 @@ class MatplotlibZoomWidget(MatplotlibWidget):
         self.control_R_on = control_R_on
 
     def check_scale(self, ax):
+        """ This is meant to be part of the logic to automatically switch
+        to appropriate SI units (mm, m, km, etc.). In principle you could
+        do something like ydata = ydata * 10**check_scale(ax)
+        """
+        
         ymin, ymax = ax.get_ylim()
         if max(abs(ymin), abs(ymax)) > 1000:
             return 3
@@ -131,9 +141,14 @@ class MatplotlibZoomWidget(MatplotlibWidget):
 
     def autoscale_axes(self, axes=None, scale_x=True, scale_y=True, span_x=0,
                        margin_y=0.05):
-
+        """ Autoscale the axes such that the x data spans from the left edge
+        to the right edge of the plot, but the y data leaves a margin at the 
+        top and bottom. 
+        """
+        # default to adjusting the left axes
         if axes == None:
             axes = self.axes
+            
         x_max = -np.inf
         x_min = np.inf
 
@@ -145,20 +160,24 @@ class MatplotlibZoomWidget(MatplotlibWidget):
         for line in axes.get_lines():
             xdata = line.get_xdata()
 
-            if xdata != np.array([]):
+            if len(xdata) > 0:
 
                 x_max = max(x_max, np.amax(xdata))
                 x_min = min(x_min, np.amin(xdata))
                 has_data = True
+
             ydata = line.get_ydata()
 
-            if ydata != np.array([]):
+            if len(ydata) > 0:
                 y_max = max(y_max, np.amax(ydata))
                 y_min = min(y_min, np.amin(ydata))
                 has_data = True
 
         if x_max == x_min:
-            x_min = x_max - 1
+            # if there's only a single point, centre that point in the middle
+            # of a window of width 1
+            x_min = x_max - 0.5
+            x_max = x_min + 1
 
         if scale_x and has_data:
             if span_x == 0:
@@ -168,6 +187,8 @@ class MatplotlibZoomWidget(MatplotlibWidget):
 
         if scale_y and has_data:
             if y_max == y_min:
+                # if there's only a single point, centre that point in the middle
+                # of a window with 0 at the bottom
                 y_min = 0
                 y_max = y_max * 2
                 margin = 0
