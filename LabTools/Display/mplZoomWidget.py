@@ -6,7 +6,11 @@ Copyright (C) 10th april 2015 Benjamin Schmidt
 License: see LICENSE.txt file
 """
 
+import sys
+
 from PyQt4 import QtCore, QtGui
+from PyQt4.QtGui import QAction, QIcon
+from PyQt4.QtCore import SIGNAL
 from matplotlibwidget import MatplotlibWidget
 import numpy as np
 import matplotlib as mpl
@@ -463,7 +467,7 @@ class ActionManager():
         self.plotSelectAction = self.create_action(parent, "Drag to Select", slot=self.toggleSelect, shortcut=QtGui.QKeySequence("Ctrl+L"),
                                                       icon="select", tip="Turn drag to Select on or off", checkable=True)
 
-        self.plotClearSelectAction = self.create_action(self, "Hide selection box", slot=self.hide_selection_box,
+        self.plotClearSelectAction = self.create_action(parent, "Hide selection box", slot=self.hide_selection_box,
                                                            icon="clear_select", tip="Hide Selection box", checkable=False)
 
         self.changeXscale = self.create_action(parent, "Set X log", slot=self.setXscale, shortcut=None,
@@ -482,10 +486,10 @@ class ActionManager():
                         self.plotDragZoomAction, self.plotDragZoomAction,
                         self.plotPanAction, self.plotSelectAction,
                         self.plotClearSelectAction, self.plotClearSelectAction,
-                        self.changeXscale, self.changeYscale, self.changeYRscale
+                        self.changeXscale, self.changeYscale, self.changeYRscale,
                         self.clearPlotAction]
     
-    def create_action(parent, text, slot=None, shortcut=None, icon=None, tip=None, checkable=False, signal="triggered()"):
+    def create_action(self, parent, text, slot=None, shortcut=None, icon=None, tip=None, checkable=False, signal="triggered()"):
         action = QAction(text, parent)
         if icon is not None:
             action.setIcon(QIcon("./images/%s.png" % icon))
@@ -501,9 +505,8 @@ class ActionManager():
         return action    
         
     def update_current_window(self, current_dw):
-
         self.current_dw = current_dw
-        self.fooAction.setChecked(self.current_dw.is_foo)
+        self.mplwidget = self.current_dw
     
     def toggleControlL(self):
         if self.plotToggleControlLAction.isChecked():
@@ -567,20 +570,20 @@ class ActionManager():
             self.mplwidget.select_rectangle.remove()
             self.mplwidget.selection_showing = False
             self.mplwidget.figure.canvas.draw()
-            self.emit(SIGNAL("removed_selection_box()"))
+            self.mplwidget.emit(SIGNAL("removed_selection_box()"))
 
     def setXscale(self):
-        self.set_Xaxis_scale(self.ax)
+        self.set_Xaxis_scale(self.mplwidget.axes)
 
     def setYscale(self):
-        self.set_Yaxis_scale(self.ax)
+        self.set_Yaxis_scale(self.mplwidget.axes)
 
     def setYRscale(self):
-        self.set_Yaxis_scale(self.axR)
+        self.set_Yaxis_scale(self.mplwidget.axesR)
 
     def clear_plot(self):
         self.data_array = np.array([])
-        self.emit(SIGNAL("data_array_updated(PyQt_PyObject)"), self.data_array)
+        self.mplwidget.emit(SIGNAL("data_array_updated(PyQt_PyObject)"), self.data_array)
 
         
     # change the x axis scale to linear if it was log and reverse
@@ -604,11 +607,7 @@ class ActionManager():
 
     
     def remove_fit(self):
-        self.emit(SIGNAL("remove_fit()"))
-
-    
-
-    
+        self.mplwidget.emit(SIGNAL("remove_fit()"))
 
     def updateZoomSettings(self):
         self.mplwidget.setActiveAxes(self.plotToggleXControlAction.isChecked(),
@@ -650,13 +649,45 @@ class Printer(QtGui.QWidget):
         print(mode, limits)
 
 
-# This snippet makes it run as a standalone program
+class ExamplePlotDisplay(QtGui.QMainWindow):
+    def __init__(self, xdata=None, ydata=None):
+        super(ExamplePlotDisplay, self).__init__()
+        
+        self.action_manager = ActionManager(self)
+        
+        menubar = self.menuBar()
+        fileMenu = menubar.addMenu('&Plot')
+        self.toolbar = self.addToolBar('Plot')
+        for action in self.action_manager.actions:
+            fileMenu.addAction(action)
+            self.toolbar.addAction(action)
+            
+        self.centralZone = QtGui.QMdiArea()
+        self.centralZone.subWindowActivated.connect(
+            self.update_current_window)
+        self.setCentralWidget(self.centralZone)
+        self.create_dw("Window 1", xdata=xdata, ydata=ydata)
+        self.create_dw("Window 2", xdata=xdata, ydata=ydata)
+        
+    def create_dw(self, name, xdata=None, ydata=None):
+        dw = MatplotlibZoomWidget()
+        if not (xdata is None or ydata is None):
+            dw.axes.plot(xdata,ydata)
+        
+        self.centralZone.addSubWindow(dw)
+        dw.show()
+    
+    def update_current_window(self):
+        current_window = self.centralZone.activeSubWindow()
+        if current_window:
+            self.action_manager.update_current_window(current_window.widget())
+
+        
 if __name__ == "__main__":
-    import sys
     app = QtGui.QApplication(sys.argv)
-    form = MatplotlibZoomWidget()
-    form.set_mouse_mode(form.ZOOM_MODE)
-    pt=Printer()
-    pt.connect(form,QtCore.SIGNAL("limits_changed(int,PyQt_PyObject)"),pt.to_print)
-    form.show()
-    app.exec_()
+    x = np.arange (0, 10)
+    y = x **2
+    
+    ex = ExamplePlotDisplay(xdata=x, ydata=y)
+    ex.show()
+    sys.exit(app.exec_())
