@@ -14,43 +14,6 @@ import logging
 
 from QtTools import ZOOM_MODE, PAN_MODE, SELECT_MODE
 
-class SIAxesLabel():
-    SI_prefixes = {-21: 'y', -18: 'z', -15: 'a', -12: 'p', -9: 'n', -6: 'u', -3: 'm',
-                   0: '', 3: 'k', 6: 'M', 9: 'G', 12: 'T', 15: 'P', 18: 'E', 21: 'Z', 24: 'Y'}
-
-    def __init__(self, axes, quantity=[], units=[], power=[]):
-        self.axes = axes
-        self.quantity = quantity
-        self.units = units
-        self.power = power
-
-    def check_scale(self, ax):
-        ymin, ymax = ax.get_ylim()
-        if max(abs(ymin), abs(ymax)) > 1000:
-            return 3
-        elif max(abs(ymin), abs(ymax)) < 1:
-            return -3
-        else:
-            return 0
-
-    # buggy, don't call this!!!!
-    def adjust_units(self):
-        chk = self.check_scale(self.axes)
-        if chk != 0:
-            self.power += chk
-            self.axes.set_ylim(np.array(self.axes.get_ylim()) / 10 ** chk)
-            self.adjust_units()
-        label_str = ""
-
-        for quant, unit in zip(self.quantity, self.units):
-            label_str = label_str + quant
-            label_str = label_str + \
-                "(%s%s), " % (self.SI_prefixes[self.power], unit)
-
-        label_str.rstrip(', ')
-
-        self.axes.set_ylabel(label_str)
-
 
 class MatplotlibZoomWidget(MatplotlibWidget):
 
@@ -124,20 +87,6 @@ class MatplotlibZoomWidget(MatplotlibWidget):
         self.control_X_on = control_X_on
         self.control_Y_on = control_Y_on
         self.control_R_on = control_R_on
-
-    def check_scale(self, ax):
-        """ This is meant to be part of the logic to automatically switch
-        to appropriate SI units (mm, m, km, etc.). In principle you could
-        do something like ydata = ydata * 10**check_scale(ax)
-        """
-        
-        ymin, ymax = ax.get_ylim()
-        if max(abs(ymin), abs(ymax)) > 1000:
-            return 3
-        elif max(abs(ymin), abs(ymax)) < 1:
-            return -3
-        else:
-            return 0
 
     def autoscale_axes(self, axes=None, scale_x=True, scale_y=True, span_x=0,
                        margin_y=0.05):
