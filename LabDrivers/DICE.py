@@ -39,4 +39,11 @@ class Instrument(Tool.MeasInstr):
             print("existing channels :", self.channels)
             answer = None
         return answer
-        return 
+        
+if (__name__ == '__main__'):
+    
+    from utils import command_line_test
+    
+    command_line_test(Instrument)
+
+       

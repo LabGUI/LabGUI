@@ -216,8 +216,7 @@ class PrologixController(object):
      connection = None
     
      def __init__(self,com_port = None, baud_rate = 9600, timeout = 3 ):
-         
-         
+
          if com_port == None:
              #the user didn't provide a COM port, so we look for one
              com_port = find_prologix_ports()
@@ -338,7 +337,38 @@ ller (try to plug and unplug the cable if it is there nevertheless)"%(com_port))
 
         return open_ports       
 
+def command_line_test(instrument_class):
+    '''
+    Launch an interactive debugging session. The user is prompted to enter
+    a port number to connect to. They can then enter commands (methods of 
+    instrument_class), and the response is printed.
+
+    Args:
+        instrument_class (class): the class of instrument to be tested
+    '''
+    
+    print("\nWelcome to the LabDriver command line tester.")
+    msg = "Use this tool to test if your instrument connects"
+    msg += " and responds to commands."
+    print(msg)
+    
+    stri = raw_input("Please enter port to connect to: ")
+    inst = instrument_class(stri)                
+    
+    while True:            
+        stri = raw_input("Enter command or type x to quit: ")
+        if stri.lower() == 'x':
+            break
+        try:
+            print eval('inst.' + stri)
+        except AttributeError:
+            print("Command not recognized.")
+
+    inst.close()
+            
+                
 if __name__=="__main__":
+    pass
     #i,p,u = list_drivers(interface = "all")
     #print((p['TIME']))
 #    print(find_prologix_ports())
@@ -346,4 +376,4 @@ if __name__=="__main__":
 #    test_prologix_controller_creation_with_com()
 #    print list_GPIB_ports()
 #    print list_serial_ports()
-    print(list_drivers())
+    #print(list_drivers())
