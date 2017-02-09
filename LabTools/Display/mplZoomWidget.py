@@ -59,8 +59,8 @@ class MatplotlibZoomWidget(MatplotlibWidget):
 
         self.mouseMode = self.PAN_MODE
 
-        self.autoscale_x_on = True
-        self.autoscale_y_on = True
+        self.autoscale_X_on = True
+        self.autoscale_L_on = True
         self.autoscale_R_on = True
 
         # Shrink current axis by 20%
@@ -151,7 +151,7 @@ class MatplotlibZoomWidget(MatplotlibWidget):
             axes.set_ylim(y_min - margin, y_max + margin)
 
     def set_autoscale_x(self, setting):
-        self.autoscale_x_on = setting
+        self.autoscale_X_on = setting
         if setting:
             self.rescale_and_draw()
 
@@ -160,7 +160,7 @@ class MatplotlibZoomWidget(MatplotlibWidget):
         self.set_autoscale_yL(setting)
 
     def set_autoscale_yL(self, setting):
-        self.autoscale_y_on = setting
+        self.autoscale_L_on = setting
         if setting:
             self.rescale_and_draw()
 
@@ -171,8 +171,8 @@ class MatplotlibZoomWidget(MatplotlibWidget):
 
     def rescale_and_draw(self):
         # self.adjust_units()
-        self.autoscale_axes(axes=self.axes, scale_x=self.autoscale_x_on,
-                            scale_y=self.autoscale_y_on)
+        self.autoscale_axes(axes=self.axes, scale_x=self.autoscale_X_on,
+                            scale_y=self.autoscale_L_on)
 
         if self.usingR:
             self.autoscale_axes(axes=self.axesR, scale_x=False,
@@ -440,10 +440,10 @@ class ActionManager():
     def __init__(self, parent):
         self.parent = parent
         
-        self.plotToggleControlLAction = self.create_action(parent, "Toggle &Left Axes Control", slot=self.toggleControlL, shortcut=QtGui.QKeySequence("Ctrl+L"),
+        self.plotToggleLControlAction = self.create_action(parent, "Toggle &Left Axes Control", slot=self.toggleLControl, shortcut=QtGui.QKeySequence("Ctrl+L"),
                                                               icon="toggleLeft", tip="Toggle whether the mouse adjusts Left axes pan and zoom", checkable=True)
 
-        self.plotToggleControlRAction = self.create_action(parent, "Toggle &Right Axes Control", slot=self.toggleControlR, shortcut=QtGui.QKeySequence("Ctrl+R"),
+        self.plotToggleRControlAction = self.create_action(parent, "Toggle &Right Axes Control", slot=self.toggleRControl, shortcut=QtGui.QKeySequence("Ctrl+R"),
                                                               icon="toggleRight", tip="Toggle whether the mouse adjusts right axes pan and zoom", checkable=True)
 
         self.plotToggleXControlAction = self.create_action(parent, "Toggle &X Axes Control", slot=self.toggleXControl, shortcut=QtGui.QKeySequence("Ctrl+X"),
@@ -480,8 +480,8 @@ class ActionManager():
         self.clearPlotAction = self.create_action(parent, "Clear Plot", slot=self.clear_plot, shortcut=None,
                                                      icon="clear_plot", tip="Clears the data arrays")
                  
-        self.actions = [self.plotToggleControlLAction, self.plotToggleControlRAction,
-                        self.plotToggleXControlAction, self.plotAutoScaleXAction, 
+        self.actions = [self.plotToggleXControlAction, self.plotToggleLControlAction, 
+                        self.plotToggleRControlAction, self.plotAutoScaleXAction, 
                         self.plotAutoScaleLAction, self.plotAutoScaleRAction,
                         self.plotDragZoomAction, self.plotDragZoomAction,
                         self.plotPanAction, self.plotSelectAction,
@@ -507,14 +507,26 @@ class ActionManager():
     def update_current_window(self, current_dw):
         self.current_dw = current_dw
         self.mplwidget = self.current_dw
-    
-    def toggleControlL(self):
-        if self.plotToggleControlLAction.isChecked():
+        self.plotToggleXControlAction.setChecked(self.current_dw.control_X_on)
+        self.plotToggleLControlAction.setChecked(self.current_dw.control_Y_on)
+        self.plotToggleRControlAction.setChecked(self.current_dw.control_R_on)
+        
+        mode = self.mplwidget.mouseMode
+        self.plotDragZoomAction.setChecked(mode==self.mplwidget.ZOOM_MODE)
+        self.plotPanAction.setChecked(mode==self.mplwidget.PAN_MODE)
+        self.plotSelectAction.setChecked(mode==self.mplwidget.SELECT_MODE)
+        
+        self.plotAutoScaleXAction.setChecked(self.mplwidget.autoscale_X_on)
+        self.plotAutoScaleLAction.setChecked(self.mplwidget.autoscale_L_on)
+        self.plotAutoScaleRAction.setChecked(self.mplwidget.autoscale_R_on)
+
+    def toggleLControl(self):
+        if self.plotToggleLControlAction.isChecked():
             self.plotAutoScaleLAction.setChecked(False)
         self.updateZoomSettings()
 
-    def toggleControlR(self):
-        if self.plotToggleControlLAction.isChecked():
+    def toggleRControl(self):
+        if self.plotToggleRControlAction.isChecked():
             self.plotAutoScaleRAction.setChecked(False)
         self.updateZoomSettings()
 
@@ -532,16 +544,16 @@ class ActionManager():
 
     def toggleAutoScaleL(self):
         if self.plotAutoScaleLAction.isChecked():
-            self.plotToggleControlLAction.setChecked(False)
+            self.plotToggleLControlAction.setChecked(False)
         else:
-            self.plotToggleControlLAction.setChecked(True)
+            self.plotToggleLControlAction.setChecked(True)
         self.updateZoomSettings()
 
     def toggleAutoScaleR(self):
         if self.plotAutoScaleRAction.isChecked():
-            self.plotToggleControlRAction.setChecked(False)
+            self.plotToggleRControlAction.setChecked(False)
         else:
-            self.plotToggleControlRAction.setChecked(True)
+            self.plotToggleRControlAction.setChecked(True)
         self.updateZoomSettings()
 
     def toggleDragZoom(self):
@@ -595,7 +607,6 @@ class ActionManager():
         elif curscale == 'linear':
             axis.set_xscale('log')
 
-
     # change the y axis scale to linear if it was log and reverse
     def set_Yaxis_scale(self, axis):
         curscale = axis.get_yscale()
@@ -611,8 +622,8 @@ class ActionManager():
 
     def updateZoomSettings(self):
         self.mplwidget.setActiveAxes(self.plotToggleXControlAction.isChecked(),
-                                     self.plotToggleControlLAction.isChecked(),
-                                     self.plotToggleControlRAction.isChecked())
+                                     self.plotToggleLControlAction.isChecked(),
+                                     self.plotToggleRControlAction.isChecked())
         if self.plotDragZoomAction.isChecked():
             self.mplwidget.set_mouse_mode(self.mplwidget.ZOOM_MODE)
         elif self.plotPanAction.isChecked():
