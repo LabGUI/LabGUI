@@ -446,10 +446,12 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
                 
             newlabel = tot_label
             
-        elif not isinstance(newlabel,str) and np.iterable(newlabel):
-            #a list with only one element
-            newlabel = newlabel[0]
-            print newlabel
+        elif np.size(newlabel) == 1:
+            
+            if not isinstance(newlabel,str) and np.iterable(newlabel):
+                #a list with only one element
+                newlabel = newlabel[0]
+            
             
         self.ax.set_ylabel(newlabel)
         

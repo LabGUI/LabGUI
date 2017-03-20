@@ -45,6 +45,7 @@ from LabTools.Widgets import script_widget
 from LabTools.Widgets import load_plot_widget as lpw
 from LabTools.Widgets import LimitsWidget as lw
 from LabTools.Fitting import analyse_data_widget as adw
+from LabTools.DataStructure import LabeledData
 #FORMAT ='%(asctime)s - %(module)s - %(levelname)s - %(lineno)d -%(message)s'
 #logging.basicConfig(level=logging.DEBUG,format=FORMAT)
 
@@ -618,6 +619,11 @@ class LabGuiMain(QtGui.QMainWindow):
             data = np.transpose(np.array(data))
             labels = {}
             labels["param"] = ["Vc", "T", "P"]
+        elif extension == "ldat":
+            lb_data = LabeledData(fname = load_fname)
+            data = lb_data.data
+            labels = {}
+            labels["param"] = lb_data.labels
         else:
             [data, labels] = IOTool.load_file_windows(load_fname)
 
@@ -657,6 +663,7 @@ class LabGuiMain(QtGui.QMainWindow):
                 plw.lineEdit_Name[i].setText(param)
         except:
             pass
+        
         try:
             plw.set_axis_ticks(IOTool.load_pset_file(load_fname, labels['param']))
         except:
