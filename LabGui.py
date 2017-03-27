@@ -761,7 +761,6 @@ class LabGuiMain(QtGui.QMainWindow):
 
                 self.output_file = open(of_name, 'w')
                 [instr_name_list, dev_list, param_list] = self.collect_instruments()
-                self.output_file.write(str(self.startWidget.get_header_text()))
                 self.output_file.write(
                     "#C" + str(self.cmdwin.get_label_list()).strip('[]') + '\n')
                 self.output_file.write(
@@ -774,6 +773,7 @@ class LabGuiMain(QtGui.QMainWindow):
                 # here I want to perform a check to see whether the number of instrument match
                 # open it in append mode, so it won't erase previous data
                 self.output_file = open(of_name, 'a')
+                
             self.datataker.initialize(is_new_file)
             # read the name of the script file to run
             self.datataker.set_script(
@@ -795,7 +795,22 @@ class LabGuiMain(QtGui.QMainWindow):
         if not self.datataker.isStopped():
             self.datataker.resume()
             self.datataker.stop()
+            
+            #close the output file
             self.output_file.close()
+            
+            #reopen the output file to read its content
+            self.output_file = open(self.output_file.name, 'r')
+            data = self.output_file.read()
+            self.output_file.close()
+            
+            #insert the comments written by the user in the first line
+            self.output_file = open(self.output_file.name, 'w')
+            self.output_file.write(str(self.startWidget.get_header_text()))
+            self.output_file.write(data)
+            self.output_file.close()
+            
+            
 
             self.start_DTT_action.setEnabled(True)
             self.pause_DTT_action.setEnabled(False)

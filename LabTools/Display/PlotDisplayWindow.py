@@ -650,8 +650,16 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
                 
         self.mplwidget.rescale_and_draw()
 
+
         #rescale the ticks so that we can always read them
-        self.fig.tight_layout()
+        try:
+            self.fig.tight_layout()
+        except ValueError as e:
+            if "left cannot be >= right" in e:
+                pass
+                #it seems to be a platform dependent error
+            else:
+                raise e
                 
 
     def update_fit(self,fitp):
@@ -691,7 +699,14 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
         self.mplwidget.rescale_and_draw() 
             
         #rescale the ticks so that we can always read them
-        self.fig.tight_layout()            
+        try:
+            self.fig.tight_layout()
+        except ValueError as e:
+            if "left cannot be >= right" in e:
+                pass
+                #it seems to be a platform dependent error
+            else:
+                raise e         
         
     def remove_fit(self):
         """
@@ -1161,8 +1176,11 @@ def test_timestamp():
     #create a data array
     t = []
     d = []
-    for i  in np.arange(600,0,-1):
-        d.append(random.random())
+    for i  in np.arange(20,0,-1):
+        if i == 10:
+            d.append(np.nan)
+        else:
+            d.append(random.random())
         t.append((now - datetime.timedelta(seconds = i) - EPOCH_DATE).total_seconds())
 
     data = np.transpose(np.vstack([t,d]))    
