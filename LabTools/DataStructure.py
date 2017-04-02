@@ -4,35 +4,6 @@ from pprint import pprint as pp
 
 COMPLEX_HDR = "complexvalues#"
 REAL_HDR="realvalues#"
-"""
-The following global variables are probably better off in a config file and then 
-accessed based on how people want to name their files.
-"""
-TITLE = "_PIEZOCHARACTERIZATION"
-PRESSURE = "#P_"
-CHAINGING_PRESSURE = "#dP_"
-
-
-def get_dataset_name(fname=None):
-    first, second = fname.split(TITLE)
-    year = first[-4:]
-    month = first[-6:-4]
-    day = first[-8:-6]
-    date = day+"\\"+month+"\\"+year
-    if PRESSURE in second:
-        return "Constant Pressure Trial on %s"%date
-    elif CHANGING_PRESSURE in second:
-        return "Changin Pressure Trial on %s"%date
-    elif self.is_number(year) and self.is_number(month) and self.is_number(day):
-        return str(date)
-    else:
-        return None
-def is_number(s):
-    try:
-        float(s)
-        return True
-    except ValueError:
-        return False
 
 
 class LabeledData(object):

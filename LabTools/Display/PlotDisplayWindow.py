@@ -42,6 +42,7 @@ from collections import OrderedDict
 
 
 import logging
+logging.basicConfig(level = logging.DEBUG)
 
 def isnparray(an_array):
     if not isinstance(an_array, np.ndarray):
@@ -108,7 +109,7 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
         self.axR = self.mplwidget.axesR
 
         self.ax.xaxis.set_major_formatter(ticker.ScalarFormatter(useOffset = False))
-        self.major_locator=self.ax.xaxis.get_major_locator()
+        self.major_locator = self.ax.xaxis.get_major_locator()
         self.ax.yaxis.set_major_formatter(ticker.ScalarFormatter(useOffset = False))
         self.axR.yaxis.set_major_formatter(ticker.ScalarFormatter(useOffset = False))
   
@@ -121,10 +122,16 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
         self.left_lines = [] 
         self.right_lines = [] 
         
-        #Fills self.lineEdit_Name = [], self.comboBox_Type = [], self.comboBox_Instr = []. self.comboBox_Param = []
-        #Whenever connect(obbject,SIGNAL(),function) is used it will call the function whenever the object is manipulated or something emits the same SIGNAL()
-        for i in range (default_channels):   
-            self.add_channel_controls()
+        
+
+        if labels:
+            self.update_labels(labels)        
+        
+        else:
+            #Fills self.lineEdit_Name = [], self.comboBox_Type = [], self.comboBox_Instr = []. self.comboBox_Param = []
+            #Whenever connect(obbject,SIGNAL(),function) is used it will call the function whenever the object is manipulated or something emits the same SIGNAL()
+            for i in range (default_channels):   
+                self.add_channel_controls()
         
         # objects to hold line data. Plot empty lists just to make handles
         # for line objects of the correct color   
@@ -134,7 +141,6 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
         self.data_array = data_array
         self.chan_X = 0
         self.time_Xaxis=False
-        self.date_txt=self.fig.text(0.03,0.95,"",fontsize=15)
 
     def closeEvent(self, event):
         """
@@ -260,39 +266,51 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
         
     def XRadioButtonHandler(self):
 #        print "X clicked"  
-        obj=self.sender()         
+        obj=self.sender()   
         name=obj.objectName()
         name=str(name.split("#")[0])
  
+         
+ 
         for num, box in enumerate(self.channel_objects[name]):
             if box.isChecked():
+                
                 self.chan_X = num
-                label=self.channel_objects["groupBox_Name"][num].text()
+                label = self.channel_objects["groupBox_Name"][num].text()
                 self.ax.set_xlabel(label)
-                if label=="time(s)":
-                    self.time_Xaxis=True
+                
+                if label == "Time(s)":
+                    
+                    self.time_Xaxis = True
 
-                    hfmt=self.set_axis_time(want_format=True)
+                    hfmt = self.set_axis_time(want_format = True)
+                  
+                    self.ax.xaxis.set_major_locator(self.major_locator)
                     self.ax.xaxis.set_major_formatter(hfmt)
                     
                     
-                    major_ticks=self.ax.xaxis.get_major_ticks()
+                    major_ticks = self.ax.xaxis.get_major_ticks()
 #                 
+            
                     for i,tick in enumerate(major_ticks):
                         if i==1:
-                            n=tick.label.get_text()
-                            label_i=n.split(" ")[0]
-                        tick.label.set_rotation('vertical')
-                    self.date_txt.set_text("Date :"+label_i)
+                            n = tick.label.get_text()
+                            label_i = n.split(" ")[0]
+                        tick.label.set_rotation(45)
+                        
                 else:
-                    self.time_Xaxis=False
-                    self.date_txt.set_text("")
+                    
+                    self.time_Xaxis = False
                     self.ax.xaxis.set_major_locator(self.major_locator)
                     self.ax.xaxis.set_major_formatter(ticker.ScalarFormatter(useOffset = False))
                     
                     for tick in self.ax.xaxis.get_major_ticks():
                         tick.label.set_rotation('horizontal')
-        self.update_plot() 
+        
+        #Avoid updating the labels the first time the user click on the button
+        if self.is_any_checkbox_checked("groupBox_Y") and\
+           self.is_any_checkbox_checked("groupBox_YR"):
+            self.update_plot() 
         
     def YCheckBoxHandler(self):  
         """Update which data is used for the Y axis (both left and right)"""
@@ -307,7 +325,7 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
                 label = str(self.channel_objects["groupBox_Name"][num].text())
                 #unit = self.UNITS[str(self.comboBox_Param[num].currentText())]
                 tot_label.append(label) #+ " (" + unit + ")" + ", "
-        print get_groupBox_purpouse(name)
+
         if get_groupBox_purpouse(name)=="Y":
                     self.set_Y_axis_label(tot_label)
         elif get_groupBox_purpouse(name)=="YR":
@@ -348,7 +366,6 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
         color = QtGui.QColorDialog.getColor(initial = obj.palette().color(1))
         obj.setStyleSheet('QPushButton {background-color: %s}'%color.name())
 #        btn.palette().color(1).name()
-        print color.name()
         self.set_color(idx,str(color.name()))
     
     def lineEditHandler(self,mystr):
@@ -449,10 +466,15 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
                 
             newlabel = tot_label
             
-        elif not isinstance(newlabel,str) and np.iterable(newlabel):
-            #a list with only one element
-            newlabel = newlabel[0]
-            print newlabel
+        elif np.size(newlabel) == 1:
+            
+            if not isinstance(newlabel,str) and np.iterable(newlabel):
+                #a list with only one element
+                newlabel = newlabel[0]
+        
+        else:
+            
+            newlabel = ''
             
         self.ax.set_ylabel(newlabel)
         
@@ -468,30 +490,57 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
                 
             newlabel = tot_label
             
-        elif np.iterable(newlabel):
-            #a list with only one element
-            newlabel = newlabel[0]
+        elif np.size(newlabel) == 1:
+            
+            if not isinstance(newlabel,str) and np.iterable(newlabel):
+                #a list with only one element
+                newlabel = newlabel[0]
+            
+        else:
+            
+            newlabel = ''
             
         self.axR.set_ylabel(newlabel)
+
+    def is_any_checkbox_checked(self, group_box_name):
+        """loop through the checkbox of a list and look if at least one is on"""        
+        
+        answer = False
+        
+        if self.channel_objects.has_key(group_box_name):
+        
+            for box in self.channel_objects[group_box_name]:
+                
+                if box.isChecked():
+                    
+                    answer = True
+                    
+        return answer
 
     def convert_timestamp(self, timestamp):
         dts = map(datetime.datetime.fromtimestamp, timestamp)
         return dates.date2num(dts) # converted        
 
-    def set_axis_time(self,want_format=False):
+    def set_axis_time(self,want_format = False):
         """
             convert the time to a certain format
         """
 
         if want_format:
             time_interval=self.data_array[-1,self.chan_X]-self.data_array[0,self.chan_X]
+            
             if time_interval<500:
                 hfmt = dates.DateFormatter('%m/%d %H:%M:%S')
+                
             else:
                 hfmt = dates.DateFormatter('%m/%d %H:%M')
+                
             return hfmt
+            
         else:
+            
             time_data = self.convert_timestamp(self.data_array[:,self.chan_X])
+            
             return time_data
         
 
@@ -536,6 +585,7 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
 
     def update_labels(self, label_list):
         """change the label of all the lines according to a label list"""
+        
         for idx, label_text in enumerate(label_list):
             if idx == len(self.channel_objects["groupBox_Name"]):
                 self.add_channel_controls()
@@ -549,12 +599,10 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
             it only plots if the checkbox of the line is checked
         """
         
-        if not data_array == None:
-            if not isnparray(data_array) == True:
-                raise isnparray(data_array)
-            else:
-                logging.debug("update the data_array")
-                self.data_array = data_array
+        if isnparray(data_array) == True :
+            logging.debug("update the data_array")
+            self.data_array = data_array
+
 
         if self.data_array.size>0 :
             # if the number of columns is more than the number of control boxes
@@ -569,7 +617,7 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
 
             #there is a different treatment if x is choosen to be a time axis or quantity measured by an instrument                
             if self.time_Xaxis:
-                xdata=self.set_axis_time()
+                xdata = self.set_axis_time()
             else:
                 xdata = self.data_array[:,self.chan_X]   
 
@@ -599,7 +647,20 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
             for line_L, line_R in zip (self.ax.lines, self.axR.lines):
                 line_L.set_data([],[])
                 line_R.set_data([],[])
-        self.mplwidget.rescale_and_draw() 
+                         
+                
+        self.mplwidget.rescale_and_draw()
+
+
+        #rescale the ticks so that we can always read them
+        try:
+            self.fig.tight_layout()
+        except ValueError as e:
+            if "left cannot be >= right" in e:
+                pass
+                #it seems to be a platform dependent error
+            else:
+                raise e
                 
 
     def update_fit(self,fitp):
@@ -638,6 +699,16 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
         #call a method defined in the module mplZoomwidget.py         
         self.mplwidget.rescale_and_draw() 
             
+        #rescale the ticks so that we can always read them
+        try:
+            self.fig.tight_layout()
+        except ValueError as e:
+            if "left cannot be >= right" in e:
+                pass
+                #it seems to be a platform dependent error
+            else:
+                raise e         
+        
     def remove_fit(self):
         """
             remove the last line on the ax as this position is by default reserved for the fit function. There is probaly a cleverer way to do so...
@@ -728,6 +799,7 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
         return True
         
 def convert_timestamp(timestamp):
+    print timestamp
     dts = map(datetime.datetime.fromtimestamp, timestamp)
     return dates.date2num(dts) # converted    
         
@@ -1095,9 +1167,38 @@ def test_update_plot():
     app.exec_() 
     
 
+def test_timestamp():
+    
+    EPOCH_DATE = datetime.datetime(1969,12,31,20,0,0)
+
+    now = datetime.datetime.now()
+    import random
+    
+    #create a data array
+    t = []
+    d = []
+    for i  in np.arange(20,0,-1):
+        if i == 10:
+            d.append(np.nan)
+        else:
+            d.append(random.random())
+        t.append((now - datetime.timedelta(seconds = i) - EPOCH_DATE).total_seconds())
+
+    data = np.transpose(np.vstack([t,d]))    
+    
+    app = QtGui.QApplication(sys.argv)
+    form = PlotDisplayWindow(labels = ['Time(s)', 'data(arb)'])
+    form.update_plot(data)
+    form.show()
+    app.exec_() 
+
+
 # This snippet makes it run as a standalone program
 if __name__ == "__main__":
-    test_pdw()
+#    test_pdw()
+    test_timestamp()
+
+    
 #    app = QtGui.QApplication(sys.argv)
 #    from GuiTools.DataStructure import LabeledData
 #    data=LabeledData(np.array([[1,2,3],[4,5,6],[7,8,9]]),["a","b","c"],dataset_name="Num1")    

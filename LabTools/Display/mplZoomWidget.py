@@ -114,15 +114,16 @@ class MatplotlibZoomWidget(MatplotlibWidget):
             xdata = line.get_xdata()
 
             if len(xdata) > 0:
-                x_max = max(x_max, np.amax(xdata))
-                x_min = min(x_min, np.amin(xdata))
+
+                x_max = max(x_max, np.nanmax(xdata))
+                x_min = min(x_min, np.nanmin(xdata))
                 has_data = True
 
             ydata = line.get_ydata()
 
             if len(ydata) > 0:
-                y_max = max(y_max, np.amax(ydata))
-                y_min = min(y_min, np.amin(ydata))
+                y_max = max(y_max, np.nanmax(ydata))
+                y_min = min(y_min, np.nanmin(ydata))
                 has_data = True
 
         if scale_x and has_data:

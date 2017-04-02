@@ -345,6 +345,9 @@ def load_file_windows(fname, splitchar=' ', headers=True):
                 label['instr'] = dat.split(', ')
 
     data = np.array(data)
+    if len(label) == 0:
+        
+        label['param'] = ["col %i"% i for i in range(np.size(data,1))]
 #    data.reshape(nrow,ncolumn)#,nrow)
 
     if headers:

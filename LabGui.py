@@ -45,6 +45,7 @@ from LabTools.Widgets import script_widget
 from LabTools.Widgets import load_plot_widget as lpw
 from LabTools.Widgets import LimitsWidget as lw
 from LabTools.Fitting import analyse_data_widget as adw
+from LabTools.DataStructure import LabeledData
 #FORMAT ='%(asctime)s - %(module)s - %(levelname)s - %(lineno)d -%(message)s'
 #logging.basicConfig(level=logging.DEBUG,format=FORMAT)
 
@@ -560,6 +561,11 @@ class LabGuiMain(QtGui.QMainWindow):
             data = np.transpose(np.array(data))
             labels = {}
             labels["param"] = ["Vc", "T", "P"]
+        elif extension == "ldat":
+            lb_data = LabeledData(fname = load_fname)
+            data = lb_data.data
+            labels = {}
+            labels["param"] = lb_data.labels
         else:
             [data, labels] = IOTool.load_file_windows(load_fname)
 
@@ -599,6 +605,7 @@ class LabGuiMain(QtGui.QMainWindow):
                 plw.lineEdit_Name[i].setText(param)
         except:
             pass
+        
         try:
             plw.set_axis_ticks(IOTool.load_pset_file(load_fname, labels['param']))
         except:
@@ -696,7 +703,6 @@ class LabGuiMain(QtGui.QMainWindow):
 
                 self.output_file = open(of_name, 'w')
                 [instr_name_list, dev_list, param_list] = self.collect_instruments()
-                self.output_file.write(str(self.startWidget.get_header_text()))
                 self.output_file.write(
                     "#C" + str(self.cmdwin.get_label_list()).strip('[]') + '\n')
                 self.output_file.write(
@@ -709,6 +715,7 @@ class LabGuiMain(QtGui.QMainWindow):
                 # here I want to perform a check to see whether the number of instrument match
                 # open it in append mode, so it won't erase previous data
                 self.output_file = open(of_name, 'a')
+                
             self.datataker.initialize(is_new_file)
             # read the name of the script file to run
             self.datataker.set_script(
@@ -730,7 +737,22 @@ class LabGuiMain(QtGui.QMainWindow):
         if not self.datataker.isStopped():
             self.datataker.resume()
             self.datataker.stop()
+            
+            #close the output file
             self.output_file.close()
+            
+            #reopen the output file to read its content
+            self.output_file = open(self.output_file.name, 'r')
+            data = self.output_file.read()
+            self.output_file.close()
+            
+            #insert the comments written by the user in the first line
+            self.output_file = open(self.output_file.name, 'w')
+            self.output_file.write(str(self.startWidget.get_header_text()))
+            self.output_file.write(data)
+            self.output_file.close()
+            
+            
 
             self.start_DTT_action.setEnabled(True)
             self.pause_DTT_action.setEnabled(False)
