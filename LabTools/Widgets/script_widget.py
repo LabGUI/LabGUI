@@ -54,7 +54,8 @@ class ScriptWidget(QWidget):
         if fname:
             self.scriptFileLineEdit.setText(fname)
 
-
+    def get_script_fname(self):
+        return str(self.scriptFileLineEdit.text())
 
 if __name__ == "__main__":
 

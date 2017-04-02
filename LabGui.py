@@ -121,13 +121,9 @@ class LabGuiMain(QtGui.QMainWindow):
             # creates a config.txt with basic needs
             IOTool.create_config_file(main_dir=path)
                 
-                
-
         self.zoneCentrale = QtGui.QMdiArea()
-        self.zoneCentrale.subWindowActivated.connect(
-            self.update_current_window)
+        self.zoneCentrale.subWindowActivated.connect(self.update_current_window)
         self.setCentralWidget(self.zoneCentrale)
-
 
         self.DEBUG = IOTool.get_debug_setting()
        
@@ -154,9 +150,9 @@ class LabGuiMain(QtGui.QMainWindow):
             logging.warning(msg)
             Tool.INTF_GPIB = Tool.INTF_PROLOGIX
                                        
-        else:
-            
+        else:            
             Tool.INTF_GPIB = interface
+            
         logging.info("*" * 20)
         logging.info("The GPIB setting for connecting instruments is %s"%(
                     Tool.INTF_GPIB))
@@ -717,14 +713,14 @@ class LabGuiMain(QtGui.QMainWindow):
                 self.output_file = open(of_name, 'a')
                 
             self.datataker.initialize(is_new_file)
-            # read the name of the script file to run
-            self.datataker.set_script(
-                str(self.scriptWidget.scriptFileLineEdit.text()))
-            # this command is specific to Qthread, it will execute whatever is define in
+            self.datataker.set_script(self.scriptWidget.get_script_fname())
+            
+            # this command is specific to Qthread, it will execute whatever is defined in
             # the method run() from DataManagement.py module
             self.datataker.start()
 
         elif self.datataker.isPaused():
+            # restarting from pause
             self.start_DTT_action.setEnabled(False)
             self.pause_DTT_action.setEnabled(True)
             self.stop_DTT_action.setEnabled(True)
@@ -748,19 +744,16 @@ class LabGuiMain(QtGui.QMainWindow):
             
             #insert the comments written by the user in the first line
             self.output_file = open(self.output_file.name, 'w')
-            self.output_file.write(str(self.startWidget.get_header_text()))
+            self.output_file.write(self.startWidget.get_header_text())
             self.output_file.write(data)
             self.output_file.close()
-            
-            
-
+                       
+            # just make sure the pause setting is left as false after ther run        
             self.start_DTT_action.setEnabled(True)
             self.pause_DTT_action.setEnabled(False)
             self.stop_DTT_action.setEnabled(False)
 
-
-            # just make sure the pause setting is left as false after ther run
-            
+            # Enable changes to the instrument connections    
             self.cmdwin.bt_connecthub.setEnabled(True)
         else:
             print("Couldn't stop DTT - it wasn't running!")
