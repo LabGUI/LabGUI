@@ -84,8 +84,14 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
     What callback function is associated with each control can be defined in the method 'add_channel_control'
     
     """
+<<<<<<< HEAD
     def __init__(self, parent=None, data_array=np.array([]),name="Main Window",window_type = "Live", 
-                 default_channels=10,channel_controls=chan_contr, labels = []):
+                 default_channels=10,channel_controls=chan_contr):
+=======
+    def __init__(self, parent = None, data_array = np.array([]),
+                 name = "Main Window", default_channels = 10, labels = [],
+                 channel_controls = chan_contr):
+>>>>>>> 8f2127641ac8866edd4a6a1e9eaccfa650324d40
         # run the initializer of the class inherited from
         super(PlotDisplayWindow, self).__init__()
         

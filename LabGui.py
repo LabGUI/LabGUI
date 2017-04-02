@@ -117,9 +117,9 @@ class LabGuiMain(QtGui.QMainWindow):
             logging.warning("A config.txt file has been generated for you.")           
             logging.warning("Please modify it to change the default script, settings and data locations, or to enter debug mode.")
 
+            path = os.path.dirname(os.path.realpath(__file__)) + os.sep
             # creates a config.txt with basic needs
-            IOTool.create_config_file(main_dir=os.path.realpath(
-                __file__).rstrip("LabGui.py"))
+            IOTool.create_config_file(main_dir=path)
                 
                 
 

@@ -29,7 +29,7 @@ def create_config_file(main_dir=None):
     """
     # get home directory of the main programm
     if main_dir == None:
-        main_dir = os.path.dirname(os.path.realpath(__file__))
+        main_dir = os.path.dirname(os.path.realpath(__file__)) + os.sep
 
     config_path = os.path.join(main_dir, CONFIG_FILE)
     if os.path.exists(os.path.join(main_dir, CONFIG_FILE)):
@@ -37,11 +37,11 @@ def create_config_file(main_dir=None):
             "the file config.txt already exists, it will not be erased")
     else:
         of = open(config_path, "w")
-        of.write("%s=%sscratch\\\n" % (SAVE_DATA_PATH_ID, main_dir))
+        of.write("%s=%sscratch%s\n" % (SAVE_DATA_PATH_ID, main_dir, os.sep))
         of.write("%s=True\n"%(DEBUG_ID))
-        of.write("%s=%sscripts\script.py\n" % (SCRIPT_ID, main_dir))
-        of.write("%s=%ssettings\demo_dice.txt\n" % (SETTINGS_ID, main_dir))
-        of.write("%s=%sscratch\\\n" % (LOAD_DATA_FILE_ID, main_dir))
+        of.write("%s=%sscripts%sscript.py\n" % (SCRIPT_ID, main_dir,os.sep))
+        of.write("%s=%ssettings%sdemo_dice.txt\n" % (SETTINGS_ID, main_dir,os.sep))
+        of.write("%s=%sscratch%s\n" % (LOAD_DATA_FILE_ID, main_dir,os.sep))
         of.write("%s=\n"%(GPIB_INTF_ID))
         of.close()
         # COOLDOWN=TEST
