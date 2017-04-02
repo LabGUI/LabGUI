@@ -83,10 +83,13 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
     What callback function is associated with each control can be defined in the method 'add_channel_control'
     
     """
-    def __init__(self, parent=None, data_array=np.array([]),name="Main Window",default_channels=10,channel_controls=chan_contr):
+    def __init__(self, parent=None, data_array=np.array([]),name="Main Window",window_type = "Live", 
+                 default_channels=10,channel_controls=chan_contr):
         # run the initializer of the class inherited from
         super(PlotDisplayWindow, self).__init__()
-                    
+        
+        self.window_type = window_type
+            
         #store the choice of channel controls parameters
         self.channel_controls=channel_controls
         
@@ -96,7 +99,7 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
         self.customizeUi(default_channels)
 
         #Create an instance of auto-hiding widget which will contain the channel controls
-        autoHide =  QtTools.QAutoHideDockWidgets(Qt.RightDockWidgetArea, self) 
+        self.autoHide =  QtTools.QAutoHideDockWidgets(Qt.RightDockWidgetArea, self) 
         
         # axes and figure initialization - short names for convenience   
         self.fig = self.mplwidget.figure

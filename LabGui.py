@@ -580,7 +580,7 @@ class LabGuiMain(QtGui.QMainWindow):
         nb_channels = np.size(data, 1)
         logging.info("%i channels in total"% (nb_channels))
         plw = PlotDisplayWindow.PlotDisplayWindow(
-            data_array=data, name="Past data file: " + load_fname, default_channels=nb_channels, channel_controls=chan_contr)
+            data_array=data, name="Past data file: " + load_fname, window_type="Past", default_channels=nb_channels, channel_controls=chan_contr)
         
         
         self.connect(plw.mplwidget, SIGNAL(
@@ -917,22 +917,24 @@ class LabGuiMain(QtGui.QMainWindow):
             self.action_manager.update_current_window(
                         current_window.widget().mplwidget)
             
-        #### I have no idea why the below needs to run when a plot is clicked...
-
-        #I do this to be able to change the piece of code which goes here and not having to 
-        #start again LabGui
-        
-        script = open("debug.py")
-        print("open script " + script.name)
-        # check for syntax errors
-        try:
-            # py_compile.compile(script_file_name)
-            code = compile(script.read(), script.name, 'exec')
-            exec(code)
-        except py_compile.PyCompileError:
-            print("Syntax error detected")
-
-        script.close()
+        if not current_window is None:
+            current_widget = self.zoneCentrale.activeSubWindow().widget()
+            
+            window_type = getattr(current_widget, "window_type", "unknown")
+            
+            if window_type == "unknown":                
+                msg = "The type of PlotDisplayWindow '%s' is unknown"%(window_type)
+                raise ValueError(msg)
+            else:     
+                # this is only used by Print Figure (which doesn't work anyways)
+                self.current_pdw = current_widget
+                
+                # this is only used by saveFig
+                self.fig = current_widget.fig
+        else:
+            # 20130722 it runs this part of the code everytime I click
+            # somewhere else that inside the main window
+            pass
 
     def isrunning(self):
         """indicates whether the datataker is running or not"""
