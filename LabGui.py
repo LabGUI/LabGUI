@@ -34,7 +34,7 @@ logging.config.fileConfig(os.path.join(ABS_PATH,"logging.conf"))
 
 
 from LabTools.IO import IOTool
-from LabTools.Display import QtTools, PlotDisplayWindow
+from LabTools.Display import QtTools, PlotDisplayWindow, mplZoomWidget
 from LabDrivers import Tool
 from LabTools.Widgets import data_management
 from LabTools.Widgets import InstrumentWindow as CW
@@ -323,43 +323,16 @@ class LabGuiMain(QtGui.QMainWindow):
 
 ###### PLOT MENU + TOOLBAR SETUP ######
         # plot_menu_and_toolbar.add_plot_stuff(self)
-
-        self.plotToggleControlLAction = QtTools.create_action(self, "Toggle &Left Axes Control", slot=self.toggleControlL, shortcut=QtGui.QKeySequence("Ctrl+L"),
-                                                              icon="toggleLeft", tip="Toggle whether the mouse adjusts Left axes pan and zoom", checkable=True)
-
-        self.plotToggleControlRAction = QtTools.create_action(self, "Toggle &Right Axes Control", slot=self.toggleControlR, shortcut=QtGui.QKeySequence("Ctrl+R"),
-                                                              icon="toggleRight", tip="Toggle whether the mouse adjusts right axes pan and zoom", checkable=True)
-
-        self.plotToggleXControlAction = QtTools.create_action(self, "Toggle &X Axes Control", slot=self.toggleXControl, shortcut=QtGui.QKeySequence("Ctrl+X"),
-                                                              icon="toggleX", tip="Toggle whether the mouse adjusts x axis pan and zoom", checkable=True)
-
-        self.plotAutoScaleXAction = QtTools.create_action(self, "Auto Scale X", slot=self.toggleAutoScaleX, shortcut=QtGui.QKeySequence("Ctrl+A"),
-                                                          icon="toggleAutoScaleX", tip="Turn autoscale X on or off", checkable=True)
-
-        self.plotAutoScaleLAction = QtTools.create_action(self, "Auto Scale L", slot=self.toggleAutoScaleL, shortcut=QtGui.QKeySequence("Ctrl+D"),
-                                                          icon="toggleAutoScaleL", tip="Turn autoscale Left Y on or off", checkable=True)
-
-        self.plotAutoScaleRAction = QtTools.create_action(self, "Auto Scale R", slot=self.toggleAutoScaleR, shortcut=QtGui.QKeySequence("Ctrl+E"),
-                                                          icon="toggleAutoScaleR", tip="Turn autoscale Right Y on or off", checkable=True)
-
-        self.plotDragZoomAction = QtTools.create_action(self, "Drag to zoom", slot=self.toggleDragZoom, shortcut=QtGui.QKeySequence("Ctrl+Z"),
-                                                        icon="zoom", tip="Turn drag to zoom on or off", checkable=True)
-
-        self.plotPanAction = QtTools.create_action(self, "Drag to Pan", slot=self.togglePan, shortcut=QtGui.QKeySequence("Ctrl+P"),
-                                                   icon="pan", tip="Turn drag to Pan on or off", checkable=True)
-
-        self.plotSelectAction = QtTools.create_action(self, "Drag to Select", slot=self.toggleSelect, shortcut=QtGui.QKeySequence("Ctrl+L"),
-                                                      icon="select", tip="Turn drag to Select on or off", checkable=True)
-
-        self.plotClearSelectAction = QtTools.create_action(self, "Hide selection box", slot=self.hide_selection_box,
-                                                           icon="clear_select", tip="Hide Selection box", checkable=False)
-
-        self.changeXscale = QtTools.create_action(self, "Set X log", slot=self.setXscale, shortcut=None,
-                                                  icon="logX", tip="Set the x scale to log")
-        self.changeYscale = QtTools.create_action(self, "Set Y log", slot=self.setYscale, shortcut=None,
-                                                  icon="logY", tip="Set the y scale to log")
-        self.changeYRscale = QtTools.create_action(self, "Set YR log", slot=self.setYRscale, shortcut=None,
-                                                   icon="logY", tip="Set the yr scale to log")
+        self.plotMenu = self.menuBar().addMenu("&Plot")
+        self.plotToolbar = self.addToolBar("Plot")
+        self.plotToolbar.setObjectName("PlotToolBar")
+        
+        # all actions related to the figure widget (mplZoomWidget.py) are 
+        # set up in the actionmanager
+        self.action_manager = mplZoomWidget.ActionManager(self)
+        for action in self.action_manager.actions:
+            self.plotMenu.addAction(action)
+            self.plotToolbar.addAction(action)
 
         self.clearPlotAction = QtTools.create_action(self, "Clear Plot", slot=self.clear_plot, shortcut=None,
                                                      icon="clear_plot", tip="Clears the data arrays")
@@ -367,40 +340,9 @@ class LabGuiMain(QtGui.QMainWindow):
         self.removeFitAction = QtTools.create_action(self, "Remove Fit", slot=self.remove_fit, shortcut=None,
                                                      icon="clear", tip="Reset the fit data to an empty array")
 
-        self.plotMenu = self.menuBar().addMenu("&Plot")
-
-        self.plotMenu.addAction(self.plotToggleXControlAction)
-        self.plotMenu.addAction(self.plotToggleControlLAction)
-        self.plotMenu.addAction(self.plotToggleControlRAction)
-
-        self.plotMenu.addAction(self.plotAutoScaleXAction)
-        self.plotMenu.addAction(self.plotAutoScaleLAction)
-        self.plotMenu.addAction(self.plotAutoScaleRAction)
-
-        self.plotMenu.addAction(self.plotPanAction)
-        self.plotMenu.addAction(self.plotDragZoomAction)
-
         self.plotMenu.addAction(self.clearPlotAction)
         self.plotMenu.addAction(self.removeFitAction)
 
-        self.plotToolbar = self.addToolBar("Plot")
-        self.plotToolbar.setObjectName("PlotToolBar")
-
-        self.plotToolbar.addAction(self.plotToggleXControlAction)
-        self.plotToolbar.addAction(self.plotToggleControlLAction)
-        self.plotToolbar.addAction(self.plotToggleControlRAction)
-
-        self.plotToolbar.addAction(self.plotAutoScaleXAction)
-        self.plotToolbar.addAction(self.plotAutoScaleLAction)
-        self.plotToolbar.addAction(self.plotAutoScaleRAction)
-
-        self.plotToolbar.addAction(self.plotPanAction)
-        self.plotToolbar.addAction(self.plotDragZoomAction)
-        self.plotToolbar.addAction(self.plotSelectAction)
-        self.plotToolbar.addAction(self.plotClearSelectAction)
-        self.plotToolbar.addAction(self.changeXscale)
-        self.plotToolbar.addAction(self.changeYscale)
-        self.plotToolbar.addAction(self.changeYRscale)
 
 
 # start/stop/pause buttons ########3
@@ -970,6 +912,13 @@ class LabGuiMain(QtGui.QMainWindow):
     def update_current_window(self, x):
         ''' this changes what self.<object> refers to so that the same shared toolbars can modify whichever plot window has focus right now '''        
         
+        current_window = self.zoneCentrale.activeSubWindow()
+        if current_window:
+            self.action_manager.update_current_window(
+                        current_window.widget().mplwidget)
+            
+        #### I have no idea why the below needs to run when a plot is clicked...
+
         #I do this to be able to change the piece of code which goes here and not having to 
         #start again LabGui
         
@@ -989,118 +938,12 @@ class LabGuiMain(QtGui.QMainWindow):
         """indicates whether the datataker is running or not"""
         return not self.datataker.stopped
 
-    # change the x axis scale to linear if it was log and reverse
-    def set_Xaxis_scale(self, axis):
-        curscale = axis.get_xscale()
-#        print curscale
-        if curscale == 'log':
-            axis.set_xscale('linear')
-        elif curscale == 'linear':
-            axis.set_xscale('log')
-
-    # change the y axis scale to linear if it was log and reverse
-    def set_Yaxis_scale(self, axis):
-        curscale = axis.get_yscale()
-#        print curscale
-        if curscale == 'log':
-            axis.set_yscale('linear')
-        elif curscale == 'linear':
-            axis.set_yscale('log')
-
-    def setXscale(self):
-        self.set_Xaxis_scale(self.ax)
-
-    def setYscale(self):
-        self.set_Yaxis_scale(self.ax)
-
-    def setYRscale(self):
-        self.set_Yaxis_scale(self.axR)
-
     def clear_plot(self):
         self.data_array = np.array([])
         self.emit(SIGNAL("data_array_updated(PyQt_PyObject)"), self.data_array)
 
     def remove_fit(self):
         self.emit(SIGNAL("remove_fit()"))
-
-    def toggleAutoScaleX(self):
-        if self.plotAutoScaleXAction.isChecked():
-            self.plotToggleXControlAction.setChecked(False)
-        else:
-            self.plotToggleXControlAction.setChecked(True)
-        self.updateZoomSettings()
-
-    def toggleAutoScaleL(self):
-        if self.plotAutoScaleLAction.isChecked():
-            self.plotToggleControlLAction.setChecked(False)
-        else:
-            self.plotToggleControlLAction.setChecked(True)
-        self.updateZoomSettings()
-
-    def toggleAutoScaleR(self):
-        if self.plotAutoScaleRAction.isChecked():
-            self.plotToggleControlRAction.setChecked(False)
-        else:
-            self.plotToggleControlRAction.setChecked(True)
-        self.updateZoomSettings()
-
-    def toggleXControl(self):
-        if self.plotToggleXControlAction.isChecked():
-            self.plotAutoScaleXAction.setChecked(False)
-        self.updateZoomSettings()
-
-    def toggleControlL(self):
-        if self.plotToggleControlLAction.isChecked():
-            self.plotAutoScaleLAction.setChecked(False)
-        self.updateZoomSettings()
-
-    def toggleControlR(self):
-        if self.plotToggleControlLAction.isChecked():
-            self.plotAutoScaleRAction.setChecked(False)
-        self.updateZoomSettings()
-
-    def togglePan(self):
-        if self.plotDragZoomAction.isChecked():
-            self.plotDragZoomAction.setChecked(False)
-        if self.plotSelectAction.isChecked():
-            self.plotSelectAction.setChecked(False)
-        self.updateZoomSettings()
-
-    def toggleDragZoom(self):
-        if self.plotPanAction.isChecked():
-            self.plotPanAction.setChecked(False)
-        if self.plotSelectAction.isChecked():
-            self.plotSelectAction.setChecked(False)
-        self.updateZoomSettings()
-
-    def toggleSelect(self):
-        if self.plotDragZoomAction.isChecked():
-            self.plotDragZoomAction.setChecked(False)
-        if self.plotPanAction.isChecked():
-            self.plotPanAction.setChecked(False)
-        self.updateZoomSettings()
-
-    def hide_selection_box(self):
-        if self.mplwidget.selection_showing:
-            self.mplwidget.select_rectangle.remove()
-            self.mplwidget.selection_showing = False
-            self.mplwidget.figure.canvas.draw()
-            self.emit(SIGNAL("removed_selection_box()"))
-
-    def updateZoomSettings(self):
-        self.mplwidget.setActiveAxes(self.plotToggleXControlAction.isChecked(),
-                                     self.plotToggleControlLAction.isChecked(),
-                                     self.plotToggleControlRAction.isChecked())
-        if self.plotDragZoomAction.isChecked():
-            self.mplwidget.set_mouse_mode(self.mplwidget.ZOOM_MODE)
-        elif self.plotPanAction.isChecked():
-            self.mplwidget.set_mouse_mode(self.mplwidget.PAN_MODE)
-        elif self.plotSelectAction.isChecked():
-            self.mplwidget.set_mouse_mode(self.mplwidget.SELECT_MODE)
-
-        self.mplwidget.set_autoscale_x(self.plotAutoScaleXAction.isChecked())
-        self.mplwidget.set_autoscale_yL(self.plotAutoScaleLAction.isChecked())
-        self.mplwidget.set_autoscale_yR(self.plotAutoScaleRAction.isChecked())
 
     def file_save_fig(self):
         fname = str(QtGui.QFileDialog.getSaveFileName(

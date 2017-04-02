@@ -93,7 +93,7 @@ class MatplotlibZoomWidget(MatplotlibWidget):
         self.control_R_on = control_R_on
 
     def autoscale_axes(self, axes=None, scale_x=True, scale_y=True, span_x=0,
-                       margin_y=0.05):
+                       margin_x=0, margin_y=0.05):
         """ Autoscale the axes such that the x data spans from the left edge
         to the right edge of the plot, but the y data leaves a margin at the 
         top and bottom. 
@@ -114,7 +114,6 @@ class MatplotlibZoomWidget(MatplotlibWidget):
             xdata = line.get_xdata()
 
             if len(xdata) > 0:
-
                 x_max = max(x_max, np.amax(xdata))
                 x_min = min(x_min, np.amin(xdata))
                 has_data = True
@@ -126,13 +125,13 @@ class MatplotlibZoomWidget(MatplotlibWidget):
                 y_min = min(y_min, np.amin(ydata))
                 has_data = True
 
-        if x_max == x_min:
-            # if there's only a single point, centre that point in the middle
-            # of a window of width 1
-            x_min = x_max - 0.5
-            x_max = x_min + 1
-
         if scale_x and has_data:
+            if x_max == x_min:
+                # if there's only a single point, centre that point in the middle
+                # of a window of width 1
+                x_min = x_max - 0.5
+                x_max = x_min + 1
+                
             if span_x == 0:
                 axes.set_xlim(x_min, x_max)
             else:
@@ -155,8 +154,8 @@ class MatplotlibZoomWidget(MatplotlibWidget):
         if setting:
             self.rescale_and_draw()
 
-    # def scale_x():
     def set_autoscale_y(self, setting):
+        """ this appears to be here for back-compatibility """
         self.set_autoscale_yL(setting)
 
     def set_autoscale_yL(self, setting):
@@ -170,18 +169,14 @@ class MatplotlibZoomWidget(MatplotlibWidget):
             self.rescale_and_draw()
 
     def rescale_and_draw(self):
-        # self.adjust_units()
+
         self.autoscale_axes(axes=self.axes, scale_x=self.autoscale_X_on,
                             scale_y=self.autoscale_L_on)
 
         if self.usingR:
             self.autoscale_axes(axes=self.axesR, scale_x=False,
                                 scale_y=self.autoscale_R_on)
-#        self.axes.relim()
-#        self.axes.autoscale_view()
-#        self.axesR.relim()
-#        self.axesR.autoscale_view()
-#        self.figure.canvas.draw()
+
         selection_limits = [self.axes.get_xlim(), self.axes.get_ylim()]
         self.emit(QtCore.SIGNAL("limits_changed(int,PyQt_PyObject)"),
                   3, np.array(selection_limits))
