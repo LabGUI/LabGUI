@@ -500,21 +500,21 @@ class ActionManager():
             action.setCheckable(True)
         return action    
         
-    def update_current_window(self, current_dw):
-        self.current_dw = current_dw
-        self.mplwidget = self.current_dw
-        self.plotToggleXControlAction.setChecked(self.current_dw.control_X_on)
-        self.plotToggleLControlAction.setChecked(self.current_dw.control_Y_on)
-        self.plotToggleRControlAction.setChecked(self.current_dw.control_R_on)
+    def update_current_widget(self, current_widget):
+        self.current_widget = current_widget
         
-        mode = self.mplwidget.mouseMode
-        self.plotDragZoomAction.setChecked(mode==self.mplwidget.ZOOM_MODE)
-        self.plotPanAction.setChecked(mode==self.mplwidget.PAN_MODE)
-        self.plotSelectAction.setChecked(mode==self.mplwidget.SELECT_MODE)
+        self.plotToggleXControlAction.setChecked(current_widget.control_X_on)
+        self.plotToggleLControlAction.setChecked(current_widget.control_Y_on)
+        self.plotToggleRControlAction.setChecked(current_widget.control_R_on)
         
-        self.plotAutoScaleXAction.setChecked(self.mplwidget.autoscale_X_on)
-        self.plotAutoScaleLAction.setChecked(self.mplwidget.autoscale_L_on)
-        self.plotAutoScaleRAction.setChecked(self.mplwidget.autoscale_R_on)
+        mode = current_widget.mouseMode
+        self.plotDragZoomAction.setChecked(mode==current_widget.ZOOM_MODE)
+        self.plotPanAction.setChecked(mode==current_widget.PAN_MODE)
+        self.plotSelectAction.setChecked(mode==self.current_widget.SELECT_MODE)
+        
+        self.plotAutoScaleXAction.setChecked(current_widget.autoscale_X_on)
+        self.plotAutoScaleLAction.setChecked(current_widget.autoscale_L_on)
+        self.plotAutoScaleRAction.setChecked(current_widget.autoscale_R_on)
 
     def toggleLControl(self):
         if self.plotToggleLControlAction.isChecked():
@@ -574,24 +574,25 @@ class ActionManager():
         self.updateZoomSettings()
 
     def hide_selection_box(self):
-        if self.mplwidget.selection_showing:
-            self.mplwidget.select_rectangle.remove()
-            self.mplwidget.selection_showing = False
-            self.mplwidget.figure.canvas.draw()
-            self.mplwidget.emit(SIGNAL("removed_selection_box()"))
+        if self.current_widget.selection_showing:
+            self.current_widget.select_rectangle.remove()
+            self.current_widget.selection_showing = False
+            self.current_widget.figure.canvas.draw()
+            self.current_widget.emit(SIGNAL("removed_selection_box()"))
 
     def setXscale(self):
-        self.set_Xaxis_scale(self.mplwidget.axes)
+        self.set_Xaxis_scale(self.current_widget.axes)
 
     def setYscale(self):
-        self.set_Yaxis_scale(self.mplwidget.axes)
+        self.set_Yaxis_scale(self.current_widget.axes)
 
     def setYRscale(self):
-        self.set_Yaxis_scale(self.mplwidget.axesR)
+        self.set_Yaxis_scale(self.current_widget.axesR)
 
     def clear_plot(self):
         self.data_array = np.array([])
-        self.mplwidget.emit(SIGNAL("data_array_updated(PyQt_PyObject)"), self.data_array)
+        self.current_widget.emit(SIGNAL("data_array_updated(PyQt_PyObject)"),
+                                 self.data_array)
 
         
     # change the x axis scale to linear if it was log and reverse
@@ -614,22 +615,22 @@ class ActionManager():
 
     
     def remove_fit(self):
-        self.mplwidget.emit(SIGNAL("remove_fit()"))
+        self.current_widget.emit(SIGNAL("remove_fit()"))
 
     def updateZoomSettings(self):
-        self.mplwidget.setActiveAxes(self.plotToggleXControlAction.isChecked(),
+        self.current_widget.setActiveAxes(self.plotToggleXControlAction.isChecked(),
                                      self.plotToggleLControlAction.isChecked(),
                                      self.plotToggleRControlAction.isChecked())
         if self.plotDragZoomAction.isChecked():
-            self.mplwidget.set_mouse_mode(self.mplwidget.ZOOM_MODE)
+            self.current_widget.set_mouse_mode(self.current_widget.ZOOM_MODE)
         elif self.plotPanAction.isChecked():
-            self.mplwidget.set_mouse_mode(self.mplwidget.PAN_MODE)
+            self.current_widget.set_mouse_mode(self.current_widget.PAN_MODE)
         elif self.plotSelectAction.isChecked():
-            self.mplwidget.set_mouse_mode(self.mplwidget.SELECT_MODE)
+            self.current_widget.set_mouse_mode(self.current_widget.SELECT_MODE)
 
-        self.mplwidget.set_autoscale_x(self.plotAutoScaleXAction.isChecked())
-        self.mplwidget.set_autoscale_yL(self.plotAutoScaleLAction.isChecked())
-        self.mplwidget.set_autoscale_yR(self.plotAutoScaleRAction.isChecked())
+        self.current_widget.set_autoscale_x(self.plotAutoScaleXAction.isChecked())
+        self.current_widget.set_autoscale_yL(self.plotAutoScaleLAction.isChecked())
+        self.current_widget.set_autoscale_yR(self.plotAutoScaleRAction.isChecked())
         
         
         
@@ -671,7 +672,7 @@ class ExamplePlotDisplay(QtGui.QMainWindow):
             
         self.centralZone = QtGui.QMdiArea()
         self.centralZone.subWindowActivated.connect(
-            self.update_current_window)
+            self.update_current_widget)
         self.setCentralWidget(self.centralZone)
         self.create_dw("Window 1", xdata=xdata, ydata=ydata)
         self.create_dw("Window 2", xdata=xdata, ydata=ydata)
@@ -684,10 +685,10 @@ class ExamplePlotDisplay(QtGui.QMainWindow):
         self.centralZone.addSubWindow(dw)
         dw.show()
     
-    def update_current_window(self):
+    def update_current_widget(self):
         current_window = self.centralZone.activeSubWindow()
         if current_window:
-            self.action_manager.update_current_window(current_window.widget())
+            self.action_manager.update_current_widget(current_window.widget())
 
         
 if __name__ == "__main__":

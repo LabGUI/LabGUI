@@ -792,6 +792,8 @@ class LabGuiMain(QtGui.QMainWindow):
                 # numpy arrays include newlines in their strings, get rid of
                 # them.
                 stri = stri.replace('\n', '')
+                
+                # np.loadtxt uses whitespace delimiter by default, so we do too
                 stri = stri.replace(',', ' ')
 
                 self.output_file.write(stri + '\n')
@@ -883,12 +885,7 @@ class LabGuiMain(QtGui.QMainWindow):
 
     def refresh_ports_list(self):
         """Update the availiable port list in the InstrumentWindow module """
-        
-        if self.DEBUG:
-            available_ports = ["GPIB0::%i"%(i) for i in range(30)]
-        else:
-            available_ports = self.instr_hub.get_connectable_ports()
-#        print available_ports
+
         self.cmdwin.refresh_cbb_port()
 
     def connect_instrument(self, connection_param):
@@ -929,7 +926,7 @@ class LabGuiMain(QtGui.QMainWindow):
         
         current_window = self.zoneCentrale.activeSubWindow()
         if current_window:
-            self.action_manager.update_current_window(
+            self.action_manager.update_current_widget(
                         current_window.widget().mplwidget)
             
         if not current_window is None:
