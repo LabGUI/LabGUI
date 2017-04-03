@@ -32,6 +32,8 @@ import logging.config
 ABS_PATH=os.path.abspath(os.curdir)
 logging.config.fileConfig(os.path.join(ABS_PATH,"logging.conf"))
 
+from importlib import import_module
+
 
 from LabTools.IO import IOTool
 from LabTools.Display import QtTools, PlotDisplayWindow, mplZoomWidget
@@ -50,6 +52,8 @@ from LabTools.DataStructure import LabeledData
 #logging.basicConfig(level=logging.DEBUG,format=FORMAT)
 
 PYTHON_VERSION = int(sys.version[0])
+
+LABWIDGETS_PACKAGE_NAME = "LabTools.TestWidgets"
 
 CONFIG_FILE = IOTool.CONFIG_FILE
 
@@ -179,6 +183,36 @@ class LabGuiMain(QtGui.QMainWindow):
             "script_finished(bool)"), self.finished_DTT)
         self.data_array = np.array([])
 
+
+
+
+        self.widgets = {}
+        
+        cur_path = os.path.dirname(__file__)
+        #    widget_path = os.path.join(cur_path,'LabTools')
+        #    widget_path = os.path.join(widget_path,'Widgets')
+
+        widget_path = os.path.join(cur_path,'LabTools')
+        widget_path = os.path.join(widget_path,'TestWidgets')
+
+        widgets_list = [o for o in os.listdir(widget_path) 
+                        if o.endswith(".py") and not "__init__" in o]
+
+        
+        for widget in widgets_list:
+            
+            widget_name = widget.rstrip('.py')
+            print widget_name
+            widget_module = import_module("." + widget_name, 
+                                          package = LABWIDGETS_PACKAGE_NAME)
+            print widget_module.__file__
+            print widget_module
+            
+            self.add_widget(widget_module.add_widget_into_main)
+
+
+
+
 ###### DOCK WIDGET SETUP: INSTRUMENT CONNECTION PANEL ######
         self.cmdwin = CW.InstrumentWindow(self)
         self.refresh_ports_list()
@@ -230,16 +264,16 @@ class LabGuiMain(QtGui.QMainWindow):
         startDockWidget.setWidget(self.startWidget)
         self.addDockWidget(Qt.RightDockWidgetArea, startDockWidget)
 
-###### DOCK WIDGET SETUP: LOAD PLOT PANEL ######
-
-        self.loadPlotWidget = lpw.LoadPlotWidget(
-            parent=self, load_fname=IOTool.get_config_setting("DATAFILE"))
-        loadPlotDockWidget = QtGui.QDockWidget("Load previous data file", self)
-        loadPlotDockWidget.setObjectName("loadPlotDockWidget")
-        loadPlotDockWidget.setAllowedAreas(
-            Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea)
-        loadPlotDockWidget.setWidget(self.loadPlotWidget)
-        self.addDockWidget(Qt.RightDockWidgetArea, loadPlotDockWidget)
+####### DOCK WIDGET SETUP: LOAD PLOT PANEL ######
+#
+#        self.loadPlotWidget = lpw.LoadPlotWidget(
+#            parent=self, load_fname=IOTool.get_config_setting("DATAFILE"))
+#        loadPlotDockWidget = QtGui.QDockWidget("Load previous data file", self)
+#        loadPlotDockWidget.setObjectName("loadPlotDockWidget")
+#        loadPlotDockWidget.setAllowedAreas(
+#            Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea)
+#        loadPlotDockWidget.setWidget(self.loadPlotWidget)
+#        self.addDockWidget(Qt.RightDockWidgetArea, loadPlotDockWidget)
 
 ###### DOCK WIDGET SETUP: DATA ANALYSE PANEL ######
 
@@ -381,8 +415,8 @@ class LabGuiMain(QtGui.QMainWindow):
 
        # self.connect(self.startWidget.startStopButton,
        #              SIGNAL("clicked()"), self.toggle_DTT)
-        self.connect(self.loadPlotWidget.plotButton,
-                     SIGNAL("clicked()"), self.create_plw)
+#        self.connect(self.loadPlotWidget.plotButton,
+#                     SIGNAL("clicked()"), self.create_plw)
 
 
 ###### WINDOW MENU SETUP ######
@@ -406,7 +440,7 @@ class LabGuiMain(QtGui.QMainWindow):
         self.windowMenu.addAction(calcDockWidget.toggleViewAction())
         self.windowMenu.addAction(limitsDockWidget.toggleViewAction())
         self.windowMenu.addAction(startDockWidget.toggleViewAction())  
-        self.windowMenu.addAction(loadPlotDockWidget.toggleViewAction())  
+#        self.windowMenu.addAction(loadPlotDockWidget.toggleViewAction())  
         self.windowMenu.addAction(analyseDataDockWidget.toggleViewAction())
         self.windowMenu.addAction(logDockWidget.toggleViewAction())
         self.windowMenu.addAction(simpleconnectDockWidget.toggleViewAction())
@@ -444,12 +478,22 @@ class LabGuiMain(QtGui.QMainWindow):
             #hide some of the advanced widgets so they don't show for new users
             # the objects are not actually deleted, just hidden
             analyseDataDockWidget.hide()   
-            loadPlotDockWidget.hide()
+#            loadPlotDockWidget.hide()
             limitsDockWidget.hide()
             calcDockWidget.hide()
             simpleconnectDockWidget.hide()
 
 
+
+    def add_widget(self,widget_creation,action_fonctions = None,**kwargs):
+        """adds a widget to the MainArea Window
+        
+        this is a rough stage of this fonction, it calls a fonction from
+        another module to add this widget
+        
+        """
+        widget_creation(self)
+        
 
             
     def closeEvent(self, event):
@@ -536,85 +580,7 @@ class LabGuiMain(QtGui.QMainWindow):
         label_list = self.cmdwin.get_label_list() + self.calcWidget.get_label_list()
         self.emit(SIGNAL("labelsChanged(PyQt_PyObject)"), label_list)
 
-    def create_plw(self, load_fname = None):
-        """
-            add a new plot load window in the MDI area. The data and channels are loaded from a file
-        """
-        # maintain the previous functionality if file name not passed in
-        if not load_fname:
-            load_fname = str(self.loadPlotWidget.load_file_name())
-            
-        logging.info("loading %s for plot"%(load_fname))
 
-        extension = load_fname.rsplit('.')[len(load_fname.rsplit('.')) - 1]
-#        print extension
-
-        if extension == "adat":
-            [data, labels] = IOTool.load_file_windows(load_fname, '\t')
-        elif extension == "adat2":
-            [data, labels] = IOTool.load_file_windows(load_fname)
-        elif extension == "a5dat":
-            data, param = load_experiment(load_fname)
-            data = np.transpose(np.array(data))
-            labels = {}
-            labels["param"] = ["Vc", "T", "P"]
-        elif extension == "ldat":
-            lb_data = LabeledData(fname = load_fname)
-            data = lb_data.data
-            labels = {}
-            labels["param"] = lb_data.labels
-        else:
-            [data, labels] = IOTool.load_file_windows(load_fname)
-
-#        [data,labels]=IOTool.load_file_windows(load_fname)
-
-        chan_contr = OrderedDict()
-        chan_contr["groupBox_Name"] = ["Channel", "lineEdit"]
-        chan_contr["groupBox_X"] = ["X", "radioButton"]
-        chan_contr["groupBox_Y"] = ["YL", "checkBox"]
-        chan_contr["groupBox_YR"] = ["YR", "checkBox"]
-        chan_contr["groupBox_fit"] = ["fit", "radioButton"]
-        chan_contr["groupBox_invert"] = ["+/-", "checkBox"]
-        chan_contr["groupBox_marker"] = ["M", "comboBox"]
-        chan_contr["groupBox_line"] = ["L", "comboBox"]
-
-        logging.info("channel names are ", labels)
-#        print data
-        nb_channels = np.size(data, 1)
-        logging.info("%i channels in total"% (nb_channels))
-        plw = PlotDisplayWindow.PlotDisplayWindow(
-            data_array=data, name="Past data file: " + load_fname, window_type="Past", default_channels=nb_channels, channel_controls=chan_contr)
-        
-        
-        self.connect(plw.mplwidget, SIGNAL(
-            "limits_changed(int,PyQt_PyObject)"), self.emit_axis_lim)
-            
-        self.connect(self.dataAnalyseWidget, SIGNAL(
-            "data_set_updated(PyQt_PyObject)"), plw.update_plot)
-            
-        self.connect(self.dataAnalyseWidget, SIGNAL(
-            "update_fit(PyQt_PyObject)"), plw.update_fit)
-            
-        self.connect(self, SIGNAL("remove_fit()"), plw.remove_fit)
-
-        try:
-            for i, param in enumerate(labels['param']):
-                plw.lineEdit_Name[i].setText(param)
-        except:
-            pass
-        
-        try:
-            plw.set_axis_ticks(IOTool.load_pset_file(load_fname, labels['param']))
-        except:
-            pass
-
-#        self.dataAnalyseWidget.refresh_active_set()
-        
-        plw.update_labels(labels['param'])
-        self.dataAnalyseWidget.update_data_and_fit(data)
-#        plw.update_plot(data)
-        self.zoneCentrale.addSubWindow(plw)
-        plw.show()
 
     def emit_axis_lim(self, mode, limits):
         """
