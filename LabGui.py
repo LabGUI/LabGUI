@@ -256,13 +256,13 @@ class LabGuiMain(QtGui.QMainWindow):
 
 ###### DOCK WIDGET SETUP: START PANEL ######
 
-        self.startWidget = sw.StartWidget(parent=self)
-        startDockWidget = QtGui.QDockWidget("Output file and header text", self)
-        startDockWidget.setObjectName("startDockWidget")
-        startDockWidget.setAllowedAreas(
-            Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea)
-        startDockWidget.setWidget(self.startWidget)
-        self.addDockWidget(Qt.RightDockWidgetArea, startDockWidget)
+#        self.startWidget = sw.StartWidget(parent=self)
+#        startDockWidget = QtGui.QDockWidget("Output file and header text", self)
+#        startDockWidget.setObjectName("startDockWidget")
+#        startDockWidget.setAllowedAreas(
+#            Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea)
+#        startDockWidget.setWidget(self.startWidget)
+#        self.addDockWidget(Qt.RightDockWidgetArea, startDockWidget)
 
 ####### DOCK WIDGET SETUP: LOAD PLOT PANEL ######
 #
@@ -439,7 +439,7 @@ class LabGuiMain(QtGui.QMainWindow):
         self.windowMenu.addAction(instDockWidget.toggleViewAction())
         self.windowMenu.addAction(calcDockWidget.toggleViewAction())
         self.windowMenu.addAction(limitsDockWidget.toggleViewAction())
-        self.windowMenu.addAction(startDockWidget.toggleViewAction())  
+#        self.windowMenu.addAction(startDockWidget.toggleViewAction())  
 #        self.windowMenu.addAction(loadPlotDockWidget.toggleViewAction())  
         self.windowMenu.addAction(analyseDataDockWidget.toggleViewAction())
         self.windowMenu.addAction(logDockWidget.toggleViewAction())
@@ -657,7 +657,7 @@ class LabGuiMain(QtGui.QMainWindow):
             self.update_labels()
 
             # read the name of the output file and determine if it exists
-            of_name = str(self.startWidget.outputFileLineEdit.text())
+            of_name = self.widgets['OutputFileWidget'].get_output_fname()
             is_new_file = not os.path.exists(of_name)
 
             # if this file is new, the first 2 lines contain the instrument and
@@ -711,7 +711,7 @@ class LabGuiMain(QtGui.QMainWindow):
             
             #insert the comments written by the user in the first line
             self.output_file = open(self.output_file.name, 'w')
-            self.output_file.write(self.startWidget.get_header_text())
+            self.output_file.write(self.widgets['OutputFileWidget'].get_header_text())
             self.output_file.write(data)
             self.output_file.close()
                        
@@ -745,7 +745,7 @@ class LabGuiMain(QtGui.QMainWindow):
             self.pause_DTT_action.setEnabled(False)
             self.stop_DTT_action.setEnabled(False)
 
-            self.startWidget.increment_filename()
+            self.widgets['OutputFileWidget'].increment_filename()
             
             # just make sure the pause setting is left as false after ther run
             self.datataker.resume()
@@ -933,7 +933,7 @@ class LabGuiMain(QtGui.QMainWindow):
         script_fname=str(self.scriptWidget.scriptFileLineEdit.text())
         IOTool.set_config_setting(IOTool.SCRIPT_ID,script_fname,CONFIG_FILE)
         
-        output_path=os.path.dirname(str(self.startWidget.outputFileLineEdit.text()))+os.path.sep
+        output_path = os.path.dirname(self.widgets['OutputFileWidget'].get_output_fname())+os.path.sep
         IOTool.set_config_setting(IOTool.SAVE_DATA_PATH_ID,output_path,CONFIG_FILE)
         
         if not self.instrument_connexion_setting_fname == "":
