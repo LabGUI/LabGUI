@@ -473,8 +473,8 @@ class ActionManager():
         self.changeYRscale = self.create_action(parent, "Set YR log", slot=self.setYRscale, shortcut=None,
                                                    icon="logY", tip="Set the yr scale to log")
 
-        self.clearPlotAction = self.create_action(parent, "Clear Plot", slot=self.clear_plot, shortcut=None,
-                                                     icon="clear_plot", tip="Clears the data arrays")
+        #self.clearPlotAction = self.create_action(parent, "Clear Plot", slot=self.clear_plot, shortcut=None,
+        #                                            icon="clear_plot", tip="Clears the data arrays")
 
                  
         self.actions = [self.plotToggleXControlAction, self.plotToggleLControlAction, 
@@ -483,8 +483,8 @@ class ActionManager():
                         self.plotDragZoomAction, self.plotDragZoomAction,
                         self.plotPanAction, self.plotSelectAction,
                         self.plotClearSelectAction, self.plotClearSelectAction,
-                        self.changeXscale, self.changeYscale, self.changeYRscale,
-                        self.clearPlotAction]
+                        self.changeXscale, self.changeYscale, self.changeYRscale]
+                       # self.clearPlotAction]
 
         self.saveFigAction = self.create_action(parent, "&Save Figure", slot=self.save_fig, shortcut=QtGui.QKeySequence.Save,
                                                        icon=None, tip="Save the current figure")

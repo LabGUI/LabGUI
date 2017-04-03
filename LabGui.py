@@ -332,8 +332,8 @@ class LabGuiMain(QtGui.QMainWindow):
             self.plotMenu.addAction(action)
             self.plotToolbar.addAction(action)
 
-        self.clearPlotAction = QtTools.create_action(self, "Clear Plot", slot=self.clear_plot, shortcut=None,
-                                                     icon="clear_plot", tip="Clears the data arrays")
+        self.clearPlotAction = QtTools.create_action(self, "Clear All Plots", slot=self.clear_plot, shortcut=None,
+                                                     icon="clear_plot", tip="Clears the live data arrays")
                                                      
         self.removeFitAction = QtTools.create_action(self, "Remove Fit", slot=self.remove_fit, shortcut=None,
                                                      icon="clear", tip="Reset the fit data to an empty array")
