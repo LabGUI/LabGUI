@@ -475,6 +475,7 @@ class ActionManager():
 
         self.clearPlotAction = self.create_action(parent, "Clear Plot", slot=self.clear_plot, shortcut=None,
                                                      icon="clear_plot", tip="Clears the data arrays")
+
                  
         self.actions = [self.plotToggleXControlAction, self.plotToggleLControlAction, 
                         self.plotToggleRControlAction, self.plotAutoScaleXAction, 
@@ -484,7 +485,10 @@ class ActionManager():
                         self.plotClearSelectAction, self.plotClearSelectAction,
                         self.changeXscale, self.changeYscale, self.changeYRscale,
                         self.clearPlotAction]
-    
+
+        self.saveFigAction = self.create_action(parent, "&Save Figure", slot=self.save_fig, shortcut=QtGui.QKeySequence.Save,
+                                                       icon=None, tip="Save the current figure")
+                                                       
     def create_action(self, parent, text, slot=None, shortcut=None, icon=None, tip=None, checkable=False, signal="triggered()"):
         action = QAction(text, parent)
         if icon is not None:
@@ -613,6 +617,11 @@ class ActionManager():
         elif curscale == 'linear':
             axis.set_yscale('log')
 
+    def save_fig(self):
+        fname = str(QtGui.QFileDialog.getSaveFileName(
+            self.parent, 'Open settings file', './'))
+        if fname:
+            self.current_widget.figure.savefig(fname, dpi = 600)
     
     def remove_fit(self):
         self.current_widget.emit(SIGNAL("remove_fit()"))

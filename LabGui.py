@@ -290,6 +290,12 @@ class LabGuiMain(QtGui.QMainWindow):
 #        widget = Tool.SimpleConnectWidget()
 #        widget.show()
 
+#### set up menus and toolbars
+
+        # all actions related to the figure widget (mplZoomWidget.py) are 
+        # set up in the actionmanager
+        self.action_manager = mplZoomWidget.ActionManager(self)
+        
 ###### FILE MENU SETUP ######
 
         self.fileSaveSettingsAction = QtTools.create_action(self, "Save Instrument Settings", slot=self.file_save_settings, shortcut=QtGui.QKeySequence.SaveAs,
@@ -300,14 +306,11 @@ class LabGuiMain(QtGui.QMainWindow):
 
         self.fileLoadDataAction = QtTools.create_action(self, "Load Previous Data", slot=self.file_load_data, shortcut=None,
                                                             icon=None, tip="Load previous data from file")
-                                                            
-        self.fileSaveFigAction = QtTools.create_action(self, "&Save Figure", slot=self.file_save_fig, shortcut=QtGui.QKeySequence.Save,
-                                                       icon=None, tip="Save the current figure")
+                                                                    
         """this is not working I will leave it commented right now"""
 #        self.filePrintAction = QtTools.create_action(self, "&Print Report", slot=self.file_print, shortcut=QtGui.QKeySequence.Print,
 #                                                     icon=None, tip="Print the figure along with relevant information")
-        
-        
+                
         self.fileSaveCongfigAction = QtTools.create_action(self, "Save current configuration", slot=self.file_save_config, shortcut=None,
                                                      icon=None, tip="Save the setting file path, the script path and the data output path into the config file")
         self.fileMenu = self.menuBar().addMenu("File")
@@ -315,7 +318,7 @@ class LabGuiMain(QtGui.QMainWindow):
         self.fileMenu.addAction(self.fileSaveSettingsAction)
         self.fileMenu.addAction(self.fileLoadDataAction)
 #        self.fileMenu.addAction(self.filePrintAction)
-        self.fileMenu.addAction(self.fileSaveFigAction)
+        self.fileMenu.addAction(self.action_manager.saveFigAction)
         self.fileMenu.addAction(self.fileSaveCongfigAction)
 
 ###### PLOT MENU + TOOLBAR SETUP ######
@@ -324,9 +327,7 @@ class LabGuiMain(QtGui.QMainWindow):
         self.plotToolbar = self.addToolBar("Plot")
         self.plotToolbar.setObjectName("PlotToolBar")
         
-        # all actions related to the figure widget (mplZoomWidget.py) are 
-        # set up in the actionmanager
-        self.action_manager = mplZoomWidget.ActionManager(self)
+
         for action in self.action_manager.actions:
             self.plotMenu.addAction(action)
             self.plotToolbar.addAction(action)
@@ -941,7 +942,7 @@ class LabGuiMain(QtGui.QMainWindow):
                 # this is only used by Print Figure (which doesn't work anyways)
                 self.current_pdw = current_widget
                 
-                # this is only used by saveFig
+                # this was only used by saveFig, at least within this file.
                 self.fig = current_widget.fig
         else:
             # 20130722 it runs this part of the code everytime I click
@@ -958,12 +959,6 @@ class LabGuiMain(QtGui.QMainWindow):
 
     def remove_fit(self):
         self.emit(SIGNAL("remove_fit()"))
-
-    def file_save_fig(self):
-        fname = str(QtGui.QFileDialog.getSaveFileName(
-            self, 'Open settings file', './'))
-        if fname:
-            self.fig.savefig(fname)
 
     def file_save_config(self):
         """
