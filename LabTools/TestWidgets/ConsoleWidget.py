@@ -17,6 +17,7 @@ import sys
 import PyQt4.QtGui as QtGui
 import PyQt4.QtCore as QtCore
 from types import MethodType
+import logging
 
 from LabTools.Display import QtTools
 
@@ -28,6 +29,13 @@ class ConsoleWidget(QtGui.QWidget):
 
         self.consoleTextEdit = QtGui.QTextEdit()
         self.consoleTextEdit.setReadOnly(True)
+
+        self.verticalLayout = QtGui.QVBoxLayout()
+
+        self.verticalLayout.addWidget(self.consoleTextEdit)
+        
+        self.setLayout(self.verticalLayout)
+
 
 
     def console_text(self, new_text = None):
@@ -91,7 +99,6 @@ def update_console(parent, stri):
 
     stri = str(stri)
     new_text = parent.widgets['ConsoleWidget'].console_text() + '\n' + stri
-
 
     line_list = new_text.splitlines()
     N_lines = min(MAX_LINES, len(line_list))
