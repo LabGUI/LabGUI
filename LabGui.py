@@ -42,10 +42,10 @@ from LabTools.Widgets import data_management
 from LabTools.Widgets import InstrumentWindow as CW
 #rom abTools.Widgets import CommandWindow as CW
 from LabTools.Widgets import CalcWindow
-from LabTools.Widgets import start_widget as sw
+#from LabTools.Widgets import start_widget as sw
 from LabTools.Widgets import script_widget
-from LabTools.Widgets import load_plot_widget as lpw
-from LabTools.Widgets import LimitsWidget as lw
+#from LabTools.Widgets import load_plot_widget as lpw
+#from LabTools.Widgets import LimitsWidget as lw
 from LabTools.Fitting import analyse_data_widget as adw
 from LabTools.DataStructure import LabeledData
 #FORMAT ='%(asctime)s - %(module)s - %(levelname)s - %(lineno)d -%(message)s'
@@ -186,29 +186,6 @@ class LabGuiMain(QtGui.QMainWindow):
 
 
 
-        self.widgets = {}
-        
-        cur_path = os.path.dirname(__file__)
-        #    widget_path = os.path.join(cur_path,'LabTools')
-        #    widget_path = os.path.join(widget_path,'Widgets')
-
-        widget_path = os.path.join(cur_path,'LabTools')
-        widget_path = os.path.join(widget_path,'TestWidgets')
-
-        widgets_list = [o for o in os.listdir(widget_path) 
-                        if o.endswith(".py") and not "__init__" in o]
-
-        
-        for widget in widgets_list:
-            
-            widget_name = widget.rstrip('.py')
-            print widget_name
-            widget_module = import_module("." + widget_name, 
-                                          package = LABWIDGETS_PACKAGE_NAME)
-            print widget_module.__file__
-            print widget_module
-            
-            self.add_widget(widget_module.add_widget_into_main)
 
 
 
@@ -288,13 +265,13 @@ class LabGuiMain(QtGui.QMainWindow):
 
 ###### DOCK WIDGET SETUP: LIMITS MANAGMENT PANEL ######
 
-        self.limitsWidget = lw.LimitsWidget(parent=self)
-        limitsDockWidget = QtGui.QDockWidget("Limits", self)
-        limitsDockWidget.setObjectName("limitsWidget")
-        limitsDockWidget.setAllowedAreas(
-            Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea)
-        limitsDockWidget.setWidget(self.limitsWidget)
-        self.addDockWidget(Qt.RightDockWidgetArea, limitsDockWidget)
+#        self.limitsWidget = lw.LimitsWidget(parent=self)
+#        limitsDockWidget = QtGui.QDockWidget("Limits", self)
+#        limitsDockWidget.setObjectName("limitsWidget")
+#        limitsDockWidget.setAllowedAreas(
+#            Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea)
+#        limitsDockWidget.setWidget(self.limitsWidget)
+#        self.addDockWidget(Qt.RightDockWidgetArea, limitsDockWidget)
 
 ###### DOCK WIDGET SETUP: CONSOLE PANEL ######
 
@@ -428,7 +405,37 @@ class LabGuiMain(QtGui.QMainWindow):
             self, "Add a PyQtplot", slot=self.create_pqtw, shortcut=None, icon=None, tip="Add a pyqt window")
 
         # self.zoneCentrale.addSubWindow(self.sw)
+
         self.windowMenu = self.menuBar().addMenu("&Window")
+
+
+        self.widgets = {}
+        
+        cur_path = os.path.dirname(__file__)
+        #    widget_path = os.path.join(cur_path,'LabTools')
+        #    widget_path = os.path.join(widget_path,'Widgets')
+
+        widget_path = os.path.join(cur_path,'LabTools')
+        widget_path = os.path.join(widget_path,'TestWidgets')
+
+        widgets_list = [o for o in os.listdir(widget_path) 
+                        if o.endswith(".py") and not "__init__" in o]
+
+        
+        for widget in widgets_list:
+            
+            widget_name = widget.rstrip('.py')
+            print widget_name
+            widget_module = import_module("." + widget_name, 
+                                          package = LABWIDGETS_PACKAGE_NAME)
+            print widget_module.__file__
+            print widget_module
+            
+            self.add_widget(widget_module.add_widget_into_main)
+
+
+
+
         self.windowMenu.addAction(self.add_pdw)
         try:
             import PyQTWindow
@@ -438,7 +445,7 @@ class LabGuiMain(QtGui.QMainWindow):
             
         self.windowMenu.addAction(instDockWidget.toggleViewAction())
         self.windowMenu.addAction(calcDockWidget.toggleViewAction())
-        self.windowMenu.addAction(limitsDockWidget.toggleViewAction())
+#        self.windowMenu.addAction(limitsDockWidget.toggleViewAction())
 #        self.windowMenu.addAction(startDockWidget.toggleViewAction())  
 #        self.windowMenu.addAction(loadPlotDockWidget.toggleViewAction())  
         self.windowMenu.addAction(analyseDataDockWidget.toggleViewAction())
@@ -479,7 +486,7 @@ class LabGuiMain(QtGui.QMainWindow):
             # the objects are not actually deleted, just hidden
             analyseDataDockWidget.hide()   
 #            loadPlotDockWidget.hide()
-            limitsDockWidget.hide()
+#            limitsDockWidget.hide()
             calcDockWidget.hide()
             simpleconnectDockWidget.hide()
 

@@ -14,12 +14,6 @@ from PyQt4.QtCore import SIGNAL, Qt
 
 from LabTools.IO import IOTool
 
-from types import MethodType
-
-from LabTools.IO import IOTool
-
-import numpy as np
-
 import logging
 
 
@@ -74,7 +68,7 @@ class OutputFileWidget(QtGui.QWidget):
         # search for the regular expression that corresponds to the incrementable
         # file name
         p = re.compile(r"_[0-9]{3}[.]dat$")
-        fname = str(self.outputFileLineEdit.text())
+        fname = self.get_output_fname()
         found = p.findall(fname)
         print(("found:" + str(found)))
         if not found == []:
@@ -95,33 +89,27 @@ class OutputFileWidget(QtGui.QWidget):
         
         return str(self.outputFileLineEdit.text())
 
-#        self.startWidget = sw.StartWidget(parent=self)
-#        startDockWidget = QtGui.QDockWidget("Output file and header text", self)
-#        startDockWidget.setObjectName("startDockWidget")
-#        startDockWidget.setAllowedAreas(
-#            Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea)
-#        startDockWidget.setWidget(self.startWidget)
-#        self.addDockWidget(Qt.RightDockWidgetArea, startDockWidget)
-#         of_name = str(self.widgets["OutputFile"].outputFileLineEdit.text()
+
 def add_widget_into_main(parent):
+    """add a widget into the main window of LabGuiMain
+    
+    create a QDock widget and store a reference to the widget
+    """
     
     mywidget = OutputFileWidget(parent = parent)
-    startDockWidget = QtGui.QDockWidget("Output file and header text", parent)
-    startDockWidget.setObjectName("OutputFileDockWidget")
-    startDockWidget.setAllowedAreas(
+    outDockWidget = QtGui.QDockWidget("Output file and header text", parent)
+    outDockWidget.setObjectName("OutputFileDockWidget")
+    outDockWidget.setAllowedAreas(
         Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea)
         
+    #fill the dictionnary with the widgets added into LabGuiMain
     parent.widgets['OutputFileWidget'] = mywidget
     
-    startDockWidget.setWidget(mywidget)
-    parent.addDockWidget(Qt.RightDockWidgetArea, startDockWidget)    
-    
-    
-#    parent.create_plw = MethodType(create_plw_func, parent, parent.__class__)
-#    
-#    parent.connect(parent.widgets["loadPlotWidget"].plotButton,
-#                 SIGNAL("clicked()"), parent.create_plw)
+    outDockWidget.setWidget(mywidget)
+    parent.addDockWidget(Qt.RightDockWidgetArea, outDockWidget)    
 
+    #Enable the toggle view action
+    parent.windowMenu.addAction(outDockWidget.toggleViewAction())
 
 if __name__ == "__main__":
 
