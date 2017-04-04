@@ -275,19 +275,19 @@ class LabGuiMain(QtGui.QMainWindow):
 
 ###### DOCK WIDGET SETUP: CONSOLE PANEL ######
 
-        self.logTextEdit = QtGui.QTextEdit()
-        self.logTextEdit.setReadOnly(True)
-        logDockWidget = QtGui.QDockWidget("Output Console", self)
-        logDockWidget.setObjectName("LogDockWidget")
-        logDockWidget.setAllowedAreas(
-            Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea | Qt.BottomDockWidgetArea)
-        logDockWidget.setWidget(self.logTextEdit)
-        self.addDockWidget(Qt.BottomDockWidgetArea, logDockWidget)
-
-        # redirect print statements to show a copy on "console"
-        sys.stdout = QtTools.printerceptor(self)
-        self.connect(self, SIGNAL(
-            "print_to_console(PyQt_PyObject)"), self.update_console)
+#        self.logTextEdit = QtGui.QTextEdit()
+#        self.logTextEdit.setReadOnly(True)
+#        logDockWidget = QtGui.QDockWidget("Output Console", self)
+#        logDockWidget.setObjectName("LogDockWidget")
+#        logDockWidget.setAllowedAreas(
+#            Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea | Qt.BottomDockWidgetArea)
+#        logDockWidget.setWidget(self.logTextEdit)
+#        self.addDockWidget(Qt.BottomDockWidgetArea, logDockWidget)
+#
+#        # redirect print statements to show a copy on "console"
+#        sys.stdout = QtTools.printerceptor(self)
+#        self.connect(self, SIGNAL(
+#            "print_to_console(PyQt_PyObject)"), self.update_console)
 
 ###### DOCK WIDGET SETUP: INSTRUMENT SIMPLE CONNECT ######
 
@@ -449,7 +449,7 @@ class LabGuiMain(QtGui.QMainWindow):
 #        self.windowMenu.addAction(startDockWidget.toggleViewAction())  
 #        self.windowMenu.addAction(loadPlotDockWidget.toggleViewAction())  
         self.windowMenu.addAction(analyseDataDockWidget.toggleViewAction())
-        self.windowMenu.addAction(logDockWidget.toggleViewAction())
+#        self.windowMenu.addAction(logDockWidget.toggleViewAction())
         self.windowMenu.addAction(simpleconnectDockWidget.toggleViewAction())
         
 ###### OPTION MENU SETUP ######
@@ -1001,20 +1001,20 @@ class LabGuiMain(QtGui.QMainWindow):
    
         
 
-    def update_console(self, stri):
-  
-        MAX_LINES = 50
-
-        new_text = str(self.logTextEdit.toPlainText()).rstrip() + '\n' + stri
-        stri = str(stri)
-
-        line_list = new_text.splitlines()
-        N_lines = min(MAX_LINES, len(line_list))
-
-        new_text = '\n'.join(line_list[-N_lines:])
-        self.logTextEdit.setPlainText(new_text)
-        sb = self.logTextEdit.verticalScrollBar()
-        sb.setValue(sb.maximum())
+#    def update_console(self, stri):
+#  
+#        MAX_LINES = 50
+#
+#        new_text = str(self.logTextEdit.toPlainText()).rstrip() + '\n' + stri
+#        stri = str(stri)
+#
+#        line_list = new_text.splitlines()
+#        N_lines = min(MAX_LINES, len(line_list))
+#
+#        new_text = '\n'.join(line_list[-N_lines:])
+#        self.logTextEdit.setPlainText(new_text)
+#        sb = self.logTextEdit.verticalScrollBar()
+#        sb.setValue(sb.maximum())
 
 if __name__ == "__main__":
     print("Launched LabGui")
