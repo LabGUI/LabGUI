@@ -44,10 +44,6 @@ class MatplotlibZoomWidget(MatplotlibWidget):
 
         self.rect_zoom_on = True
 
-        self.control_X_on = True
-        self.control_Y_on = True
-        self.control_R_on = usingR
-
         self.ZOOM_MODE = ZOOM_MODE
         self.PAN_MODE = PAN_MODE
         self.SELECT_MODE = SELECT_MODE
@@ -86,11 +82,6 @@ class MatplotlibZoomWidget(MatplotlibWidget):
             self.setCursor(QtGui.QCursor(QtCore.Qt.ArrowCursor))
         else:
             self.setCursor(QtGui.QCursor(QtCore.Qt.ArrowCursor))
-
-    def setActiveAxes(self, control_X_on=True, control_Y_on=True, control_R_on=False):
-        self.control_X_on = control_X_on
-        self.control_Y_on = control_Y_on
-        self.control_R_on = control_R_on
 
     def autoscale_axes(self, axes=None, scale_x=True, scale_y=True, span_x=0,
                        margin_x=0, margin_y=0.05):
@@ -189,6 +180,8 @@ class MatplotlibZoomWidget(MatplotlibWidget):
 
     def mousePressEvent(self, event):
         if event.button() == QtCore.Qt.LeftButton:
+            print "MouseMode:", self.mouseMode
+            print "AutoScale", self.autoscale_X_on, self.autoscale_L_on, self.autoscale_R_on
             if self.mouseMode == self.PAN_MODE:
                 if self.mouseMode == self.PAN_MODE:
                     self.setCursor(QtGui.QCursor(QtCore.Qt.ClosedHandCursor))
@@ -225,15 +218,15 @@ class MatplotlibZoomWidget(MatplotlibWidget):
         if event.buttons() == QtCore.Qt.LeftButton:
 
             if self.mouseMode == self.PAN_MODE:
-                if self.control_X_on:
+                if not self.autoscale_X_on:
                     new_lim = convert_lim(
                         self.axes.xaxis, self.__XLim_0 + self.__xScale * (event.x() - self.__mousePressX))
                     self.axes.set_xlim(new_lim)
-                if self.control_Y_on:
+                if not self.autoscale_L_on:
                     new_lim = convert_lim(
                         self.axes.yaxis, self.__YLim_0_L + self.__yScale_L * (event.y() - self.__mousePressY))
                     self.axes.set_ylim(new_lim)
-                if self.control_R_on and self.usingR:
+                if not self.autoscale_R_on and self.usingR:
                     new_lim = convert_lim(
                         self.axesR.yaxis, self.__YLim_0_R + self.__yScale_R * (event.y() - self.__mousePressY))
                     self.axesR.set_ylim(new_lim)
@@ -335,9 +328,9 @@ class MatplotlibZoomWidget(MatplotlibWidget):
         mouse_on_plot = (X_0 > 0 and X_0 < 1) and (Y_0 > 0 and Y_0 < 1)
 
         if mouse_on_plot:
-            do_scale_X = self.control_X_on or event.buttons() == QtCore.Qt.LeftButton
-            do_scale_Y = self.control_Y_on
-            do_scale_R = self.control_R_on
+            do_scale_X = not self.autoscale_X_on or event.buttons() == QtCore.Qt.LeftButton
+            do_scale_Y = not self.autoscale_L_on
+            do_scale_R = not self.autoscale_R_on
         else:
             do_scale_X = (X_0 > 0 and Y_0 < 0)
             do_scale_Y = (X_0 < 0 and Y_0 > 0)
@@ -436,15 +429,6 @@ class ActionManager():
     def __init__(self, parent):
         self.parent = parent
         
-        self.plotToggleLControlAction = self.create_action(parent, "Toggle &Left Axes Control", slot=self.toggleLControl, shortcut=QtGui.QKeySequence("Ctrl+L"),
-                                                              icon="toggleLeft", tip="Toggle whether the mouse adjusts Left axes pan and zoom", checkable=True)
-
-        self.plotToggleRControlAction = self.create_action(parent, "Toggle &Right Axes Control", slot=self.toggleRControl, shortcut=QtGui.QKeySequence("Ctrl+R"),
-                                                              icon="toggleRight", tip="Toggle whether the mouse adjusts right axes pan and zoom", checkable=True)
-
-        self.plotToggleXControlAction = self.create_action(parent, "Toggle &X Axes Control", slot=self.toggleXControl, shortcut=QtGui.QKeySequence("Ctrl+X"),
-                                                              icon="toggleX", tip="Toggle whether the mouse adjusts x axis pan and zoom", checkable=True)
-
         self.plotAutoScaleXAction = self.create_action(parent, "Auto Scale X", slot=self.toggleAutoScaleX, shortcut=QtGui.QKeySequence("Ctrl+A"),
                                                           icon="toggleAutoScaleX", tip="Turn autoscale X on or off", checkable=True)
 
@@ -477,8 +461,7 @@ class ActionManager():
         #                                            icon="clear_plot", tip="Clears the data arrays")
 
                  
-        self.actions = [self.plotToggleXControlAction, self.plotToggleLControlAction, 
-                        self.plotToggleRControlAction, self.plotAutoScaleXAction, 
+        self.actions = [self.plotAutoScaleXAction, 
                         self.plotAutoScaleLAction, self.plotAutoScaleRAction,
                         self.plotDragZoomAction, self.plotDragZoomAction,
                         self.plotPanAction, self.plotSelectAction,
@@ -506,11 +489,7 @@ class ActionManager():
         
     def update_current_widget(self, current_widget):
         self.current_widget = current_widget
-        
-        self.plotToggleXControlAction.setChecked(current_widget.control_X_on)
-        self.plotToggleLControlAction.setChecked(current_widget.control_Y_on)
-        self.plotToggleRControlAction.setChecked(current_widget.control_R_on)
-        
+
         mode = current_widget.mouseMode
         self.plotDragZoomAction.setChecked(mode==current_widget.ZOOM_MODE)
         self.plotPanAction.setChecked(mode==current_widget.PAN_MODE)
@@ -520,40 +499,13 @@ class ActionManager():
         self.plotAutoScaleLAction.setChecked(current_widget.autoscale_L_on)
         self.plotAutoScaleRAction.setChecked(current_widget.autoscale_R_on)
 
-    def toggleLControl(self):
-        if self.plotToggleLControlAction.isChecked():
-            self.plotAutoScaleLAction.setChecked(False)
-        self.updateZoomSettings()
-
-    def toggleRControl(self):
-        if self.plotToggleRControlAction.isChecked():
-            self.plotAutoScaleRAction.setChecked(False)
-        self.updateZoomSettings()
-
-    def toggleXControl(self):
-        if self.plotToggleXControlAction.isChecked():
-            self.plotAutoScaleXAction.setChecked(False)
-        self.updateZoomSettings()
-
     def toggleAutoScaleX(self):
-        if self.plotAutoScaleXAction.isChecked():
-            self.plotToggleXControlAction.setChecked(False)
-        else:
-            self.plotToggleXControlAction.setChecked(True)
         self.updateZoomSettings()
 
     def toggleAutoScaleL(self):
-        if self.plotAutoScaleLAction.isChecked():
-            self.plotToggleLControlAction.setChecked(False)
-        else:
-            self.plotToggleLControlAction.setChecked(True)
         self.updateZoomSettings()
 
     def toggleAutoScaleR(self):
-        if self.plotAutoScaleRAction.isChecked():
-            self.plotToggleRControlAction.setChecked(False)
-        else:
-            self.plotToggleRControlAction.setChecked(True)
         self.updateZoomSettings()
 
     def toggleDragZoom(self):
@@ -627,9 +579,7 @@ class ActionManager():
         self.current_widget.emit(SIGNAL("remove_fit()"))
 
     def updateZoomSettings(self):
-        self.current_widget.setActiveAxes(self.plotToggleXControlAction.isChecked(),
-                                     self.plotToggleLControlAction.isChecked(),
-                                     self.plotToggleRControlAction.isChecked())
+
         if self.plotDragZoomAction.isChecked():
             self.current_widget.set_mouse_mode(self.current_widget.ZOOM_MODE)
         elif self.plotPanAction.isChecked():
