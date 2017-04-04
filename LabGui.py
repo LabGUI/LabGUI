@@ -301,13 +301,6 @@ class LabGuiMain(QtGui.QMainWindow):
         self.plotMenu.addAction(self.removeFitAction)
 
 
-
-
-        
-#        self.scriptWidget = script_widget.ScriptWidget()
-        
-#        self.instToolbar.addWidget(self.scriptWidget)
-
 ###### INSTRUMENT MENU SETUP ######
         self.read_DTT = QtTools.create_action(
             self, "Read", slot=self.single_measure_DTT, shortcut=None, icon=None, tip="Take a one shot measure with DTT")
@@ -322,11 +315,6 @@ class LabGuiMain(QtGui.QMainWindow):
         self.instMenu.addAction(self.read_DTT)
         self.instMenu.addAction(self.connect_hub)
         self.instMenu.addAction(self.refresh_ports_list_action)
-        
-       # self.connect(self.startWidget.startStopButton,
-       #              SIGNAL("clicked()"), self.toggle_DTT)
-#        self.connect(self.loadPlotWidget.plotButton,
-#                     SIGNAL("clicked()"), self.create_plw)
 
 
 ###### WINDOW MENU SETUP ######
@@ -353,14 +341,7 @@ class LabGuiMain(QtGui.QMainWindow):
             self.windowMenu.addAction(self.add_pqtw)
         except:
             logging.info("pyqtgraph is unable to load, the pyqt window option is disabled")
-            
-#        self.windowMenu.addAction(instDockWidget.toggleViewAction())
-#        self.windowMenu.addAction(calcDockWidget.toggleViewAction())
-#        self.windowMenu.addAction(limitsDockWidget.toggleViewAction())
-#        self.windowMenu.addAction(startDockWidget.toggleViewAction())  
-#        self.windowMenu.addAction(loadPlotDockWidget.toggleViewAction())  
-#        self.windowMenu.addAction(analyseDataDockWidget.toggleViewAction())
-#        self.windowMenu.addAction(logDockWidget.toggleViewAction())
+
         self.windowMenu.addAction(simpleconnectDockWidget.toggleViewAction())
         
 ###### OPTION MENU SETUP ######
@@ -395,10 +376,6 @@ class LabGuiMain(QtGui.QMainWindow):
             logging.info('Using default window configuration') # no biggie - probably means settings haven't been saved on this machine yet
             #hide some of the advanced widgets so they don't show for new users
             # the objects are not actually deleted, just hidden
-#            analyseDataDockWidget.hide()   
-#            loadPlotDockWidget.hide()
-#            limitsDockWidget.hide()
-#            calcDockWidget.hide()
             simpleconnectDockWidget.hide()
 
 
@@ -725,48 +702,7 @@ class LabGuiMain(QtGui.QMainWindow):
 
         self.emit(SIGNAL("data_array_updated(PyQt_PyObject)"), self.data_array)
 
-#    def connect_instrument_hub(self, signal=True):
-#        """
-#            When the button "Connect" is clicked this method actualise the InstrumentHub
-#            according to what the user choosed in the command window. 
-#            It cannot change while the DataTaker is running though
-#        """
-#        #@ISSUE
-#        # I should add something here to avoid that we reconnect the instrument hub if the # of instrument is different
-#        # and also not allow to take data if the current file header doesn't
-#        # correspond to the intrument hub   
-#
-#        if signal:
-#            [instr_name_list, dev_list, param_list] = self.collect_instruments()
-#            logging.debug([instr_name_list, dev_list, param_list])
-#            
-#            actual_instrument_number = len(
-#                self.instr_hub.get_instrument_list())
-#            cmdwin_instrument_number = len(instr_name_list)
-#            # if the datataker is running the user should not modify the length
-#            # of the instrument list and connect it
-#            connect = False
-#            if self.isrunning():
-#                if actual_instrument_number == cmdwin_instrument_number or actual_instrument_number == 0:
-#                    connect = True
-#            else:
-#                connect = True
-#
-#            if connect:
-#                print("Connect instrument hub...")
-#                self.instr_hub.connect_hub(
-#                    instr_name_list, dev_list, param_list)
-#                print("...instrument hub connected")
-#                self.emit(
-#                    SIGNAL("instrument_hub_connected(PyQt_PyObject)"), param_list)
-#            else:
-#                print()
-#                logging.warning("You cannot connect a number of instrument different than " + str(actual_instrument_number) + " when the datataker is running")
-#                print()
-#
-#            logging.debug("The instrument list : "+str(self.instr_hub.get_instrument_list()))
-##           show a plot by default
-#            self.create_pdw()
+#   
 
     def collect_instruments(self):
         return self.widgets['InstrumentWidget'].collect_device_info()
@@ -776,38 +712,6 @@ class LabGuiMain(QtGui.QMainWindow):
 
         self.widgets['InstrumentWidget'].refresh_cbb_port()
 
-#    def connect_instrument(self, connection_param):
-#        """
-#            When the button "Connect" is clicked this method actualise the InstrumentHub
-#            according to what the user choosed in the command window. 
-#            It cannot change while the DataTaker is running though
-#        """
-#        [instr_name, dev_port, param] = connection_param
-#
-##        cmdwin_instrument_number=len(instr_name_list)
-#        # if the datataker is running the user should not modify the length of
-#        # the instrument list and connect it
-#        connect = False
-#        if self.isrunning():
-#            print("As data are being recorded now, you are not allowed to connect " + instr_name + " to " + dev_port)
-##            if actual_instrument_number == cmdwin_instrument_number or actual_instrument_number==0:
-##                connect=True
-#        else:
-#            connect = True
-#
-#        actual_instrument_number = len(self.instr_hub.get_instrument_list())
-#        print("number of instruments connected (b)", actual_instrument_number)
-#        if connect:
-#            print("Connect single instrument...")
-#            self.instr_hub.connect_instrument(instr_name, dev_port, param)
-#            print("...single instrument connected")
-##«            self.emit(SIGNAL("instrument_hub_connected(PyQt_PyObject)"),None)
-#        else:
-#            print()
-#            print("You cannot connect a number of instrument different than " + str(actual_instrument_number) + " when the datataker is running")
-#            print()
-#        actual_instrument_number = len(self.instr_hub.get_instrument_list())
-#        print("number of instruments connected (a)", actual_instrument_number)
 
     def update_current_window(self, x):
         ''' this changes what self.<object> refers to so that the same shared toolbars can modify whichever plot window has focus right now '''        
@@ -913,22 +817,6 @@ class LabGuiMain(QtGui.QMainWindow):
         IOTool.set_config_setting(IOTool.DEBUG_ID,self.DEBUG,CONFIG_FILE)
         self.emit(SIGNAL("DEBUG_mode_changed(bool)"),self.DEBUG)
    
-        
-
-#    def update_console(self, stri):
-#  
-#        MAX_LINES = 50
-#
-#        new_text = str(self.logTextEdit.toPlainText()).rstrip() + '\n' + stri
-#        stri = str(stri)
-#
-#        line_list = new_text.splitlines()
-#        N_lines = min(MAX_LINES, len(line_list))
-#
-#        new_text = '\n'.join(line_list[-N_lines:])
-#        self.logTextEdit.setPlainText(new_text)
-#        sb = self.logTextEdit.verticalScrollBar()
-#        sb.setValue(sb.maximum())
 
 if __name__ == "__main__":
     print("Launched LabGui")
