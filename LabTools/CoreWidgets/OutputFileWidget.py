@@ -9,38 +9,40 @@ License: see LICENSE.txt file
 import sys
 import re
 
-from PyQt4.QtGui import *
-from PyQt4.QtCore import SIGNAL
+import PyQt4.QtGui as QtGui
+from PyQt4.QtCore import SIGNAL, Qt
 
 from LabTools.IO import IOTool
 
+import logging
 
 
-class StartWidget(QWidget):
 
-    def __init__(self, parent=None):
-        super(StartWidget, self).__init__(parent)
+class OutputFileWidget(QtGui.QWidget):
+
+    def __init__(self, parent = None):
+        super(OutputFileWidget, self).__init__(parent)
 
         # main layout of the form is the verticallayout
 
-        self.verticalLayout = QVBoxLayout()
+        self.verticalLayout = QtGui.QVBoxLayout()
         self.verticalLayout.setObjectName("verticalLayout")
 
         #moved the script stuff to a separate widget that lives in the toolbar
 
-        self.outputLayout = QHBoxLayout()
+        self.outputLayout = QtGui.QHBoxLayout()
         self.outputLayout.setObjectName("outputLayout")
-        self.outputFileLabel = QLabel(self)
+        self.outputFileLabel = QtGui.QLabel(self)
         self.outputFileLabel.setText("Output File:")
-        self.outputFileLineEdit = QLineEdit(self)
-        self.outputFileButton = QPushButton(self)
+        self.outputFileLineEdit = QtGui.QLineEdit(self)
+        self.outputFileButton = QtGui.QPushButton(self)
         self.outputFileButton.setText("Browse")
         self.outputLayout.addWidget(self.outputFileLabel)
         self.outputLayout.addWidget(self.outputFileLineEdit)
         self.outputLayout.addWidget(self.outputFileButton)
         self.verticalLayout.addLayout(self.outputLayout)
 
-        self.headerTextEdit = QPlainTextEdit("")
+        self.headerTextEdit = QtGui.QPlainTextEdit("")
         fontsize = self.headerTextEdit.fontMetrics()
         self.headerTextEdit.setFixedHeight(fontsize.lineSpacing() * 8)
         self.verticalLayout.addWidget(self.headerTextEdit)
@@ -54,10 +56,10 @@ class StartWidget(QWidget):
         self.connect(self.outputFileButton, SIGNAL(
             'clicked()'), self.on_outputFileButton_clicked)
 
-        self.setSizePolicy(QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Maximum))
+        self.setSizePolicy(QtGui.QSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Maximum))
         
     def on_outputFileButton_clicked(self):
-        fname = str(QFileDialog.getSaveFileName(self, 'Save output file as',
+        fname = str(QtGui.QFileDialog.getSaveFileName(self, 'Save output file as',
                                                 self.outputFileLineEdit.text()))
         if fname:
             self.outputFileLineEdit.setText(fname)
@@ -66,7 +68,7 @@ class StartWidget(QWidget):
         # search for the regular expression that corresponds to the incrementable
         # file name
         p = re.compile(r"_[0-9]{3}[.]dat$")
-        fname = str(self.outputFileLineEdit.text())
+        fname = self.get_output_fname()
         found = p.findall(fname)
         print(("found:" + str(found)))
         if not found == []:
@@ -83,9 +85,35 @@ class StartWidget(QWidget):
         else:
             return ""
 
+    def get_output_fname(self):
+        
+        return str(self.outputFileLineEdit.text())
+
+
+def add_widget_into_main(parent):
+    """add a widget into the main window of LabGuiMain
+    
+    create a QDock widget and store a reference to the widget
+    """
+    
+    mywidget = OutputFileWidget(parent = parent)
+    outDockWidget = QtGui.QDockWidget("Output file and header text", parent)
+    outDockWidget.setObjectName("OutputFileDockWidget")
+    outDockWidget.setAllowedAreas(
+        Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea)
+        
+    #fill the dictionnary with the widgets added into LabGuiMain
+    parent.widgets['OutputFileWidget'] = mywidget
+    
+    outDockWidget.setWidget(mywidget)
+    parent.addDockWidget(Qt.RightDockWidgetArea, outDockWidget)    
+
+    #Enable the toggle view action
+    parent.windowMenu.addAction(outDockWidget.toggleViewAction())
+
 if __name__ == "__main__":
 
-    app = QApplication(sys.argv)
-    ex = StartWidget()
+    app = QtGui.QApplication(sys.argv)
+    ex = OutputFileWidget()
     ex.show()
     sys.exit(app.exec_())

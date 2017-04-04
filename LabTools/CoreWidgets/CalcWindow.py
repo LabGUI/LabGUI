@@ -14,7 +14,7 @@ Created on Fri Jul 19 17:19:44 2013
 
 import sys
 import PyQt4.QtGui as QtGui
-from PyQt4.QtCore import SIGNAL
+from PyQt4.QtCore import SIGNAL, Qt
 
 from numpy import mod
 
@@ -267,6 +267,47 @@ class CalcWindow(QtGui.QWidget):
             except:
                 answer = ""
         return answer
+        
+
+            
+     
+        
+def add_widget_into_main(parent):
+    """add a widget into the main window of LabGuiMain
+    
+    create a QDock widget and store a reference to the widget
+    """    
+
+    mywidget = CalcWindow(parent = parent)
+    
+    #create a QDockWidget
+    calcDockWidget = QtGui.QDockWidget("Live Calculations", parent)
+    calcDockWidget.setObjectName("startDockWidget")
+    calcDockWidget.setAllowedAreas(
+        Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea)
+        
+    #fill the dictionnary with the widgets added into LabGuiMain
+    parent.widgets['CalcWidget'] = mywidget
+    
+    calcDockWidget.setWidget(mywidget)
+    parent.addDockWidget(Qt.RightDockWidgetArea, calcDockWidget)
+    
+    #Enable the toggle view action
+    parent.windowMenu.addAction(calcDockWidget.toggleViewAction())
+    
+    calcDockWidget.hide()
+
+    parent.connect(parent.widgets['CalcWidget'], SIGNAL(
+        "colorsChanged()"), parent.update_colors)
+        
+    parent.connect(parent.widgets['CalcWidget'], SIGNAL(
+        "labelsChanged()"), parent.update_labels)
+        
+
+        
+        
+        
+        
 if __name__ == "__main__":
 
     app = QtGui.QApplication(sys.argv)

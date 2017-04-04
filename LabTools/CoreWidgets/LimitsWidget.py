@@ -90,6 +90,34 @@ class LimitsWidget(QtGui.QWidget):
         fill_layout_textbox(layout, labels)
 
 
+def add_widget_into_main(parent):
+    """add a widget into the main window of LabGuiMain
+    
+    create a QDock widget and store a reference to the widget
+    """
+
+    mywidget = LimitsWidget(parent = parent)
+    
+    #create a QDockWidget
+    limitsDockWidget = QtGui.QDockWidget("Limits", parent)
+    limitsDockWidget.setObjectName("limitsWidget")
+    limitsDockWidget.setAllowedAreas(
+        QtCore.Qt.LeftDockWidgetArea | QtCore.Qt.RightDockWidgetArea)
+        
+    #fill the dictionnary with the widgets added into LabGuiMain
+    parent.widgets['LimitsWidget'] = mywidget
+    
+    limitsDockWidget.setWidget(mywidget)
+    parent.addDockWidget(QtCore.Qt.RightDockWidgetArea, limitsDockWidget)
+    
+    #Enable the toggle view action
+    parent.windowMenu.addAction(limitsDockWidget.toggleViewAction())
+    limitsDockWidget.hide()
+
+
+
+
+
 def fill_layout_textbox(layout, text):
     """
     This function loop over a layout objects set their texts
