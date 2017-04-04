@@ -4,29 +4,100 @@ Created on Sat Feb 16 11:25:22 2013
 
 Copyright (C) 10th april 2015 Benjamin Schmidt
 License: see LICENSE.txt file
+
+
+MatplotlibZoomWidget
+================
+
+Incorporates parts of MatplotlibWidget
+Copyright © 2009 Pierre Raybaut (licensed under the terms of the MIT License)
+
+which is in turn,
+Derived from 'embedding_in_pyqt4.py':
+Copyright © 2005 Florent Rougon, 2006 Darren Dale
 """
 
 import sys
 
 from PyQt4 import QtCore, QtGui
-from PyQt4.QtGui import QAction, QIcon
-from PyQt4.QtCore import SIGNAL
-from matplotlibwidget import MatplotlibWidget
+from PyQt4.QtGui import QAction, QIcon, QSizePolicy
+from PyQt4.QtCore import SIGNAL, QSize
+
+from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as Canvas
+
 import numpy as np
 import matplotlib as mpl
 import logging
 
+mpl.rcParams['font.size'] = 9
+
+
 from QtTools import ZOOM_MODE, PAN_MODE, SELECT_MODE
 
 
-class MatplotlibZoomWidget(MatplotlibWidget):
+class MatplotlibZoomWidget(Canvas):
+    """
+    MatplotlibZoomWidget provides a MatPlotlibWidget with additional 
+    zooming and panning functionality, which can be accessed by adding
+    actions from ActionManager to a toolbar or menu.
+    
+    It inherits PyQt4.QtGui.QWidget and
+    matplotlib.backend_bases.FigureCanvasBase
 
+    
+    Options: option_name (default_value)
+    -------    
+    parent (None): parent widget
+    title (''): figure title
+    xlabel (''): X-axis label
+    ylabel (''): Y-axis label
+    xlim (None): X-axis limits ([min, max])
+    ylim (None): Y-axis limits ([min, max])
+    xscale ('linear'): X-axis scale
+    yscale ('linear'): Y-axis scale
+    width (4): width in inches
+    height (3): height in inches
+    dpi (100): resolution in dpi
+    hold (False): if False, figure will be cleared each time plot is called
+
+    Widget attributes:
+    -----------------
+    figure: instance of matplotlib.figure.Figure
+    axes: figure axes
+
+    Example:
+    -------
+    self.widget = MatplotlibWidget(self, yscale='log', hold=True)
+    from numpy import linspace
+    x = linspace(-10, 10)
+    self.widget.axes.plot(x, x**2)
+    self.wdiget.axes.plot(x, x**3)
+    """
     def __init__(self, parent=None, title='', xlabel='', ylabel='',
                  xlim=None, ylim=None, xscale='linear', yscale='linear',
                  width=4, height=3, dpi=100, hold=True, usingR=True):
-        super(MatplotlibZoomWidget, self).__init__(parent, title, xlabel, ylabel,
-                                                   xlim, ylim, xscale, yscale, width, height, dpi, hold)
+                     
+        self.figure = mpl.figure.Figure(figsize=(width, height), dpi=dpi)
+        self.axes = self.figure.add_subplot(111)
+        self.axes.set_title(title)
+        self.axes.set_xlabel(xlabel)
+        self.axes.set_ylabel(ylabel)
+        if xscale is not None:
+            self.axes.set_xscale(xscale)
+        if yscale is not None:
+            self.axes.set_yscale(yscale)
+        if xlim is not None:
+            self.axes.set_xlim(*xlim)
+        if ylim is not None:
+            self.axes.set_ylim(*ylim)
+        self.axes.hold(hold)
 
+        Canvas.__init__(self, self.figure)
+        self.setParent(parent)
+
+        Canvas.setSizePolicy(self, QSizePolicy.Expanding,
+                             QSizePolicy.Expanding)
+        Canvas.updateGeometry(self)
         self.usingR = usingR
 
         if usingR:
