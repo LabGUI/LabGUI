@@ -39,7 +39,7 @@ from LabTools.IO import IOTool
 from LabTools.Display import QtTools, PlotDisplayWindow, mplZoomWidget
 from LabDrivers import Tool
 from LabTools.Widgets import data_management
-from LabTools.Widgets import InstrumentWindow as CW
+#from LabTools.Widgets import InstrumentWindow as CW
 #rom abTools.Widgets import CommandWindow as CW
 from LabTools.Widgets import CalcWindow
 #from LabTools.Widgets import start_widget as sw
@@ -105,7 +105,7 @@ class LabGuiMain(QtGui.QMainWindow):
 
         A wiki should be created to help understand and contribute to this project
     """
-    cmdwin = None
+#    cmdwin = None
 
     outputfile = None
     
@@ -191,31 +191,31 @@ class LabGuiMain(QtGui.QMainWindow):
 
 
 ###### DOCK WIDGET SETUP: INSTRUMENT CONNECTION PANEL ######
-        self.cmdwin = CW.InstrumentWindow(self)
-        self.refresh_ports_list()
-        
-        self.instrument_connexion_setting_fname=""     
-        
-        self.connect(self.cmdwin, SIGNAL(
-            "ConnectInstrumentHub(bool)"), self.connect_instrument_hub)
-        self.connect(self.cmdwin, SIGNAL(
-            "ConnectInstrument(PyQt_PyObject)"), self.connect_instrument)
-        self.connect(self.cmdwin, SIGNAL(
-            "colorsChanged()"), self.update_colors)
-        self.connect(self.cmdwin, SIGNAL(
-            "labelsChanged()"), self.update_labels)
-            
-        instDockWidget = QtGui.QDockWidget("Instrument Setup", self)
-        instDockWidget.setObjectName("InstDockWidget")
-        instDockWidget.setAllowedAreas(
-            Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea)
-        instScrollArea = QtGui.QScrollArea()
-        instScrollArea.setWidgetResizable(True)
-        instScrollArea.setEnabled(True)
-        #instScrollArea.setMaximumSize(375, 300)  # optional
-        instScrollArea.setWidget(self.cmdwin)
-        instDockWidget.setWidget(instScrollArea)
-        self.addDockWidget(Qt.RightDockWidgetArea, instDockWidget)
+#        self.cmdwin = CW.InstrumentWindow(self)
+#        self.refresh_ports_list()
+#        
+#        self.instrument_connexion_setting_fname=""     
+#        
+#        self.connect(self.cmdwin, SIGNAL(
+#            "ConnectInstrumentHub(bool)"), self.connect_instrument_hub)
+#        self.connect(self.cmdwin, SIGNAL(
+#            "ConnectInstrument(PyQt_PyObject)"), self.connect_instrument)
+#        self.connect(self.cmdwin, SIGNAL(
+#            "colorsChanged()"), self.update_colors)
+#        self.connect(self.cmdwin, SIGNAL(
+#            "labelsChanged()"), self.update_labels)
+#            
+#        instDockWidget = QtGui.QDockWidget("Instrument Setup", self)
+#        instDockWidget.setObjectName("InstDockWidget")
+#        instDockWidget.setAllowedAreas(
+#            Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea)
+#        instScrollArea = QtGui.QScrollArea()
+#        instScrollArea.setWidgetResizable(True)
+#        instScrollArea.setEnabled(True)
+#        #instScrollArea.setMaximumSize(375, 300)  # optional
+#        instScrollArea.setWidget(self.cmdwin)
+#        instDockWidget.setWidget(instScrollArea)
+#        self.addDockWidget(Qt.RightDockWidgetArea, instDockWidget)
 
 ###### DOCK WIDGET SETUP: CALCULATIONS PANEL ######
 
@@ -307,6 +307,40 @@ class LabGuiMain(QtGui.QMainWindow):
         # set up in the actionmanager
         self.action_manager = mplZoomWidget.ActionManager(self)
         
+        
+        
+        self.fileMenu = self.menuBar().addMenu("File")
+        self.plotMenu = self.menuBar().addMenu("&Plot")
+        self.instMenu = self.menuBar().addMenu("&Meas/Connect")
+        self.windowMenu = self.menuBar().addMenu("&Window")
+        self.optionMenu = self.menuBar().addMenu("&Options")
+        
+        
+        self.widgets = {}
+        
+        cur_path = os.path.dirname(__file__)
+        #    widget_path = os.path.join(cur_path,'LabTools')
+        #    widget_path = os.path.join(widget_path,'Widgets')
+
+        widget_path = os.path.join(cur_path,'LabTools')
+        widget_path = os.path.join(widget_path,'TestWidgets')
+
+        widgets_list = [o for o in os.listdir(widget_path) 
+                        if o.endswith(".py") and not "__init__" in o]
+
+        
+        for widget in widgets_list:
+            
+            widget_name = widget.rstrip('.py')
+            print widget_name
+            widget_module = import_module("." + widget_name, 
+                                          package = LABWIDGETS_PACKAGE_NAME)
+            print widget_module.__file__
+            print widget_module
+            
+            self.add_widget(widget_module.add_widget_into_main)        
+        
+        
 ###### FILE MENU SETUP ######
 
         self.fileSaveSettingsAction = QtTools.create_action(self, "Save Instrument Settings", slot=self.file_save_settings, shortcut=QtGui.QKeySequence.SaveAs,
@@ -324,7 +358,9 @@ class LabGuiMain(QtGui.QMainWindow):
                 
         self.fileSaveCongfigAction = QtTools.create_action(self, "Save current configuration", slot=self.file_save_config, shortcut=None,
                                                      icon=None, tip="Save the setting file path, the script path and the data output path into the config file")
-        self.fileMenu = self.menuBar().addMenu("File")
+
+        
+        
         self.fileMenu.addAction(self.fileLoadSettingsAction)
         self.fileMenu.addAction(self.fileSaveSettingsAction)
         self.fileMenu.addAction(self.fileLoadDataAction)
@@ -334,7 +370,7 @@ class LabGuiMain(QtGui.QMainWindow):
 
 ###### PLOT MENU + TOOLBAR SETUP ######
         # plot_menu_and_toolbar.add_plot_stuff(self)
-        self.plotMenu = self.menuBar().addMenu("&Plot")
+
         self.plotToolbar = self.addToolBar("Plot")
         self.plotToolbar.setObjectName("PlotToolBar")
         
@@ -382,14 +418,13 @@ class LabGuiMain(QtGui.QMainWindow):
 
         self.refresh_ports_list_action = QtTools.create_action(self, "Refresh ports list", slot=self.refresh_ports_list, icon=None, tip="Refresh the list of availiable ports")
 
-
         
-        self.windowMenu = self.menuBar().addMenu("&Meas/Connect")
-        self.windowMenu.addAction(self.start_DTT_action)
-        self.windowMenu.addAction(self.read_DTT)
-        self.windowMenu.addAction(self.connect_hub)
-        self.windowMenu.addAction(self.refresh_ports_list_action)
-
+ 
+        self.instMenu.addAction(self.start_DTT_action)
+        self.instMenu.addAction(self.read_DTT)
+        self.instMenu.addAction(self.connect_hub)
+        self.instMenu.addAction(self.refresh_ports_list_action)
+        
        # self.connect(self.startWidget.startStopButton,
        #              SIGNAL("clicked()"), self.toggle_DTT)
 #        self.connect(self.loadPlotWidget.plotButton,
@@ -406,32 +441,10 @@ class LabGuiMain(QtGui.QMainWindow):
 
         # self.zoneCentrale.addSubWindow(self.sw)
 
-        self.windowMenu = self.menuBar().addMenu("&Window")
 
 
-        self.widgets = {}
-        
-        cur_path = os.path.dirname(__file__)
-        #    widget_path = os.path.join(cur_path,'LabTools')
-        #    widget_path = os.path.join(widget_path,'Widgets')
 
-        widget_path = os.path.join(cur_path,'LabTools')
-        widget_path = os.path.join(widget_path,'TestWidgets')
-
-        widgets_list = [o for o in os.listdir(widget_path) 
-                        if o.endswith(".py") and not "__init__" in o]
-
-        
-        for widget in widgets_list:
-            
-            widget_name = widget.rstrip('.py')
-            print widget_name
-            widget_module = import_module("." + widget_name, 
-                                          package = LABWIDGETS_PACKAGE_NAME)
-            print widget_module.__file__
-            print widget_module
-            
-            self.add_widget(widget_module.add_widget_into_main)
+       
 
 
 
@@ -443,7 +456,7 @@ class LabGuiMain(QtGui.QMainWindow):
         except:
             logging.info("pyqtgraph is unable to load, the pyqt window option is disabled")
             
-        self.windowMenu.addAction(instDockWidget.toggleViewAction())
+#        self.windowMenu.addAction(instDockWidget.toggleViewAction())
         self.windowMenu.addAction(calcDockWidget.toggleViewAction())
 #        self.windowMenu.addAction(limitsDockWidget.toggleViewAction())
 #        self.windowMenu.addAction(startDockWidget.toggleViewAction())  
@@ -456,7 +469,7 @@ class LabGuiMain(QtGui.QMainWindow):
         self.toggle_debug_state = QtTools.create_action(
             self, "Change debug mode", slot=self.option_change_debug_state, shortcut=None, icon=None, tip="Change the state of the debug mode")
         
-        self.optionMenu = self.menuBar().addMenu("&Options")
+
         self.optionMenu.addAction(self.toggle_debug_state)
         
         
@@ -466,7 +479,7 @@ class LabGuiMain(QtGui.QMainWindow):
         #Load the user settings for the instrument connectic and parameters
         self.default_settings_fname = 'settings/default_settings.txt'
         if os.path.isfile(self.default_settings_fname):   
-            self.cmdwin.load_settings(self.default_settings_fname)
+            self.widgets['InstrumentWidget'].load_settings(self.default_settings_fname)
             self.calcWidget.load_settings(self.default_settings_fname)
 
         # Create the object responsible to display information send by the
@@ -508,7 +521,7 @@ class LabGuiMain(QtGui.QMainWindow):
                                            "Are you sure you want to quit?", QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
 
         if reply == QtGui.QMessageBox.Yes:
-            self.cmdwin.save_settings(self.default_settings_fname)
+            self.widgets['InstrumentWidget'].save_settings(self.default_settings_fname)
             self.settings.setValue("windowState", self.saveState())
             self.settings.setValue("geometry", self.saveGeometry())
             self.settings.remove("script_name")
@@ -579,12 +592,15 @@ class LabGuiMain(QtGui.QMainWindow):
 
 
     def update_colors(self):
-        color_list = self.cmdwin.get_color_list() + self.calcWidget.get_color_list()
-        logging.debug("Color list : which will be updated "+str(color_list))
+        color_list = self.widgets['InstrumentWidget'].get_color_list() \
+                     + self.calcWidget.get_color_list()
+
         self.emit(SIGNAL("colorsChanged(PyQt_PyObject)"), color_list)
 
     def update_labels(self):
-        label_list = self.cmdwin.get_label_list() + self.calcWidget.get_label_list()
+        label_list = self.widgets['InstrumentWidget'].get_label_list() \
+                     + self.calcWidget.get_label_list()
+                     
         self.emit(SIGNAL("labelsChanged(PyQt_PyObject)"), label_list)
 
 
@@ -654,7 +670,7 @@ class LabGuiMain(QtGui.QMainWindow):
             self.pause_DTT_action.setEnabled(True)
             self.stop_DTT_action.setEnabled(True)
             
-            self.cmdwin.bt_connecthub.setEnabled(False)
+            self.widgets['InstrumentWidget'].bt_connecthub.setEnabled(False)
 
             #self.startWidget.startStopButton.setText("Stop!")
             #self.start_DTT_.setText("Stop DTT")
@@ -674,9 +690,9 @@ class LabGuiMain(QtGui.QMainWindow):
                 self.output_file = open(of_name, 'w')
                 [instr_name_list, dev_list, param_list] = self.collect_instruments()
                 self.output_file.write(
-                    "#C" + str(self.cmdwin.get_label_list()).strip('[]') + '\n')
+                    "#C" + str(self.widgets['InstrumentWidget'].get_label_list()).strip('[]') + '\n')
                 self.output_file.write(
-                    "#I" + str(self.cmdwin.get_descriptor_list()).strip('[]') + '\n')
+                    "#I" + str(self.widgets['InstrumentWidget'].get_descriptor_list()).strip('[]') + '\n')
 
                 self.output_file.write(
                     "#P" + str(param_list).strip('[]') + '\n')
@@ -728,7 +744,7 @@ class LabGuiMain(QtGui.QMainWindow):
             self.stop_DTT_action.setEnabled(False)
 
             # Enable changes to the instrument connections    
-            self.cmdwin.bt_connecthub.setEnabled(True)
+            self.widgets['InstrumentWidget'].bt_connecthub.setEnabled(True)
         else:
             print("Couldn't stop DTT - it wasn't running!")
 
@@ -811,89 +827,89 @@ class LabGuiMain(QtGui.QMainWindow):
 
         self.emit(SIGNAL("data_array_updated(PyQt_PyObject)"), self.data_array)
 
-    def connect_instrument_hub(self, signal=True):
-        """
-            When the button "Connect" is clicked this method actualise the InstrumentHub
-            according to what the user choosed in the command window. 
-            It cannot change while the DataTaker is running though
-        """
-        #@ISSUE
-        # I should add something here to avoid that we reconnect the instrument hub if the # of instrument is different
-        # and also not allow to take data if the current file header doesn't
-        # correspond to the intrument hub   
-
-        if signal:
-            [instr_name_list, dev_list, param_list] = self.collect_instruments()
-            logging.debug([instr_name_list, dev_list, param_list])
-            
-            actual_instrument_number = len(
-                self.instr_hub.get_instrument_list())
-            cmdwin_instrument_number = len(instr_name_list)
-            # if the datataker is running the user should not modify the length
-            # of the instrument list and connect it
-            connect = False
-            if self.isrunning():
-                if actual_instrument_number == cmdwin_instrument_number or actual_instrument_number == 0:
-                    connect = True
-            else:
-                connect = True
-
-            if connect:
-                print("Connect instrument hub...")
-                self.instr_hub.connect_hub(
-                    instr_name_list, dev_list, param_list)
-                print("...instrument hub connected")
-                self.emit(
-                    SIGNAL("instrument_hub_connected(PyQt_PyObject)"), param_list)
-            else:
-                print()
-                logging.warning("You cannot connect a number of instrument different than " + str(actual_instrument_number) + " when the datataker is running")
-                print()
-
-            logging.debug("The instrument list : "+str(self.instr_hub.get_instrument_list()))
-#           show a plot by default
-            self.create_pdw()
+#    def connect_instrument_hub(self, signal=True):
+#        """
+#            When the button "Connect" is clicked this method actualise the InstrumentHub
+#            according to what the user choosed in the command window. 
+#            It cannot change while the DataTaker is running though
+#        """
+#        #@ISSUE
+#        # I should add something here to avoid that we reconnect the instrument hub if the # of instrument is different
+#        # and also not allow to take data if the current file header doesn't
+#        # correspond to the intrument hub   
+#
+#        if signal:
+#            [instr_name_list, dev_list, param_list] = self.collect_instruments()
+#            logging.debug([instr_name_list, dev_list, param_list])
+#            
+#            actual_instrument_number = len(
+#                self.instr_hub.get_instrument_list())
+#            cmdwin_instrument_number = len(instr_name_list)
+#            # if the datataker is running the user should not modify the length
+#            # of the instrument list and connect it
+#            connect = False
+#            if self.isrunning():
+#                if actual_instrument_number == cmdwin_instrument_number or actual_instrument_number == 0:
+#                    connect = True
+#            else:
+#                connect = True
+#
+#            if connect:
+#                print("Connect instrument hub...")
+#                self.instr_hub.connect_hub(
+#                    instr_name_list, dev_list, param_list)
+#                print("...instrument hub connected")
+#                self.emit(
+#                    SIGNAL("instrument_hub_connected(PyQt_PyObject)"), param_list)
+#            else:
+#                print()
+#                logging.warning("You cannot connect a number of instrument different than " + str(actual_instrument_number) + " when the datataker is running")
+#                print()
+#
+#            logging.debug("The instrument list : "+str(self.instr_hub.get_instrument_list()))
+##           show a plot by default
+#            self.create_pdw()
 
     def collect_instruments(self):
-        return self.cmdwin.collect_device_info()
+        return self.widgets['InstrumentWidget'].collect_device_info()
 
     def refresh_ports_list(self):
         """Update the availiable port list in the InstrumentWindow module """
 
-        self.cmdwin.refresh_cbb_port()
+        self.widgets['InstrumentWidget'].refresh_cbb_port()
 
-    def connect_instrument(self, connection_param):
-        """
-            When the button "Connect" is clicked this method actualise the InstrumentHub
-            according to what the user choosed in the command window. 
-            It cannot change while the DataTaker is running though
-        """
-        [instr_name, dev_port, param] = connection_param
-
-#        cmdwin_instrument_number=len(instr_name_list)
-        # if the datataker is running the user should not modify the length of
-        # the instrument list and connect it
-        connect = False
-        if self.isrunning():
-            print("As data are being recorded now, you are not allowed to connect " + instr_name + " to " + dev_port)
-#            if actual_instrument_number == cmdwin_instrument_number or actual_instrument_number==0:
-#                connect=True
-        else:
-            connect = True
-
-        actual_instrument_number = len(self.instr_hub.get_instrument_list())
-        print("number of instruments connected (b)", actual_instrument_number)
-        if connect:
-            print("Connect single instrument...")
-            self.instr_hub.connect_instrument(instr_name, dev_port, param)
-            print("...single instrument connected")
-#«            self.emit(SIGNAL("instrument_hub_connected(PyQt_PyObject)"),None)
-        else:
-            print()
-            print("You cannot connect a number of instrument different than " + str(actual_instrument_number) + " when the datataker is running")
-            print()
-        actual_instrument_number = len(self.instr_hub.get_instrument_list())
-        print("number of instruments connected (a)", actual_instrument_number)
+#    def connect_instrument(self, connection_param):
+#        """
+#            When the button "Connect" is clicked this method actualise the InstrumentHub
+#            according to what the user choosed in the command window. 
+#            It cannot change while the DataTaker is running though
+#        """
+#        [instr_name, dev_port, param] = connection_param
+#
+##        cmdwin_instrument_number=len(instr_name_list)
+#        # if the datataker is running the user should not modify the length of
+#        # the instrument list and connect it
+#        connect = False
+#        if self.isrunning():
+#            print("As data are being recorded now, you are not allowed to connect " + instr_name + " to " + dev_port)
+##            if actual_instrument_number == cmdwin_instrument_number or actual_instrument_number==0:
+##                connect=True
+#        else:
+#            connect = True
+#
+#        actual_instrument_number = len(self.instr_hub.get_instrument_list())
+#        print("number of instruments connected (b)", actual_instrument_number)
+#        if connect:
+#            print("Connect single instrument...")
+#            self.instr_hub.connect_instrument(instr_name, dev_port, param)
+#            print("...single instrument connected")
+##«            self.emit(SIGNAL("instrument_hub_connected(PyQt_PyObject)"),None)
+#        else:
+#            print()
+#            print("You cannot connect a number of instrument different than " + str(actual_instrument_number) + " when the datataker is running")
+#            print()
+#        actual_instrument_number = len(self.instr_hub.get_instrument_list())
+#        print("number of instruments connected (a)", actual_instrument_number)
 
     def update_current_window(self, x):
         ''' this changes what self.<object> refers to so that the same shared toolbars can modify whichever plot window has focus right now '''        
@@ -950,14 +966,14 @@ class LabGuiMain(QtGui.QMainWindow):
         fname = str(QtGui.QFileDialog.getSaveFileName(
             self, 'Save settings file as', './'))
         if fname:
-            self.cmdwin.save_settings(fname)
+            self.widgets['InstrumentWidget'].save_settings(fname)
             self.instrument_connexion_setting_fname=fname
 
     def file_load_settings(self):
         fname = str(QtGui.QFileDialog.getOpenFileName(
             self, 'Open settings file', './'))
         if fname:
-            self.cmdwin.load_settings(fname)
+            self.widgets['InstrumentWidget'].load_settings(fname)
             self.instrument_connexion_setting_fname=fname
 
     def file_load_data(self):
