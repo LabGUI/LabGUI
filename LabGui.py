@@ -843,5 +843,5 @@ def test_automatic_fitting():
     sys.exit(app.exec_())
 
 if __name__ == "__main__":
-#    launch_LabGui()
-    test_automatic_fitting()
+    launch_LabGui()
+#    test_automatic_fitting()
