@@ -175,6 +175,9 @@ def add_widget_into_main(parent):
     parent.widgets["loadPlotWidget"] = mywidget
     parent.addDockWidget(Qt.RightDockWidgetArea, loadPlotDockWidget)
     
+    parent.windowMenu.addAction(loadPlotDockWidget.toggleViewAction())
+    
+    loadPlotDockWidget.hide()
     
     parent.create_plw = MethodType(create_plw_func, parent, parent.__class__)
     

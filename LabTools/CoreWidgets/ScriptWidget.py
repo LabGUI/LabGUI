@@ -18,7 +18,7 @@ from LabTools.IO import IOTool
 
 class ScriptWidget(QWidget):
 
-    def __init__(self, parent=None):
+    def __init__(self, parent = None):
         super(ScriptWidget, self).__init__(parent)
 
         self.scriptLayout = QHBoxLayout()
@@ -56,6 +56,19 @@ class ScriptWidget(QWidget):
 
     def get_script_fname(self):
         return str(self.scriptFileLineEdit.text())
+
+
+def add_widget_into_main(parent):
+    """add a widget into the main window of LabGuiMain
+    
+    create a QDock widget and store a reference to the widget
+    """    
+
+    parent.widgets['SciptWidget'] = ScriptWidget(parent)
+    
+    parent.instToolbar.addWidget(parent.widgets['SciptWidget'])
+
+
 
 if __name__ == "__main__":
 

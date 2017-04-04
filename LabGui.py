@@ -20,7 +20,6 @@ import py_compile
 #import plot_menu_and_toolbar
 
 import os
-import string
 from os.path import exists
 
 import numpy as np
@@ -38,22 +37,14 @@ from importlib import import_module
 from LabTools.IO import IOTool
 from LabTools.Display import QtTools, PlotDisplayWindow, mplZoomWidget
 from LabDrivers import Tool
-from LabTools.Widgets import data_management
-#from LabTools.Widgets import InstrumentWindow as CW
-#rom abTools.Widgets import CommandWindow as CW
-from LabTools.Widgets import CalcWindow
-#from LabTools.Widgets import start_widget as sw
-from LabTools.Widgets import script_widget
-#from LabTools.Widgets import load_plot_widget as lpw
-#from LabTools.Widgets import LimitsWidget as lw
-from LabTools.Fitting import analyse_data_widget as adw
+from LabTools import DataManagement
 from LabTools.DataStructure import LabeledData
 #FORMAT ='%(asctime)s - %(module)s - %(levelname)s - %(lineno)d -%(message)s'
 #logging.basicConfig(level=logging.DEBUG,format=FORMAT)
 
 PYTHON_VERSION = int(sys.version[0])
 
-LABWIDGETS_PACKAGE_NAME = "LabTools.TestWidgets"
+LABWIDGETS_PACKAGE_NAME = "LabTools.CoreWidgets"
 
 CONFIG_FILE = IOTool.CONFIG_FILE
 
@@ -171,7 +162,7 @@ class LabGuiMain(QtGui.QMainWindow):
         
         # DataTaker is responsible for taking data from instruments in the
         # InstrumentHub object
-        self.datataker = data_management.DataTaker(self.lock, self.instr_hub)
+        self.datataker = DataManagement.DataTaker(self.lock, self.instr_hub)
 
         # handle data emitted by datataker (basically stuff it into a shared,
         # central array)
@@ -183,111 +174,6 @@ class LabGuiMain(QtGui.QMainWindow):
             "script_finished(bool)"), self.finished_DTT)
         self.data_array = np.array([])
 
-
-
-
-
-
-
-
-###### DOCK WIDGET SETUP: INSTRUMENT CONNECTION PANEL ######
-#        self.cmdwin = CW.InstrumentWindow(self)
-#        self.refresh_ports_list()
-#        
-#        self.instrument_connexion_setting_fname=""     
-#        
-#        self.connect(self.cmdwin, SIGNAL(
-#            "ConnectInstrumentHub(bool)"), self.connect_instrument_hub)
-#        self.connect(self.cmdwin, SIGNAL(
-#            "ConnectInstrument(PyQt_PyObject)"), self.connect_instrument)
-#        self.connect(self.cmdwin, SIGNAL(
-#            "colorsChanged()"), self.update_colors)
-#        self.connect(self.cmdwin, SIGNAL(
-#            "labelsChanged()"), self.update_labels)
-#            
-#        instDockWidget = QtGui.QDockWidget("Instrument Setup", self)
-#        instDockWidget.setObjectName("InstDockWidget")
-#        instDockWidget.setAllowedAreas(
-#            Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea)
-#        instScrollArea = QtGui.QScrollArea()
-#        instScrollArea.setWidgetResizable(True)
-#        instScrollArea.setEnabled(True)
-#        #instScrollArea.setMaximumSize(375, 300)  # optional
-#        instScrollArea.setWidget(self.cmdwin)
-#        instDockWidget.setWidget(instScrollArea)
-#        self.addDockWidget(Qt.RightDockWidgetArea, instDockWidget)
-
-###### DOCK WIDGET SETUP: CALCULATIONS PANEL ######
-
-        self.calcWidget = CalcWindow.CalcWindow(parent=self)
-        self.connect(self.calcWidget, SIGNAL(
-            "colorsChanged()"), self.update_colors)
-        self.connect(self.calcWidget, SIGNAL(
-            "labelsChanged()"), self.update_labels)
-        calcDockWidget = QtGui.QDockWidget("Live Calculations", self)
-        calcDockWidget.setObjectName("startDockWidget")
-        calcDockWidget.setAllowedAreas(
-            Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea)
-        calcDockWidget.setWidget(self.calcWidget)
-        self.addDockWidget(Qt.RightDockWidgetArea, calcDockWidget)
-
-###### DOCK WIDGET SETUP: START PANEL ######
-
-#        self.startWidget = sw.StartWidget(parent=self)
-#        startDockWidget = QtGui.QDockWidget("Output file and header text", self)
-#        startDockWidget.setObjectName("startDockWidget")
-#        startDockWidget.setAllowedAreas(
-#            Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea)
-#        startDockWidget.setWidget(self.startWidget)
-#        self.addDockWidget(Qt.RightDockWidgetArea, startDockWidget)
-
-####### DOCK WIDGET SETUP: LOAD PLOT PANEL ######
-#
-#        self.loadPlotWidget = lpw.LoadPlotWidget(
-#            parent=self, load_fname=IOTool.get_config_setting("DATAFILE"))
-#        loadPlotDockWidget = QtGui.QDockWidget("Load previous data file", self)
-#        loadPlotDockWidget.setObjectName("loadPlotDockWidget")
-#        loadPlotDockWidget.setAllowedAreas(
-#            Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea)
-#        loadPlotDockWidget.setWidget(self.loadPlotWidget)
-#        self.addDockWidget(Qt.RightDockWidgetArea, loadPlotDockWidget)
-
-###### DOCK WIDGET SETUP: DATA ANALYSE PANEL ######
-
-        self.dataAnalyseWidget = adw.FittingWidget(parent = self)
-        analyseDataDockWidget = QtGui.QDockWidget("Fitting", self)
-        analyseDataDockWidget.setObjectName("analyseDataWidget")
-        analyseDataDockWidget.setAllowedAreas(
-            Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea)
-        analyseDataDockWidget.setWidget(self.dataAnalyseWidget)
-        self.addDockWidget(Qt.RightDockWidgetArea, analyseDataDockWidget)
-#        self.connect(self.dataAnalyseWidget.addSubsetButton, SIGNAL("clicked()"), self.emit_axis_lim)
-
-###### DOCK WIDGET SETUP: LIMITS MANAGMENT PANEL ######
-
-#        self.limitsWidget = lw.LimitsWidget(parent=self)
-#        limitsDockWidget = QtGui.QDockWidget("Limits", self)
-#        limitsDockWidget.setObjectName("limitsWidget")
-#        limitsDockWidget.setAllowedAreas(
-#            Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea)
-#        limitsDockWidget.setWidget(self.limitsWidget)
-#        self.addDockWidget(Qt.RightDockWidgetArea, limitsDockWidget)
-
-###### DOCK WIDGET SETUP: CONSOLE PANEL ######
-
-#        self.logTextEdit = QtGui.QTextEdit()
-#        self.logTextEdit.setReadOnly(True)
-#        logDockWidget = QtGui.QDockWidget("Output Console", self)
-#        logDockWidget.setObjectName("LogDockWidget")
-#        logDockWidget.setAllowedAreas(
-#            Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea | Qt.BottomDockWidgetArea)
-#        logDockWidget.setWidget(self.logTextEdit)
-#        self.addDockWidget(Qt.BottomDockWidgetArea, logDockWidget)
-#
-#        # redirect print statements to show a copy on "console"
-#        sys.stdout = QtTools.printerceptor(self)
-#        self.connect(self, SIGNAL(
-#            "print_to_console(PyQt_PyObject)"), self.update_console)
 
 ###### DOCK WIDGET SETUP: INSTRUMENT SIMPLE CONNECT ######
 
@@ -315,6 +201,36 @@ class LabGuiMain(QtGui.QMainWindow):
         self.windowMenu = self.menuBar().addMenu("&Window")
         self.optionMenu = self.menuBar().addMenu("&Options")
         
+        self.plotToolbar = self.addToolBar("Plot")
+        self.instToolbar = self.addToolBar("Instruments")
+        
+        
+        # start/stop/pause buttons 
+        self.start_DTT_action = QtTools.create_action(
+            self, "Start DTT", slot = self.start_DTT, 
+            shortcut = QtGui.QKeySequence("F5"), icon = "start",
+            tip = "Start script")
+            
+        self.stop_DTT_action = QtTools.create_action(
+            self, "Stop DTT", slot = self.stop_DTT,
+            shortcut = QtGui.QKeySequence("F6"), icon = "stop",
+            tip = "stop script")
+            
+        self.pause_DTT_action = QtTools.create_action(
+            self, "Pause DTT", slot = self.pause_DTT, 
+            shortcut = QtGui.QKeySequence("F7"), icon = "pause", 
+            tip = "pause script")
+            
+        self.pause_DTT_action.setEnabled(False)
+        self.stop_DTT_action.setEnabled(False)
+
+
+        self.instToolbar.setObjectName("InstToolBar")
+
+        self.instToolbar.addAction(self.start_DTT_action)
+        self.instToolbar.addAction(self.pause_DTT_action)
+        self.instToolbar.addAction(self.stop_DTT_action)        
+        
         
         self.widgets = {}
         
@@ -323,20 +239,18 @@ class LabGuiMain(QtGui.QMainWindow):
         #    widget_path = os.path.join(widget_path,'Widgets')
 
         widget_path = os.path.join(cur_path,'LabTools')
-        widget_path = os.path.join(widget_path,'TestWidgets')
-
-        widgets_list = [o for o in os.listdir(widget_path) 
+        core_widget_path = os.path.join(widget_path,'CoreWidgets')
+        user_widget_path = os.path.join(widget_path,'UserWidgets')
+        
+        widgets_list = [o for o in os.listdir(core_widget_path) 
                         if o.endswith(".py") and not "__init__" in o]
 
         
         for widget in widgets_list:
             
             widget_name = widget.rstrip('.py')
-            print widget_name
             widget_module = import_module("." + widget_name, 
                                           package = LABWIDGETS_PACKAGE_NAME)
-            print widget_module.__file__
-            print widget_module
             
             self.add_widget(widget_module.add_widget_into_main)        
         
@@ -358,8 +272,6 @@ class LabGuiMain(QtGui.QMainWindow):
                 
         self.fileSaveCongfigAction = QtTools.create_action(self, "Save current configuration", slot=self.file_save_config, shortcut=None,
                                                      icon=None, tip="Save the setting file path, the script path and the data output path into the config file")
-
-        
         
         self.fileMenu.addAction(self.fileLoadSettingsAction)
         self.fileMenu.addAction(self.fileSaveSettingsAction)
@@ -371,7 +283,7 @@ class LabGuiMain(QtGui.QMainWindow):
 ###### PLOT MENU + TOOLBAR SETUP ######
         # plot_menu_and_toolbar.add_plot_stuff(self)
 
-        self.plotToolbar = self.addToolBar("Plot")
+        
         self.plotToolbar.setObjectName("PlotToolBar")
         
 
@@ -390,25 +302,11 @@ class LabGuiMain(QtGui.QMainWindow):
 
 
 
-# start/stop/pause buttons ########3
-        self.start_DTT_action = QtTools.create_action(
-            self, "Start DTT", slot=self.start_DTT, shortcut=QtGui.QKeySequence("F5"), icon="start", tip="Launch DTT")
-        self.stop_DTT_action = QtTools.create_action(
-            self, "Stop DTT", slot=self.stop_DTT, shortcut=QtGui.QKeySequence("F6"), icon="stop", tip="stop DTT")
-        self.pause_DTT_action = QtTools.create_action(
-            self, "Pause DTT", slot=self.pause_DTT, shortcut=QtGui.QKeySequence("F7"), icon="pause", tip="pause DTT")
-        self.pause_DTT_action.setEnabled(False)
-        self.stop_DTT_action.setEnabled(False)
 
-        self.instToolbar = self.addToolBar("Instruments")
-        self.instToolbar.setObjectName("InstToolBar")
-
-        self.instToolbar.addAction(self.start_DTT_action)
-        self.instToolbar.addAction(self.pause_DTT_action)
-        self.instToolbar.addAction(self.stop_DTT_action)
         
-        self.scriptWidget = script_widget.ScriptWidget()
-        self.instToolbar.addWidget(self.scriptWidget)
+#        self.scriptWidget = script_widget.ScriptWidget()
+        
+#        self.instToolbar.addWidget(self.scriptWidget)
 
 ###### INSTRUMENT MENU SETUP ######
         self.read_DTT = QtTools.create_action(
@@ -457,11 +355,11 @@ class LabGuiMain(QtGui.QMainWindow):
             logging.info("pyqtgraph is unable to load, the pyqt window option is disabled")
             
 #        self.windowMenu.addAction(instDockWidget.toggleViewAction())
-        self.windowMenu.addAction(calcDockWidget.toggleViewAction())
+#        self.windowMenu.addAction(calcDockWidget.toggleViewAction())
 #        self.windowMenu.addAction(limitsDockWidget.toggleViewAction())
 #        self.windowMenu.addAction(startDockWidget.toggleViewAction())  
 #        self.windowMenu.addAction(loadPlotDockWidget.toggleViewAction())  
-        self.windowMenu.addAction(analyseDataDockWidget.toggleViewAction())
+#        self.windowMenu.addAction(analyseDataDockWidget.toggleViewAction())
 #        self.windowMenu.addAction(logDockWidget.toggleViewAction())
         self.windowMenu.addAction(simpleconnectDockWidget.toggleViewAction())
         
@@ -480,11 +378,11 @@ class LabGuiMain(QtGui.QMainWindow):
         self.default_settings_fname = 'settings/default_settings.txt'
         if os.path.isfile(self.default_settings_fname):   
             self.widgets['InstrumentWidget'].load_settings(self.default_settings_fname)
-            self.calcWidget.load_settings(self.default_settings_fname)
+            self.widgets['CalcWidget'].load_settings(self.default_settings_fname)
 
         # Create the object responsible to display information send by the
         # datataker
-        self.data_displayer = data_management.DataDisplayer(self.datataker)
+        self.data_displayer = DataManagement.DataDisplayer(self.datataker)
 
         # platform-independent way to restore settings such as toolbar positions,
         # dock widget configuration and window size from previous session.
@@ -497,10 +395,10 @@ class LabGuiMain(QtGui.QMainWindow):
             logging.info('Using default window configuration') # no biggie - probably means settings haven't been saved on this machine yet
             #hide some of the advanced widgets so they don't show for new users
             # the objects are not actually deleted, just hidden
-            analyseDataDockWidget.hide()   
+#            analyseDataDockWidget.hide()   
 #            loadPlotDockWidget.hide()
 #            limitsDockWidget.hide()
-            calcDockWidget.hide()
+#            calcDockWidget.hide()
             simpleconnectDockWidget.hide()
 
 
@@ -535,7 +433,7 @@ class LabGuiMain(QtGui.QMainWindow):
             add a new plot display window in the MDI area its channels are labeled according to the channel names on the cmd window.
             It is connected to the signal of data update.
         """
-        num_channels = self.instr_hub.get_instrument_nb() + self.calcWidget.get_calculation_nb()
+        num_channels = self.instr_hub.get_instrument_nb() + self.widgets['CalcWidget'].get_calculation_nb()
         pdw = PlotDisplayWindow.PlotDisplayWindow(data_array=self.data_array, name="Live Data Window", default_channels=num_channels)  # self.datataker)
         self.connect(self, SIGNAL("data_array_updated(PyQt_PyObject)"),
                      pdw.update_plot)
@@ -544,9 +442,9 @@ class LabGuiMain(QtGui.QMainWindow):
 
         # this is here temporary, I would like to change the plw when the live
         # fit is ticked
-        self.connect(self.dataAnalyseWidget, SIGNAL(
+        self.connect(self.widgets['AnalyseDataWidget'], SIGNAL(
             "data_set_updated(PyQt_PyObject)"), pdw.update_plot)
-        self.connect(self.dataAnalyseWidget, SIGNAL(
+        self.connect(self.widgets['AnalyseDataWidget'], SIGNAL(
             "update_fit(PyQt_PyObject)"), pdw.update_fit)
         self.connect(self, SIGNAL("remove_fit()"), pdw.remove_fit)
 
@@ -569,7 +467,7 @@ class LabGuiMain(QtGui.QMainWindow):
             It is connected to the signal of data update.
         """
         pqtw = PyQtWindow.PyQtGraphWidget(n_curves=self.instr_hub.get_instrument_nb(
-        ) + self.calcWidget.get_calculation_nb(), parent=self)  # self.datataker)
+        ) + self.widgets['CalcWidget'].get_calculation_nb(), parent=self)  # self.datataker)
         self.connect(self, SIGNAL("spectrum_data_updated(PyQt_PyObject,int)"),
                      pqtw.update_plot)
 #        self.connect(pdw.mplwidget,SIGNAL("limits_changed(int,PyQt_PyObject)"),self.emit_axis_lim)
@@ -593,13 +491,13 @@ class LabGuiMain(QtGui.QMainWindow):
 
     def update_colors(self):
         color_list = self.widgets['InstrumentWidget'].get_color_list() \
-                     + self.calcWidget.get_color_list()
+                     + self.widgets['CalcWidget'].get_color_list()
 
         self.emit(SIGNAL("colorsChanged(PyQt_PyObject)"), color_list)
 
     def update_labels(self):
         label_list = self.widgets['InstrumentWidget'].get_label_list() \
-                     + self.calcWidget.get_label_list()
+                     + self.widgets['CalcWidget'].get_label_list()
                      
         self.emit(SIGNAL("labelsChanged(PyQt_PyObject)"), label_list)
 
@@ -703,7 +601,7 @@ class LabGuiMain(QtGui.QMainWindow):
                 self.output_file = open(of_name, 'a')
                 
             self.datataker.initialize(is_new_file)
-            self.datataker.set_script(self.scriptWidget.get_script_fname())
+            self.datataker.set_script(self.widgets['SciptWidget'].get_script_fname())
             
             # this command is specific to Qthread, it will execute whatever is defined in
             # the method run() from DataManagement.py module
@@ -800,7 +698,7 @@ class LabGuiMain(QtGui.QMainWindow):
         # convert this latest data to an array
         data = np.array(data_set)
 
-        for calculation in self.calcWidget.get_calculation_list():
+        for calculation in self.widgets['CalcWidget'].get_calculation_list():
             calculation = calculation.strip()
             if calculation:
                 data = np.append(data, eval(calculation + '\n'))
@@ -953,7 +851,7 @@ class LabGuiMain(QtGui.QMainWindow):
         """
         this function get the actual values of parameters and save them into the config file
         """
-        script_fname=str(self.scriptWidget.scriptFileLineEdit.text())
+        script_fname=str(self.widgets['SciptWidget'].scriptFileLineEdit.text())
         IOTool.set_config_setting(IOTool.SCRIPT_ID,script_fname,CONFIG_FILE)
         
         output_path = os.path.dirname(self.widgets['OutputFileWidget'].get_output_fname())+os.path.sep

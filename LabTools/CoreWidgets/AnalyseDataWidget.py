@@ -832,6 +832,32 @@ class FittingWidget(QtGui.QWidget):
         return self.loadFileLineEdit.text()
 
 
+def add_widget_into_main(parent):
+    """add a widget into the main window of LabGuiMain
+    
+    create a QDock widget and store a reference to the widget
+    """    
+    mywidget = FittingWidget(parent = parent)
+    
+    
+     #create a QDockWidget
+    analyseDataDockWidget = QtGui.QDockWidget("Fitting", parent)
+    analyseDataDockWidget.setObjectName("analyseDataWidget")
+    analyseDataDockWidget.setAllowedAreas(
+        Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea)
+        
+    analyseDataDockWidget.setWidget(mywidget)
+    
+    #fill the dictionnary with the widgets added into LabGuiMain
+    parent.widgets['AnalyseDataWidget'] = mywidget        
+    
+    parent.addDockWidget(Qt.RightDockWidgetArea, analyseDataDockWidget)
+
+    #Enable the toggle view action
+    parent.windowMenu.addAction(analyseDataDockWidget.toggleViewAction())
+
+    analyseDataDockWidget.hide()
+
 def test_data_fitting():
     x = np.arange(0,10,1)
     y = np.array([0,-1,2,3,4,5,6,7,8,9])
