@@ -222,7 +222,7 @@ class FittingWidget(QtGui.QWidget):
 
         self.connect(self.fitCombo, QtCore.SIGNAL(
             "currentIndexChanged(int)"), self.fit_func_changed)
-
+        
         self.connect(self.live_fitButton, QtCore.SIGNAL(
             'clicked()'), self.on_live_fitButton_clicked)    
             
@@ -306,14 +306,10 @@ class FittingWidget(QtGui.QWidget):
         this function is mainly called upon the signal "selections_limits(PyQt_PyObject,int,int,int,int)" usually emitted by emit_axis_lim
         in LabGui.
         """
-        
-        logging.debug("Triggered")
-        logging.debug(limits)
-        
 
         # update the fit selection parameters, we actually don't care about the
         # paramY, only the fit axis
-        self.fit_selection_parameters["X_line_idx"] = paramX,
+        self.fit_selection_parameters["X_line_idx"] = paramX
         self.fit_selection_parameters["Fit_line_idx"] = paramYfit
         
         #this lock the change of the mode as long as the selection recangle
@@ -350,20 +346,31 @@ class FittingWidget(QtGui.QWidget):
             #this is a number between 0 and the number of row in the data set
             paramY = self.fit_selection_parameters["Fit_line_idx"]
             
+            
             if not xlims == [] and whole ==False:
-                start = xlims[0]
-                end = xlims[1]
+                
+                start = int(xlims[0])
+                end = int(xlims[1])
+                
                 if start == 0 and end == 1:
+                    
                     X = self.data_array[:,paramX]
                     Y = self.data_array[:,paramY]
+                    
                 else:
+                    
                     X = self.data_array[start:end,paramX]
                     Y = self.data_array[start:end,paramY]
+                    
             else:
+                
                 X = self.data_array[:,paramX]
                 Y = self.data_array[:,paramY]
+                
             return np.squeeze(X),np.squeeze(Y)
+            
         else:
+            
             return VOID_NPARRAY,VOID_NPARRAY
 
     def on_live_fitButton_clicked(self):
@@ -556,8 +563,10 @@ class FittingWidget(QtGui.QWidget):
                 #performs the fit
                 fitp_val, cov = ad.fit_nonlinear(X, Y, self.fit_func,guess_param)
                     
-                logging.debug("analyse_data.fit: fitter params ",fitp_val)
-                logging.debug("analyse_data.fit: covariance ",cov)
+                logging.debug("analyse_data.fit: fitter params ")
+                logging.debug(fitp_val)
+                logging.debug("analyse_data.fit: covariance ")
+                logging.debug(cov)
         
                 #stores the parameters value in an ordered dict
                 fitp = OrderedDict()

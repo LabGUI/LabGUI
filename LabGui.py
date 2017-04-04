@@ -507,8 +507,6 @@ class LabGuiMain(QtGui.QMainWindow):
 #                except:
 #                    logging.info( "G2GUI.emit_axis_lim : the params are not defined, the default is X-> Channel 1 and Y->Channel 2")
                     
-                    
-#  
 #            else:
 #                try:
 #                    paramX = current_widget.get_X_axis_index()
@@ -818,11 +816,32 @@ class LabGuiMain(QtGui.QMainWindow):
         self.emit(SIGNAL("DEBUG_mode_changed(bool)"),self.DEBUG)
    
 
-if __name__ == "__main__":
-    print("Launched LabGui")
+def launch_LabGui():
     app = QtGui.QApplication(sys.argv)
     ex = LabGuiMain()
-#    ex.create_plw()
     ex.show()
-    # print ex
     sys.exit(app.exec_())
+
+def test_automatic_fitting():
+    app = QtGui.QApplication(sys.argv)
+    ex = LabGuiMain()
+    ex.connect_instrument_hub()
+
+    pdw = ex.zoneCentrale.subWindowList()[0].widget()
+
+    pdw.channel_objects["groupBox_X" ][1].setChecked(True)
+    pdw.channel_objects["groupBox_Y" ][2].setChecked(True)
+    pdw.channel_objects["groupBox_fit" ][2].setChecked(True)
+    
+    ex.toggle_DTT()
+    
+    #choose the linear fonction to fit
+    ex.widgets['AnalyseDataWidget'].fitCombo.setCurrentIndex(2)
+    ex.widgets['AnalyseDataWidget'].on_live_fitButton_clicked()
+    
+    ex.show()
+    sys.exit(app.exec_())
+
+if __name__ == "__main__":
+#    launch_LabGui()
+    test_automatic_fitting()
