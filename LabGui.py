@@ -108,9 +108,11 @@ class LabGuiMain(QtGui.QMainWindow):
 
         self.settings = QSettings(self)
         self.settings.setValue("state", self.saveState())
+        
         if exists(CONFIG_FILE) == False:
             logging.warning("A config.txt file has been generated for you.")           
-            logging.warning("Please modify it to change the default script, settings and data locations, or to enter debug mode.")
+            logging.warning("Please modify it to change the default \
+script, settings and data locations, or to enter debug mode.")
 
             path = os.path.dirname(os.path.realpath(__file__)) + os.sep
             # creates a config.txt with basic needs
@@ -158,7 +160,8 @@ class LabGuiMain(QtGui.QMainWindow):
 
         # InstrumentHub is responsible for storing and managing the user
         # choices about which instrument goes on which port
-        self.instr_hub = Tool.InstrumentHub(parent=self,debug=IOTool.get_debug_setting())
+        self.instr_hub = Tool.InstrumentHub(parent = self,
+                                            debug = IOTool.get_debug_setting())
         
         # DataTaker is responsible for taking data from instruments in the
         # InstrumentHub object
@@ -177,8 +180,9 @@ class LabGuiMain(QtGui.QMainWindow):
 
 ###### DOCK WIDGET SETUP: INSTRUMENT SIMPLE CONNECT ######
 
-        self.simpleConnectWidget = Tool.SimpleConnectWidget(parent=self)
-        simpleconnectDockWidget = QtGui.QDockWidget("Simple instrument console", self)
+        self.simpleConnectWidget = Tool.SimpleConnectWidget(parent = self)
+        simpleconnectDockWidget = QtGui.QDockWidget("Simple instrument console"
+                                                    , self)
         simpleconnectDockWidget.setObjectName("simpleConnectWidgetDockWidget")
         simpleconnectDockWidget.setAllowedAreas(
             Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea)
@@ -187,13 +191,13 @@ class LabGuiMain(QtGui.QMainWindow):
 #        widget = Tool.SimpleConnectWidget()
 #        widget.show()
 
-#### set up menus and toolbars
+
 
         # all actions related to the figure widget (mplZoomWidget.py) are 
         # set up in the actionmanager
         self.action_manager = mplZoomWidget.ActionManager(self)
         
-        
+#### set up menus and toolbars      
         
         self.fileMenu = self.menuBar().addMenu("File")
         self.plotMenu = self.menuBar().addMenu("&Plot")
@@ -232,20 +236,26 @@ class LabGuiMain(QtGui.QMainWindow):
         self.instToolbar.addAction(self.stop_DTT_action)        
         
         
+        #this will contain the different widgets in the window
         self.widgets = {}
         
         cur_path = os.path.dirname(__file__)
         #    widget_path = os.path.join(cur_path,'LabTools')
         #    widget_path = os.path.join(widget_path,'Widgets')
 
+        #find the path to the widgets folders
         widget_path = os.path.join(cur_path,'LabTools')
+        
+        #these are widgets essential to the interface
         core_widget_path = os.path.join(widget_path,'CoreWidgets')
+        
+        #these are widgets which were added by users
         user_widget_path = os.path.join(widget_path,'UserWidgets')
         
         widgets_list = [o for o in os.listdir(core_widget_path) 
                         if o.endswith(".py") and not "__init__" in o]
 
-        
+        #add the widgets to the interface
         for widget in widgets_list:
             
             widget_name = widget.rstrip('.py')
@@ -257,21 +267,28 @@ class LabGuiMain(QtGui.QMainWindow):
         
 ###### FILE MENU SETUP ######
 
-        self.fileSaveSettingsAction = QtTools.create_action(self, "Save Instrument Settings", slot=self.file_save_settings, shortcut=QtGui.QKeySequence.SaveAs,
-                                                            icon=None, tip="Save the current instrument settings")
+        self.fileSaveSettingsAction = QtTools.create_action(self,
+        "Save Instrument Settings", slot = self.file_save_settings, 
+        shortcut = QtGui.QKeySequence.SaveAs,
+        icon = None, tip = "Save the current instrument settings")
 
-        self.fileLoadSettingsAction = QtTools.create_action(self, "Load Instrument Settings", slot=self.file_load_settings, shortcut=QtGui.QKeySequence.Open,
-                                                            icon=None, tip="Load instrument settings from file")
+        self.fileLoadSettingsAction = QtTools.create_action(self, 
+        "Load Instrument Settings", slot = self.file_load_settings,
+        shortcut = QtGui.QKeySequence.Open,
+        icon = None, tip = "Load instrument settings from file")
 
-        self.fileLoadDataAction = QtTools.create_action(self, "Load Previous Data", slot=self.file_load_data, shortcut=None,
-                                                            icon=None, tip="Load previous data from file")
+        self.fileLoadDataAction = QtTools.create_action(self, 
+        "Load Previous Data", slot = self.file_load_data, shortcut = None,
+        icon = None, tip = "Load previous data from file")
                                                                     
         """this is not working I will leave it commented right now"""
 #        self.filePrintAction = QtTools.create_action(self, "&Print Report", slot=self.file_print, shortcut=QtGui.QKeySequence.Print,
 #                                                     icon=None, tip="Print the figure along with relevant information")
                 
-        self.fileSaveCongfigAction = QtTools.create_action(self, "Save current configuration", slot=self.file_save_config, shortcut=None,
-                                                     icon=None, tip="Save the setting file path, the script path and the data output path into the config file")
+        self.fileSaveCongfigAction = QtTools.create_action(self,
+        "Save current configuration", slot = self.file_save_config,
+        shortcut = None, icon = None, tip = "Save the setting file path, \
+the script path and the data output path into the config file")
         
         self.fileMenu.addAction(self.fileLoadSettingsAction)
         self.fileMenu.addAction(self.fileSaveSettingsAction)
@@ -281,7 +298,6 @@ class LabGuiMain(QtGui.QMainWindow):
         self.fileMenu.addAction(self.fileSaveCongfigAction)
 
 ###### PLOT MENU + TOOLBAR SETUP ######
-        # plot_menu_and_toolbar.add_plot_stuff(self)
 
         
         self.plotToolbar.setObjectName("PlotToolBar")
@@ -291,23 +307,32 @@ class LabGuiMain(QtGui.QMainWindow):
             self.plotMenu.addAction(action)
             self.plotToolbar.addAction(action)
 
-        self.clearPlotAction = QtTools.create_action(self, "Clear All Plots", slot=self.clear_plot, shortcut=None,
-                                                     icon="clear_plot", tip="Clears the live data arrays")
+        self.clearPlotAction = QtTools.create_action(self, 
+        "Clear All Plots", slot = self.clear_plot, shortcut = None,
+        icon = "clear_plot", tip = "Clears the live data arrays")
                                                      
-        self.removeFitAction = QtTools.create_action(self, "Remove Fit", slot=self.remove_fit, shortcut=None,
-                                                     icon="clear", tip="Reset the fit data to an empty array")
+        self.removeFitAction = QtTools.create_action(self, 
+        "Remove Fit", slot = self.remove_fit, shortcut = None,
+        icon = "clear", tip = "Reset the fit data to an empty array")
 
         self.plotMenu.addAction(self.clearPlotAction)
         self.plotMenu.addAction(self.removeFitAction)
 
 
 ###### INSTRUMENT MENU SETUP ######
-        self.read_DTT = QtTools.create_action(
-            self, "Read", slot=self.single_measure_DTT, shortcut=None, icon=None, tip="Take a one shot measure with DTT")
-        self.connect_hub = QtTools.create_action(self, "Connect Instruments", slot=self.connect_instrument_hub, shortcut=QtGui.QKeySequence(
-            "Ctrl+I"), icon=None, tip="Refresh the list of selected instruments")
+        self.read_DTT = QtTools.create_action(self, "Read", 
+        slot = self.single_measure_DTT, shortcut = None, icon = None, 
+        tip = "Take a one shot measure with DTT")
+        
+        
+        self.connect_hub = QtTools.create_action(self, "Connect Instruments", 
+        slot = self.connect_instrument_hub, 
+        shortcut = QtGui.QKeySequence("Ctrl+I"), icon=None,
+        tip="Refresh the list of selected instruments")
 
-        self.refresh_ports_list_action = QtTools.create_action(self, "Refresh ports list", slot=self.refresh_ports_list, icon=None, tip="Refresh the list of availiable ports")
+        self.refresh_ports_list_action = QtTools.create_action(self, 
+        "Refresh ports list", slot = self.refresh_ports_list, icon = None,
+        tip = "Refresh the list of availiable ports")
 
         
  
@@ -318,35 +343,34 @@ class LabGuiMain(QtGui.QMainWindow):
 
 
 ###### WINDOW MENU SETUP ######
-        self.add_pdw = QtTools.create_action(
-            self, "Add a Plot", slot=self.create_pdw, shortcut=None, icon=None, tip="Add a recordsweep window")
+        self.add_pdw = QtTools.create_action(self, "Add a Plot",
+        slot = self.create_pdw, shortcut = None, icon = None,
+        tip = "Add a recordsweep window")
         
         
-        self.add_pqtw = QtTools.create_action(
-            self, "Add a PyQtplot", slot=self.create_pqtw, shortcut=None, icon=None, tip="Add a pyqt window")
-
-        # self.zoneCentrale.addSubWindow(self.sw)
-
-
-
-
-       
-
-
+        self.add_pqtw = QtTools.create_action(self, "Add a PyQtplot",
+        slot = self.create_pqtw, shortcut = None, icon = None,
+        tip = "Add a pyqt window")
 
 
         self.windowMenu.addAction(self.add_pdw)
+        
         try:
+            
             import PyQTWindow
             self.windowMenu.addAction(self.add_pqtw)
+            
         except:
-            logging.info("pyqtgraph is unable to load, the pyqt window option is disabled")
+            logging.info("pyqtgraph is unable to load, \
+the pyqt window option is disabled")
 
         self.windowMenu.addAction(simpleconnectDockWidget.toggleViewAction())
         
 ###### OPTION MENU SETUP ######
-        self.toggle_debug_state = QtTools.create_action(
-            self, "Change debug mode", slot=self.option_change_debug_state, shortcut=None, icon=None, tip="Change the state of the debug mode")
+        self.toggle_debug_state = QtTools.create_action(self, 
+        "Change debug mode", slot = self.option_change_debug_state, 
+        shortcut = None, icon = None,
+        tip = "Change the state of the debug mode")
         
 
         self.optionMenu.addAction(self.toggle_debug_state)
@@ -357,9 +381,14 @@ class LabGuiMain(QtGui.QMainWindow):
 
         #Load the user settings for the instrument connectic and parameters
         self.default_settings_fname = 'settings/default_settings.txt'
-        if os.path.isfile(self.default_settings_fname):   
-            self.widgets['InstrumentWidget'].load_settings(self.default_settings_fname)
-            self.widgets['CalcWidget'].load_settings(self.default_settings_fname)
+        
+        if os.path.isfile(self.default_settings_fname):  
+            
+            self.widgets['InstrumentWidget'].load_settings(
+                    self.default_settings_fname)
+            
+            self.widgets['CalcWidget'].load_settings(
+                    self.default_settings_fname)
 
         # Create the object responsible to display information send by the
         # datataker
@@ -393,10 +422,14 @@ class LabGuiMain(QtGui.QMainWindow):
             
     def closeEvent(self, event):
         reply = QtGui.QMessageBox.question(self, 'Message',
-                                           "Are you sure you want to quit?", QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
+        "Are you sure you want to quit?", QtGui.QMessageBox.Yes, 
+        QtGui.QMessageBox.No)
 
         if reply == QtGui.QMessageBox.Yes:
-            self.widgets['InstrumentWidget'].save_settings(self.default_settings_fname)
+            
+            self.widgets['InstrumentWidget'].save_settings(
+                    self.default_settings_fname)
+            
             self.settings.setValue("windowState", self.saveState())
             self.settings.setValue("geometry", self.saveGeometry())
             self.settings.remove("script_name")
