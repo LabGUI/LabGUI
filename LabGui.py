@@ -109,19 +109,23 @@ class LabGuiMain(QtGui.QMainWindow):
         self.settings = QSettings(self)
         self.settings.setValue("state", self.saveState())
         
+        #check whether a config file exists or not
         if exists(CONFIG_FILE) == False:
             logging.warning("A config.txt file has been generated for you.")           
             logging.warning("Please modify it to change the default \
 script, settings and data locations, or to enter debug mode.")
 
             path = os.path.dirname(os.path.realpath(__file__)) + os.sep
+            
             # creates a config.txt with basic needs
-            IOTool.create_config_file(main_dir=path)
+            IOTool.create_config_file(main_dir = path)
                 
+        #create the central part of the application
         self.zoneCentrale = QtGui.QMdiArea()
         self.zoneCentrale.subWindowActivated.connect(self.update_current_window)
         self.setCentralWidget(self.zoneCentrale)
 
+        #read the DEBUG parameter from the configuration file (True/False)
         self.DEBUG = IOTool.get_debug_setting()
        
         if self.DEBUG == True:
@@ -171,27 +175,13 @@ script, settings and data locations, or to enter debug mode.")
         # central array)
         self.connect(self.datataker, SIGNAL(
             "data(PyQt_PyObject)"), self.update_data_array)
-        self.connect(self.datataker, SIGNAL(
-            "spectrum_data(PyQt_PyObject)"), self.update_spectrum_data)
+
+        #a signal to signify the data taking script is over
         self.connect(self.datataker, SIGNAL(
             "script_finished(bool)"), self.finished_DTT)
+            
+        #the array in which the data will be stored
         self.data_array = np.array([])
-
-
-###### DOCK WIDGET SETUP: INSTRUMENT SIMPLE CONNECT ######
-
-        self.simpleConnectWidget = Tool.SimpleConnectWidget(parent = self)
-        simpleconnectDockWidget = QtGui.QDockWidget("Simple instrument console"
-                                                    , self)
-        simpleconnectDockWidget.setObjectName("simpleConnectWidgetDockWidget")
-        simpleconnectDockWidget.setAllowedAreas(
-            Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea)
-        simpleconnectDockWidget.setWidget(self.simpleConnectWidget)
-        self.addDockWidget(Qt.RightDockWidgetArea, simpleconnectDockWidget)
-#        widget = Tool.SimpleConnectWidget()
-#        widget.show()
-
-
 
         # all actions related to the figure widget (mplZoomWidget.py) are 
         # set up in the actionmanager
@@ -363,8 +353,6 @@ the script path and the data output path into the config file")
         except:
             logging.info("pyqtgraph is unable to load, \
 the pyqt window option is disabled")
-
-        self.windowMenu.addAction(simpleconnectDockWidget.toggleViewAction())
         
 ###### OPTION MENU SETUP ######
         self.toggle_debug_state = QtTools.create_action(self, 
@@ -405,8 +393,6 @@ the pyqt window option is disabled")
             logging.info('Using default window configuration') # no biggie - probably means settings haven't been saved on this machine yet
             #hide some of the advanced widgets so they don't show for new users
             # the objects are not actually deleted, just hidden
-            simpleconnectDockWidget.hide()
-
 
 
     def add_widget(self,widget_creation,action_fonctions = None,**kwargs):
@@ -876,5 +862,5 @@ def test_automatic_fitting():
     sys.exit(app.exec_())
 
 if __name__ == "__main__":
-#    launch_LabGui()
-    test_automatic_fitting()
+    launch_LabGui()
+#    test_automatic_fitting()

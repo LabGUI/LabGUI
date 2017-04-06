@@ -737,11 +737,7 @@ def add_widget_into_main(parent):
     create a QDock widget and store a reference to the widget
     """    
 
-    print "in the construction of the window"
-
-    mywidget = InstrumentWindow(parent = parent)
-    
-    print "created inst window"    
+    mywidget = InstrumentWindow(parent = parent)  
     
     parent.instrument_connexion_setting_fname=""  
     
@@ -762,43 +758,34 @@ def add_widget_into_main(parent):
     
     instDockWidget.setWidget(instScrollArea)
     parent.addDockWidget(Qt.RightDockWidgetArea, instDockWidget)
-        
-        
-    print "set the dock"        
+    
     
     #fill the dictionnary with the widgets added into LabGuiMain
     parent.widgets['InstrumentWidget'] = mywidget
     
-    parent.refresh_ports_list()    
-    
-    print "refreshed the ports"     
+    parent.refresh_ports_list()      
     
     #Enable the toggle view action
     parent.windowMenu.addAction(instDockWidget.toggleViewAction())
 
-    print "add the menu" 
     #add a series of signals tiggers
 
 
     parent.connect_instrument_hub = MethodType(connect_instrument_hub,
                                                parent, parent.__class__)    
-    
-    print "add connect_instrument_hub"     
+        
     
     parent.connect(parent.widgets['InstrumentWidget'], SIGNAL(
             "ConnectInstrumentHub(bool)"), parent.connect_instrument_hub) 
 
-    print "connect to connect_instrument_hub" 
 
     parent.connect_instrument = MethodType(connect_instrument,
                                                parent, parent.__class__)
 
-    print "add connect_instrument" 
 
     parent.connect(parent.widgets['InstrumentWidget'], SIGNAL(
         "ConnectInstrument(PyQt_PyObject)"), parent.connect_instrument)
         
-    print "connect to connect_instrument"         
     
     parent.connect(parent.widgets['InstrumentWidget'], SIGNAL(
         "colorsChanged()"), parent.update_colors)
@@ -806,7 +793,6 @@ def add_widget_into_main(parent):
     parent.connect(parent.widgets['InstrumentWidget'], SIGNAL(
         "labelsChanged()"), parent.update_labels)
         
-    print "finished" 
             
      
 
