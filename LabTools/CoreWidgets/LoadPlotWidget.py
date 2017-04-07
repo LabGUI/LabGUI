@@ -52,12 +52,8 @@ class LoadPlotWidget(QWidget):
         self.plotButton.setText("Plot")
 
         self.plotLayout.addWidget(self.plotButton)
-        #self.runLayout.addItem(QSpacerItem(20, 183,  QSizePolicy.Expanding, QSizePolicy.Minimum))
 
         self.verticalLayout.addLayout(self.plotLayout)
-
-#        spacerItem = QSpacerItem(20, 183, QSizePolicy.Minimum, QSizePolicy.Expanding)
-#        self.verticalLayout.addItem(spacerItem)
 
         self.setLayout(self.verticalLayout)
 
@@ -84,9 +80,10 @@ class LoadPlotWidget(QWidget):
         self.plotButton.setEnabled(True)
 
 
-def create_plw_func(parent, load_fname = None):
+def create_plw(parent, load_fname = None):
     """
-        add a new plot load window in the MDI area. The data and channels are loaded from a file
+        add a new plot load window in the MDI area. The data and channels 
+        are loaded from a file
     """
     # maintain the previous functionality if file name not passed in
     if not load_fname:
@@ -97,24 +94,13 @@ def create_plw_func(parent, load_fname = None):
     extension = load_fname.rsplit('.')[len(load_fname.rsplit('.')) - 1]
 #        print extension
 
-    if extension == "adat":
-        [data, labels] = IOTool.load_file_windows(load_fname, '\t')
-    elif extension == "adat2":
-        [data, labels] = IOTool.load_file_windows(load_fname)
-    elif extension == "a5dat":
-        data, param = load_experiment(load_fname)
-        data = np.transpose(np.array(data))
-        labels = {}
-        labels["param"] = ["Vc", "T", "P"]
-    elif extension == "ldat":
+    if extension == "ldat":
         lb_data = LabeledData(fname = load_fname)
         data = lb_data.data
         labels = {}
         labels["param"] = lb_data.labels
     else:
         [data, labels] = IOTool.load_file_windows(load_fname)
-
-#        [data,labels]=IOTool.load_file_windows(load_fname)
 
     chan_contr = OrderedDict()
     chan_contr["groupBox_Name"] = ["Channel", "lineEdit"]
@@ -137,10 +123,10 @@ def create_plw_func(parent, load_fname = None):
     parent.connect(plw.mplwidget, SIGNAL(
         "limits_changed(int,PyQt_PyObject)"), parent.emit_axis_lim)
         
-    parent.connect(parent.dataAnalyseWidget, SIGNAL(
+    parent.connect(parent.widgets['AnalyseDataWidget'], SIGNAL(
         "data_set_updated(PyQt_PyObject)"), plw.update_plot)
         
-    parent.connect(parent.dataAnalyseWidget, SIGNAL(
+    parent.connect(parent.widgets['AnalyseDataWidget'], SIGNAL(
         "update_fit(PyQt_PyObject)"), plw.update_fit)
         
     parent.connect(parent, SIGNAL("remove_fit()"), plw.remove_fit)
@@ -159,7 +145,7 @@ def create_plw_func(parent, load_fname = None):
 #        self.dataAnalyseWidget.refresh_active_set()
     
     plw.update_labels(labels['param'])
-    parent.dataAnalyseWidget.update_data_and_fit(data)
+    parent.widgets['AnalyseDataWidget'].update_data_and_fit(data)
 #        plw.update_plot(data)
     parent.zoneCentrale.addSubWindow(plw)
     plw.show()
@@ -179,7 +165,7 @@ def add_widget_into_main(parent):
     
     loadPlotDockWidget.hide()
     
-    parent.create_plw = MethodType(create_plw_func, parent, parent.__class__)
+    parent.create_plw = MethodType(create_plw, parent, parent.__class__)
     
     parent.connect(parent.widgets["loadPlotWidget"].plotButton,
                  SIGNAL("clicked()"), parent.create_plw)

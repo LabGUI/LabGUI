@@ -861,6 +861,20 @@ def test_automatic_fitting():
     ex.show()
     sys.exit(app.exec_())
 
+def test_load_previous_data(data_path = os.path.join(ABS_PATH,'scratch','example_output.dat')):
+    """
+    open a new plot window with previous data
+    """
+    app = QtGui.QApplication(sys.argv)
+    ex = LabGuiMain()
+
+    ex.create_plw(data_path)
+
+    ex.show()
+    sys.exit(app.exec_())
+
+
 if __name__ == "__main__":
-    launch_LabGui()
+#    launch_LabGui()
 #    test_automatic_fitting()
+    test_load_previous_data()

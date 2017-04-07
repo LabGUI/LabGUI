@@ -40,7 +40,8 @@ def create_config_file(main_dir=None):
         of.write("%s=%sscratch%s\n" % (SAVE_DATA_PATH_ID, main_dir, os.sep))
         of.write("%s=True\n"%(DEBUG_ID))
         of.write("%s=%sscripts%sscript.py\n" % (SCRIPT_ID, main_dir,os.sep))
-        of.write("%s=%ssettings%sdemo_dice.txt\n" % (SETTINGS_ID, main_dir,os.sep))
+        of.write("%s=%ssettings%sdemo_dice.txt\n" % (SETTINGS_ID,
+                                                     main_dir,os.sep))
         of.write("%s=%sscratch%s\n" % (LOAD_DATA_FILE_ID, main_dir,os.sep))
         of.write("%s=\n"%(GPIB_INTF_ID))
         of.close()
@@ -67,27 +68,7 @@ def save_config_file(data_path=None):
         of.write("%s=%ssettings\demo_voltage_AC.set\n" % (SETTINGS_ID, cwd))
         of.write("%s=%sdata\\\n" % (LOAD_DATA_FILE_ID,cwd))
         of.close()
-        # COOLDOWN=TEST
-        # SAMPLE=sample_name
 
-
-# old version
-#def open_therm_file(config_file_name=CONFIG_FILE):
-#    """
-#        open the output file and autoincrement it, if it already exists 
-#    """
-#    file_name = get_file_name(config_file_name)
-#
-#    n = 1
-#    # make sure the file doesn't already exist by incrementing the number
-#    while os.path.exists(file_name + "_%3.3d.dat" % n):
-#        n += 1
-#
-#    out_file_name = file_name + "_%3.3d" % n
-#
-#    print("open output file: " + out_file_name + "in write mode")
-#    output_file = open(out_file_name, 'w')
-#    return output_file, out_file_name
 
 def open_therm_file(config_file_name=CONFIG_FILE):
     """
@@ -98,7 +79,8 @@ def open_therm_file(config_file_name=CONFIG_FILE):
     therm_path = ""
     sample_name = ""
     file_format = ".dat"
-    name_formatter = "data_path + time.strftime('%y%m%d') + '_' + cooldown + 'therm'"
+    name_formatter = "data_path + time.strftime('%y%m%d') + '_' + cooldown \
++ 'therm'"
     try:
         config_file = open(config_file_name)
         for line in config_file:
@@ -192,54 +174,83 @@ def get_file_name(config_file_name=CONFIG_FILE):
     return file_name
 
 
-def get_config_setting(setting, config_file_name=CONFIG_FILE):
+def get_config_setting(setting, config_file_name = CONFIG_FILE):
     """
         gets a setting from the configuration file
     """
     value = None
+    
     try:
-        config_file = open(config_file_name)
+        #open the file
+        config_file = open(config_file_name,'r')
 
+        #loop through all the lines
         for line in config_file:
+            #the setting should have a = sign in the line
             [left, right] = line.split("=")
-            left = left.strip()
-            right = right.strip()
+            
+            #separate the setting name from its value
+            left = left.strip() #name
+            right = right.strip() #value
+            
+            #if the name corresponds to the setting we want, we read the value
             if left == setting:
+                
                 value = right
+                
         if not value:
-            print("Configuration file does not contain a'" + setting + "=' line.")
+            
+            print("Configuration file does not contain a'" 
+                  + setting + "=' line.")
             print("returning the keyword None")
-            #value = "no %s file" % (setting)
         config_file.close()
+        
     except IOError:
+        
         print("No configuration file " + config_file_name + " found")
         value = None
+        
     return value
 
-def set_config_setting(setting,setting_value, config_file_name=CONFIG_FILE):
+def set_config_setting(setting, setting_value, config_file_name = CONFIG_FILE):
     """
         sets a setting to a given value inside the configuration file
     """
-#    value = None
     try:
+        #open the file
         config_file = open(config_file_name,'r')
 
-        lines=config_file.readlines()     
+        #read the lines into a list
+        lines = config_file.readlines()
+        
+        #loop through all the lines
         for i,line in enumerate(lines):
+            #the setting should have a = sign in the line
             [left, right] = line.split("=")
-            left = left.strip()
-            right = right.strip()
+            
+            #separate the setting name from its value
+            left = left.strip() #name
+            right = right.strip() #value
+            
+            #if the name corresponds to the setting we want, we write the value
             if left == setting:
+                
                 lines[i]="%s=%s\n"%(setting,setting_value)
         
         config_file.close()
         
+        #reopen the file and write the modified lines
         config_file = open(config_file_name,'w')
         config_file.writelines(lines)
         config_file.close()
-        print(("The parameter %s in the config file was successfully changed to %s"%(setting,setting_value)))
+        
+        print(("The parameter %s in the config file was \
+successfully changed to %s"%(setting,setting_value)))
+        
     except:
-        logging.error("Could not set the parameter %s to %s in the config file located at %s\n"%(setting,setting_value, config_file_name))
+        
+        logging.error("Could not set the parameter %s to %s in the config \
+file located at %s\n"%(setting,setting_value, config_file_name))
         
 
 def get_settings_name():
@@ -293,68 +304,88 @@ def load_file_linux(fname, splitchar='\t'):
     return data
 
 
-def load_file_windows(fname, splitchar=' ', headers=True):
+def load_file_windows(fname, splitchar = ', ', headers = True, hdr_only = False):
     """
     This one is for Window
     """
-    str(fname)
-    instr = open(fname, 'r')
-    data = []
-    label = {}
-    row_length = 0
-    for i, dat in enumerate(instr):
-        #        print dat
-        if dat[0] != "#":
-            lines = dat.split('\r')
-            nrow = 0
 
-            for el in lines:
-                #                print el
-                nrow = nrow + 1
-                mes = el.split(splitchar)
-                ncolumn = 0
-                row = []
-                for p in mes:
-                    #                    print p
-                    #                    print p
-                    ncolumn = ncolumn + 1
-                    try:
-                        row.append(float(p))
-                    except:
-                        pass
-                if row_length == 0:
-                    row_length = len(row)
-                if len(row) == row_length:
-                    data.append(row)
-                else:
-                    print("IOTools.load_file_windows : line", i, " skipped")
-        else:
-            label_id = dat[1:2]
+    ifs = open(fname, 'r')
+    label = {'hdr' : ""}
+    
+    LABELS_ID = ['P','I','C']
+    
+    lines = ifs.readlines()
+    
+    #useful index to know when we passed the lines with specific information
+    end_normal_hdr_idx = len(lines)
 
-            dat = dat[2:len(dat)].replace("'", "")
-            dat = dat.strip("\n")
-            print("IOTools.load_file_windows : labels", dat)
+    
+    for i, line in enumerate(lines):
+        
+        #if the line starts with a #, it is a comment
+        if line[0] == "#":
+
+            #get the label identifier :
+            #   P for parameter, 
+            #   I for instrument,
+            #   C for channel name
+            label_id = line[1:2]
+
+            #identify if we have an occurence of a label_id from LABELS_ID
+            if label_id in LABELS_ID:
+                #get rid of the ' signs and the return lines
+                line = line[2:].replace("'", "")
+                line = line.strip("\n")
+                
+                #if the line after this one isn't a label_id one
+                #it is going to be ignored
+                end_normal_hdr_idx = i
+                
+            else:
+                #get rid of the # at beginning of the line
+                line = line[1:]
+            
+            #assign the header parameters according the the label_id
             if label_id == 'P':
-                if splitchar == '\t':
-                    dat = dat.strip('\t')
-                    print("IOTools.load_file_windows : labels", dat)
-                    label['param'] = dat.split(splitchar)
-                else:
-                    label['param'] = dat.split(', ')
+                
+                label['param'] = line.split(splitchar)
+                    
             elif label_id == 'I':
-                label['instr'] = dat.split(', ')
+                
+                label['instr'] = line.split(splitchar)
+                
+            elif label_id == 'C':
+                
+                label['channel_labels'] = line.split(', u')
+                
+            #this is user comments we only save the ones that are 
+            #before the label_id, other lines will be ignored
+            if i < end_normal_hdr_idx:
+                
+                label['hdr'] = label['hdr'] + line 
 
-    data = np.array(data)
-    if len(label) == 0:
+    ifs.close()
+
+    #load the data matrix using numpy is faster
+    data = np.loadtxt(fname)
+    
+    #this means there is only the 'hdr' key
+    if len(label) == 1:
         
         label['param'] = ["col %i"% i for i in range(np.size(data,1))]
-#    data.reshape(nrow,ncolumn)#,nrow)
 
+    #return both the data and the header content if header is set to True
     if headers:
-        if len(label) == 0:
-            print("IOTools.load_file_windows : #P or #I headers are missing, all lines starting with # will be ignored")
+        #this means there is only the 'hdr' and 'param' keys
+        if len(label) == 2:
+            
+            print("IOTools.load_file_windows : #P, #I or #C headers are \
+missing, all lines starting with # are available in the second output dict")
+        
         return data, label
+    
     else:
+        
         return data
 
 
@@ -460,22 +491,7 @@ def load_adat_file(fname, splitchar=' '):
                     lines[i] = float(el)
             lines = lines[0:len(lines) - 1]
             print(lines)
-#            nrow=0
 
-#            for el in lines:
-# print el
-#                nrow=nrow+1
-#                mes=el.split(splitchar)
-#                ncolumn=0
-#                row=[]
-#                for p in mes:
-# print p
-# print p
-#                    ncolumn=ncolumn+1
-#                    try:
-#                        row.append(float(p))
-#                    except:
-#                        pass
             data.append(lines)
         else:
             dat = dat[1:len(dat)].replace("'", "")
@@ -506,7 +522,8 @@ def load_adat_file(fname, splitchar=' '):
 
 def import_module_func(module_name, func_name, package=None):
     """
-    given a module and a function name (in strings) it returns a function handle
+    given a module and a function name (in strings) 
+    it returns a function handle
     """
     my_module = import_module(module_name, package=package)
     return getattr(my_module, func_name)
@@ -520,9 +537,10 @@ def get_func_variables(my_func):
     return my_func.__code__.co_varnames
 
 
-def list_module_func(module_name, package=None):
+def list_module_func(module_name, package = None):
     """
-    given a module name which is in the PYTHONPATH this function lists all the function names of the module
+    given a module name which is in the PYTHONPATH this function 
+    lists all the function names of the module
     """
     my_module = import_module(module_name, package=package)
     all_funcs = dir(my_module)
@@ -565,28 +583,8 @@ def match_value2index(array1D, val):
 
 
 if __name__ == "__main__":
-    pass
-#    set_config_setting("SAMPLE","AHAHA", config_file_name=CONFIG_FILE)
-#    [data, l] = load_file_windows("fitdata.txt")
-#    print data
-#    print l['param']
-#    print load_pset_file('fitdata.pset')#,['dt','e','Flow','T','Ta','r','Tb','M','ert'])
-#    print load_aset_file('140212_B22_B2_LHe_cell_77K_Knusden_descente.aset')
-#    Qv=[1,2,3,4]
-#    P=[-1,-2,-3]
-#
-#    M=[]
-#    for i,q in enumerate(Qv):
-#        N=[]
-#        for j,p in enumerate(P):
-# dp=data_point(q,p,T,298,A)
-#            N.append(q*p)
-# N=np.array(N)
-#        M.append(N)
-# M=np.array(N)
-#    print M
-#
-#    save_matrix(M)
-
-#    E = scipy.io.loadmat('matrix.mat')
-#    print E
+    import time
+    ts = time.time()
+    d,l = load_file_windows("test_load.dat")
+    print l
+    print time.time()-ts
