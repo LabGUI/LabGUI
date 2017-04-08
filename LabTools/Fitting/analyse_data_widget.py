@@ -14,7 +14,7 @@ import sys
 import logging
 logging.basicConfig(level=logging.DEBUG)
 
-from LabTools.Display.QtTools import ZOOM_MODE, PAN_MODE, SELECT_MODE
+from LabTools.Display.mplZoomWidget import ZOOM_MODE, PAN_MODE, SELECT_MODE
 
 from collections import OrderedDict
 from LabTools.Fitting import analyse_data as ad

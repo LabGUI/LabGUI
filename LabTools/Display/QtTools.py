@@ -12,10 +12,11 @@ from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 from PyQt4 import QtGui
 
-#global variables used to know what mode the mouse is in
-ZOOM_MODE = 0
-PAN_MODE = 1
-SELECT_MODE =2
+##global variables used to know what mode the mouse is in
+# these have moved to mplZoomWidget
+#ZOOM_MODE = 0
+#PAN_MODE = 1
+#SELECT_MODE =2
 
 
 # A silly little class to replace stdout that both prints and emits the text as a signal

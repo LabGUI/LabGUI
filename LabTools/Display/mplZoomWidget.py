@@ -32,8 +32,10 @@ import logging
 mpl.rcParams['font.size'] = 9
 
 
-from QtTools import ZOOM_MODE, PAN_MODE, SELECT_MODE
-
+#global variables used to know what mode the mouse is in
+ZOOM_MODE = 0
+PAN_MODE = 1
+SELECT_MODE =2
 
 class MatplotlibZoomWidget(Canvas):
     """
