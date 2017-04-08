@@ -431,7 +431,7 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
         index=0
         for num, box in enumerate(self.channel_objects["groupBox_X"]):
             if box.isChecked():
-                index=num
+                index = num
         return index
         
     def get_fit_axis_index(self):
@@ -439,7 +439,7 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
         index=0
         for num, box in enumerate(self.channel_objects["groupBox_fit"]):
             if box.isChecked():
-                index=num
+                index = num
         return index
         
     def get_Y_axis_index(self):  
@@ -447,7 +447,7 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
         index = 0
         for num, box in enumerate(self.channel_objects["groupBox_Y"]):
             if box.isChecked():
-                index=num
+                index = num
         return index
     
     def set_X_axis_label(self,newlabel):
@@ -679,8 +679,8 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
             line, = self.ax.plot([],[],"--", color = "#e62e00",linewidth = 2)
 
         #if there is a resctiction on the data set        
-        idx_start = fitp["limits"][0]
-        idx_stop = fitp["limits"][1]
+        idx_start = int(fitp["limits"][0])
+        idx_stop = int(fitp["limits"][1])
         #there is a different treatment if x is choosen to be a time axis or quantity measured by an instrument                
         if self.time_Xaxis:
             xdataw=self.set_axis_time()

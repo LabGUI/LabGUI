@@ -5,10 +5,12 @@ Created on Fri Jul 19 17:19:44 2013
 Copyright (C) 10th april 2015 Benjamin Schmidt & Pierre-Francois Duc
 License: see LICENSE.txt file
 """
-from PyQt4.QtGui import *
-from PyQt4.QtCore import *
+from PyQt4.QtGui import QSizePolicy
+from PyQt4.QtCore import SIGNAL, Qt
 import sys
 import PyQt4.QtGui as QtGui
+from types import MethodType
+
 
 import LabDrivers.Tool as Tool
 import LabDrivers.utils
@@ -20,7 +22,7 @@ width_instr = 100
 width_port = 130
 width_param = 80
 
-class SingleLineWidget(QWidget):
+class SingleLineWidget(QtGui.QWidget):
     AVAILABLE_PORTS = []
     # Number of instrument that can be connected
     num_channels = 0
@@ -48,7 +50,7 @@ class SingleLineWidget(QWidget):
         # Contains the lists of parameters of the instruments
         self.param_cbb = self.create_combobox("Param", label_text="Measurement")
         
-        self.horizontal_layout = QHBoxLayout(self)
+        self.horizontal_layout = QtGui.QHBoxLayout(self)
 #        self.horizontal_layout.addWidget(self.color_btn)
         self.horizontal_layout.addWidget(self.param_name_le)
         self.horizontal_layout.addWidget(self.instr_name_cbb)       
@@ -61,7 +63,7 @@ class SingleLineWidget(QWidget):
         
         
     def create_lineedit(self, label_text="Name"): 
-        le = QLineEdit(self)
+        le = QtGui.QLineEdit(self)
 
         le.setObjectName("param_name_le")
         self.connect(le, SIGNAL("textEdited(QString)"), self.lineEdit_handler)
@@ -75,7 +77,7 @@ class SingleLineWidget(QWidget):
 #        if color == None:
 #            color = self.color_set[mod(index, 10)]
 
-        btn = QPushButton(self)
+        btn = QtGui.QPushButton(self)
         btn.setObjectName("param_name_le")
         if not color == None:
             btn.setStyleSheet('QPushButton {background-color: %s}' % color)
@@ -88,7 +90,7 @@ class SingleLineWidget(QWidget):
     def create_tickbox(self, label_text="Color"):
         # take the measure of the list length
 #        index = len(cb_list)
-        cb = QCheckBox("", self)
+        cb = QtGui.QCheckBox("", self)
         cb.setObjectName("checkBox")
         self.connect(cb, SIGNAL("stateEdited(int)"), self.tickbox_handler)
         # add the newly created widget to the list and to the layout
@@ -96,7 +98,7 @@ class SingleLineWidget(QWidget):
         return cb
 
     def create_combobox(self, name, label_text="label"):
-        cbb = QComboBox(self)
+        cbb = QtGui.QComboBox(self)
         cbb.setObjectName("comboBox")
         cbb.setStyleSheet(
             "QComboBox::drop-down {border-width: 0px;} QComboBox::down-arrow {image: url(noimg); border-width: 0px;}")
@@ -213,7 +215,7 @@ class SingleLineWidget(QWidget):
         btn = self.sender()
 #        idx = self.color_btn_list.index(btn)
 
-        color = QColorDialog.getColor(initial=btn.palette().color(1))
+        color = QtGui.QColorDialog.getColor(initial=btn.palette().color(1))
         btn.setStyleSheet('QPushButton {background-color: %s}' % color.name())
 #        print self.get_color_list()
         #emit the signal (Labgui will catch it and transfer it to the various windows which need to update their colors)
@@ -265,7 +267,6 @@ class SingleLineWidget(QWidget):
             self.port_cbb.addItems(self.AVAILABLE_PORTS)
 
     def set_color(self,color=None):
-        logging.debug(color)
         if not color == None:
             self.color_btn.setStyleSheet('QPushButton {background-color: %s}' % color)
         
@@ -276,7 +277,7 @@ class SingleLineWidget(QWidget):
         return self.param_name_le.text()
 
 
-class InstrumentWindow(QWidget):
+class InstrumentWindow(QtGui.QWidget):
     """This class operates the graphism of the instrument connectic"""
     # All the ports that can be used
     AVAILABLE_PORTS = []
@@ -298,7 +299,7 @@ class InstrumentWindow(QWidget):
             self.UNITS] = LabDrivers.utils.list_drivers()
         #print (IOTool.get_drivers_path())
         # This is a grid strictured layout
-        self.line_layout = QVBoxLayout()
+        self.line_layout = QtGui.QVBoxLayout()
         # initilize the lists
         # all the widgets of time SingleLineWidget will go in this list.
         self.lines = []
@@ -327,9 +328,9 @@ class InstrumentWindow(QWidget):
         if num_channels > 0:
             self.headers = ["Color", "Name", "Instr", "Port", "Param"]
             widths = [None, None,width_instr, width_port, width_param]
-            self.header_layout = QHBoxLayout()
+            self.header_layout = QtGui.QHBoxLayout()
             for i, hdr_text in enumerate(self.headers):
-                header = QLabel(hdr_text)
+                header = QtGui.QLabel(hdr_text)
                 if widths[i]:
                     header.setFixedWidth(widths[i])
                 self.header_layout.addWidget(header)
@@ -363,17 +364,17 @@ class InstrumentWindow(QWidget):
                 self.connect(self.bt_remove_last, SIGNAL(
                     "clicked()"), self.bt_remove_last_clicked)
                 
-                self.add_remove_layout = QHBoxLayout()
+                self.add_remove_layout = QtGui.QHBoxLayout()
                 self.add_remove_layout.addWidget(self.bt_add_line)
                 self.add_remove_layout.addWidget(self.bt_remove_last)
                 # set the layout and add a spacer bar
 
-                self.vertical_layout = QVBoxLayout(self)
+                self.vertical_layout = QtGui.QVBoxLayout(self)
                 self.vertical_layout.setObjectName("vertical_layout")
                 self.vertical_layout.addWidget(self.bt_connecthub)
                 self.vertical_layout.addLayout(self.line_layout)
                 self.vertical_layout.addLayout(self.add_remove_layout)
-                spacer_item = QSpacerItem(
+                spacer_item = QtGui.QSpacerItem(
                     20, 183, QSizePolicy.Minimum, QSizePolicy.Expanding)
                 self.vertical_layout.addItem(spacer_item)
 
@@ -622,12 +623,198 @@ class InstrumentWindow(QWidget):
         settings_file.close()
 
 
-        
+def refresh_ports_list(parent):
+    """Update the availiable port list in the InstrumentWindow module """
 
+    parent.widgets['InstrumentWidget'].refresh_cbb_port()
+
+
+def connect_instrument_hub(parent, signal = True):
+    """
+        When the button "Connect" is clicked this method actualise the InstrumentHub
+        according to what the user choosed in the command window. 
+        It cannot change while the DataTaker is running though
+    """
+    #@ISSUE
+    # I should add something here to avoid that we reconnect the instrument hub if the # of instrument is different
+    # and also not allow to take data if the current file header doesn't
+    # correspond to the intrument hub   
+
+    if signal:
+        
+        [instr_name_list, dev_list, param_list] = parent.collect_instruments()
+        logging.debug([instr_name_list, dev_list, param_list])
+        
+        actual_instrument_number = len(
+            parent.instr_hub.get_instrument_list())
+        cmdwin_instrument_number = len(instr_name_list)
+        
+        # if the datataker is running the user should not modify the length
+        # of the instrument list and connect it
+        connect = False
+        
+        if parent.isrunning():
             
+            if actual_instrument_number == cmdwin_instrument_number or \
+               actual_instrument_number == 0:
+                   
+                connect = True
+                
+        else:
+            
+            connect = True
+
+        if connect:
+            
+            print("Connect instrument hub...")
+            parent.instr_hub.connect_hub(
+                instr_name_list, dev_list, param_list)
+            print("...instrument hub connected")
+            parent.emit(
+                SIGNAL("instrument_hub_connected(PyQt_PyObject)"), param_list)
+        
+        else:
+            
+            print()
+            logging.warning("You cannot connect a number of instrument \
+different than " + str(actual_instrument_number) 
++ " when the datataker is running")
+            print()
+
+        logging.debug("The instrument list : " \
+                      + str(parent.instr_hub.get_instrument_list()))
+                      
+        #show a plot by default
+        parent.create_pdw()
+
+
+
+def connect_instrument(parent, connection_param):
+    """
+        When the button "Connect" is clicked this method actualise the InstrumentHub
+        according to what the user choosed in the command window. 
+        It cannot change while the DataTaker is running though
+    """
+    [instr_name, dev_port, param] = connection_param
+
+#        cmdwin_instrument_number=len(instr_name_list)
+    # if the datataker is running the user should not modify the length of
+    # the instrument list and connect it
+    connect = False
+    if parent.isrunning():
+        print("As data are being recorded now, you are not allowed to connect "\
+              + instr_name + " to " + dev_port)
+#            if actual_instrument_number == cmdwin_instrument_number or actual_instrument_number==0:
+#                connect=True
+    else:
+        connect = True
+
+    actual_instrument_number = len(parent.instr_hub.get_instrument_list())
+    print("number of instruments connected (b)", actual_instrument_number)
+    
+    if connect:
+        
+        print("Connect single instrument...")
+        parent.instr_hub.connect_instrument(instr_name, dev_port, param)
+        print("...single instrument connected")
+#«            self.emit(SIGNAL("instrument_hub_connected(PyQt_PyObject)"),None)
+    else:
+        
+        print()
+        
+        print("You cannot connect a number of instrument different than " + \
+        str(actual_instrument_number) + " when the datataker is running")
+        
+        print()
+        
+    actual_instrument_number = len(parent.instr_hub.get_instrument_list())
+    print("number of instruments connected (a)", actual_instrument_number)
+
+
+def add_widget_into_main(parent):
+    """add a widget into the main window of LabGuiMain
+    
+    create a QDock widget and store a reference to the widget
+    """    
+
+    print "in the construction of the window"
+
+    mywidget = InstrumentWindow(parent = parent)
+    
+    print "created inst window"    
+    
+    parent.instrument_connexion_setting_fname=""  
+    
+    #create a QDockWidget        
+    instDockWidget = QtGui.QDockWidget("Instrument Setup", parent)
+    instDockWidget.setObjectName("InstDockWidget")
+    instDockWidget.setAllowedAreas(
+        Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea)
+        
+    #make is possible to scroll up and down
+    instScrollArea = QtGui.QScrollArea()
+    instScrollArea.setWidgetResizable(True)
+    instScrollArea.setEnabled(True)
+    
+    #instScrollArea.setMaximumSize(375, 300)  # optional
+    
+    instScrollArea.setWidget(mywidget)
+    
+    instDockWidget.setWidget(instScrollArea)
+    parent.addDockWidget(Qt.RightDockWidgetArea, instDockWidget)
+        
+        
+    print "set the dock"        
+    
+    #fill the dictionnary with the widgets added into LabGuiMain
+    parent.widgets['InstrumentWidget'] = mywidget
+    
+    parent.refresh_ports_list()    
+    
+    print "refreshed the ports"     
+    
+    #Enable the toggle view action
+    parent.windowMenu.addAction(instDockWidget.toggleViewAction())
+
+    print "add the menu" 
+    #add a series of signals tiggers
+
+
+    parent.connect_instrument_hub = MethodType(connect_instrument_hub,
+                                               parent, parent.__class__)    
+    
+    print "add connect_instrument_hub"     
+    
+    parent.connect(parent.widgets['InstrumentWidget'], SIGNAL(
+            "ConnectInstrumentHub(bool)"), parent.connect_instrument_hub) 
+
+    print "connect to connect_instrument_hub" 
+
+    parent.connect_instrument = MethodType(connect_instrument,
+                                               parent, parent.__class__)
+
+    print "add connect_instrument" 
+
+    parent.connect(parent.widgets['InstrumentWidget'], SIGNAL(
+        "ConnectInstrument(PyQt_PyObject)"), parent.connect_instrument)
+        
+    print "connect to connect_instrument"         
+    
+    parent.connect(parent.widgets['InstrumentWidget'], SIGNAL(
+        "colorsChanged()"), parent.update_colors)
+        
+    parent.connect(parent.widgets['InstrumentWidget'], SIGNAL(
+        "labelsChanged()"), parent.update_labels)
+        
+    print "finished" 
+            
+     
+
+
+
 if __name__ == "__main__":
 
-    app = QApplication(sys.argv)
+    app = QtGui.QApplication(sys.argv)
     listi = Tool.refresh_device_port_list()
     ex = InstrumentWindow()
     ex.refresh_cbb_port(listi)
