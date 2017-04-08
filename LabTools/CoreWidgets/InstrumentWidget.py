@@ -609,16 +609,29 @@ class InstrumentWindow(QtGui.QWidget):
         #except:
          #   print "Setting file loading error, the filename was :", fname
 
-    def save_settings(self, fname):
+    def save_settings(self, fname, window_settings):
         """Generates a settings file that can be read with load_settings."""
         settings_file = open(fname, 'w')
         logging.info("Settings saved in " + fname)
         
         #write the text of each line object into a line of text file
-        for line in self.lines:
+        for i, line in enumerate(self.lines):
+            
             settings_file.write(line.get_label() + ', ')
+            
             for item in line.collect_device_info():
+                
                 settings_file.write(item + ', ')
+                
+            try:
+                
+                settings_file.write(window_settings[i])
+                
+            except IndexError:
+                logging.info(
+                "Couldn't save the plot window information to the file %s"
+                %(fname))
+                
             settings_file.write('\n')
         settings_file.close()
 
@@ -686,6 +699,8 @@ different than " + str(actual_instrument_number)
                       
         #show a plot by default
         parent.create_pdw()
+        
+        parent.actual_pdw = parent.get_last_window()
 
 
 

@@ -260,7 +260,49 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
 #        self.radio
         #create line objects and append them to self.ax[R].lines autoatically
 
+
+    def list_channels_values(self):
+        lines = []
         
+        for i in range(self.num_channels):
+            
+            line = ""
+            
+            for name,item in self.channel_controls.items():
+         
+                if item[1]=="radioButton":
+                    
+                    line = "%s, %s"%(
+                    line, int(self.channel_objects[name][i].isChecked()))
+                    
+                elif item[1]=="checkBox":
+                    
+                    line = "%s, %s"%(
+                    line, int(self.channel_objects[name][i].isChecked()))
+                    
+                elif item[1]=="comboBox":
+                    
+                    line = "%s, '%s'"%(
+                    line, self.channel_objects[name][i].currentText())
+                    
+                elif item[1]=="lineEdit":
+
+                    line = "%s, '%s'"%(
+                    line, self.channel_objects[name][i].text())
+                    
+                elif item[1]=="colorButton":
+                    
+                    obj = self.channel_objects[name][i]                    
+                    line = "%s, %s"%(line, obj.styleSheet()[-8:-1])                
+                    
+                elif item[1]=="single_comboBox":
+                    
+                    line = "%s, %s"%(
+                    line, self.channel_objects[name][i].currentText())
+
+            lines.append(line)
+            
+        return lines
     """#####################################################################"""
     """These handler function take action when someone interact with the button, checkbox, lineEdit etc... the names are explicit"""
         
@@ -1192,11 +1234,18 @@ def test_timestamp():
     form.show()
     app.exec_() 
 
+def test_pdw_save_load_setting():
+    app = QtGui.QApplication(sys.argv)
+    form = PlotDisplayWindow()
+    form.list_channels_values()
+    form.show()
+    app.exec_() 
+
 
 # This snippet makes it run as a standalone program
 if __name__ == "__main__":
-#    test_pdw()
-    test_timestamp()
+    test_pdw_save_load_setting()
+#    test_timestamp()
 
     
 #    app = QtGui.QApplication(sys.argv)

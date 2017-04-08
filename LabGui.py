@@ -182,10 +182,14 @@ script, settings and data locations, or to enter debug mode.")
             
         #the array in which the data will be stored
         self.data_array = np.array([])
-
+        
         # all actions related to the figure widget (mplZoomWidget.py) are 
         # set up in the actionmanager
         self.action_manager = mplZoomWidget.ActionManager(self)
+        
+        #this will contain the widget of the latest pdw created upon
+        #connecting the instrument Hub
+        self.actual_pdw = None
         
 #### set up menus and toolbars      
         
@@ -413,8 +417,8 @@ the pyqt window option is disabled")
 
         if reply == QtGui.QMessageBox.Yes:
             
-            self.widgets['InstrumentWidget'].save_settings(
-                    self.default_settings_fname)
+            #save the current settings
+            self.file_save_settings(self.default_settings_fname)
             
             self.settings.setValue("windowState", self.saveState())
             self.settings.setValue("geometry", self.saveGeometry())
@@ -484,6 +488,22 @@ the pyqt window option is disabled")
         pqtw.show()
 
 
+    def get_last_window(self, window_ID = "Live"):
+        """
+        should return the window that was created when the 
+        instrument hub was connected
+        """
+        
+        try:
+            
+            pdw = self.zoneCentrale.subWindowList()[-1].widget()
+        
+        except IndexError:
+            
+            logging.error("No pdw available")
+        
+        return pdw
+            
 
     def update_colors(self):
         color_list = self.widgets['InstrumentWidget'].get_color_list() \
@@ -781,11 +801,24 @@ the pyqt window option is disabled")
         if not self.instrument_connexion_setting_fname == "":
             IOTool.set_config_setting(IOTool.SETTINGS_ID,self.instrument_connexion_setting_fname,CONFIG_FILE)
 
-    def file_save_settings(self):
-        fname = str(QtGui.QFileDialog.getSaveFileName(
-            self, 'Save settings file as', './'))
+    def file_save_settings(self, fname = None):
+        
+        if fname == None:
+            fname = str(QtGui.QFileDialog.getSaveFileName(
+                self, 'Save settings file as', './'))
+                
         if fname:
-            self.widgets['InstrumentWidget'].save_settings(fname)
+            
+            
+            pdw = self.actual_pdw
+            
+            if not pdw == None:
+                
+                pdw_settings = pdw.list_channels_values()
+                
+            else:
+                pdw_settings = []
+            self.widgets['InstrumentWidget'].save_settings(fname, pdw_settings)
             self.instrument_connexion_setting_fname=fname
 
     def file_load_settings(self):
@@ -793,7 +826,7 @@ the pyqt window option is disabled")
             self, 'Open settings file', './'))
         if fname:
             self.widgets['InstrumentWidget'].load_settings(fname)
-            self.instrument_connexion_setting_fname=fname
+            self.instrument_connexion_setting_fname = fname
 
     def file_load_data(self):
         default_path = IOTool.get_config_setting("DATAFILE")
@@ -861,6 +894,18 @@ def test_automatic_fitting():
     ex.show()
     sys.exit(app.exec_())
 
+def test_save_settings(idx = 0):
+    """connect the Hub and save the settings"""
+    app = QtGui.QApplication(sys.argv)
+    ex = LabGuiMain()
+    if idx == 0:
+        ex.connect_instrument_hub()
+
+    ex.file_save_settings("test_settings.set")    
+    
+    ex.show()
+    sys.exit(app.exec_())
+
 def test_load_previous_data(data_path = os.path.join(ABS_PATH,'scratch','example_output.dat')):
     """
     open a new plot window with previous data
@@ -874,7 +919,9 @@ def test_load_previous_data(data_path = os.path.join(ABS_PATH,'scratch','example
     sys.exit(app.exec_())
 
 
+
 if __name__ == "__main__":
 #    launch_LabGui()
 #    test_automatic_fitting()
-    test_load_previous_data()
+#    test_load_previous_data()
+    test_save_settings(1)
