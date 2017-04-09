@@ -626,8 +626,9 @@ class InstrumentWindow(QtGui.QWidget):
                         new_line.param_cbb.setCurrentIndex(
                             new_line.param_cbb.findText(param))
                             
-            #collect the settings for the window                
-            window_settings.append([s.strip() for s in settings[4:]])
+            #collect the settings for the window    
+            window_settings.append([s.strip().replace("'",'') 
+                                    for s in settings[4:]])
             
         settings_file.close()
 
