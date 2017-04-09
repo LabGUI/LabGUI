@@ -129,9 +129,9 @@ script, settings and data locations, or to enter debug mode.")
         self.DEBUG = IOTool.get_debug_setting()
        
         if self.DEBUG == True:
-            logging.info("*" * 20)
-            logging.info("Debug mode is set to True")
-            logging.info("*" * 20)
+            print("*" * 20)
+            print("Debug mode is set to True")
+            print("*" * 20)
             self.option_display_debug_state()
         else:
             self.option_display_normal_state()
@@ -154,10 +154,10 @@ script, settings and data locations, or to enter debug mode.")
         else:            
             Tool.INTF_GPIB = interface
             
-        logging.info("*" * 20)
-        logging.info("The GPIB setting for connecting instruments is %s"%(
+        print("*" * 20)
+        print("The GPIB setting for connecting instruments is %s"%(
                     Tool.INTF_GPIB))
-        logging.info("*" * 20)
+        print("*" * 20)
 
         # the lock is something for multithreading... not sure if it's important in our application.
         self.lock = QReadWriteLock()
@@ -190,6 +190,11 @@ script, settings and data locations, or to enter debug mode.")
         #this will contain the widget of the latest pdw created upon
         #connecting the instrument Hub
         self.actual_pdw = None
+        
+        #this will contain windows settings (labels, checkboxes states, colors)
+        #of the plotdisplaw window which is created when the user click on
+        #the connect button
+        self.plot_window_settings = None
         
 #### set up menus and toolbars      
         
@@ -428,15 +433,24 @@ the pyqt window option is disabled")
         else:
             event.ignore()
 
-    def create_pdw(self):
+    def create_pdw(self, num_channels = None, settings = None):
         """
             add a new plot display window in the MDI area its channels are labeled according to the channel names on the cmd window.
             It is connected to the signal of data update.
         """
-        num_channels = self.instr_hub.get_instrument_nb() + self.widgets['CalcWidget'].get_calculation_nb()
-        pdw = PlotDisplayWindow.PlotDisplayWindow(data_array=self.data_array, name="Live Data Window", default_channels=num_channels)  # self.datataker)
+        
+        if num_channels == None:
+            
+            num_channels = self.instr_hub.get_instrument_nb() + \
+                           self.widgets['CalcWidget'].get_calculation_nb()
+       
+        pdw = PlotDisplayWindow.PlotDisplayWindow(data_array = self.data_array,
+                                        name="Live Data Window",
+                                        default_channels = num_channels)  
+        
         self.connect(self, SIGNAL("data_array_updated(PyQt_PyObject)"),
                      pdw.update_plot)
+                     
         self.connect(pdw.mplwidget, SIGNAL(
             "limits_changed(int,PyQt_PyObject)"), self.emit_axis_lim)
 
@@ -454,8 +468,16 @@ the pyqt window option is disabled")
                      pdw.update_labels)
         self.connect(self, SIGNAL(
             "markersChanged(PyQt_PyObject)"), pdw.update_markers)
-        self.update_labels()
-        self.update_colors()
+        
+        if settings == None:
+            
+            self.update_labels()
+            self.update_colors()
+            
+        else:
+            #this will set saved settings for the channel controls of the 
+            #plot display window
+            pdw.set_channels_values(settings)
 
         self.zoneCentrale.addSubWindow(pdw)
 
@@ -816,14 +838,16 @@ the pyqt window option is disabled")
                 
         if fname:
             
+            #the plotdisplay window which was created when the instrument
+            #hub was connected
             pdw = self.actual_pdw
             
             if not pdw == None:
-                
+                #get the windows channel control values
                 pdw_settings = pdw.list_channels_values()
                 
             else:
-                
+                #this will do nothing
                 pdw_settings = []
                 
             self.widgets['InstrumentWidget'].save_settings(fname, pdw_settings)
@@ -844,6 +868,7 @@ the pyqt window option is disabled")
             
         if fname:
             
+            self.plot_window_settings = \
             self.widgets['InstrumentWidget'].load_settings(fname)
             
             self.instrument_connexion_setting_fname = fname
@@ -926,16 +951,17 @@ def test_save_settings(idx = 0):
     ex.show()
     sys.exit(app.exec_())
     
-def test_load_settings():
+def test_load_settings(idx = 0):
     """load the settings and connect the Hub"""
     app = QtGui.QApplication(sys.argv)
     ex = LabGuiMain()
-
+    
     ex.file_load_settings("test_settings.set")    
     
-#    ex.connect_instrument_hub()
+    if idx == 0:
+        ex.connect_instrument_hub()
     
-#    ex.show()
+    ex.show()
     sys.exit(app.exec_())
 
 def test_load_previous_data(data_path = os.path.join(ABS_PATH,'scratch','example_output.dat')):
@@ -956,5 +982,5 @@ if __name__ == "__main__":
 #    launch_LabGui()
 #    test_automatic_fitting()
 #    test_load_previous_data()
-    test_save_settings(0)
-#    test_load_settings()
+#    test_save_settings(0)
+    test_load_settings(0)

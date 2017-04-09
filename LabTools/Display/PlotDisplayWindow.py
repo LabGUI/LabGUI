@@ -318,50 +318,47 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
         
             set state of the window controls given an array of string
         """
-        
+        print lines
         for i, line in enumerate(lines):
             
-            for j, name in enumerate(self.channel_controls):
-                
-                #[name, role] of the channel control
-                item = self.channel_controls[name]
-                
-                if item[1] == "radioButton" or item[1] == "checkBox":
-                    #tick or untick the box, distinguish between 0 and 
-                    #any other number
-                    try:
+            if line:
+                for j, name in enumerate(self.channel_controls):
+                    
+                    #[name, role] of the channel control
+                    item = self.channel_controls[name]
+                    
+                    if item[1] == "radioButton" or item[1] == "checkBox":
+                        #tick or untick the box, distinguish between 0 and 
+                        #any other number
+                        try:
+                            
+                            state = int(line[j])
+                            self.channel_objects[name][i].setChecked(state)
+                            
+                        except ValueError:
+                            
+                            logging.warning("'%s' is not a boolean value"%line[j])
+                                       
                         
-                        state = int(line[j])
-                        self.channel_objects[name][i].setChecked(state)
+                    elif item[1] == "comboBox":
+                        #sets the index of the object in the combobox
+                        idx = self.channel_objects[name][i].findText(line[j])
+                        self.channel_objects[name][i].setCurrentIndex(idx)
                         
-                    except ValueError:
+                    elif item[1] == "lineEdit":
+                        #sets the text in the lineEdit
+                        self.channel_objects[name][i].setText(line[j])
                         
-                        logging.warning("'%s' is not a boolean value"%line[j])
-                                   
-                    
-                elif item[1] == "comboBox":
-                    #sets the index of the object in the combobox
-                    idx = self.channel_objects[name][i].findText(line[j])
-                    self.channel_objects[name][i].setCurrentIndex(idx)
-                    
-                elif item[1] == "lineEdit":
-                    #sets the text in the lineEdit
-                    self.channel_objects[name][i].setText(line[j])
-                    
-                elif item[1] == "colorButton":
-                    
-                    obj = self.channel_objects[name][i]    
-                    obj.setStyleSheet('QPushButton {background-color: %s}'\
-                    %(line[j]))
-                    
-                elif item[1] == "single_comboBox":
-                    #sets the index of the object in the combobox
-                    idx = self.channel_objects[name][i].findText(line[j])
-                    self.channel_objects[name][i].setCurrentIndex(idx)
-            
-        return lines     
-        
-        
+                    elif item[1] == "colorButton":
+                        
+                        obj = self.channel_objects[name][i]    
+                        obj.setStyleSheet('QPushButton {background-color: %s}'\
+                        %(line[j]))
+                        
+                    elif item[1] == "single_comboBox":
+                        #sets the index of the object in the combobox
+                        idx = self.channel_objects[name][i].findText(line[j])
+                        self.channel_objects[name][i].setCurrentIndex(idx)                
         
         
     """#####################################################################"""

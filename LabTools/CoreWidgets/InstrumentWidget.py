@@ -625,19 +625,25 @@ class InstrumentWindow(QtGui.QWidget):
                     if param in self.AVAILABLE_PARAMS[instr_type]:
                         new_line.param_cbb.setCurrentIndex(
                             new_line.param_cbb.findText(param))
-                            
-            #collect the settings for the window    
-            window_settings.append([s.strip().replace("'",'') 
-                                    for s in settings[4:]])
+                          
+            #check if the list isn't empty
+            if settings[4:]:
+                #collect the settings for the window    
+                window_settings.append([s.strip().replace("'",'') 
+                                        for s in settings[4:]])
             
         settings_file.close()
 
         self.emit(SIGNAL("colorsChanged()"))
         
-        return window_settings
+        #check if the list isn't empty
+        if window_settings:
+            
+            return window_settings
 
     def save_settings(self, fname, window_settings):
         """Generates a settings file that can be read with load_settings."""
+        
         settings_file = open(fname, 'w')
         logging.info("Settings saved in " + fname)
         
@@ -739,7 +745,7 @@ different than " + str(actual_instrument_number)
                       + str(parent.instr_hub.get_instrument_list()))
                       
         #show a plot by default
-        parent.create_pdw()
+        parent.create_pdw(settings = parent.plot_window_settings)
         
         parent.actual_pdw = parent.get_last_window()
 
