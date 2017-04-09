@@ -979,8 +979,10 @@ def test_load_previous_data(data_path = os.path.join(ABS_PATH,'scratch','example
 
 
 if __name__ == "__main__":
+
 #    launch_LabGui()
 #    test_automatic_fitting()
 #    test_load_previous_data()
 #    test_save_settings(0)
     test_load_settings(0)
+
