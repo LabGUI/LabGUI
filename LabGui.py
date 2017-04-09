@@ -802,13 +802,19 @@ the pyqt window option is disabled")
             IOTool.set_config_setting(IOTool.SETTINGS_ID,self.instrument_connexion_setting_fname,CONFIG_FILE)
 
     def file_save_settings(self, fname = None):
+        """save the settings for the instruments and plot window into a file
+        
+            the settings are instrument names, connection ports, parameters
+            for the instrument and which axis to select for plotting, colors,
+            markers, linestyles and user defined parameters for the window
+        """
         
         if fname == None:
+            
             fname = str(QtGui.QFileDialog.getSaveFileName(
                 self, 'Save settings file as', './'))
                 
         if fname:
-            
             
             pdw = self.actual_pdw
             
@@ -817,15 +823,29 @@ the pyqt window option is disabled")
                 pdw_settings = pdw.list_channels_values()
                 
             else:
+                
                 pdw_settings = []
+                
             self.widgets['InstrumentWidget'].save_settings(fname, pdw_settings)
-            self.instrument_connexion_setting_fname=fname
+            
+            self.instrument_connexion_setting_fname = fname
 
-    def file_load_settings(self):
-        fname = str(QtGui.QFileDialog.getOpenFileName(
+    def file_load_settings(self, fname = None):
+        """load the settings for the instruments and plot window
+        
+            the settings are instrument names, connection ports, parameters
+            for the instrument and which axis to select for plotting, colors,
+            markers, linestyles and user defined parameters for the window
+        """
+        if fname == None:
+            
+            fname = str(QtGui.QFileDialog.getOpenFileName(
             self, 'Open settings file', './'))
+            
         if fname:
+            
             self.widgets['InstrumentWidget'].load_settings(fname)
+            
             self.instrument_connexion_setting_fname = fname
 
     def file_load_data(self):
@@ -905,6 +925,18 @@ def test_save_settings(idx = 0):
     
     ex.show()
     sys.exit(app.exec_())
+    
+def test_load_settings():
+    """load the settings and connect the Hub"""
+    app = QtGui.QApplication(sys.argv)
+    ex = LabGuiMain()
+
+    ex.file_load_settings("test_settings.set")    
+    
+#    ex.connect_instrument_hub()
+    
+#    ex.show()
+    sys.exit(app.exec_())
 
 def test_load_previous_data(data_path = os.path.join(ABS_PATH,'scratch','example_output.dat')):
     """
@@ -924,4 +956,5 @@ if __name__ == "__main__":
 #    launch_LabGui()
 #    test_automatic_fitting()
 #    test_load_previous_data()
-    test_save_settings(1)
+    test_save_settings(0)
+#    test_load_settings()
