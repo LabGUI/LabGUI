@@ -322,7 +322,7 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
         
             set state of the window controls given an array of string
         """
-        print lines
+#        print lines
         for i, line in enumerate(lines):
             
             if line:
@@ -982,10 +982,10 @@ class MultiplePlotDisplayWindow(PlotDisplayWindow):
         sender_ID=int(sender_ID)
         
         #If the last box is being played with, then it means that we want to either select all of them or deselect all of them
-        if sender_ID==self.num_channels:
+        if sender_ID == self.num_channels:
             #This is the current state of this button
-            check_all=self.channel_objects[name][self.num_channels].isChecked()
-            print check_all
+            check_all = self.channel_objects[name][self.num_channels].isChecked()
+
             #then somebody just clicked on that button and we need to change
             for box in self.channel_objects[name]:
                 box.setChecked(check_all)
@@ -1171,7 +1171,7 @@ class SetsPlotDisplayWindow(PlotDisplayWindow):
         
     def change_legend_box_state(self):
         self.legend_box= not self.legend_box
-        print self.legend_box
+#        print self.legend_box
         self.update_legends()
         
     def change_single_comboBox_items(self,groupbox_id,newItems):

@@ -861,7 +861,7 @@ def test_load_settings():
     app = QtGui.QApplication(sys.argv)
     ex = InstrumentWindow(debug = True)
 
-    print ex.load_settings("C:\\Users\\pfduc\\Documents\\labgui_github\\test_settings.set")
+    ex.load_settings("C:\\Users\\pfduc\\Documents\\labgui_github\\test_settings.set")
     ex.show()
 
     sys.exit(app.exec_())

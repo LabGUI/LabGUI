@@ -393,11 +393,13 @@ the pyqt window option is disabled")
         
         if os.path.isfile(self.default_settings_fname):  
             
+            self.widgets['CalcWidget'].load_settings(
+                    self.default_settings_fname)            
+            
             self.widgets['InstrumentWidget'].load_settings(
                     self.default_settings_fname)
             
-            self.widgets['CalcWidget'].load_settings(
-                    self.default_settings_fname)
+           
 
         # Create the object responsible to display information send by the
         # datataker
@@ -1008,6 +1010,6 @@ if __name__ == "__main__":
 #    launch_LabGui()
 #    test_automatic_fitting()
 #    test_load_previous_data()
-    test_save_settings(1)
+    test_save_settings(0)
 #    test_load_settings(0)
 
