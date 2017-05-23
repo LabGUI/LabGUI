@@ -40,6 +40,9 @@ import datetime
 
 from collections import OrderedDict
 
+#this label is used to know when the axis should be a formated time
+#year, month, day, hours, mintues etc... 
+TIME_LABEL = "Time(s)"
 
 import logging
 logging.basicConfig(level = logging.DEBUG)
@@ -125,6 +128,7 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
         self.num_channels = 0
         self.left_lines = [] 
         self.right_lines = [] 
+        
         
         
 
@@ -377,7 +381,7 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
                 label = self.channel_objects["groupBox_Name"][num].text()
                 self.ax.set_xlabel(label)
                 
-                if label == "Time(s)":
+                if label == TIME_LABEL :
                     
                     self.time_Xaxis = True
 
@@ -414,9 +418,9 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
         """Update which data is used for the Y axis (both left and right)"""
         tot_label = []
 #        print "Y clicked"     
-        obj=self.sender()         
-        name=obj.objectName()
-        name=str(name.split("#")[0])
+        obj = self.sender()         
+        name = obj.objectName()
+        name = str(name.split("#")[0])
 
         for num, box in enumerate(self.channel_objects[name]):
             if box.isChecked():
@@ -629,13 +633,16 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
         """
 
         if want_format:
-            time_interval=self.data_array[-1,self.chan_X]-self.data_array[0,self.chan_X]
+
+            hfmt = dates.DateFormatter('%m/%d %H:%M')            
             
-            if time_interval<500:
-                hfmt = dates.DateFormatter('%m/%d %H:%M:%S')
+            if self.data_array.size > 0:            
+            
+                time_interval=self.data_array[-1,self.chan_X]-self.data_array[0,self.chan_X]
                 
-            else:
-                hfmt = dates.DateFormatter('%m/%d %H:%M')
+                if time_interval<500:
+                    hfmt = dates.DateFormatter('%m/%d %H:%M:%S')
+               
                 
             return hfmt
             
@@ -706,7 +713,7 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
             self.data_array = data_array
 
 
-        if self.data_array.size>0 :
+        if self.data_array.size > 0 :
             # if the number of columns is more than the number of control boxes
             try:
                 num_channels = self.data_array.shape[1]
@@ -761,9 +768,19 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
             if "left cannot be >= right" in e:
                 pass
                 #it seems to be a platform dependent error
+            elif "ordinal must be >= 1" in e:
+                try:
+                    self.update_plot(np.array([[time.time(),np.nan,np.nan,np.nan,np.nan]]))
+                except:
+                    pass
+                    #whenever the time format is on and the data array is empty
             else:
                 raise e
-                
+        
+        except RuntimeError:
+            pass
+            #whenever the time format is on and the data array is empty
+            #this is an ugly fix but at least the error doesn,t show anymore
 
     def update_fit(self,fitp):
         """
@@ -1289,7 +1306,7 @@ def test_timestamp():
     data = np.transpose(np.vstack([t,d]))    
     
     app = QtGui.QApplication(sys.argv)
-    form = PlotDisplayWindow(labels = ['Time(s)', 'data(arb)'])
+    form = PlotDisplayWindow(labels = [TIME_LABEL, 'data(arb)'])
     form.update_plot(data)
     form.show()
     app.exec_() 
@@ -1306,10 +1323,10 @@ def test_pdw_load_setting():
     form = PlotDisplayWindow()
     
     lines = []
-    lines.append(['Time(s', '1', '-2', '0', '0', '0', '#117733' , 's', '-'])
+    lines.append(['Time(s)', '1', '-2', '0', '0', '0', '#117733' , 's', '-'])
     lines.append(['dt(s)', '0', 'er', '0', '0', '0', '#88CCEE', 'None', '-'])
     lines.append(['PRESSURE(psi)', '0', '0', '0', '0', '0', '#332288', 'None', '-'])
-    lines.append(['dt(s)', '1', '0', '1', '0', '0', '#FFFF', 'o', '-'])
+    lines.append(['dt(s)', '0', '0', '1', '0', '0', '#FFFF', 'o', '-'])
     lines.append(['2(Torr)', '0', '0', '1', '0', '0', '#CC6677', 'None', '-'])    
     
     

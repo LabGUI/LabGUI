@@ -962,6 +962,7 @@ def test_load_settings(idx = 0):
         ex.connect_instrument_hub()
     
     ex.show()
+
     sys.exit(app.exec_())
 
 def test_load_previous_data(data_path = os.path.join(ABS_PATH,'scratch','example_output.dat')):
