@@ -204,6 +204,8 @@ script, settings and data locations, or to enter debug mode.")
         self.windowMenu = self.menuBar().addMenu("&Window")
         self.optionMenu = self.menuBar().addMenu("&Options")
         
+        self.loggingSubMenu = self.optionMenu.addMenu("&Logger output level")        
+        
         self.plotToolbar = self.addToolBar("Plot")
         self.instToolbar = self.addToolBar("Instruments")
         
@@ -369,10 +371,20 @@ the pyqt window option is disabled")
         shortcut = None, icon = None,
         tip = "Change the state of the debug mode")
         
+#        self.toggle_debug_state = QtTools.create_action(self, 
+#        "Change debug mode", slot = self.option_change_debug_state, 
+#        shortcut = None, icon = None,
+#        tip = "Change the state of the debug mode")
 
         self.optionMenu.addAction(self.toggle_debug_state)
         
-        
+        for log_level in ["DEBUG", "INFO", "WARNING", "ERROR"]:
+            action = QtTools.create_action(self, 
+            log_level, slot = self.option_change_log_level, 
+            shortcut = None, icon = None,
+            tip = "Change the state of the logger to %s" % log_level)
+            
+            self.loggingSubMenu.addAction(action)
         
 ###############################
 
@@ -912,6 +924,17 @@ the pyqt window option is disabled")
         IOTool.set_config_setting(IOTool.DEBUG_ID,self.DEBUG,CONFIG_FILE)
         self.emit(SIGNAL("DEBUG_mode_changed(bool)"),self.DEBUG)
    
+    def option_change_log_level(self):
+        """change the file logging.conf's logging level"""
+        
+        log_level = str(self.sender().text())
+
+        IOTool.set_config_setting("level", log_level, 
+                                  os.path.join(ABS_PATH,"logging.conf"))
+                                  
+        logging.config.fileConfig(os.path.join(ABS_PATH,"logging.conf"))
+
+
 
 def launch_LabGui():
     app = QtGui.QApplication(sys.argv)
@@ -943,6 +966,7 @@ def test_save_settings(idx = 0):
     """connect the Hub and save the settings"""
     app = QtGui.QApplication(sys.argv)
     ex = LabGuiMain()
+    
     if idx == 0:
         ex.connect_instrument_hub()
 
@@ -984,6 +1008,6 @@ if __name__ == "__main__":
 #    launch_LabGui()
 #    test_automatic_fitting()
 #    test_load_previous_data()
-#    test_save_settings(0)
-    test_load_settings(0)
+    test_save_settings(1)
+#    test_load_settings(0)
 
