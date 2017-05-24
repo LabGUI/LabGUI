@@ -11,8 +11,9 @@ import sys
 import PyQt4.QtGui as QtGui
 from types import MethodType
 
-
 import LabDrivers.Tool as Tool
+
+
 import LabDrivers.utils
 from LabTools.Display.PlotPreferences import color_blind_friendly_colors
 
@@ -539,107 +540,110 @@ class InstrumentWindow(QtGui.QWidget):
         try:
             
             settings_file = open(fname,'r')
-        
+            settings_file_ok = True
         except IOError:
             
+            settings_file_ok = False
             print("No such file exists : %s"%(fname))
 
-        #the new settings will overwrite existing ones
-        self.remove_all_lines()
-
-        window_settings = []
-
-        for setting_line in settings_file:
-            
-            # file format is comma-separated list of settings for each channel
-            setting_line = setting_line.strip()
-            settings = setting_line.split(',')
-            
-            if settings[0] and settings[0] != 'CALC':
-                
-                logging.debug(setting_line)
-                
-                new_line = self.create_line()
-                
-                param_name = settings[0].strip()
+        if settings_file_ok:
     
-                new_line.param_name_le.setText(param_name)                
+            #the new settings will overwrite existing ones
+            self.remove_all_lines()
+    
+            window_settings = []
+    
+            for setting_line in settings_file:
                 
-
+                # file format is comma-separated list of settings for each channel
+                setting_line = setting_line.strip()
+                settings = setting_line.split(',')
                 
-                
-                # For backwards compatibility with old settings files, leave 
-                # this part in.
-                # The TIME module was renamed because there is
-                # already the built-in time module
-
-                instr_type = settings[1].strip()
-
-                if instr_type == 'TIME':
-                    instr_type == 'Internal'
-
-                
-                if not instr_type in self.INSTRUMENT_TYPES:
+                if settings[0] and settings[0] != 'CALC':
                     
-                     logging.warning("No module for %s available"%(instr_type))
-                     
-                else:
+                    logging.debug(setting_line)
                     
-                    # set the index to the index corresponding to the instrument
-                    # type (found using the findtext function)
-                    new_line.instr_name_cbb.setCurrentIndex(
-                        new_line.instr_name_cbb.findText(instr_type))
-
-                    if instr_type == "Internal":
+                    new_line = self.create_line()
+                    
+                    param_name = settings[0].strip()
+        
+                    new_line.param_name_le.setText(param_name)                
+                    
+    
+                    
+                    
+                    # For backwards compatibility with old settings files, leave 
+                    # this part in.
+                    # The TIME module was renamed because there is
+                    # already the built-in time module
+    
+                    instr_type = settings[1].strip()
+    
+                    if instr_type == 'TIME':
+                        instr_type == 'Internal'
+    
+                    
+                    if not instr_type in self.INSTRUMENT_TYPES:
                         
-                        new_line.port_cbb.clear()
-                        new_line.port_cbb.addItem('Internal')
-                        
+                         logging.warning("No module for %s available"%(instr_type))
+                         
                     else:
                         
-                        port = settings[2].strip().upper()
-
-                        # if the port appears to be valid, select it in the box
-                        # otherwise add it, but show an icon indicating the
-                        # problem
-                        if port in self.AVAILABLE_PORTS:
+                        # set the index to the index corresponding to the instrument
+                        # type (found using the findtext function)
+                        new_line.instr_name_cbb.setCurrentIndex(
+                            new_line.instr_name_cbb.findText(instr_type))
+    
+                        if instr_type == "Internal":
                             
-                            new_line.port_cbb.setCurrentIndex(
-                                new_line.port_cbb.findText(port))
-
+                            new_line.port_cbb.clear()
+                            new_line.port_cbb.addItem('Internal')
+                            
                         else:
                             
-                            if not self.DEBUG:
+                            port = settings[2].strip().upper()
+    
+                            # if the port appears to be valid, select it in the box
+                            # otherwise add it, but show an icon indicating the
+                            # problem
+                            if port in self.AVAILABLE_PORTS:
                                 
-                                logging.warning("the port %s is not available,\
- please check your connectic or your settings file\n"%(port))
-
-                    #fills the parameter combobox with instrument parameters
-                    new_line.param_cbb.clear()
-                    new_line.param_cbb.addItems(
-                        self.AVAILABLE_PARAMS[instr_type])
-                        
-                    #modify the parameter combobox with the chosen parameter
-                    param = settings[3].strip()
-
-                    if param in self.AVAILABLE_PARAMS[instr_type]:
-                        new_line.param_cbb.setCurrentIndex(
-                            new_line.param_cbb.findText(param))
-                          
+                                new_line.port_cbb.setCurrentIndex(
+                                    new_line.port_cbb.findText(port))
+    
+                            else:
+                                
+                                if not self.DEBUG:
+                                    
+                                    logging.warning("the port %s is not available,\
+     please check your connectic or your settings file\n"%(port))
+    
+                        #fills the parameter combobox with instrument parameters
+                        new_line.param_cbb.clear()
+                        new_line.param_cbb.addItems(
+                            self.AVAILABLE_PARAMS[instr_type])
+                            
+                        #modify the parameter combobox with the chosen parameter
+                        param = settings[3].strip()
+    
+                        if param in self.AVAILABLE_PARAMS[instr_type]:
+                            new_line.param_cbb.setCurrentIndex(
+                                new_line.param_cbb.findText(param))
+                              
+                #check if the list isn't empty
+                if settings[4:]:
+                    #collect the settings for the window    
+                    window_settings.append([s.strip().replace("'",'') 
+                                            for s in settings[4:]])
+                
+            settings_file.close()
+    
+            self.emit(SIGNAL("colorsChanged()"))
+            
             #check if the list isn't empty
-            if settings[4:]:
-                #collect the settings for the window    
-                window_settings.append([s.strip().replace("'",'') 
-                                        for s in settings[4:]])
-            
-        settings_file.close()
-
-        self.emit(SIGNAL("colorsChanged()"))
-        
-        #check if the list isn't empty
-        if window_settings:
-            
-            return window_settings
+            if window_settings:
+                
+                return window_settings
 
     def save_settings(self, fname, window_settings):
         """Generates a settings file that can be read with load_settings."""
@@ -882,7 +886,7 @@ def test_main():
 if __name__ == "__main__":
     import logging.config
     import os
-    ABS_PATH = "C:\\Users\\pfduc\\Documents\\labgui_github"
+    ABS_PATH = "C:\\Users\\admin\\Documents\\Labgui_github"
     logging.config.fileConfig(os.path.join(ABS_PATH,"logging.conf"))
 
     test_load_settings()

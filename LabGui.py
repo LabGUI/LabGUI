@@ -961,6 +961,10 @@ def test_load_settings(idx = 0):
     if idx == 0:
         ex.connect_instrument_hub()
     
+    elif idx == 1:
+        #tries to load an unexisting file
+        ex.file_load_settings("doesnt_exist_settings.set")
+    
     ex.show()
     sys.exit(app.exec_())
 
@@ -984,5 +988,5 @@ if __name__ == "__main__":
 #    test_automatic_fitting()
 #    test_load_previous_data()
 #    test_save_settings(0)
-    test_load_settings(0)
+    test_load_settings(1)
 
