@@ -219,23 +219,35 @@ def set_config_setting(setting, setting_value, config_file_name = CONFIG_FILE):
     try:
         #open the file
         config_file = open(config_file_name,'r')
-
+    
         #read the lines into a list
         lines = config_file.readlines()
         
         #loop through all the lines
         for i,line in enumerate(lines):
             #the setting should have a = sign in the line
-            [left, right] = line.split("=")
+            try:
+                [left, right] = line.split("=")
             
-            #separate the setting name from its value
-            left = left.strip() #name
-            right = right.strip() #value
-            
-            #if the name corresponds to the setting we want, we write the value
-            if left == setting:
+                #separate the setting name from its value
+                left = left.strip() #name
+                right = right.strip() #value
                 
-                lines[i]="%s=%s\n"%(setting,setting_value)
+                #if the name corresponds to the setting we want, we write the value
+                if left == setting:
+                    
+                    lines[i]="%s=%s\n"%(setting,setting_value)
+            
+            except ValueError as e:
+                
+                if "need more than 1 value to unpack" in e:
+                    
+                    pass
+                
+                else:
+                   
+                    raise e
+            
         
         config_file.close()
         
@@ -244,7 +256,7 @@ def set_config_setting(setting, setting_value, config_file_name = CONFIG_FILE):
         config_file.writelines(lines)
         config_file.close()
         
-        print(("The parameter %s in the config file was \
+        print(("The parameter '%s' in the config file was \
 successfully changed to %s"%(setting,setting_value)))
         
     except:
