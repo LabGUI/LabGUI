@@ -10,3 +10,4 @@ scratch/*
 !scratch/README.txt
 !settings/demo_dice.txt
 !scripts/script.py
+LabDrivers/ArduinoUno.py
