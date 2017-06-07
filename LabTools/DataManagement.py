@@ -36,7 +36,14 @@ class DataTaker(QThread):
         self.completed = False
         self.DEBUG = IOTool.get_debug_setting()
 
+
+        #the script which is run everytime the user call the routine "run"
         self.script_file_name = ''
+        
+        #a dict that can be populated by variable the user would like to change
+        #in real time while the script is ran
+        self.user_variables = {}        
+        
         self.t_start = None
         # initialize the intruments and their parameters
         self.reset_lists()
@@ -63,6 +70,16 @@ class DataTaker(QThread):
         self.instruments = self.instr_hub.get_instrument_list()
         self.port_param_pairs = self.instr_hub.get_port_param_pairs()
         #print("\t...instruments updated in datataker")
+
+    
+    def update_user_variables(self, adict):
+        """
+        Replace the user variables by updated ones
+        """
+
+        if isinstance(adict, dict):
+            
+            self.user_variables = adict
 
     def run(self):
         print("DTT begin run")

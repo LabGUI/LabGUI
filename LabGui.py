@@ -1007,7 +1007,22 @@ def test_load_previous_data(data_path = os.path.join(ABS_PATH,'scratch','example
     ex.show()
     sys.exit(app.exec_())
 
+def test_user_variable_widget():
+    """
+    open a new plot window with previous data
+    """
+    app = QtGui.QApplication(sys.argv)
+    ex = LabGuiMain()
 
+    ex.file_load_settings("test_settings.set")    
+    
+
+    ex.connect_instrument_hub()
+
+#    ex.widgets["userVariableWidget"].on_updateVariableButton_clicked()
+
+    ex.show()
+    sys.exit(app.exec_())
 
 if __name__ == "__main__":
 
@@ -1016,7 +1031,8 @@ if __name__ == "__main__":
 #    test_load_previous_data()
 
 #    test_save_settings(0)
-    test_load_settings(1)
+#    test_load_settings(1)
 #    test_load_settings(0)
+    test_user_variable_widget()
 
 
