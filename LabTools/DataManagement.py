@@ -81,6 +81,45 @@ class DataTaker(QThread):
             
             self.user_variables = adict
 
+    def assign_user_variable(self, key, value_type = float, default = None):
+        
+        #the key exists
+        if key in self.user_variables:
+            
+            if value_type == None:
+                
+                return self.user_variables[key]
+                
+            else:
+                
+                if isinstance(value_type, type):
+                    
+                    try:
+                        
+                        return value_type(self.user_variables[key])
+                        
+                    except ValueError:
+                        print("Wrong type conversion applied on \
+user variable")
+                        return self.user_variables[key]
+                        
+                else:
+                    
+                    print("Wrong type used for user variable")
+                    return self.user_variables[key]
+                
+        else:
+            
+            if default == None:
+                
+                print("The user variable key %s isn't defined" % key)
+                
+            else:
+                #assign the default value to the key entry
+                self.user_variables[key] = default
+                #make a recursive call to the method
+                return self.assign_user_variable(key, value_type) 
+                
     def run(self):
         print("DTT begin run")
         self.stopped = False

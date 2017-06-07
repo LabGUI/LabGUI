@@ -14,7 +14,6 @@ import sys
 
 from types import MethodType
 
-import logging
 
 class SingleLineWidget(QtGui.QWidget):
     """a line of QWidget representing a user variable
@@ -238,14 +237,14 @@ class UserVariableWidget(QtGui.QWidget):
         this will create as many lines as in the numVariableLineEdit 
         """
         
-       #if there already are some lines
-       start_idx = len(self.lines) + 1    
+        #if there already are some lines
+        start_idx = len(self.lines)  
     
-       for i in range(int(self.numVariableLineEdit.text())):
+        for i in range(int(self.numVariableLineEdit.text())):
            
            self.create_line(i + start_idx)
            
-       self.resetLayout()
+        self.resetLayout()
        
 
     def on_deleteVariableButton_clicked(self):
