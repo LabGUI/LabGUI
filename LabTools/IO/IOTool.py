@@ -15,7 +15,10 @@ import os
 
 # the configuration file will always be in the parent of the parent of the directory
 # where this module is located. i.e. in the LabGUI main folder
-MAIN_DIR = os.sep.join(__file__.split(os.sep)[:-3]) + os.sep
+#print("__file__ in IOTool.py is at " + __file__)
+abs_file = os.path.abspath(os.path.dirname(__file__))
+#print("abs_file in IOTool.py is at " + abs_file)
+MAIN_DIR = os.sep.join(abs_file.split(os.sep)[:-2]) + os.sep
 CONFIG_FILE =  "config.txt"
 CONFIG_FILE_PATH = MAIN_DIR + CONFIG_FILE
 print("configuration from: " + CONFIG_FILE_PATH)
