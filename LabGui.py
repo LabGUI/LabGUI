@@ -46,7 +46,7 @@ PYTHON_VERSION = int(sys.version[0])
 
 LABWIDGETS_PACKAGE_NAME = "LabTools.CoreWidgets"
 
-CONFIG_FILE = IOTool.CONFIG_FILE
+CONFIG_FILE = IOTool.CONFIG_FILE_PATH
 
 class LabGuiMain(QtGui.QMainWindow):
     """
@@ -115,10 +115,8 @@ class LabGuiMain(QtGui.QMainWindow):
             logging.warning("Please modify it to change the default \
 script, settings and data locations, or to enter debug mode.")
 
-            path = os.path.dirname(os.path.realpath(__file__)) + os.sep
-            
             # creates a config.txt with basic needs
-            IOTool.create_config_file(main_dir = path)
+            IOTool.create_config_file()
                 
         #create the central part of the application
         self.zoneCentrale = QtGui.QMdiArea()
@@ -979,10 +977,10 @@ def test_load_previous_data(data_path = os.path.join(ABS_PATH,'scratch','example
 
 
 if __name__ == "__main__":
-
-#    launch_LabGui()
+    print("Launching LabGUI")
+    launch_LabGui()
 #    test_automatic_fitting()
 #    test_load_previous_data()
 #    test_save_settings(0)
-    test_load_settings(0)
+#    test_load_settings(0)
 
