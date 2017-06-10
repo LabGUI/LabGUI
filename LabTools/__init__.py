@@ -1,2 +1,2 @@
-__all__=['Display','Fitting','IO','Widgets']
+__all__=['Display','Fitting','IO','CoreWidgets','UserWidgets']
 

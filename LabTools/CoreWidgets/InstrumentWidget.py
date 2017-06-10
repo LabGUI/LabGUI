@@ -18,6 +18,7 @@ from LabTools.Display.PlotPreferences import color_blind_friendly_colors
 
 import logging
 
+
 width_instr = 100
 width_port = 130
 width_param = 80
@@ -286,12 +287,15 @@ class InstrumentWindow(QtGui.QWidget):
     #num_channels = 0
     color_set = color_blind_friendly_colors(10)
 
-    def __init__(self, parent=None, available_ports=["GPIB0::" + str(i) for i in range(30)]):
+    def __init__(self, parent = None, 
+                 available_ports = ["GPIB0::" + str(i) for i in range(30)],
+                 debug = False):
         super(InstrumentWindow, self).__init__(parent)
 
 
 #        print "available ports inside InstrumentWindows",available_ports        
         
+        self.DEBUG = debug
 
         self.AVAILABLE_PORTS = available_ports
         # Load the lists of instruments, with their parameters and their units
@@ -531,95 +535,151 @@ class InstrumentWindow(QtGui.QWidget):
 
     def load_settings(self, fname):
         """ Load in instrument and initial plot settings from a file"""
-        #try:
-        if True:
-            settings_file = open(fname)
-#            print self.AVAILABLE_PORTS
-#            print self.INSTRUMENT_TYPES
-            self.remove_all_lines()
 
-#            self.line_layout.removeWidget(self.bt_connecthub)
+        try:
+            
+            settings_file = open(fname,'r')
+        
+        except IOError:
+            
+            print("No such file exists : %s"%(fname))
 
-            for setting_line in settings_file:
-                #            print line
-                # file format is comma-separated list of settings for each
-                # channel
-                setting_line = setting_line.strip()
-                settings = setting_line.split(',')
+        #the new settings will overwrite existing ones
+        self.remove_all_lines()
+
+        window_settings = []
+
+        for setting_line in settings_file:
+            
+            # file format is comma-separated list of settings for each channel
+            setting_line = setting_line.strip()
+            settings = setting_line.split(',')
+            
+            if settings[0] and settings[0] != 'CALC':
                 
-                if settings[0] and settings[0] != 'CALC':
-                    logging.debug(setting_line)
-                    new_line = self.create_line()
-                    param_name = settings[0].strip()
-                    instr_type = settings[1].strip()
-                    
-                    
-                    # For backwards compatibility with old settings files, leave 
-                    # this part in.
-                    # The TIME module was renamed because there is
-                    # already the built-in time module
+                logging.debug(setting_line)
+                
+                new_line = self.create_line()
+                
+                param_name = settings[0].strip()
+    
+                new_line.param_name_le.setText(param_name)                
+                
 
-                    if instr_type == 'TIME':
-                        instr_type == 'Internal'
+                
+                
+                # For backwards compatibility with old settings files, leave 
+                # this part in.
+                # The TIME module was renamed because there is
+                # already the built-in time module
 
+                instr_type = settings[1].strip()
+
+                if instr_type == 'TIME':
+                    instr_type == 'Internal'
+
+                
+                if not instr_type in self.INSTRUMENT_TYPES:
                     
-                    new_line.param_name_le.setText(param_name)
+                     logging.warning("No module for %s available"%(instr_type))
+                     
+                else:
                     
-                    if not instr_type in self.INSTRUMENT_TYPES:
-                         logging.warning("No module for %s available"%(instr_type))
+                    # set the index to the index corresponding to the instrument
+                    # type (found using the findtext function)
+                    new_line.instr_name_cbb.setCurrentIndex(
+                        new_line.instr_name_cbb.findText(instr_type))
+
+                    if instr_type == "Internal":
+                        
+                        new_line.port_cbb.clear()
+                        new_line.port_cbb.addItem('Internal')
+                        
                     else:
-                        # set the index to the index corresponding to the instrument
-                        # type (found using the findtext function)
-                        new_line.instr_name_cbb.setCurrentIndex(
-                            new_line.instr_name_cbb.findText(instr_type))
+                        
+                        port = settings[2].strip().upper()
 
-                        if instr_type == "Internal":
-                            new_line.port_cbb.clear()
-                            new_line.port_cbb.addItem('Internal')
+                        # if the port appears to be valid, select it in the box
+                        # otherwise add it, but show an icon indicating the
+                        # problem
+                        if port in self.AVAILABLE_PORTS:
+                            
+                            new_line.port_cbb.setCurrentIndex(
+                                new_line.port_cbb.findText(port))
+
                         else:
-                            port = settings[2].strip().upper()
+                            
+                            if not self.DEBUG:
+                                
+                                logging.warning("the port %s is not available,\
+ please check your connectic or your settings file\n"%(port))
 
-                            # if the port appears to be valid, select it in the box
-                            # otherwise add it, but show an icon indicating the
-                            # problem
-                            if port in self.AVAILABLE_PORTS:
-                                new_line.port_cbb.setCurrentIndex(
-                                    new_line.port_cbb.findText(port))
-                                print port
-    #                            print self.port_cbb_list[idx].findText(port)
-                            else:
-                                logging.warning("the port %s is not available, please check your connectic or your settings file"%(port))
-#                                new_line.port_cbb.addItem(
-#                                    QIcon("not_found.png"), port)
-#                                new_line.port_cbb.setCurrentIndex(
-#                                    new_line.instr_name_cbb.count() - 1)
+                    #fills the parameter combobox with instrument parameters
+                    new_line.param_cbb.clear()
+                    new_line.param_cbb.addItems(
+                        self.AVAILABLE_PARAMS[instr_type])
+                        
+                    #modify the parameter combobox with the chosen parameter
+                    param = settings[3].strip()
 
-                        new_line.param_cbb.clear()
-                        new_line.param_cbb.addItems(
-                            self.AVAILABLE_PARAMS[instr_type
-])
-                        param = settings[3].strip()
+                    if param in self.AVAILABLE_PARAMS[instr_type]:
+                        new_line.param_cbb.setCurrentIndex(
+                            new_line.param_cbb.findText(param))
+                          
+            #check if the list isn't empty
+            if settings[4:]:
+                #collect the settings for the window    
+                window_settings.append([s.strip().replace("'",'') 
+                                        for s in settings[4:]])
+            
+        settings_file.close()
 
-                        if param in self.AVAILABLE_PARAMS[instr_type]:
-                            new_line.param_cbb.setCurrentIndex(
-                                new_line.param_cbb.findText(param))
-            settings_file.close()
+        self.emit(SIGNAL("colorsChanged()"))
+        
+        #check if the list isn't empty
+        if window_settings:
+            
+            return window_settings
 
-            self.emit(SIGNAL("colorsChanged()"))
-        #except:
-         #   print "Setting file loading error, the filename was :", fname
-
-    def save_settings(self, fname):
+    def save_settings(self, fname, window_settings):
         """Generates a settings file that can be read with load_settings."""
+        
         settings_file = open(fname, 'w')
         logging.info("Settings saved in " + fname)
         
         #write the text of each line object into a line of text file
-        for line in self.lines:
+        for i, line in enumerate(self.lines):
+            
+            #the user defined labels
             settings_file.write(line.get_label() + ', ')
-            for item in line.collect_device_info():
-                settings_file.write(item + ', ')
+            
+            #the connection device ports, instrument and parameter names
+            device_info = line.collect_device_info()
+            n_info = len(device_info)
+            
+            for j,item in enumerate(device_info):
+                
+                if j  == n_info - 1:
+                    
+                    settings_file.write(item)
+                
+                else:
+                
+                    settings_file.write(item + ', ')
+                
+            #if available, the plot window ticks for axes
+            try:
+                
+                settings_file.write(window_settings[i])
+                
+            except IndexError:
+                
+                logging.info(
+                "Couldn't save the plot window information to the file %s"
+                %(fname))
+                
             settings_file.write('\n')
+            
         settings_file.close()
 
 
@@ -685,7 +745,9 @@ different than " + str(actual_instrument_number)
                       + str(parent.instr_hub.get_instrument_list()))
                       
         #show a plot by default
-        parent.create_pdw()
+        parent.create_pdw(settings = parent.plot_window_settings)
+        
+        parent.actual_pdw = parent.get_last_window()
 
 
 
@@ -737,11 +799,7 @@ def add_widget_into_main(parent):
     create a QDock widget and store a reference to the widget
     """    
 
-    print "in the construction of the window"
-
-    mywidget = InstrumentWindow(parent = parent)
-    
-    print "created inst window"    
+    mywidget = InstrumentWindow(parent = parent)  
     
     parent.instrument_connexion_setting_fname=""  
     
@@ -762,43 +820,34 @@ def add_widget_into_main(parent):
     
     instDockWidget.setWidget(instScrollArea)
     parent.addDockWidget(Qt.RightDockWidgetArea, instDockWidget)
-        
-        
-    print "set the dock"        
+    
     
     #fill the dictionnary with the widgets added into LabGuiMain
     parent.widgets['InstrumentWidget'] = mywidget
     
-    parent.refresh_ports_list()    
-    
-    print "refreshed the ports"     
+    parent.refresh_ports_list()      
     
     #Enable the toggle view action
     parent.windowMenu.addAction(instDockWidget.toggleViewAction())
 
-    print "add the menu" 
     #add a series of signals tiggers
 
 
     parent.connect_instrument_hub = MethodType(connect_instrument_hub,
                                                parent, parent.__class__)    
-    
-    print "add connect_instrument_hub"     
+        
     
     parent.connect(parent.widgets['InstrumentWidget'], SIGNAL(
             "ConnectInstrumentHub(bool)"), parent.connect_instrument_hub) 
 
-    print "connect to connect_instrument_hub" 
 
     parent.connect_instrument = MethodType(connect_instrument,
                                                parent, parent.__class__)
 
-    print "add connect_instrument" 
 
     parent.connect(parent.widgets['InstrumentWidget'], SIGNAL(
         "ConnectInstrument(PyQt_PyObject)"), parent.connect_instrument)
         
-    print "connect to connect_instrument"         
     
     parent.connect(parent.widgets['InstrumentWidget'], SIGNAL(
         "colorsChanged()"), parent.update_colors)
@@ -806,17 +855,21 @@ def add_widget_into_main(parent):
     parent.connect(parent.widgets['InstrumentWidget'], SIGNAL(
         "labelsChanged()"), parent.update_labels)
         
-    print "finished" 
             
      
+def test_load_settings():
+    app = QtGui.QApplication(sys.argv)
+    ex = InstrumentWindow(debug = True)
 
+    print ex.load_settings("C:\\Users\\pfduc\\Documents\\labgui_github\\test_settings.set")
+    ex.show()
 
+    sys.exit(app.exec_())
 
-if __name__ == "__main__":
-
+def test_main():
     app = QtGui.QApplication(sys.argv)
     listi = Tool.refresh_device_port_list()
-    ex = InstrumentWindow()
+    ex = InstrumentWindow(debug = True)
     ex.refresh_cbb_port(listi)
 #    ex.load_settings('C:\Users\pfduc\Documents\g2gui\g2python\settings\demo_dice.txt')
     #ex = SingleLineWidget()
@@ -825,3 +878,11 @@ if __name__ == "__main__":
 
 #    ex.remove_all_lines()
     sys.exit(app.exec_())
+
+if __name__ == "__main__":
+    import logging.config
+    import os
+    ABS_PATH = "C:\\Users\\pfduc\\Documents\\labgui_github"
+    logging.config.fileConfig(os.path.join(ABS_PATH,"logging.conf"))
+
+    test_load_settings()

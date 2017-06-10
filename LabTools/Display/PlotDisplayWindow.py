@@ -55,9 +55,11 @@ def isnparray(an_array):
 VOID_NPARRAY=np.array([])
 
 """
-This describe what element will be displayed on each line of the window option panel.
-It does it row by row, chan_contr contain each row element which consist of the label and the type of the objet.
-The label can be any string, the type has to be predifined
+This describe what element will be displayed on each line of 
+the window option panel. It does it row by row, chan_contr contain 
+each row element which consist of the label and the type of the objet.
+
+The label can be any string, the type has to be predefined
 """
 chan_contr=OrderedDict()
 chan_contr["groupBox_Name"]=["Channel","lineEdit"]
@@ -84,15 +86,17 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
     What callback function is associated with each control can be defined in the method 'add_channel_control'
     
     """
-    def __init__(self, parent=None, data_array=np.array([]),name="Main Window",window_type = "Live", 
-                 default_channels=10,channel_controls=chan_contr, labels = []):
+    def __init__(self, parent = None, data_array = np.array([]),
+                 name = "Main Window", window_type = "Live", 
+                 default_channels = 10, channel_controls = chan_contr,
+                 labels = []):
         # run the initializer of the class inherited from
         super(PlotDisplayWindow, self).__init__()
         
         self.window_type = window_type
             
         #store the choice of channel controls parameters
-        self.channel_controls=channel_controls
+        self.channel_controls = channel_controls
         
         self.color_set=color_blind_friendly_colors(default_channels)
         # this is where most of the GUI is made
@@ -204,7 +208,7 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
                 self.channel_objects[name].append(QtGui.QCheckBox(self.groupBoxes[name]))
                 self.channel_objects[name][i].setText("")
                 self.connect(self.channel_objects[name][i], SIGNAL("stateChanged(int)"), self.YCheckBoxHandler)
-            
+
             elif item[1]=="comboBox":
                 self.channel_objects[name].append(QtGui.QComboBox(self.groupBoxes[name]))
                 if get_groupBox_purpouse(name)=="marker":
@@ -260,6 +264,102 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
 #        self.radio
         #create line objects and append them to self.ax[R].lines autoatically
 
+
+    def list_channels_values(self):
+        """list the current state of the window controls
+        
+            list the current state of the window controls in an array of string
+        """
+        lines = []
+        
+        for i in range(self.num_channels):
+            
+            line = ""
+            
+            for name,item in self.channel_controls.items():
+         
+                if item[1] == "radioButton":
+                    
+                    line = "%s, %s"%(
+                    line, int(self.channel_objects[name][i].isChecked()))
+                    
+                elif item[1] == "checkBox":
+                    
+                    line = "%s, %s"%(
+                    line, int(self.channel_objects[name][i].isChecked()))
+                    
+                elif item[1] == "comboBox":
+                    
+                    line = "%s, '%s'"%(
+                    line, self.channel_objects[name][i].currentText())
+                    
+                elif item[1] == "lineEdit":
+
+                    line = "%s, '%s'"%(
+                    line, self.channel_objects[name][i].text())
+                    
+                elif item[1] == "colorButton":
+                    
+                    obj = self.channel_objects[name][i]                    
+                    line = "%s, %s"%(line, obj.styleSheet()[-8:-1])                
+                    
+                elif item[1] == "single_comboBox":
+                    
+                    line = "%s, %s"%(
+                    line, self.channel_objects[name][i].currentText())
+
+            lines.append(line)
+            
+        return lines
+   
+
+    def set_channels_values(self, lines):
+        """set the states of the window controls
+        
+            set state of the window controls given an array of string
+        """
+        print lines
+        for i, line in enumerate(lines):
+            
+            if line:
+                for j, name in enumerate(self.channel_controls):
+                    
+                    #[name, role] of the channel control
+                    item = self.channel_controls[name]
+                    
+                    if item[1] == "radioButton" or item[1] == "checkBox":
+                        #tick or untick the box, distinguish between 0 and 
+                        #any other number
+                        try:
+                            
+                            state = int(line[j])
+                            self.channel_objects[name][i].setChecked(state)
+                            
+                        except ValueError:
+                            
+                            logging.warning("'%s' is not a boolean value"%line[j])
+                                       
+                        
+                    elif item[1] == "comboBox":
+                        #sets the index of the object in the combobox
+                        idx = self.channel_objects[name][i].findText(line[j])
+                        self.channel_objects[name][i].setCurrentIndex(idx)
+                        
+                    elif item[1] == "lineEdit":
+                        #sets the text in the lineEdit
+                        self.channel_objects[name][i].setText(line[j])
+                        
+                    elif item[1] == "colorButton":
+                        
+                        obj = self.channel_objects[name][i]    
+                        obj.setStyleSheet('QPushButton {background-color: %s}'\
+                        %(line[j]))
+                        
+                    elif item[1] == "single_comboBox":
+                        #sets the index of the object in the combobox
+                        idx = self.channel_objects[name][i].findText(line[j])
+                        self.channel_objects[name][i].setCurrentIndex(idx)                
+        
         
     """#####################################################################"""
     """These handler function take action when someone interact with the button, checkbox, lineEdit etc... the names are explicit"""
@@ -269,8 +369,6 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
         obj=self.sender()   
         name=obj.objectName()
         name=str(name.split("#")[0])
- 
-         
  
         for num, box in enumerate(self.channel_objects[name]):
             if box.isChecked():
@@ -334,17 +432,21 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
         self.update_plot()             
 
 
-    def ComboBoxHandler(self,num):
-        obj=self.sender()         
-        name=obj.objectName()
+    def ComboBoxHandler(self, num):
+        """This fonction is triggered when someones toggle a combobox"""
+        obj = self.sender()         
+        name = obj.objectName()
         
-        name,idx=name.split("#")
-        name=str(name)
-        idx=int(idx)
+        name, idx = name.split("#")
+        name = str(name)
+        idx = int(idx)
         
-        if get_groupBox_purpouse(name)=="marker":
+        if get_groupBox_purpouse(name) == "marker":
+            
             self.set_marker(idx,str(obj.currentText()))
-        elif get_groupBox_purpouse(name)=="line":
+            
+        elif get_groupBox_purpouse(name) == "line":
+            
             self.set_linestyle(idx,str(obj.currentText()))
             
     def singleComboBoxHandler(self,num):
@@ -356,12 +458,12 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
              
             
     def colorButtonHandler(self):
-        obj=self.sender()         
-        name=obj.objectName()
+        obj = self.sender()         
+        name = obj.objectName()
         
-        name,idx=name.split("#")
-        name=str(name)
-        idx=int(idx)
+        name,idx = name.split("#")
+        name = str(name)
+        idx = int(idx)
 
         color = QtGui.QColorDialog.getColor(initial = obj.palette().color(1))
         obj.setStyleSheet('QPushButton {background-color: %s}'%color.name())
@@ -1192,11 +1294,36 @@ def test_timestamp():
     form.show()
     app.exec_() 
 
+def test_pdw_save_setting():
+    app = QtGui.QApplication(sys.argv)
+    form = PlotDisplayWindow()
+    form.list_channels_values()
+    form.show()
+    app.exec_() 
+
+def test_pdw_load_setting():
+    app = QtGui.QApplication(sys.argv)
+    form = PlotDisplayWindow()
+    
+    lines = []
+    lines.append(['Time(s', '1', '-2', '0', '0', '0', '#117733' , 's', '-'])
+    lines.append(['dt(s)', '0', 'er', '0', '0', '0', '#88CCEE', 'None', '-'])
+    lines.append(['PRESSURE(psi)', '0', '0', '0', '0', '0', '#332288', 'None', '-'])
+    lines.append(['dt(s)', '1', '0', '1', '0', '0', '#FFFF', 'o', '-'])
+    lines.append(['2(Torr)', '0', '0', '1', '0', '0', '#CC6677', 'None', '-'])    
+    
+    
+    form.set_channels_values(lines)
+    form.show()
+    app.exec_() 
+
+
 
 # This snippet makes it run as a standalone program
 if __name__ == "__main__":
-#    test_pdw()
-    test_timestamp()
+#    test_pdw_save_setting()
+    test_pdw_load_setting()
+#    test_timestamp()
 
     
 #    app = QtGui.QApplication(sys.argv)
