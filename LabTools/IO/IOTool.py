@@ -13,7 +13,16 @@ import logging
 import time
 import os
 
-CONFIG_FILE="config.txt"
+# the configuration file will always be in the parent of the parent of the directory
+# where this module is located. i.e. in the LabGUI main folder
+#print("__file__ in IOTool.py is at " + __file__)
+abs_file = os.path.abspath(os.path.dirname(__file__))
+#print("abs_file in IOTool.py is at " + abs_file)
+MAIN_DIR = os.sep.join(abs_file.split(os.sep)[:-2]) + os.sep
+CONFIG_FILE =  "config.txt"
+CONFIG_FILE_PATH = MAIN_DIR + CONFIG_FILE
+print("configuration from: " + CONFIG_FILE_PATH)
+
 
 #these are the key words used in the configfile, they are defined here only
 SCRIPT_ID = "SCRIPT"
@@ -23,26 +32,22 @@ SETTINGS_ID = "SETTINGS"
 LOAD_DATA_FILE_ID = "DATAFILE"
 GPIB_INTF_ID = "GPIB_INTF"
 
-def create_config_file(main_dir=None):
+def create_config_file(config_path=CONFIG_FILE_PATH):
     """
     this function generate a generic config file from a given path
     """
-    # get home directory of the main programm
-    if main_dir == None:
-        main_dir = os.path.dirname(os.path.realpath(__file__)) + os.sep
 
-    config_path = os.path.join(main_dir, CONFIG_FILE)
-    if os.path.exists(os.path.join(main_dir, CONFIG_FILE)):
+    if os.path.exists(config_path):
         logging.warning(
-            "the file config.txt already exists, it will not be erased")
+            "the file config.txt already exists, it will not be overwritten")
     else:
         of = open(config_path, "w")
-        of.write("%s=%sscratch%s\n" % (SAVE_DATA_PATH_ID, main_dir, os.sep))
-        of.write("%s=True\n"%(DEBUG_ID))
-        of.write("%s=%sscripts%sscript.py\n" % (SCRIPT_ID, main_dir,os.sep))
+        of.write("%s=%sscratch%s\n" % (SAVE_DATA_PATH_ID, MAIN_DIR, os.sep))
+        of.write("%s=False\n"%(DEBUG_ID))
+        of.write("%s=%sscripts%sscript.py\n" % (SCRIPT_ID, MAIN_DIR, os.sep))
         of.write("%s=%ssettings%sdemo_dice.txt\n" % (SETTINGS_ID,
-                                                     main_dir,os.sep))
-        of.write("%s=%sscratch%s\n" % (LOAD_DATA_FILE_ID, main_dir,os.sep))
+                                                     MAIN_DIR, os.sep))
+        of.write("%s=%sscratch%s\n" % (LOAD_DATA_FILE_ID, MAIN_DIR, os.sep))
         of.write("%s=\n"%(GPIB_INTF_ID))
         of.close()
         # COOLDOWN=TEST
@@ -52,25 +57,23 @@ def save_config_file(data_path=None):
     """
     this function generate a config file from actual settings
     """
-    # get home directory of the main programm
-    cwd = os.path.dirname(os.path.realpath(__file__))
 
-    config_path = os.path.join(cwd, CONFIG_FILE)
-    if os.path.exists(os.path.join(cwd, CONFIG_FILE)):
+    
+    if os.path.exists(CONFIG_FILE_PATH):
         logging.warning(
-            "the file config.txt already exists, it will not be erased")
+            "the file config.txt already exists, it will not be overwritten")
     else:
-        of = open(config_path, "w")
+        of = open(CONFIG_FILE_PATH, "w")
         if not data_path == None:
             of.write("%s=%s\\\n" % (SAVE_DATA_PATH_ID,data_path))
         of.write("%s=True\n"%(DEBUG_ID))
-        of.write("%s=%sscripts\script.py\n" % (SCRIPT_ID, cwd))
-        of.write("%s=%ssettings\demo_voltage_AC.set\n" % (SETTINGS_ID, cwd))
-        of.write("%s=%sdata\\\n" % (LOAD_DATA_FILE_ID,cwd))
+        of.write("%s=%sscripts\script.py\n" % (SCRIPT_ID, MAIN_DIR))
+        of.write("%s=%ssettings\demo_voltage_AC.set\n" % (SETTINGS_ID, MAIN_DIR))
+        of.write("%s=%sdata\\\n" % (LOAD_DATA_FILE_ID, MAIN_DIR))
         of.close()
 
 
-def open_therm_file(config_file_name=CONFIG_FILE):
+def open_therm_file(config_file_name='config.txt'):
     """
         returns the filename of output file as it is in the config file
     """
@@ -124,7 +127,7 @@ def open_therm_file(config_file_name=CONFIG_FILE):
     return file_name
 
 
-def get_file_name(config_file_name=CONFIG_FILE):
+def get_file_name(config_file_name='config.txt'):
     """
         returns the filename of output file as it is in the config file
     """
@@ -174,7 +177,7 @@ def get_file_name(config_file_name=CONFIG_FILE):
     return file_name
 
 
-def get_config_setting(setting, config_file_name = CONFIG_FILE):
+def get_config_setting(setting, config_file_path = CONFIG_FILE_PATH):
     """
         gets a setting from the configuration file
     """
@@ -182,7 +185,7 @@ def get_config_setting(setting, config_file_name = CONFIG_FILE):
     
     try:
         #open the file
-        config_file = open(config_file_name,'r')
+        config_file = open(config_file_path,'r')
 
         #loop through all the lines
         for line in config_file:
@@ -207,12 +210,12 @@ def get_config_setting(setting, config_file_name = CONFIG_FILE):
         
     except IOError:
         
-        print("No configuration file " + config_file_name + " found")
+        print("No configuration file " + config_file_path + " found")
         value = None
         
     return value
 
-def set_config_setting(setting, setting_value, config_file_name = CONFIG_FILE):
+def set_config_setting(setting, setting_value, config_file_path=CONFIG_FILE_PATH):
     """
         sets a setting to a given value inside the configuration file
     """
@@ -252,7 +255,7 @@ def set_config_setting(setting, setting_value, config_file_name = CONFIG_FILE):
         config_file.close()
         
         #reopen the file and write the modified lines
-        config_file = open(config_file_name,'w')
+        config_file = open(config_file_path,'w')
         config_file.writelines(lines)
         config_file.close()
         
@@ -262,7 +265,7 @@ successfully changed to %s"%(setting,setting_value)))
     except:
         
         logging.error("Could not set the parameter %s to %s in the config \
-file located at %s\n"%(setting,setting_value, config_file_name))
+file located at %s\n"%(setting,setting_value, config_file_path))
         
 
 def get_settings_name():

@@ -19,9 +19,11 @@ import sys
 import serial
 import visa
 
+from LabTools.IO import IOTool
+
 INTF_VISA = 'pyvisa'
 INTF_PROLOGIX = 'prologix'
-INTF_GPIB = INTF_PROLOGIX #INTF_VISA
+INTF_GPIB = IOTool.get_interface_setting()
 INTF_SERIAL = 'serial'
 
 INTF_NONE = 'None'
