@@ -99,12 +99,12 @@ class MeasInstr(object):
     channels_names = {}
 
     # the name of the communication port
-    resource_name = ''
+    #resource_name = ''
 
     #**kwargs can be any of the following param "timeout", "term_chars","chunk_size", "lock","delay", "send_end","values_format"
     # example inst=MeasInstr('GPIB0::0','Inst_name',True,timeout=12,term_char='\n')
     # other exemple inst=MeasInstr('GPIB0::0',timeout=12,term_char='\n')
-    def __init__(self, resource_name, name = 'default', debug = False,
+    def __init__(self, resource_name, name='default', debug = False,
                  interface = None, **kwargs):
         """
             use interface = None if the instrument will not inherit read and 
@@ -116,8 +116,15 @@ class MeasInstr(object):
         # one of these two should disappear, but we need to look into the bugs
         # it might create first
         self.DEBUG = debug
-        #self.resource_name = resource_name
         
+        
+        if resource_name == None:
+            self.resource_name = name
+            print("Resource name was not specified, defaulting to: " + name)
+        else:
+            self.resource_name = resource_name
+            
+        print ("Trying to connect to resource_name: " + resource_name)
 
         self.term_chars=""        
 
@@ -184,10 +191,8 @@ class MeasInstr(object):
                 self.channels_names[chan] = chan
 
         # establishs a connection with the instrument
-        # this check should be based on interface, not resource_name
-        # the check is now performed in self.connect, deprecating this if statement
-        # if not resource_name == None:
-        self.connect(resource_name, **kwargs)
+
+        self.connect(**kwargs)
 
     def initialize(self):
         """
@@ -307,7 +312,7 @@ class MeasInstr(object):
             answer = msg
         return answer
 
-    def connect(self, resource_name, **keyw):
+    def connect(self, **keyw):
         """Trigger the physical connection to the instrument"""
         
         logging.info("\nMy interface is %s\n" % (self.interface))
@@ -322,16 +327,13 @@ class MeasInstr(object):
                 
                 if old_visa:
                     
-                    self.connection = visa.instrument(resource_name, **keyw)
-                    self.resource_name = resource_name
+                    self.connection = visa.instrument(self.resource_name, **keyw)
                     
                 else:
                     
                     logging.debug("using pyvisa version higher than 1.6")
                     self.connection = self.resource_manager.get_instrument(
-                        resource_name, **keyw)
-                        
-                self.resource_name = resource_name
+                        self.resource_name, **keyw)
 
             elif self.interface == INTF_SERIAL:
                 
@@ -348,39 +350,37 @@ class MeasInstr(object):
                     baud_rate = keyw["baud_rate"]
                     keyw.pop("baud_rate")
                     self.connection = serial.Serial(
-                        resource_name, baud_rate, **keyw)
+                        self.resource_name, baud_rate, **keyw)
                         
                 else:
                     
-                    self.connection = serial.Serial(resource_name)
+                    self.connection = serial.Serial(self.resource_name)
                     
-                self.resource_name = resource_name
-
             elif self.interface == INTF_PROLOGIX:
                 # only keeps the number of the port
-                self.resource_name = resource_name.replace('GPIB0::', '')
+                self.resource_name = self.resource_name.replace('GPIB0::', '')
 
                 self.connection.write(("++addr %s" % (self.resource_name)))
                 self.connection.readline()
                 # the \n termchar is embedded in the PrologixController class
                 self.term_chars = ""
 
-            else:
-                # instruments like TIME and DICE don't have a resource name
-                # so just set it to their ID name
-                if resource_name == None:
-                    
-                    self.resource_name = self.ID_name
-                    
-                else:
-                    
-                    self.resource_name = resource_name
-                    
-                print("setting default resource name to ", self.resource_name)
-                # all others must take care of their own communication
+#            else:
+#                # instruments like TIME and DICE don't have a resource name
+#                # so just set it to their ID name
+#                if resource_name == None:
+#                    
+#                    self.resource_name = self.ID_name
+#                    
+#                else:
+#                    
+#                    self.resource_name = resource_name
+#                    
+#                print("setting default resource name to ", self.resource_name)
+#                # all others must take care of their own communication
 
 
-            logging.info("connected to " + str(resource_name))
+            logging.info("connected to " + str(self.resource_name))
 
 
     def close(self):
