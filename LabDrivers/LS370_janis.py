@@ -39,7 +39,7 @@ class Instrument(Tool.MeasInstr):
 
     def read_channel(self, chan):
         if not self.DEBUG:
-            data = self.ask('RDGR? ' + str(chan))
+            data = self.ask('RDGR? ' + str(chan[-1]))
 
             try:
                 return float(data)
@@ -87,5 +87,5 @@ if (__name__ == '__main__'):
     i = Instrument("GPIB0::12")
     print(i.identify())
     print(i.measure("1K Pot"))
-    print(i.read_channel("ICP"))
+    print(i.measure("ICP"))
     

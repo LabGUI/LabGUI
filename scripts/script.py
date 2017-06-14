@@ -28,10 +28,10 @@ print("INIT DONE")
 #print self.instruments
 while self.isStopped() == False:
     
-
+    
     #This initiates the measure sequence in datatakerthread
     self.read_data()
-    time.sleep(2)
+    time.sleep(1)
     self.check_stopped_or_paused()
     
     #The following is tha basic alarm sequence, uncomment this block to activate it

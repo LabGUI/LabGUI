@@ -12,7 +12,7 @@ from . import Tool
 from collections import OrderedDict
 
 param = OrderedDict([('LS1', 'ohms'), ('LS2', 'ohms'), ('LS3', 'ohms'), ('LS4', 'ohms'),
-                     ('LS5', 'ohms'), ('LS9', 'ohms'), ('CMN', 'H'), ('CMN_T', 'mK')])
+                     ('LS5', 'ohms'), ('LS9', 'ohms'), ('CMN', 'H'), ('CMN_T', 'mK'), ('heater','A')])
 
 INTERFACE = Tool.INTF_NONE
 
