@@ -12,7 +12,7 @@ from . import Tool
 from collections import OrderedDict
 
 param = OrderedDict([('LS1', 'ohms'), ('LS2', 'ohms'), ('LS3', 'ohms'), ('LS4', 'ohms'),
-                     ('LS5', 'ohms'), ('LS9', 'ohms'), ('CMN', 'H'), ('CMN_T', 'mK'), ('heater','A')])
+                     ('LS5', 'ohms'), ('LS9', 'ohms'), ('CMN', 'H'), ('CMN_T', 'mK')])
 
 INTERFACE = Tool.INTF_NONE
 
@@ -60,6 +60,7 @@ class Instrument(Tool.MeasInstr):
         except IOError:
             print("connection to fridge monitor failed")
             return 0
+            
     def change_setpoint(self, val):
         try:
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -82,6 +83,36 @@ class Instrument(Tool.MeasInstr):
             s.connect(('localhost', 4589))
          
             s.send('DAMP ' + str(val) + '\n')
+    
+            s.close()
+    
+            
+        except IOError:
+            print("connection to fridge monitor failed")
+            return 0  
+
+    def change_htr_range(self, val):
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        
+            s.connect(('localhost', 4589))
+         
+            s.send('SET_HTR_RANGE ' + str(val) + '\n')
+    
+            s.close()
+    
+            
+        except IOError:
+            print("connection to fridge monitor failed")
+            return 0  
+            
+    def change_htr_val(self, val):
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        
+            s.connect(('localhost', 4589))
+         
+            s.send('SET_HTR_VAL ' + str(val) + '\n')
     
             s.close()
     
