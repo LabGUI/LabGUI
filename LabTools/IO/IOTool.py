@@ -215,13 +215,13 @@ def get_config_setting(setting, config_file_path = CONFIG_FILE_PATH):
         
     return value
 
-def set_config_setting(setting, setting_value, config_file_path=CONFIG_FILE_PATH):
+def set_config_setting(setting, setting_value, config_file_path = CONFIG_FILE_PATH):
     """
         sets a setting to a given value inside the configuration file
     """
     try:
         #open the file
-        config_file = open(config_file_name,'r')
+        config_file = open(config_file_path,'r')
     
         #read the lines into a list
         lines = config_file.readlines()
@@ -268,15 +268,15 @@ successfully changed to %s"%(setting,setting_value)))
 file located at %s\n"%(setting,setting_value, config_file_path))
         
 
-def get_settings_name():
-    return get_config_setting(SETTINGS_ID)
+def get_settings_name(**kwargs):
+    return get_config_setting(SETTINGS_ID,**kwargs)
 
 
-def get_script_name():
-    return get_config_setting("SCRIPT")
+def get_script_name(**kwargs):
+    return get_config_setting("SCRIPT",**kwargs)
 
-def get_debug_setting():
-    setting = get_config_setting(DEBUG_ID)
+def get_debug_setting(**kwargs):
+    setting = get_config_setting(DEBUG_ID,**kwargs)
     if setting:
         # case insensitive check of the debug setting. get_config_setting already performed strip() of whitespace characters
         if setting.upper() == 'TRUE':
@@ -288,8 +288,8 @@ def get_debug_setting():
         debug = False
     return debug
 
-def get_interface_setting():
-    return get_config_setting(GPIB_INTF_ID)
+def get_interface_setting(**kwargs):
+    return get_config_setting(GPIB_INTF_ID,**kwargs)
 
 
 def get_drivers(drivers_path):
