@@ -108,4 +108,6 @@ class Instrument(Tool.MeasInstr):
 if (__name__ == '__main__'):  
     i = Instrument("GPIB0::25")
     print(i.identify())
+    i.unlock()
+    
       

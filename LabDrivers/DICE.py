@@ -26,7 +26,7 @@ INTERFACE = Tool.INTF_NONE
 class Instrument(Tool.MeasInstr):
 
     def __init__(self, resource_name, debug=False, **kwargs):
-        super(Instrument, self).__init__(None, name = 'DICE', debug = debug, interface = INTERFACE, **kwargs)
+        super(Instrument, self).__init__('Dice', name = 'DICE', debug=debug, interface = INTERFACE, **kwargs)
 
     def measure(self, channel):
         logging.debug("DICE measure %s"%(channel))

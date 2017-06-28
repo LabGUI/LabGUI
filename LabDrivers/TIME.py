@@ -18,6 +18,7 @@ class Instrument(Tool.MeasInstr):
     # const_label=''
 
     def __init__(self, resource_name = None, debug = False, **kwargs):
+        resource_name = 'Time'
         super(Instrument, self).__init__(resource_name, name = 'TIME', debug=debug,
                                          interface = INTERFACE, **kwargs)
         self.t_start = 0
