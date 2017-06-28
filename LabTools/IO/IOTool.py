@@ -21,7 +21,7 @@ abs_file = os.path.abspath(os.path.dirname(__file__))
 MAIN_DIR = os.sep.join(abs_file.split(os.sep)[:-2]) + os.sep
 CONFIG_FILE =  "config.txt"
 CONFIG_FILE_PATH = MAIN_DIR + CONFIG_FILE
-print("configuration from: " + CONFIG_FILE_PATH)
+
 
 
 #these are the key words used in the configfile, they are defined here only
@@ -189,29 +189,48 @@ def get_config_setting(setting, config_file_path = CONFIG_FILE_PATH):
 
         #loop through all the lines
         for line in config_file:
-            #the setting should have a = sign in the line
-            [left, right] = line.split("=")
             
-            #separate the setting name from its value
-            left = left.strip() #name
-            right = right.strip() #value
-            
-            #if the name corresponds to the setting we want, we read the value
-            if left == setting:
+            # the dash caracter is used as comment
+            if line[0] != '#':
                 
-                value = right
+                #the setting should have a = sign in the line
+                [left, right] = line.split("=")
+                
+                #separate the setting name from its value
+                left = left.strip() #name
+                right = right.strip() #value
+                
+                #if the name corresponds to the setting we want, we read the value
+                if left == setting:
+                    
+                    value = right
                 
         if not value:
             
             print("Configuration file does not contain a'" 
                   + setting + "=' line.")
             print("returning the keyword None")
+            
         config_file.close()
         
     except IOError:
         
         print("No configuration file " + config_file_path + " found")
         value = None
+        
+    except ValueError as e:
+        
+        #if this is this error it means the command .split failed and
+        #it is likely due to the fact that the file doesn't have the config
+        #file format
+        if "too many values to unpack" in e:
+            
+            err = IOError("The configuration file doesn't have the \
+right format")
+            raise(err)
+        else:
+            
+            raise(e)
         
     return value
 

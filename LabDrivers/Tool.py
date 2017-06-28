@@ -82,24 +82,7 @@ class MeasInstr(object):
     empty method, any child class should redefine it)
     """
 
-    # identify the instrument in a unique way
-    ID_name = None
-    # store the pyvisa object connecting to the hardware
-    connection = None
-    # debug mode trigger
-    debug = False
-    # contains the different channels availiable
-    channels = []
-    # store the instrument last measure in the different channels
-    last_measure = {}
-    # contains the units of the different channels
-    units = {}
-    # contains the name of the different channels if the channels do not have
-    # explicit names
-    channels_names = {}
 
-    # the name of the communication port
-    resource_name = ''
 
     #**kwargs can be any of the following param "timeout", "term_chars","chunk_size", "lock","delay", "send_end","values_format"
     # example inst=MeasInstr('GPIB0::0','Inst_name',True,timeout=12,term_char='\n')
@@ -112,19 +95,35 @@ class MeasInstr(object):
             other highly custom instruments
         """
 
+
+        # identify the instrument in a unique way
         self.ID_name = name
-        # one of these two should disappear, but we need to look into the bugs
-        # it might create first
+        # store the pyvisa object connecting to the hardware
+        self.connection = None
+        # debug mode trigger
         self.DEBUG = debug
-        #self.resource_name = resource_name
-        
+        # contains the different channels availiable
+        self.channels = []
+        # store the instrument last measure in the different channels
+        self.last_measure = {}
+        # contains the units of the different channels
+        self.units = {}
+        # contains the name of the different channels if the channels do not have
+        # explicit names
+        self.channels_names = {}
+    
+        #the name of the communication port it will be changed in the 
+        #connect method
+        self.resource_name = None
 
         self.term_chars=""        
 
         self.interface = interface
 
+        #check which interface the user choose to use
         if self.interface == INTF_VISA:
             
+            #version of pyvisa
             if not old_visa:
                 
                 self.resource_manager = visa.ResourceManager()
@@ -134,8 +133,8 @@ class MeasInstr(object):
             # through that for all GPIB communications
 
             if INTF_PROLOGIX in kwargs:
+                
                 # the connection is passed as an argument
-
                 if isinstance(kwargs[INTF_PROLOGIX], str):
                     # it was the COM PORT number so we initiate an instance
                     # of prologix controller
@@ -166,11 +165,11 @@ class MeasInstr(object):
             try:
                 
                 module_name = import_module(
-                    "." + name, package=utils.LABDRIVER_PACKAGE_NAME)
+                    "." + name, package = utils.LABDRIVER_PACKAGE_NAME)
                     
             except ImportError:
                 module_name = import_module(
-                    name, package=utils.LABDRIVER_PACKAGE_NAME)
+                    name, package = utils.LABDRIVER_PACKAGE_NAME)
 #            else:
 #                module_name=import_module("."+name,package=LABDRIVER_PACKAGE_NAME)
             self.channels = []
@@ -425,7 +424,7 @@ class InstrumentHub(QObject):
         
     """
 
-    def __init__(self, parent=None, debug=False, **kwargs):
+    def __init__(self, parent = None, debug = False, **kwargs):
 
         if parent != None:
             
@@ -478,6 +477,9 @@ class InstrumentHub(QObject):
                         "The controller passed as an argument is not the good one")
 
         else:
+            
+            logging.warning("The instrument Hub recieved no port for the \
+                            prologix connector")
             # the connection doesn't exist so we create it
             self.prologix_com_port = utils.PrologixController()
 

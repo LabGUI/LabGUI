@@ -100,78 +100,134 @@ class LabGuiMain(QtGui.QMainWindow):
     """
 #    cmdwin = None
 
-    outputfile = None
-    
-    DEBUG = True
-
     def __init__(self, argv = []):
         
-        print argv
         # run the initializer of the class inherited from6
         super(LabGuiMain, self).__init__()
 
         self.settings = QSettings(self)
         self.settings.setValue("state", self.saveState())
+    
+        #debug parameter used to run labgui even when there is no instrument
+        #to connect to, used to plot past data or test the code
+        self.DEBUG = True
+        
+        
+        #variable to store the configfile name
+        self.config_file = ''
+        
         
        #parse the argument(s) passed inline
         try:
             #option c is to provide a name for config file
             opts, args = getopt.getopt(argv,"c:")
             
-        except getopt.GetoptError:
-            print('configuration file : option -c argument missing')
-            sys.exit(2)
+            #loop through the arguments on the inline command
+            for opt, arg in opts:
         
-        #variable to store the configfile name
-        self.config_file = None
-        
-        #loop through the arguments
-        for opt, arg in opts:
-           if opt == '-c':
-               self.config_file = arg
-          
-        if not self.config_file == None:
+                #user passed configfile 
+                if opt == '-c':
+                    
+                    self.config_file = arg
             
-            print self.config_file
-            print exists(self.config_file)
+        except getopt.GetoptError:
+            
+            logging.error('configuration file : option -c argument missing')
+
+          
+        #verify if the config file passed by the user is valid and exists
+        if self.config_file:
+            
+            if not exists(self.config_file):
+                
+                logging.error("The config file you provided ('%s') doesn't \
+exist, '%s' will be used instead"%(self.config_file, CONFIG_FILE))
+                
+                self.config_file = CONFIG_FILE
             
         else:
             
-            #check whether a config file exists or not
+            #check whether the default config file exists or not
             if exists(CONFIG_FILE) == False:
                 
-                logging.warning("A config.txt file has been generated for you.")           
+                logging.warning("A '%s' file has been generated for you."%(
+                        CONFIG_FILE))           
                 logging.warning("Please modify it to change the default \
     script, settings and data locations, or to enter debug mode.")
     
                 # creates a config.txt with basic needs
                 IOTool.create_config_file()
                 
-            else:
+            #sets default config file name
+            self.config_file = CONFIG_FILE
+        
+        
+        
+        #to make sure the config file is of the right format
+        #ie that the user didn't specify the name of an existing file which
+        #isn't a configuration file
+        config_file_ok = False
+        
+        while not config_file_ok:
+        
+            try:
+                #try to read the DEBUG parameter from the configuration file
+                #as a test of the good formatting of the file
+                self.DEBUG = IOTool.get_debug_setting(
+                        config_file_path = self.config_file)
                 
+                #if this didn't generate errors we allow to get out of the loop
+                config_file_ok = True
+                
+            except IOError:
+                
+                logging.error("The config file you provided ('%s') doesn't \
+have the right format, '%s' will be used instead"%(self.config_file,
+                                                   CONFIG_FILE))
+                
+                #check whether the default config file exists or not
+                if exists(CONFIG_FILE) == False:
+                    
+                    logging.warning("A '%s' file has been generated for you."%(
+                        CONFIG_FILE))           
+                    logging.warning("Please modify it to change the default \
+    script, settings and data locations, or to enter debug mode.")
+    
+                    # creates a config.txt with basic needs
+                    IOTool.create_config_file()
+                    
+                #sets default config file name
                 self.config_file = CONFIG_FILE
-                
+            
+        print("Configuration loaded from : %s"%(self.config_file))
+        
+        
+        
+        if self.DEBUG == True:
+            
+            print("*" * 20)
+            print("Debug mode is set to True")
+            print("*" * 20)
+            
+            self.option_display_debug_state()
+            
+        else:
+            
+            self.option_display_normal_state()
+            
+            
         #create the central part of the application
         self.zoneCentrale = QtGui.QMdiArea()
         self.zoneCentrale.subWindowActivated.connect(self.update_current_window)
         self.setCentralWidget(self.zoneCentrale)
-
-        #read the DEBUG parameter from the configuration file (True/False)
-        self.DEBUG = IOTool.get_debug_setting(config_file_path = self.config_file)
-       
-        if self.DEBUG == True:
-            print("*" * 20)
-            print("Debug mode is set to True")
-            print("*" * 20)
-            self.option_display_debug_state()
-        else:
-            self.option_display_normal_state()
             
+        
         #load the parameter for the GPIB interface setting of the instruments
         interface = IOTool.get_interface_setting(config_file_path = self.config_file)
         
         #test if the parameter is correct
         if interface not in [Tool.INTF_VISA,Tool.INTF_PROLOGIX]:
+            
             msg = """The %s variable of the config file '%s' is not correct
             The only two allowed values are : '%s' and '%s' """%(
                                                         IOTool.GPIB_INTF_ID,
@@ -180,9 +236,11 @@ class LabGuiMain(QtGui.QMainWindow):
                                                         Tool.INTF_PROLOGIX
                                                         )
             logging.warning(msg)
+            #default setting
             Tool.INTF_GPIB = Tool.INTF_PROLOGIX
                                        
-        else:            
+        else:           
+            
             Tool.INTF_GPIB = interface
             
         print("*" * 20)
@@ -950,6 +1008,7 @@ the pyqt window option is disabled")
 
     def option_change_debug_state(self):
         """Togggle the debug state"""
+        
         if self.DEBUG:
             self.option_display_normal_state()
             self.DEBUG = False
@@ -958,10 +1017,13 @@ the pyqt window option is disabled")
             self.option_display_debug_state()
             self.DEBUG = True
         
+        #if DEBUG is false, the port list needs to be fetched
         self.refresh_ports_list()
+        
         IOTool.set_config_setting(IOTool.DEBUG_ID, 
                                   self.DEBUG, 
                                   config_file_path = self.config_file)
+        
         self.emit(SIGNAL("DEBUG_mode_changed(bool)"),self.DEBUG)
    
     def option_change_log_level(self):
@@ -1063,7 +1125,7 @@ def test_user_variable_widget():
     sys.exit(app.exec_())
 
 if __name__ == "__main__":
-    print("Launching LabGUI")
+#    print("Launching LabGUI")
     launch_LabGui()
 #    test_automatic_fitting()
 #    test_load_previous_data()
