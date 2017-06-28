@@ -477,9 +477,7 @@ class InstrumentHub(QObject):
                         "The controller passed as an argument is not the good one")
 
         else:
-            
-            logging.warning("The instrument Hub recieved no port for the \
-                            prologix connector")
+        
             # the connection doesn't exist so we create it
             self.prologix_com_port = utils.PrologixController()
 

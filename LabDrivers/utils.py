@@ -265,6 +265,14 @@ class PrologixController(object):
                  self.connection = None
                  logging.error("The port %s isn't related to a Prologix contro\
 ller (try to plug and unplug the cable if it is there nevertheless)"%(com_port))
+        
+             logging.info("%s is connected on the port '%s'"%(version_number[:-2],
+                                                              com_port))
+         else:
+             
+             logging.info("The connection to the Prologix connector failed")
+                                                             
+             
      
      def __str__(self):
          if not self.connection == None:
