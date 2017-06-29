@@ -579,8 +579,10 @@ class InstrumentWindow(QtGui.QWidget):
     
                     instr_type = settings[1].strip()
     
-                    if instr_type == 'TIME':
-                        instr_type == 'Internal'
+                    if 'TIME' in instr_type:
+                        
+                        pass
+                        #instr_type = 'Internal'
     
                     
                     if not instr_type in self.INSTRUMENT_TYPES:
@@ -594,10 +596,10 @@ class InstrumentWindow(QtGui.QWidget):
                         new_line.instr_name_cbb.setCurrentIndex(
                             new_line.instr_name_cbb.findText(instr_type))
     
-                        if instr_type == "Internal":
+                        if 'TIME' in instr_type:
                             
                             new_line.port_cbb.clear()
-                            new_line.port_cbb.addItem('Internal')
+                            new_line.port_cbb.addItem('TIME')
                             
                         else:
                             

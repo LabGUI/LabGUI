@@ -309,8 +309,12 @@ class MeasInstr(object):
     def connect(self, resource_name, **keyw):
         """Trigger the physical connection to the instrument"""
         
-        logging.info("\nMy interface is %s\n" % (self.interface))
+
+        
+        logging.debug("keyw arguments")
+        
         for a in keyw:
+            
             logging.debug(a)
 
         if not self.DEBUG:
@@ -378,8 +382,8 @@ class MeasInstr(object):
                 print("setting default resource name to ", self.resource_name)
                 # all others must take care of their own communication
 
-
-            logging.info("connected to " + str(resource_name))
+            logging.info("connected to %s (INTF : %s)"% (str(resource_name),
+                                                         self.interface))
 
 
     def close(self):
@@ -604,7 +608,7 @@ class InstrumentHub(QObject):
         """ closes all instruments and reset the lists and dictionnaries """
         
         for key, inst in list(self.instrument_list.items()):
-
+            print key, inst
             if key:
                 
                 inst.close()

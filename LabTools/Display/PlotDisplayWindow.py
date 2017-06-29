@@ -708,9 +708,11 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
             it only plots if the checkbox of the line is checked
         """
         
+
         if isnparray(data_array) == True :
             logging.debug("update the data_array")
             self.data_array = data_array
+        
 
 
         if self.data_array.size > 0 :
@@ -718,8 +720,8 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
             try:
                 num_channels = self.data_array.shape[1]
             except:
-                num_channels = self.data_array.size                
-                
+                num_channels = np.size(self.data_array,1)             
+            
             #if there is more instruments than channel numbers we expand the channels on the window
             while self.num_channels < num_channels:
                 self.add_channel_controls()
@@ -763,14 +765,24 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
 
         #rescale the ticks so that we can always read them
         try:
+            
             self.fig.tight_layout()
+            
         except ValueError as e:
+            
             if "left cannot be >= right" in e:
                 pass
                 #it seems to be a platform dependent error
             elif "ordinal must be >= 1" in e:
                 try:
-                    self.update_plot(np.array([[time.time(),np.nan,np.nan,np.nan,np.nan]]))
+                    
+                    initial_array = [time.time()]
+                    
+                    for i in range(self.num_channels - 1):
+                        
+                        initial_array.append(np.nan)
+                        
+                    self.update_plot(np.array([initial_array]))
                 except:
                     pass
                     #whenever the time format is on and the data array is empty
