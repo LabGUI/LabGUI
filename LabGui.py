@@ -483,6 +483,9 @@ the pyqt window option is disabled")
         
         if not exists(self.default_settings_fname):
             
+            logging.warning("The filename '%s' wasn't found, using '%s'"%(
+                self.default_settings_fname,'settings/default_settings.txt'))
+                
             self.default_settings_fname = 'settings/default_settings.txt'
         
         if os.path.isfile(self.default_settings_fname):  

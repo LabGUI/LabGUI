@@ -599,7 +599,7 @@ class InstrumentWindow(QtGui.QWidget):
                         if 'TIME' in instr_type:
                             
                             new_line.port_cbb.clear()
-                            new_line.port_cbb.addItem('TIME')
+                            new_line.port_cbb.addItem('')
                             
                         else:
                             
@@ -616,9 +616,9 @@ class InstrumentWindow(QtGui.QWidget):
                             else:
                                 
                                 if not self.DEBUG:
-                                    
-                                    logging.warning("the port %s is not available,\
-     please check your connectic or your settings file\n"%(port))
+                                    logging.warning(self.AVAILABLE_PORTS)
+                                    logging.warning("the port '%s' is not available,\
+please check your connectic or your settings file\n"%(port))
     
                         #fills the parameter combobox with instrument parameters
                         new_line.param_cbb.clear()
