@@ -45,7 +45,7 @@ class DataTaker(QThread):
         self.user_variables = {}        
         
         self.t_start = None
-        # initialize the intruments and their parameters
+        # scriptize the intruments and their parameters
         self.reset_lists()
 
     def __del__(self):
@@ -146,7 +146,7 @@ user variable")
 
         self.completed = True
         self.emit(SIGNAL("script_finished(bool)"), self.completed)
-        self.stopped = True
+#        self.stopped = True
 
         print("DTT run over")
 

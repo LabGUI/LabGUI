@@ -30,7 +30,7 @@ from collections import OrderedDict
 import logging
 import logging.config
 
-ABS_PATH=os.path.abspath(os.curdir)
+ABS_PATH = os.path.abspath(os.curdir)
 logging.config.fileConfig(os.path.join(ABS_PATH,"logging.conf"))
 
 from importlib import import_module
@@ -809,6 +809,9 @@ the pyqt window option is disabled")
 
     def finished_DTT(self, completed):
         if completed:
+            
+            self.stop_DTT()
+            
             self.start_DTT_action.setEnabled(True)
             self.pause_DTT_action.setEnabled(False)
             self.stop_DTT_action.setEnabled(False)
