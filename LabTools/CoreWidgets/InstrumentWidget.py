@@ -708,7 +708,7 @@ def connect_instrument_hub(parent, signal = True):
 
     if signal:
         
-        [instr_name_list, dev_list, param_list] = parent.collect_instruments()
+        [instr_name_list, dev_list, param_list] = parent.widgets['InstrumentWidget'].collect_device_info()
         logging.debug([instr_name_list, dev_list, param_list])
         
         actual_instrument_number = len(
@@ -749,11 +749,16 @@ different than " + str(actual_instrument_number)
 
         logging.debug("The instrument list : " \
                       + str(parent.instr_hub.get_instrument_list()))
-                      
-        #show a plot by default
-        parent.create_pdw(settings = parent.plot_window_settings)
+              
         
-        parent.actual_pdw = parent.get_last_window()
+        try:
+            #show a plot by default if used for LabGui
+            parent.create_pdw(settings = parent.plot_window_settings)
+            
+            parent.actual_pdw = parent.get_last_window()
+            
+        except:
+            pass
 
 
 
