@@ -708,7 +708,10 @@ def connect_instrument_hub(parent, signal = True):
 
     if signal:
         
-        [instr_name_list, dev_list, param_list] = parent.widgets['InstrumentWidget'].collect_device_info()
+        [instr_name_list, dev_list, param_list] = \
+                    parent.widgets['InstrumentWidget'].collect_device_info()
+        
+        logging.debug("Information sent to the connect_hub method")
         logging.debug([instr_name_list, dev_list, param_list])
         
         actual_instrument_number = len(

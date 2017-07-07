@@ -267,7 +267,16 @@ class MeasInstr(object):
                 # make sure the address is the right one (might be faster to
                 # check for that, might be not)
                 self.connection.write("++addr %s" % (self.resource_name))
-            answer = self.connection.write(msg + self.term_chars)
+                
+            if not self.connection == None:
+                
+                answer = self.connection.write(msg + self.term_chars)
+            
+            else:
+                
+                logging.debug("There is no physical connection established \
+with the instrument %s"%(self.ID_name))
+            
             
         else:
             
@@ -309,9 +318,7 @@ class MeasInstr(object):
     def connect(self, resource_name, **keyw):
         """Trigger the physical connection to the instrument"""
         
-
-        
-        logging.debug("keyw arguments")
+        logging.debug("keyw arguments for instrument %s"%(self.ID_name))
         
         for a in keyw:
             
@@ -321,42 +328,48 @@ class MeasInstr(object):
 
             if self.interface == INTF_VISA:
                 
+                #make sure the instrument is not already connected
                 self.close()
                 
+                #connects differently depending on the version of pyvisa
                 if old_visa:
                     
                     self.connection = visa.instrument(resource_name, **keyw)
-                    self.resource_name = resource_name
                     
                 else:
                     
                     logging.debug("using pyvisa version higher than 1.6")
                     self.connection = self.resource_manager.get_instrument(
                         resource_name, **keyw)
-                        
+                
+                #keep track of the port used with the instrument
                 self.resource_name = resource_name
 
             elif self.interface == INTF_SERIAL:
                 
+                #make sure the instrument is not already connected
                 self.close()
-                logging.debug(keyw)
                 
                 if "term_chars" in keyw:
-                    
+                    #store the terminaison character and will add them 
+                    #automatically at the end of each commands sent through
+                    #the connection
                     self.term_chars = keyw["term_chars"]
                     keyw.pop("term_chars")
                     
                 if "baud_rate" in keyw:
-                    
+                    #the baud rate need to be passed as an argument not a kwarg
                     baud_rate = keyw["baud_rate"]
                     keyw.pop("baud_rate")
+                    
                     self.connection = serial.Serial(
                         resource_name, baud_rate, **keyw)
                         
                 else:
                     
-                    self.connection = serial.Serial(resource_name)
+                    self.connection = serial.Serial(resource_name, **keyw)
                     
+                #keep track of the port used with the instrument
                 self.resource_name = resource_name
 
             elif self.interface == INTF_PROLOGIX:
@@ -368,22 +381,28 @@ class MeasInstr(object):
                 # the \n termchar is embedded in the PrologixController class
                 self.term_chars = ""
 
-            else:
+            elif self.interface == INTF_NONE:
                 # instruments like TIME and DICE don't have a resource name
                 # so just set it to their ID name
                 if resource_name == None:
-                    
+                    #keep track of the port used with the instrument
                     self.resource_name = self.ID_name
                     
                 else:
-                    
+                    #keep track of the port used with the instrument
                     self.resource_name = resource_name
                     
                 print("setting default resource name to ", self.resource_name)
                 # all others must take care of their own communication
 
+            else:
+                logging.error("The interface you passed as an argument to \
+connect the instrument %s to the port %s is not implemented, check utils.py \
+file to see which are the ones implemented"%(self.ID_name,resource_name))
+
             logging.info("connected to %s (INTF : %s)"% (str(resource_name),
                                                          self.interface))
+
 
 
     def close(self):
@@ -458,6 +477,9 @@ class InstrumentHub(QObject):
         # each element in this list
         self.port_param_pairs = []
 
+
+        #check if the connectic interface is prologix if you use serial or 
+        #other GPIB to usb converter you can ignore any prologix code
         if INTF_PROLOGIX in kwargs:
             # the connection is passed as an argument
 
@@ -473,12 +495,15 @@ class InstrumentHub(QObject):
                 # it was the PrologixController instance
                 self.prologix_com_port = kwargs[INTF_PROLOGIX]
 
+                #check that the instance is a prologix controller (version can
+                #change but this sentence is in all of their model when I coded
+                #this)
                 if "Prologix GPIB-USB Controller" in self.prologix_com_port.controller_id():
                     pass
 
                 else:
-                    logging.error(
-                        "The controller passed as an argument is not the good one")
+                    logging.error("The prologix controller passed as an \
+argument is not the good one")
 
         else:
         
@@ -486,70 +511,92 @@ class InstrumentHub(QObject):
             self.prologix_com_port = utils.PrologixController()
 
     def __del__(self):
+        #free the existing connections
         self.clean_up()
+        
         logging.info("InstrumentHub deleted")
 
     def connect_hub(self, instr_list, dev_list, param_list):
         """ 
             triggers the connection of a list of instruments instr_list,
             dev_list contains the port name information and param_list should
-            refer to one of the parameters each instrument would measure
+            refer to one of the parameters each instrument would measure.
             
+            The 3 lists should be the same size and the order of the items in
+            each list matters.
         """
-        # first close the connections and clear the lists
+        # first close the potential connections and clear the lists
         self.clean_up()
 
-        for instr_name, device_port, param in zip(instr_list, dev_list, param_list):
+        #loop over the lists to connect each instrument to the corresponding
+        #port to measure the given parameter
+        for instr_name, device_port, param in zip(instr_list, 
+                                                  dev_list, 
+                                                  param_list):
             
-            logging.debug("Connect_hub : Connecting %s to %s to measure %s" % (
+            logging.debug("Trying to connecting %s to %s to measure %s" % (
                 instr_name, device_port, param))
+            
             self.connect_instrument(
-                instr_name, device_port, param, send_signal=False)
+                instr_name, device_port, param, send_signal = False)
 
-            if self.parent != None:
+        if self.parent != None:
+            #notify that the list of instuments has been modified
+            self.emit(SIGNAL("changed_list()"))
                 
-                self.emit(SIGNAL("changed_list()"))
-                
-        print self.port_param_pairs
-        print self.instrument_list
+        logging.debug("Connect_hub : the lists of instrument and port-params")
+        logging.debug(self.port_param_pairs)
+        logging.debug(self.instrument_list)
         
-    def connect_instrument(self,instr_name,device_port,param,send_signal=True):
+    def connect_instrument(self,instr_name, device_port, param, send_signal=True):
         #device_port should contain the name of the GPIB or the COM port
 #        class_inst=__import__(instr_name)
-#        logging.debug("Connect_intrument args : %s, %s, %s"%(instr_name,device_port,param))
+        logging.debug("args : %s, %s, %s"%(instr_name,device_port,param))
         
+        #the relative import works differently if this module is executed as
+        #the main or imported
         if __name__ == "__main__":
             
             class_inst = import_module(instr_name)
 
         else:
-            class_inst=import_module("."+instr_name,package=utils.LABDRIVER_PACKAGE_NAME)
+            
+            class_inst = import_module("." + instr_name,
+                                       package = utils.LABDRIVER_PACKAGE_NAME)
         
+        #check if the port is already used in our list
         if device_port in self.instrument_list:
             print 'Instrument already exists at' + device_port
-            # Another data channel already used this instrument - make
-            # sure it's the same type!!!
+           
+            #the instrument we are trying to connect is not the same as the
+            #instrument already connected to this device_port
             if instr_name != self.instrument_list[device_port].ID_name:
 
                 print("You are trying to connect " +
                       instr_name + " to the port " + device_port)
                 print("But " + self.instrument_list[
                       device_port].ID_name + " is already connected to " + device_port)
+    
+                #make sure that the instrument will not be added to the port_param list
                 instr_name = 'NONE'
+                #make sure that no signal is sent that the list was changed
                 send_signal = False
 
             else:
-                print("Connect_instrument: added to %s at address %s measurement of %s" % (
-                    instr_name, device_port, param))
+                print("Connect_instrument: added the measurement of %s to %s \
+which is connected to %s " % ( param, instr_name, device_port))
 
+        #the port is not used yet
         else:
-
+            logging.debug("The port %s is not in the list already"%(device_port))
+            
+            #let the instrument be connected if it isn't one of these two strings
             if instr_name != '' and instr_name != 'NONE':
 
                 if class_inst.INTERFACE == INTF_PROLOGIX and self.prologix_com_port != None:
                     print("The instrument uses prologix")
                     obj = class_inst.Instrument(
-                        device_port, self.DEBUG, prologix=self.prologix_com_port)
+                        device_port, self.DEBUG, prologix = self.prologix_com_port)
 
                 elif class_inst.INTERFACE == INTF_PROLOGIX and self.prologix_com_port == None:
                     
@@ -557,8 +604,18 @@ class InstrumentHub(QObject):
                         "The interface is PROLOGIX but the controller object is not provided")
 
                 else:
+                    #the instrument interface is INTF_NONE, INTF_SERIAL or INTF_GPIB
                     
-                    obj = class_inst.Instrument(device_port, self.DEBUG)
+                    
+                    #I should do the check here if the device port can be 
+                    #assimilated to an IP address
+                    if utils.is_IP_port(device_port):
+                        pass
+                        #create a virtual instrument passing class_inst.Instrument
+                        #as an argument for inheritance
+                    else:
+                        obj = class_inst.Instrument(device_port, self.DEBUG)
+
 
                 if not self.DEBUG:
                     
@@ -582,7 +639,7 @@ class InstrumentHub(QObject):
             self.emit(SIGNAL("changed_list()"))
 
     def get_instrument_list(self):
-
+        """get the port name together with the instrument instance"""
         return self.instrument_list
 
     def get_port_param_pairs(self):
@@ -607,22 +664,36 @@ class InstrumentHub(QObject):
     def clean_up(self):
         """ closes all instruments and reset the lists and dictionnaries """
         
-        for key, inst in list(self.instrument_list.items()):
-            print key, inst
-            if key:
+        for port, inst in list(self.instrument_list.items()):
+            try:
+                
+                logging.debug("Instrument %s, port %s"%(inst, port))
+                
+            except AttributeError:
+                #when the instrument is None (I have to check why we add a
+                #port param with None connecting to None)
+                pass
+                
+                
+            
+            #if the port is valid then we close the connection to the instrument
+            if port:
                 
                 inst.close()
 
+        
         self.instrument_list = {}
         self.port_param_pairs = []
+        #I am not sure why this is useful anymore
         self.instrument_list[None] = None
 
 
-# try to connect to all ports availiable and send *IDN? command
-# this is something than can take some time
-
 
 def whoisthere():
+    """
+        try to connect to all ports availiable and send *IDN? command
+        this is something than can take some time
+    """
     
     if old_visa:
         

@@ -132,7 +132,22 @@ def find_prologix_ports():
 
     return result
 
-
+def is_IP_port(device_port):
+    """
+        decides whether the given port can be considered as an IP address with
+        a port and a unique identifier (for client instrument use)
+    """
+    
+    #I should make sure I identify the IP device port in a unique way
+    #maybe the presence of two ":" character plus the presence of three "." in
+    #the IP part should be good enough
+    #IP:ip_port:server_port
+    #IP : IP address XXX.XX.XX.XXX
+    #port : something like 4XXXX
+    #server_port, the device port of the instrument which has a physical 
+    #connection on the server side (to be able to uniquely identify)
+    
+    return False
  
 
 
