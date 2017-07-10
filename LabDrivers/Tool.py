@@ -474,6 +474,80 @@ def create_virtual_inst(parent_class):
 
                 print("'%s' doesn't have the right format" % resource_name)
 
+        def identify(self):
+            
+            return "Virtual %s at %s"(self.ID_name. self.host)
+
+
+
+        def use_method(self, method_name, *args, **kwargs):
+            """
+            This sends a request to call a method of the server instrument
+            it provides the potential arguments and keyword arguments
+            """
+                        
+            #parsing the arguments into a string to send the request
+            arguments = ""
+            
+            #arguments
+            if len(args) > 0:
+                
+                for arg in args:
+                    
+                    arguments = "%s,%s"%(arguments, arg)
+            
+            #keyword arguments
+            if len(kwargs) > 0 :
+                
+                for key in kwargs:
+                
+                    arguments = "%s,%s=%s"%(arguments, key, kwargs[key])
+                
+            #if the string isn't empty
+            if arguments:
+                
+                #if there is a comma in the first spot we remove it
+                if arguments[0] == ',':
+                    
+                    arguments = arguments[1:]
+                
+                
+            #prepare the request in the format 
+            #"inst_ID.method(*args,**kwargs)@device_port"
+            req = "%s.%s(%s)@%s"%(self.ID_name, method_name, 
+                                  arguments, self.device_port)
+
+#            print(req)
+#
+#            print("HOST : %s"%(self.host))
+#
+#            print("PORT : %s"%(self.port))
+            
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+#
+            #initiates the connection
+            try:
+                
+                s.connect((self.host, self.port))
+            
+            except socket.error:
+                
+                logging.error("Wrong IP or IP port number for the \
+virtual instrument %s"%self.ID_name)
+                
+                return "NetworkError : the IP address might be wrong or the \
+server might be down"
+                
+            #sends the request
+            s.sendall(req)
+
+            #collect the answer form the server
+            stri = s.recv(1024)
+            
+            s.close()
+        
+            return stri  
+        
 
         def measure(self, channel):
 
@@ -481,41 +555,20 @@ def create_virtual_inst(parent_class):
 
                 if not self.DEBUG:
 
-                    #prepare the request in the format 
-                    #"inst_ID.param@device_port"
-                    req = "%s.%s@%s"%(self.ID_name, channel, self.device_port)
-
-                    print(req)
-
-                    print("HOST : %s"%(self.host))
-
-                    print("PORT : %s"%(self.port))
-                    
-                    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-                    #initiates the connection
-                    try:
-                        
-                        s.connect((self.host, self.port))
-                    
-                    except socket.error:
-                        
-                        logging.error("Wrong IP or IP port number for the \
-virtual instrument %s"%self.ID_name)
-                        
-                        return np.nan
-                        
-                    #sends the request
-                    s.sendall(req)
-
-                    #collect the answer form the server
-                    stri = s.recv(1024)
-                    
-                    #close the communication
-                    s.close()
+                    #prepare the request and sends it to the instrument
+                    answer = self.use_method('measure', channel = channel)
                 
-                    answer = float(stri)                
-                
+                    #if there is an error we display it and return nan
+                    #so that it doesn't affect the data taking process
+                    if 'Error' in answer:
+                        
+                        logging.error(answer)
+                        
+                        answer = np.nan
+                    
+                    else:
+                        
+                        answer = float(answer)
                 else:
                     #random answer for the debug mode
                     answer = np.random.random()
@@ -910,15 +963,20 @@ def test_hub_connect_virtual_inst():
     h = InstrumentHub()
     h.DEBUG = False
     h.connect_hub(['TIME', 'PARO1000', 'LS370','TIME'], [
-                  'COM1', '132.206.186.71:48371:COM4', '132.206.186.71:48371:GPIB0::12::INSTR', ''], ['Time', '4K flange', '50K flange', 'dt'])
+                  'COM1', '132.206.186.166:48372:COM4', '132.206.186.71:48371:GPIB0::12::INSTR', ''], ['Time', '4K flange', '50K flange', 'dt'])
     
     print h.instrument_list
     print h.port_param_pairs
     
-    ls = h.instrument_list['132.206.186.71:48371:COM4']
+#    ls = h.instrument_list['132.206.186.71:48371:GPIB0::12::INSTR']
+#    print ls.measure('4K flange')
+#    print ls.measure('50K flange')
+    ls = h.instrument_list['132.206.186.166:48372:COM4']
+#    meth = getattr(ls,"measure")
+    print ls.use_method("measure",2,87)
+    print ls.use_method("identify",3,87)
     print ls.resource_name
-    print ls.measure('PRESSURE')
-    print ls.measure('TEMPERATUR')
+
     
 if __name__ == "__main__":
 
