@@ -132,7 +132,7 @@ def find_prologix_ports():
 
     return result
 
-def is_IP_port(device_port):
+def is_IP_port(device_port, return_vals = False):
     """
         decides whether the given port can be considered as an IP address with
         a port and a unique identifier (for client instrument use)
@@ -147,7 +147,6 @@ def is_IP_port(device_port):
     #device_port, the device port of the instrument which has a physical 
     #connection on the server side (to be able to uniquely identify)
     info = device_port.split(':')
-    print info
     
     #format should be IP:ip_port:device_port
     if len(info) == 3:
@@ -208,12 +207,15 @@ def is_IP_port(device_port):
     
     
     #the device port can oly be a COM or a GPIB port
-    if not "COM" in device_port or "GPIB" in device_port:
+    if not ("COM" in device_port or "GPIB" in device_port):
         logging.warning("The device port '%s' you specified is not GPIB nor \
 COM"%(device_port))
         return False
     
-    return True
+    if return_vals:
+        return ip, int(ip_port), device_port
+    else:
+        return True
 
 def list_drivers(interface = [INTF_VISA,INTF_PROLOGIX,INTF_SERIAL,INTF_NONE]):
     """

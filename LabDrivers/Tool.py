@@ -44,6 +44,8 @@ except:
     print("pyserial not available")
 
 
+import socket
+
 # Use these constants to identify interface type.
 # Avoids case-sensitivity/typo issues if you were to use the strings directly
 # these are imported by the instrument drivers so keep them there even if your
@@ -392,7 +394,8 @@ with the instrument %s"%(self.ID_name))
                     #keep track of the port used with the instrument
                     self.resource_name = resource_name
                     
-                print("setting default resource name to ", self.resource_name)
+                logging.info("setting default resource name of instrument %s\
+to '%s'"%(self.ID_name, self.resource_name))
                 # all others must take care of their own communication
 
             else:
@@ -438,6 +441,104 @@ file to see which are the ones implemented"%(self.ID_name,resource_name))
             define this method so any instrument has a defined method measure()        
         """
         return None
+
+
+def create_virtual_inst(parent_class):
+    """
+    returns a instrument which connect to a server as a client to fetch 
+    values uploaded by an actual instrument 
+    """
+    class VirtualInstrument(parent_class):
+
+        def __init__(self, resource_name, debug = False, **kwargs):
+
+            super(VirtualInstrument, self).__init__(resource_name,
+
+                                             debug = debug, 
+
+                                             interface = INTF_NONE, 
+
+                                             **kwargs)
+
+            self.DEBUG = debug
+
+            if utils.is_IP_port(resource_name):
+
+                self.host, self.port, self.device_port = utils.is_IP_port(
+                        resource_name, return_vals = True)
+                
+#                self.host = int(self.host)
+#
+
+            else:
+
+                print("'%s' doesn't have the right format" % resource_name)
+
+
+        def measure(self, channel):
+
+            if channel in self.last_measure:
+
+                if not self.DEBUG:
+
+                    #prepare the request in the format 
+                    #"inst_ID.param@device_port"
+                    req = "%s.%s@%s"%(self.ID_name, channel, self.device_port)
+
+                    print(req)
+
+                    print("HOST : %s"%(self.host))
+
+                    print("PORT : %s"%(self.port))
+                    
+                    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+                    #initiates the connection
+                    try:
+                        
+                        s.connect((self.host, self.port))
+                    
+                    except socket.error:
+                        
+                        logging.error("Wrong IP or IP port number for the \
+virtual instrument %s"%self.ID_name)
+                        
+                        return np.nan
+                        
+                    #sends the request
+                    s.sendall(req)
+
+                    #collect the answer form the server
+                    stri = s.recv(1024)
+                    
+                    #close the communication
+                    s.close()
+                
+                    answer = float(stri)                
+                
+                else:
+                    #random answer for the debug mode
+                    answer = np.random.random()
+
+                self.last_measure[channel] = answer
+
+            else:
+
+                print("you are trying to measure a non existent channel of %s \
+instrument : '%s'"% (self.ID_name, channel))
+
+                print("existing channels :", self.channels)
+
+                answer = np.nan
+
+            return answer
+
+    #return an instance of the virtualInstrument class which inherited from
+    #the class passed as an argument 
+    return VirtualInstrument
+
+
+
 
 
 class InstrumentHub(QObject):
@@ -543,7 +644,9 @@ argument is not the good one")
         if self.parent != None:
             #notify that the list of instuments has been modified
             self.emit(SIGNAL("changed_list()"))
-                
+        
+            self.emit(SIGNAL("instrument_hub_connected()"))
+        
         logging.debug("Connect_hub : the lists of instrument and port-params")
         logging.debug(self.port_param_pairs)
         logging.debug(self.instrument_list)
@@ -593,7 +696,15 @@ which is connected to %s " % ( param, instr_name, device_port))
             #let the instrument be connected if it isn't one of these two strings
             if instr_name != '' and instr_name != 'NONE':
 
-                if class_inst.INTERFACE == INTF_PROLOGIX and self.prologix_com_port != None:
+                if utils.is_IP_port(device_port):
+                    
+                        logging.debug("Creation of a virtual instrument")
+                        
+                        virtual_class = create_virtual_inst(class_inst.Instrument)
+                        
+                        obj = virtual_class(device_port, debug = self.DEBUG)
+                
+                elif class_inst.INTERFACE == INTF_PROLOGIX and self.prologix_com_port != None:
                     print("The instrument uses prologix")
                     obj = class_inst.Instrument(
                         device_port, self.DEBUG, prologix = self.prologix_com_port)
@@ -606,15 +717,18 @@ which is connected to %s " % ( param, instr_name, device_port))
                 else:
                     #the instrument interface is INTF_NONE, INTF_SERIAL or INTF_GPIB
                     
-                    
                     #I should do the check here if the device port can be 
                     #assimilated to an IP address
-                    if utils.is_IP_port(device_port):
-                        pass
-                        #create a virtual instrument passing class_inst.Instrument
-                        #as an argument for inheritance
-                    else:
-                        obj = class_inst.Instrument(device_port, self.DEBUG)
+#                    if utils.is_IP_port(device_port):
+#                        print "the address passed is of the good format"
+#                        virtual_class = create_virtual_inst(class_inst.Instrument)
+#                        
+#                        obj = virtual_class(device_port, debug = self.DEBUG)
+#                        #create a virtual instrument passing class_inst.Instrument
+#                        #as an argument for inheritance
+#                    else:
+                    obj = class_inst.Instrument(device_port, 
+                                                debug = self.DEBUG)
 
 
                 if not self.DEBUG:
@@ -667,7 +781,7 @@ which is connected to %s " % ( param, instr_name, device_port))
         for port, inst in list(self.instrument_list.items()):
             try:
                 
-                logging.debug("Instrument %s, port %s"%(inst, port))
+                logging.debug("Disconnect instrument %s, port %s"%(inst, port))
                 
             except AttributeError:
                 #when the instrument is None (I have to check why we add a
@@ -771,17 +885,47 @@ def test_prologix_Hub():
     print(h.get_prologix_gpib_ports())
 
 
-def test_hub_debug_mode():
+def test_hub_debug_mode(i = 0):
     h = InstrumentHub()
     h.DEBUG = True
-    h.connect_hub(['TIME', 'DICE', 'TIME'], [
-                  '', 'COM14', ''], ['Time', 'Roll', 'dt'])
-
+    if i == 0:
+        h.connect_hub(['TIME', 'DICE', 'TIME'], [
+                      '', 'COM14', ''], ['Time', 'Roll', 'dt'])
+    elif i == 1:
+        h.connect_hub(['TIME', 'DICE', 'TIME'], [
+              'COM2', 'COM14', 'COM1'], ['Time', 'Roll', 'dt'])
+        
+        
+def test_hub_connect_inst():
+    h = InstrumentHub()
+    h.DEBUG = False
+    h.connect_hub(['TIME', 'PARO1000', 'PARO1000','TIME'], [
+                  'COM1', 'COM4', '132.206.186.166:48371:COM4', ''], ['Time', 'PRESSURE', 'PRESSURE', 'dt'])
+    
+    print h.instrument_list
+    print h.port_param_pairs
+    
+    
+def test_hub_connect_virtual_inst():
+    h = InstrumentHub()
+    h.DEBUG = False
+    h.connect_hub(['TIME', 'PARO1000', 'LS370','TIME'], [
+                  'COM1', '132.206.186.71:48371:COM4', '132.206.186.71:48371:GPIB0::12::INSTR', ''], ['Time', '4K flange', '50K flange', 'dt'])
+    
+    print h.instrument_list
+    print h.port_param_pairs
+    
+    ls = h.instrument_list['132.206.186.71:48371:COM4']
+    print ls.resource_name
+    print ls.measure('PRESSURE')
+    print ls.measure('TEMPERATUR')
+    
 if __name__ == "__main__":
 
     #    test_prologix_dual()
     #    test_prologix_Hub()
-    test_hub_debug_mode()
+#    test_hub_debug_mode(1)
+    test_hub_connect_virtual_inst()
 #    instr_hub=InstrumentHub(debug=True)
 
 #    instr_hub.connect_hub(["CG500"],["COM1"],["HeLevel"])

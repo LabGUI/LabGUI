@@ -103,26 +103,36 @@ class SingleLineWidget(QtGui.QWidget):
         cbb = QtGui.QComboBox(self)
         cbb.setObjectName("comboBox")
         cbb.setStyleSheet(
-            "QComboBox::drop-down {border-width: 0px;} QComboBox::down-arrow {image: url(noimg); border-width: 0px;}")
+            "QComboBox::drop-down {border-width: 0px;} \
+QComboBox::down-arrow {image: url(noimg); border-width: 0px;}")
+        
         if name == 'Instr name':
+            
             cbb.addItems(self.INSTRUMENT_TYPES)
             cbb.setCurrentIndex(cbb.findText("TIME"))
             self.connect(cbb, SIGNAL("currentIndexChanged(int)"),
                          self.combobox_handler)
-            cbb.setFixedWidth(width_instr)                         
+            cbb.setFixedWidth(width_instr)  
+                       
         if name == 'Port':
             
             #when creating a line the instrument TIME comes first so there is no port to connect to it
             cbb.addItem("")
   
 #            self.connect(cbb, SIGNAL("activated(int)"), self.combobox_dev_port_handler)
-            cbb.setFixedWidth(width_port)            
+            cbb.setFixedWidth(width_port)      
+            
+            #this allow the user to edit the content of the combobox input
+            cbb.setEditable(True)
+            
         if name == "Param":
+            
             cbb.addItems(self.AVAILABLE_PARAMS['TIME'])
             cbb.setCurrentIndex(cbb.findText("dt"))
             self.connect(cbb, SIGNAL("currentIndexChanged(int)"),
                          self.combobox_unit_handler)
             cbb.setFixedWidth(width_param*1.5) 
+            
         return cbb
 
     def combobox_handler(self):
