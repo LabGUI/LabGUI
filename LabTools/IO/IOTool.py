@@ -29,6 +29,7 @@ SCRIPT_ID = "SCRIPT"
 DEBUG_ID = "DEBUG"
 SAVE_DATA_PATH_ID = "DATA_PATH"
 SETTINGS_ID = "SETTINGS"
+WIDGETS_ID = "USER_WIDGETS"
 LOAD_DATA_FILE_ID = "DATAFILE"
 GPIB_INTF_ID = "GPIB_INTF"
 
@@ -290,7 +291,11 @@ file located at %s\n"%(setting,setting_value, config_file_path))
 def get_settings_name(**kwargs):
     return get_config_setting(SETTINGS_ID,**kwargs)
 
-
+def get_user_widgets(**kwargs):
+    """ collect the widget names the user would like to run"""
+    widgets = get_config_setting(WIDGETS_ID,**kwargs)
+    return widgets.split(';')
+    
 def get_script_name(**kwargs):
     return get_config_setting("SCRIPT",**kwargs)
 

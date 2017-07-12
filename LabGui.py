@@ -46,7 +46,9 @@ from LabTools.DataStructure import LabeledData
 
 PYTHON_VERSION = int(sys.version[0])
 
-LABWIDGETS_PACKAGE_NAME = "LabTools.CoreWidgets"
+COREWIDGETS_PACKAGE_NAME = "LabTools.CoreWidgets"
+
+USERWIDGETS_PACKAGE_NAME = "LabTools.CoreWidgets"
 
 CONFIG_FILE = IOTool.CONFIG_FILE_PATH
 
@@ -330,8 +332,6 @@ have the right format, '%s' will be used instead"%(self.config_file,
         self.widgets = {}
         
         cur_path = os.path.dirname(__file__)
-        #    widget_path = os.path.join(cur_path,'LabTools')
-        #    widget_path = os.path.join(widget_path,'Widgets')
 
         #find the path to the widgets folders
         widget_path = os.path.join(cur_path,'LabTools')
@@ -342,15 +342,34 @@ have the right format, '%s' will be used instead"%(self.config_file,
         #these are widgets which were added by users
         user_widget_path = os.path.join(widget_path,'UserWidgets')
         
-        widgets_list = [o for o in os.listdir(core_widget_path) 
+        #this is the legitimate list of core widgets
+        widgets_list = [o.rstrip('.py') for o in os.listdir(core_widget_path) 
                         if o.endswith(".py") and not "__init__" in o]
+
+        #this is the legitimate list of user widgets
+        user_widgets_list = [o.rstrip('.py') for o in os.listdir(user_widget_path) 
+                        if o.endswith(".py") and not "__init__" in o]
+        
+        #the user widgets the user would like to run, given in the config file
+        user_widgets = IOTool.get_user_widgets(config_file_path = self.config_file)
+        
+        for user_widget in user_widgets:        
+            #check that the given widget is legitimate
+            if user_widget in user_widgets_list:
+                #add the given widget to the widget list which will be loaded
+                widgets_list.append(user_widget)
+                
+            else:
+                
+                logging.warning("The user widget '%s' is not found at %s"%(
+                user_widget, user_widget_path))
 
         #add the widgets to the interface
         for widget in widgets_list:
             
-            widget_name = widget.rstrip('.py')
+            widget_name = widget
             widget_module = import_module("." + widget_name, 
-                                          package = LABWIDGETS_PACKAGE_NAME)
+                                          package = COREWIDGETS_PACKAGE_NAME)
             
             self.add_widget(widget_module.add_widget_into_main)        
         
