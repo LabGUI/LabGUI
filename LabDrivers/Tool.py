@@ -441,6 +441,22 @@ file to see which are the ones implemented"%(self.ID_name,resource_name))
             define this method so any instrument has a defined method measure()        
         """
         return None
+    
+    def get_last_measure(self,channel):
+        """
+            define to access the last measure made to a channel and not send
+            too many request to the instrument if it is used by different sources
+        """
+        if channel in self.last_measure:
+            
+            return self.last_measure[channel]
+        
+        else:
+            
+            print("you are trying to measure a non existent channel : " + channel)
+            print("existing channels :", self.channels)
+            return np.nan
+            
 
 
 def create_virtual_inst(parent_class):
@@ -556,7 +572,7 @@ server might be down"
                 if not self.DEBUG:
 
                     #prepare the request and sends it to the instrument
-                    answer = self.use_method('measure', channel = channel)
+                    answer = self.use_method('get_last_measure', channel = channel)
                 
                     #if there is an error we display it and return nan
                     #so that it doesn't affect the data taking process
@@ -972,7 +988,7 @@ def test_hub_connect_virtual_inst():
 #    print ls.measure('4K flange')
 #    print ls.measure('50K flange')
     ls = h.instrument_list['132.206.186.166:48372:COM4']
-#    meth = getattr(ls,"measure")
+
     print ls.use_method("measure",2,87)
     print ls.use_method("identify",3,87)
     print ls.resource_name

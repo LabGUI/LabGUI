@@ -294,7 +294,13 @@ def get_settings_name(**kwargs):
 def get_user_widgets(**kwargs):
     """ collect the widget names the user would like to run"""
     widgets = get_config_setting(WIDGETS_ID,**kwargs)
-    return widgets.split(';')
+    if widgets == None:
+        
+        return []
+    
+    else:
+        
+        return widgets.split(';')
     
 def get_script_name(**kwargs):
     return get_config_setting("SCRIPT",**kwargs)

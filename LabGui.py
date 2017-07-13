@@ -48,7 +48,7 @@ PYTHON_VERSION = int(sys.version[0])
 
 COREWIDGETS_PACKAGE_NAME = "LabTools.CoreWidgets"
 
-USERWIDGETS_PACKAGE_NAME = "LabTools.CoreWidgets"
+USERWIDGETS_PACKAGE_NAME = "LabTools.UserWidgets"
 
 CONFIG_FILE = IOTool.CONFIG_FILE_PATH
 
@@ -353,23 +353,32 @@ have the right format, '%s' will be used instead"%(self.config_file,
         #the user widgets the user would like to run, given in the config file
         user_widgets = IOTool.get_user_widgets(config_file_path = self.config_file)
         
-        for user_widget in user_widgets:        
-            #check that the given widget is legitimate
-            if user_widget in user_widgets_list:
-                #add the given widget to the widget list which will be loaded
-                widgets_list.append(user_widget)
-                
-            else:
-                
-                logging.warning("The user widget '%s' is not found at %s"%(
-                user_widget, user_widget_path))
+        if user_widgets:
+            
+            for user_widget in user_widgets:        
+                #check that the given widget is legitimate
+                if user_widget in user_widgets_list:
+                    #add the given widget to the widget list which will be 
+                    #loaded
+                    widgets_list.append(user_widget)
+                    
+                else:
+                    
+                    logging.warning("The user widget '%s' is not found at %s"%(
+                    user_widget, user_widget_path))
 
         #add the widgets to the interface
         for widget in widgets_list:
             
             widget_name = widget
-            widget_module = import_module("." + widget_name, 
+            try:
+                widget_module = import_module("." + widget_name, 
                                           package = COREWIDGETS_PACKAGE_NAME)
+            except ImportError:
+                
+                widget_module = import_module("." + widget_name, 
+                                          package = USERWIDGETS_PACKAGE_NAME)
+                
             
             self.add_widget(widget_module.add_widget_into_main)        
         
