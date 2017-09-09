@@ -24,59 +24,105 @@ import logging
 
 
 class LoadPlotWidget(QWidget):
-
-    def __init__(self, parent=None, load_fname=''):
+    """this widget is used to replot previously measured data"""
+    
+    def __init__(self, parent = None, load_fname = ''):
+        
         super(LoadPlotWidget, self).__init__(parent)
 
         # main layout of the form is the verticallayout
-        self.verticalLayout = QVBoxLayout()
+        self.verticalLayout = QVBoxLayout(self)
         self.verticalLayout.setObjectName("verticalLayout")
 
-        self.loadLayout = QHBoxLayout()
+        
+        #first line contains a text zone and a browse button to
+        #write the path to the data file to load
+        self.loadLayout = QHBoxLayout(self)
+        self.loadLayout.setObjectName("fileLayout")
 
-        self.verticalLayout.setObjectName("fileLayout")
+        #label for the user
         self.loadFileLabel = QLabel(self)
         self.loadFileLabel.setText("data file to load:")
+        
+        #text zone
         self.loadFileLineEdit = QLineEdit(self)
         self.loadFileLineEdit.setText(load_fname)
+        
+        #browse button
         self.loadFileButton = QPushButton(self)
         self.loadFileButton.setText("Browse")
+        
+        #add the 3 widgets to the horizontal layout
         self.loadLayout.addWidget(self.loadFileLabel)
         self.loadLayout.addWidget(self.loadFileLineEdit)
         self.loadLayout.addWidget(self.loadFileButton)
+        
+        #add the horizontal layout to the vertical one
         self.verticalLayout.addLayout(self.loadLayout)
 
-        self.plotLayout = QHBoxLayout()
+        #second line is a button to load and plot the data
+        self.plotLayout = QHBoxLayout(self)
         self.plotLayout.setObjectName("plotLayout")
-        self.plotButton = QPushButton(parent=self)
+        
+        #plot button
+        self.plotButton = QPushButton(self)
         self.plotButton.setText("Plot")
 
+        #add the widget to the layout
         self.plotLayout.addWidget(self.plotButton)
 
+        #add the horizontal layout to the vertical one
         self.verticalLayout.addLayout(self.plotLayout)
 
+        #third line is a large text zone to load the header of the file
+        self.hdrtextLayout = QHBoxLayout(self)
+        self.hdrtextLayout.setObjectName("hdrtextLayout")
+        
+        #large text zone
+        self.headerTextEdit = QPlainTextEdit("")
+        fontsize = self.headerTextEdit.fontMetrics()
+        self.headerTextEdit.setFixedHeight(fontsize.lineSpacing() * 8)
+        
+        #add the widget to the layout
+        self.hdrtextLayout.addWidget(self.headerTextEdit)
+        
+        #add the horizontal layout to the vertical one
+        self.verticalLayout.addLayout(self.hdrtextLayout)
+
+        #apply the vertical layout to the widget
         self.setLayout(self.verticalLayout)
 
         self.connect(self.loadFileButton, SIGNAL(
             'clicked()'), self.on_loadFileButton_clicked)
+            
         self.connect(self.plotButton, SIGNAL(
             'clicked()'), self.on_plotButton_clicked)
+            
         self.connect(self.loadFileLineEdit, SIGNAL(
             "textChanged(const QString &)"), self.text_changed)
 
     def on_loadFileButton_clicked(self):
+        """open a file browser to select data file to be loaded"""
+        
         fname = str(QFileDialog.getOpenFileName(self, 'Load data from', './'))
+        
+        #activate the plot button
         self.text_changed()
+        
         if fname:
+            
             self.loadFileLineEdit.setText(fname)
 
     def load_file_name(self):
+        """returns the file name indicated in the text zone"""
         return self.loadFileLineEdit.text()
 
     def on_plotButton_clicked(self):
+        """callback fonciton of the plot button"""
         self.plotButton.setDisabled(True)
 
     def text_changed(self):
+        """reactivate the plot button when the text in the text zone changes"""
         self.plotButton.setEnabled(True)
 
 
@@ -101,6 +147,9 @@ def create_plw(parent, load_fname = None):
         labels["param"] = lb_data.labels
     else:
         [data, labels] = IOTool.load_file_windows(load_fname)
+        #add the header to the header text area
+        parent.widgets["loadPlotWidget"].header_text(labels['hdr'])
+    
 
     chan_contr = OrderedDict()
     chan_contr["groupBox_Name"] = ["Channel", "lineEdit"]
@@ -151,6 +200,11 @@ def create_plw(parent, load_fname = None):
     plw.show()
 
 def add_widget_into_main(parent):
+    """add a widget into the main window of LabGuiMain
+    
+    create a QDock widget and store a reference to the widget
+    """
+    
     mywidget = LoadPlotWidget(parent = parent)
     loadPlotDockWidget = QDockWidget("Load previous data file", parent)
     loadPlotDockWidget.setObjectName("loadPlotDockWidget")
@@ -165,15 +219,20 @@ def add_widget_into_main(parent):
     
     loadPlotDockWidget.hide()
     
+    #assign a method to the LabGuiMain class to be run to create a 
+    #plot window with previous data
     parent.create_plw = MethodType(create_plw, parent, parent.__class__)
     
+    #connects the plot button clicked signal with the method to create a 
+    #plot window with previous data
     parent.connect(parent.widgets["loadPlotWidget"].plotButton,
                  SIGNAL("clicked()"), parent.create_plw)
 
 
 if __name__ == "__main__":
 
+    fname = "C:\\Users\\pfduc\\OneDrive - McGill University\\G2 Lab\\PF\\1D Helium\\Data\\170907_BF_17R1_B24K8_002.dat"
     app = QApplication(sys.argv)
-    ex = LoadPlotWidget()
+    ex = LoadPlotWidget(load_fname = fname)
     ex.show()
     sys.exit(app.exec_())
