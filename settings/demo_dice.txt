@@ -1,2 +1,2 @@
-TIME, TIME, , , False, False
-Dice, DICE, , Roll, False, True
+TIME(s), TIME, , dt
+Dice(), DICE, COM14, Roll

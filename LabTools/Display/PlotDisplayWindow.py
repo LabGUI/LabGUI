@@ -75,8 +75,9 @@ chan_contr["groupBox_color"]= ["Col","colorButton"]
 chan_contr["groupBox_marker"]= ["M","comboBox"]
 chan_contr["groupBox_line"]= ["L","comboBox"]
 
-
-
+PLOT_WINDOW_TYPE_LIVE = "Live" 
+PLOT_WINDOW_TYPE_PAST = "Past" 
+PLOT_WINDOW_TITLE_PAST = "Past data file : "
 
 def get_groupBox_purpouse(name):
     return name.split("_")[1]
@@ -90,7 +91,7 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
     
     """
     def __init__(self, parent = None, data_array = np.array([]),
-                 name = "Main Window", window_type = "Live", 
+                 name = "Main Window", window_type = PLOT_WINDOW_TYPE_LIVE, 
                  default_channels = 10, channel_controls = chan_contr,
                  labels = []):
         # run the initializer of the class inherited from
@@ -112,6 +113,7 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
         # axes and figure initialization - short names for convenience   
         self.fig = self.mplwidget.figure
         self.setWindowTitle(name)
+
         self.ax = self.mplwidget.axes
         self.axR = self.mplwidget.axesR
 

@@ -11,10 +11,11 @@ from PyQt4.QtCore import Qt
 from PyQt4.QtCore import SIGNAL
 import sys
 
+import os
+
 from collections import OrderedDict
 from LabTools.Display import QtTools, PlotDisplayWindow
 from types import MethodType
-
 from LabTools.DataStructure import LabeledData
 from LabTools.IO import IOTool
 
@@ -74,7 +75,26 @@ class LoadPlotWidget(QWidget):
         #add the horizontal layout to the vertical one
         self.verticalLayout.addLayout(self.plotLayout)
 
-        #third line is a large text zone to load the header of the file
+        #third line is the name of the file (without the path)
+        self.fileInfoLayout = QHBoxLayout(self)
+        self.fileInfoLayout.setObjectName("fileInfoLayout")
+
+        #label
+        self.loadFileLabelLabel = QLabel(self)
+        self.loadFileLabelLabel.setText("File :")
+        
+        #filename
+        self.loadFileNameLabel = QLabel(self)
+        self.loadFileNameLabel.setText("")
+        
+        #add the widget to the layout
+        self.fileInfoLayout.addWidget(self.loadFileLabelLabel)
+        self.fileInfoLayout.addWidget(self.loadFileNameLabel)
+
+        #add the horizontal layout to the vertical one
+        self.verticalLayout.addLayout(self.fileInfoLayout)
+
+        #fourth line is a large text zone to load the header of the file
         self.hdrtextLayout = QHBoxLayout(self)
         self.hdrtextLayout.setObjectName("hdrtextLayout")
         
@@ -99,31 +119,64 @@ class LoadPlotWidget(QWidget):
             'clicked()'), self.on_plotButton_clicked)
             
         self.connect(self.loadFileLineEdit, SIGNAL(
-            "textChanged(const QString &)"), self.text_changed)
+            "textChanged(const QString &)"), self.fname_changed)
 
     def on_loadFileButton_clicked(self):
         """open a file browser to select data file to be loaded"""
         
-        fname = str(QFileDialog.getOpenFileName(self, 'Load data from', './'))
+        #allow the user to set the path from the last file's path
+        default_path = os.path.dirname(self.load_file_name())       
+        
+        if default_path == '':
+            
+            default_path = './'        
+        
+        fname = str(QFileDialog.getOpenFileName(self, 
+                                                'Load data from', 
+                                                default_path))
         
         #activate the plot button
-        self.text_changed()
+        self.fname_changed()
         
         if fname:
             
-            self.loadFileLineEdit.setText(fname)
+            self.load_file_name(fname)
 
-    def load_file_name(self):
-        """returns the file name indicated in the text zone"""
-        return self.loadFileLineEdit.text()
+    def load_file_name(self, new_fname = None):
+        """returns the whole file name indicated in the text zone
+
+        or assign it if an argument is provided        
+        """
+        
+        if new_fname == None:
+            
+            return self.loadFileLineEdit.text()
+            
+        else:
+            #update the whole path and file name in the text zone
+            self.loadFileLineEdit.setText(new_fname)
+            
+            #only select the file name for the label above the large text zone
+            self.loadFileNameLabel.setText(os.path.basename(new_fname))
 
     def on_plotButton_clicked(self):
         """callback fonciton of the plot button"""
         self.plotButton.setDisabled(True)
 
-    def text_changed(self):
+    def fname_changed(self):
         """reactivate the plot button when the text in the text zone changes"""
         self.plotButton.setEnabled(True)
+        
+    def header_text(self, new_text = None):
+        """get/set method for the text in the console"""
+        
+        if new_text == None:
+            
+            return str((self.headerTextEdit.toPlainText())).rstrip()
+            
+        else:
+            
+            self.headerTextEdit.setPlainText(new_text)
 
 
 def create_plw(parent, load_fname = None):
@@ -149,7 +202,12 @@ def create_plw(parent, load_fname = None):
         [data, labels] = IOTool.load_file_windows(load_fname)
         #add the header to the header text area
         parent.widgets["loadPlotWidget"].header_text(labels['hdr'])
-    
+                
+        #update the name information in the widget
+        parent.widgets["loadPlotWidget"].load_file_name(load_fname)          
+                
+        #store the hdr is there is more than one file
+        parent.loaded_data_header[load_fname] = labels['hdr']
 
     chan_contr = OrderedDict()
     chan_contr["groupBox_Name"] = ["Channel", "lineEdit"]
@@ -166,7 +224,11 @@ def create_plw(parent, load_fname = None):
     nb_channels = np.size(data, 1)
     logging.info("%i channels in total"% (nb_channels))
     plw = PlotDisplayWindow.PlotDisplayWindow(
-        data_array=data, name="Past data file: " + load_fname, window_type="Past", default_channels=nb_channels, channel_controls=chan_contr)
+        data_array = data, 
+        name = PlotDisplayWindow.PLOT_WINDOW_TITLE_PAST + load_fname, 
+        window_type = PlotDisplayWindow.PLOT_WINDOW_TYPE_PAST,
+        default_channels = nb_channels, 
+        channel_controls = chan_contr)
     
     
     parent.connect(plw.mplwidget, SIGNAL(
@@ -204,17 +266,22 @@ def add_widget_into_main(parent):
     
     create a QDock widget and store a reference to the widget
     """
-    
+        
     mywidget = LoadPlotWidget(parent = parent)
+    
+    #create a QDockWidget
     loadPlotDockWidget = QDockWidget("Load previous data file", parent)
     loadPlotDockWidget.setObjectName("loadPlotDockWidget")
     loadPlotDockWidget.setAllowedAreas(
         Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea)
+        
     loadPlotDockWidget.setWidget(mywidget)
-    
-    parent.widgets["loadPlotWidget"] = mywidget
     parent.addDockWidget(Qt.RightDockWidgetArea, loadPlotDockWidget)
     
+    #fill the dictionnary with the widgets added into LabGuiMain
+    parent.widgets["loadPlotWidget"] = mywidget
+    
+    #Enable the toggle view action
     parent.windowMenu.addAction(loadPlotDockWidget.toggleViewAction())
     
     loadPlotDockWidget.hide()
@@ -222,6 +289,10 @@ def add_widget_into_main(parent):
     #assign a method to the LabGuiMain class to be run to create a 
     #plot window with previous data
     parent.create_plw = MethodType(create_plw, parent, parent.__class__)
+    
+    #create this dictionnary to remember the header text associated to
+    #each loaded file
+    parent.__class__.loaded_data_header = {}
     
     #connects the plot button clicked signal with the method to create a 
     #plot window with previous data
@@ -231,8 +302,7 @@ def add_widget_into_main(parent):
 
 if __name__ == "__main__":
 
-    fname = "C:\\Users\\pfduc\\OneDrive - McGill University\\G2 Lab\\PF\\1D Helium\\Data\\170907_BF_17R1_B24K8_002.dat"
     app = QApplication(sys.argv)
-    ex = LoadPlotWidget(load_fname = fname)
+    ex = LoadPlotWidget()
     ex.show()
     sys.exit(app.exec_())
