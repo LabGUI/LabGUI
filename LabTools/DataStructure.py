@@ -9,9 +9,9 @@ REAL_HDR="realvalues#"
 class LabeledData(object):
     """ This class contains two attributes a n by m matrix and a m element list which labels the colums of the matrix"""
     def __init__(self,data=None,labels=None,fname=None,dataset_name=""):
-        
-        self.data = None
-        self.labels = None
+        		
+        self.data = data
+        self.labels = labels
         self.dataset_name = dataset_name
         
         if not fname == None:
