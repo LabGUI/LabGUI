@@ -131,7 +131,8 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
         self.left_lines = [] 
         self.right_lines = [] 
         
-        
+        self.legend_box = False
+        self.data_legends = []
         
 
         if labels:
@@ -151,6 +152,15 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
         self.data_array = data_array
         self.chan_X = 0
         self.time_Xaxis=False
+
+
+###### OPTION MENU SETUP ######         
+        
+        self.optionMenu = self.menuBar().addMenu("Options")  
+        self.displayLegendsAction = QtTools.create_action(self,"Display/hide legends", slot=self.change_legend_box_state,
+                                        icon=None, tip="Display/hide legends on the figure")                   
+
+        self.optionMenu.addAction(self.displayLegendsAction)
 
     def closeEvent(self, event):
         """
@@ -370,6 +380,11 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
     """#####################################################################"""
     """These handler function take action when someone interact with the button, checkbox, lineEdit etc... the names are explicit"""
         
+        
+    def change_legend_box_state(self):
+        self.legend_box= not self.legend_box
+        self.update_legends()        
+        
     def XRadioButtonHandler(self):
 #        print "X clicked"  
         obj=self.sender()   
@@ -450,10 +465,12 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
         if get_groupBox_purpouse(name) == "marker":
             
             self.set_marker(idx,str(obj.currentText()))
+            self.update_legends()
             
         elif get_groupBox_purpouse(name) == "line":
             
             self.set_linestyle(idx,str(obj.currentText()))
+            self.update_legends()
             
     def singleComboBoxHandler(self,num):
         """
@@ -486,7 +503,8 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
         if self.channel_objects["groupBox_X"][idx].isChecked():
             self.set_X_axis_label(self.channel_objects[name][idx].text())
             self.update_plot()
-
+            
+        self.update_legends()
 
 
     def set_axis_ticks(self,ticks):
@@ -704,6 +722,30 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
             self.channel_objects["groupBox_Name"][idx].setText(label_text)             
 
         
+    def update_legends(self):
+        """update the property of the lines in the legend box"""
+        if self.legend_box:
+            handles=[]
+            legends=[]
+            for i,handle, legend, in zip(range(self.num_channels),self.ax.lines,self.data_legends['L']):
+                if legend == "no data":
+                    pass
+                else:
+                    legends.append(legend)
+                    handles.append(handle)
+            for i,handle, legend, in zip(range(self.num_channels),self.axR.lines,self.data_legends['R']):
+                if legend == "no data":
+                    pass
+                else:
+                    legends.append(legend)
+                    handles.append(handle)
+            self.ax.legend(handles, legends,numpoints = 1,frameon = False)
+        else:
+            self.ax.legend([],[],frameon = False)
+
+                
+        self.mplwidget.rescale_and_draw()        
+        
     def update_plot(self, data_array = None): 
         """
             take a matrix (data_array) with a number of rows equal to the number of channel/lines in the window and plot them along the line direction
@@ -734,6 +776,7 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
             else:
                 xdata = self.data_array[:,self.chan_X]   
 
+            self.data_legends = {'L':[],'R':[]}
             #go through the channels and update the lines for those who are checked
             for chan_Y, [line_L, line_R] in enumerate(zip (self.ax.lines, self.axR.lines)):
                 
@@ -743,18 +786,23 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
                         ydata = -self.data_array[:, chan_Y]
                     else:
                         ydata = self.data_array[:, chan_Y]                  
-                        
+                    
+                    
                     #look which checkbox is checked and plot corresponding data
                     if self.channel_objects["groupBox_Y"][chan_Y].isChecked() and self.data_array.size>0:
                         line_L.set_data(xdata, ydata)
+                        self.data_legends['L'].append(str(self.channel_objects["groupBox_Name"][chan_Y].text()))
                     else:
                         line_L.set_data([],[])
+                        self.data_legends['L'].append("no data")
                         
                     #look which checkbox is checked and plot corresponding data    
                     if self.channel_objects["groupBox_YR"][chan_Y].isChecked() and self.data_array.size>0:
                         line_R.set_data(xdata, ydata)
+                        self.data_legends['R'].append(str(self.channel_objects["groupBox_Name"][chan_Y].text()))
                     else:
-                        line_R.set_data([],[])      
+                        line_R.set_data([],[]) 
+                        self.data_legends['R'].append("no data")
         else:
             #if an empty array was given we set the lines to empty arrays
             for line_L, line_R in zip (self.ax.lines, self.axR.lines):
@@ -763,7 +811,8 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
                          
                 
         self.mplwidget.rescale_and_draw()
-
+        
+        self.update_legends()
 
         #rescale the ticks so that we can always read them
         try:
