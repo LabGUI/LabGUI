@@ -906,6 +906,7 @@ the pyqt window option is disabled")
 #   
 
     def collect_instruments(self):
+        """list properties of the connected instruments (comport, parameter)"""
         return self.widgets['InstrumentWidget'].collect_device_info()
 
     def refresh_ports_list(self):

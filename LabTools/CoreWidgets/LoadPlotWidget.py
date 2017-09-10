@@ -243,7 +243,7 @@ def create_plw(parent, load_fname = None):
     parent.connect(parent, SIGNAL("remove_fit()"), plw.remove_fit)
 
     try:
-        for i, param in enumerate(labels['param']):
+        for i, param in enumerate(labels['channel_labels']):
             plw.lineEdit_Name[i].setText(param)
     except:
         pass
@@ -255,7 +255,7 @@ def create_plw(parent, load_fname = None):
 
 #        self.dataAnalyseWidget.refresh_active_set()
     
-    plw.update_labels(labels['param'])
+    plw.update_labels(labels['channel_labels'])
     parent.widgets['AnalyseDataWidget'].update_data_and_fit(data)
 #        plw.update_plot(data)
     parent.zoneCentrale.addSubWindow(plw)

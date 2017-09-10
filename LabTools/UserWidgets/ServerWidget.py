@@ -158,12 +158,16 @@ class DataServer(QtCore.QThread):
         self.instruments = self.instr_hub.get_instrument_list()
         self.instruments.pop(None)
         self.port_param_pairs = self.instr_hub.get_port_param_pairs()
-        print "I am there now"
+
         for port_param_pair in self.port_param_pairs:
             port = port_param_pair[0]
             param = port_param_pair[1]
-            name = "%s.%s"%(self.instruments[port].ID_name,param)
-            print name
+            try:
+                name = "%s.%s"%(self.instruments[port].ID_name, param)
+            except KeyError:
+                print(self.instruments[port].ID_name, param)
+                print(port)
+
 #                print self.port_param_pairs[port]
 #                print self.instruments[port]
 #                print self.instruments[port]
