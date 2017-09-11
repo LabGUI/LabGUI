@@ -543,11 +543,11 @@ the pyqt window option is disabled")
             # the objects are not actually deleted, just hidden
 
 
-    def add_widget(self,widget_creation,action_fonctions = None,**kwargs):
+    def add_widget(self,widget_creation, action_fonctions = None, **kwargs):
         """adds a widget to the MainArea Window
         
         this is a rough stage of this fonction, it calls a fonction from
-        another module to add this widget
+        another module to add its widget to the Qdocks
         
         """
         widget_creation(self)
@@ -906,6 +906,7 @@ the pyqt window option is disabled")
 #   
 
     def collect_instruments(self):
+        """list properties of the connected instruments (comport, parameter)"""
         return self.widgets['InstrumentWidget'].collect_device_info()
 
     def refresh_ports_list(self):
@@ -918,6 +919,9 @@ the pyqt window option is disabled")
         ''' this changes what self.<object> refers to so that the same shared toolbars can modify whichever plot window has focus right now '''        
         
         current_window = self.zoneCentrale.activeSubWindow()
+        
+       
+        
         if current_window:
             self.action_manager.update_current_widget(
                         current_window.widget().mplwidget)
@@ -927,10 +931,32 @@ the pyqt window option is disabled")
             
             window_type = getattr(current_widget, "window_type", "unknown")
             
+          
+            
             if window_type == "unknown":                
                 msg = "The type of PlotDisplayWindow '%s' is unknown"%(window_type)
                 raise ValueError(msg)
             else:     
+                
+                if window_type in PlotDisplayWindow.PLOT_WINDOW_TYPE_PAST:
+
+                    #get the title of the window
+                    title = str(current_window.windowTitle())
+                    
+                    #extract the file name from the window title
+                    #see LoadPlotWidget for more info on that
+                    load_fname = title.split(
+                    PlotDisplayWindow.PLOT_WINDOW_TITLE_PAST)
+                    
+                    load_fname = load_fname[1]
+                    
+                    #replace the header text by the one stored in memory
+                    self.widgets["loadPlotWidget"].header_text(
+                    self.loaded_data_header[load_fname])
+                    
+                    #update the file information in the widget
+                    self.widgets["loadPlotWidget"].load_file_name(load_fname)
+                    
                 # this is only used by Print Figure (which doesn't work anyways)
                 self.current_pdw = current_widget
                 
@@ -1016,12 +1042,18 @@ the pyqt window option is disabled")
             self.instrument_connexion_setting_fname = fname
 
     def file_load_data(self):
-        default_path = IOTool.get_config_setting("DATAFILE",config_file_path = self.config_file)
+        default_path = IOTool.get_config_setting("DATAFILE",
+                                                 config_file_path = self.config_file)
+        
         if not default_path:
+            
             default_path = './'
+            
         fname = str(QtGui.QFileDialog.getOpenFileName(
             self, 'Open settings file', default_path))
+            
         if fname:
+            
             self.create_plw(fname)
             
     def file_print(self):
@@ -1162,7 +1194,9 @@ if __name__ == "__main__":
 #    print("Launching LabGUI")
     launch_LabGui()
 #    test_automatic_fitting()
-#    test_load_previous_data()
+    
+
+#    test_load_previous_data(fname)
 
 #    test_save_settings(0)
 #    test_load_settings(1)

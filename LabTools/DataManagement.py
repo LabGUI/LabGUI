@@ -82,6 +82,8 @@ class DataTaker(QThread):
             self.user_variables = adict
 
     def assign_user_variable(self, key, value_type = float, default = None):
+        """this is used to change variables while data are being taken
+        """
         
         #the key exists
         if key in self.user_variables:

@@ -171,23 +171,9 @@ QComboBox::down-arrow {image: url(noimg); border-width: 0px;}")
         """update the lineEdit with unit corresponding to the instrument parameter upon its selection"""
 
         # select the items on the line corresponding to the same instrument
-        le = self.param_name_le
-        instr = self.instr_name_cbb.currentText()
-        instr_params = self.AVAILABLE_PARAMS[str(instr)]
-
         current_param = self.param_cbb.currentText()
-        label = str(le.text())
-        label = label.split('(')[0]
 
-        # if there is no existing label it puts the param name
-        if label == "":
-            label = current_param
-
-        # if there is no user define param name different from the instrument params
-        # it puts the correct param name
-        if label in self.UNITS:
-            label = current_param
-        le.setText(label + self.get_unit())
+        self.param_name_le.setText(current_param + self.get_unit())
 
         # After changes the user should be able to update the instrumentHub by
         # clicking on the button 'Connect'
@@ -254,7 +240,7 @@ QComboBox::down-arrow {image: url(noimg); border-width: 0px;}")
 
         for p in [self.instr_name_cbb, self.port_cbb, self.param_cbb]:
             device_info.append(str(p.currentText()))
-
+        
         return device_info
 
     def get_descriptor(self):
@@ -286,7 +272,7 @@ QComboBox::down-arrow {image: url(noimg); border-width: 0px;}")
         return str(self.color_btn.palette().color(1).name())
     
     def get_label(self):
-        return self.param_name_le.text()
+        return str(self.param_name_le.text())
 
 
 class InstrumentWindow(QtGui.QWidget):
@@ -484,9 +470,11 @@ class InstrumentWindow(QtGui.QWidget):
         """if any line is changed the color of the connect button is changed so that one can notice """
         self.bt_connecthub.setStyleSheet("background-color : Window")
 
+
     def update_colors(self):
         """this simply send the triggered signal from a Single line instance to the LabGui instance (and any other listeners)"""
         self.emit(SIGNAL("colorsChanged()"))
+        
         
     def bt_connecthub_clicked(self):
         """when this method is called (upon button 'Connect' interaction) it send a signal, which will be treated in the main window"""
@@ -496,6 +484,7 @@ class InstrumentWindow(QtGui.QWidget):
 
             self.emit(SIGNAL("ConnectInstrumentHub(bool)"), True)
 
+
     def bt_add_line_clicked(self):
         """when this method is called (upon button 'Connect' interaction) it send a signal, which will be treated in the main window"""
         if self.bt_remove_last.isEnabled:
@@ -503,6 +492,7 @@ class InstrumentWindow(QtGui.QWidget):
             self.emit(SIGNAL("AddedInstrument(bool)"), True)
             # the lines have changed - call the relevant function!            
             self.lines_changed()           
+            
             
     def bt_remove_last_clicked(self):
         """when this method is called (upon button 'Connect' interaction) it send a signal, which will be treated in the main window"""
@@ -541,7 +531,9 @@ class InstrumentWindow(QtGui.QWidget):
         """run a method from SingleLine class which refresh the availiable ports"""
         
         self.AVAILABLE_PORTS = Tool.refresh_device_port_list()
+        
         for line in self.lines:
+            
             line.refresh_port_cbb(self.AVAILABLE_PORTS)
 
     def load_settings(self, fname):
@@ -885,7 +877,8 @@ def test_load_settings():
     app = QtGui.QApplication(sys.argv)
     ex = InstrumentWindow(debug = True)
 
-    ex.load_settings("C:\\Users\\pfduc\\Documents\\labgui_github\\test_settings.set")
+    ex.load_settings("C:\\Users\\pfduc\\Documents\\labgui_github\\settings\\default_settings.txt")
+    print ex.collect_device_info(units = True)
     ex.show()
 
     sys.exit(app.exec_())
@@ -906,7 +899,7 @@ def test_main():
 if __name__ == "__main__":
     import logging.config
     import os
-    ABS_PATH = "C:\\Users\\admin\\Documents\\Labgui_github"
-    logging.config.fileConfig(os.path.join(ABS_PATH,"logging.conf"))
+#    ABS_PATH = "C:\\Users\\admin\\Documents\\Labgui_github"
+#    logging.config.fileConfig(os.path.join(ABS_PATH,"logging.conf"))
 
     test_load_settings()

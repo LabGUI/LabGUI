@@ -401,8 +401,20 @@ def load_file_windows(fname, splitchar = ', ', headers = True, hdr_only = False)
                 
             elif label_id == 'C':
                 
-                label['channel_labels'] = line.split(', u')
                 
+                #old file were saved that way
+                label['channel_labels'] = line.split(', u')
+
+                if len(label['channel_labels']) == 1:
+   
+                    label['channel_labels'] = \
+                        label['channel_labels'][0].split(splitchar)
+                  
+                else:
+                    
+                    label['channel_labels'][0] = \
+                        label['channel_labels'][0][1:]
+                    
             #this is user comments we only save the ones that are 
             #before the label_id, other lines will be ignored
             if i < end_normal_hdr_idx:
