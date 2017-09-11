@@ -24,8 +24,19 @@ MANUAL_HTR_MAX_CURRENT = 0.091
 class Instrument(Tool.MeasInstr):
 
     def __init__(self, resource_name, debug = False, **kwargs):
-        super(Instrument, self).__init__(resource_name, 'LS370', debug=debug,
-                                         interface = INTERFACE, **kwargs)
+        
+        #manage the presence of the keyword interface which will determine
+        #which method of communication protocol this instrument will use
+        if 'interface' in kwargs.keys():
+
+            interface = kwargs.pop('interface')
+
+        else:
+
+            interface = INTERFACE
+        
+        super(Instrument, self).__init__(resource_name, 'LS370', debug = debug,
+                                         interface = interface, **kwargs)
 
     def measure(self, channel):
         if channel in self.last_measure:

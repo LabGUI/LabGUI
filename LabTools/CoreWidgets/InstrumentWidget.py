@@ -621,6 +621,11 @@ class InstrumentWindow(QtGui.QWidget):
                                     logging.warning(self.AVAILABLE_PORTS)
                                     logging.warning("the port '%s' is not available,\
 please check your connectic or your settings file\n"%(port))
+                                    
+                                    #should check if it is an IP port
+                                    new_line.port_cbb.addItem(port)
+                                    new_line.port_cbb.setCurrentIndex(
+                                    new_line.port_cbb.findText(port))
     
                         #fills the parameter combobox with instrument parameters
                         new_line.param_cbb.clear()

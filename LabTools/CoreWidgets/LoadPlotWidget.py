@@ -150,7 +150,7 @@ class LoadPlotWidget(QWidget):
         
         if new_fname == None:
             
-            return self.loadFileLineEdit.text()
+            return str(self.loadFileLineEdit.text())
             
         else:
             #update the whole path and file name in the text zone
