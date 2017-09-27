@@ -103,26 +103,36 @@ class SingleLineWidget(QtGui.QWidget):
         cbb = QtGui.QComboBox(self)
         cbb.setObjectName("comboBox")
         cbb.setStyleSheet(
-            "QComboBox::drop-down {border-width: 0px;} QComboBox::down-arrow {image: url(noimg); border-width: 0px;}")
+            "QComboBox::drop-down {border-width: 0px;} \
+QComboBox::down-arrow {image: url(noimg); border-width: 0px;}")
+        
         if name == 'Instr name':
+            
             cbb.addItems(self.INSTRUMENT_TYPES)
             cbb.setCurrentIndex(cbb.findText("TIME"))
             self.connect(cbb, SIGNAL("currentIndexChanged(int)"),
                          self.combobox_handler)
-            cbb.setFixedWidth(width_instr)                         
+            cbb.setFixedWidth(width_instr)  
+                       
         if name == 'Port':
             
             #when creating a line the instrument TIME comes first so there is no port to connect to it
             cbb.addItem("")
   
 #            self.connect(cbb, SIGNAL("activated(int)"), self.combobox_dev_port_handler)
-            cbb.setFixedWidth(width_port)            
+            cbb.setFixedWidth(width_port)      
+            
+            #this allow the user to edit the content of the combobox input
+            cbb.setEditable(True)
+            
         if name == "Param":
+            
             cbb.addItems(self.AVAILABLE_PARAMS['TIME'])
             cbb.setCurrentIndex(cbb.findText("dt"))
             self.connect(cbb, SIGNAL("currentIndexChanged(int)"),
                          self.combobox_unit_handler)
             cbb.setFixedWidth(width_param*1.5) 
+            
         return cbb
 
     def combobox_handler(self):
@@ -161,23 +171,9 @@ class SingleLineWidget(QtGui.QWidget):
         """update the lineEdit with unit corresponding to the instrument parameter upon its selection"""
 
         # select the items on the line corresponding to the same instrument
-        le = self.param_name_le
-        instr = self.instr_name_cbb.currentText()
-        instr_params = self.AVAILABLE_PARAMS[str(instr)]
-
         current_param = self.param_cbb.currentText()
-        label = str(le.text())
-        label = label.split('(')[0]
 
-        # if there is no existing label it puts the param name
-        if label == "":
-            label = current_param
-
-        # if there is no user define param name different from the instrument params
-        # it puts the correct param name
-        if label in self.UNITS:
-            label = current_param
-        le.setText(label + self.get_unit())
+        self.param_name_le.setText(current_param + self.get_unit())
 
         # After changes the user should be able to update the instrumentHub by
         # clicking on the button 'Connect'
@@ -244,7 +240,7 @@ class SingleLineWidget(QtGui.QWidget):
 
         for p in [self.instr_name_cbb, self.port_cbb, self.param_cbb]:
             device_info.append(str(p.currentText()))
-
+        
         return device_info
 
     def get_descriptor(self):
@@ -276,7 +272,7 @@ class SingleLineWidget(QtGui.QWidget):
         return str(self.color_btn.palette().color(1).name())
     
     def get_label(self):
-        return self.param_name_le.text()
+        return str(self.param_name_le.text())
 
 
 class InstrumentWindow(QtGui.QWidget):
@@ -474,9 +470,11 @@ class InstrumentWindow(QtGui.QWidget):
         """if any line is changed the color of the connect button is changed so that one can notice """
         self.bt_connecthub.setStyleSheet("background-color : Window")
 
+
     def update_colors(self):
         """this simply send the triggered signal from a Single line instance to the LabGui instance (and any other listeners)"""
         self.emit(SIGNAL("colorsChanged()"))
+        
         
     def bt_connecthub_clicked(self):
         """when this method is called (upon button 'Connect' interaction) it send a signal, which will be treated in the main window"""
@@ -486,6 +484,7 @@ class InstrumentWindow(QtGui.QWidget):
 
             self.emit(SIGNAL("ConnectInstrumentHub(bool)"), True)
 
+
     def bt_add_line_clicked(self):
         """when this method is called (upon button 'Connect' interaction) it send a signal, which will be treated in the main window"""
         if self.bt_remove_last.isEnabled:
@@ -493,6 +492,7 @@ class InstrumentWindow(QtGui.QWidget):
             self.emit(SIGNAL("AddedInstrument(bool)"), True)
             # the lines have changed - call the relevant function!            
             self.lines_changed()           
+            
             
     def bt_remove_last_clicked(self):
         """when this method is called (upon button 'Connect' interaction) it send a signal, which will be treated in the main window"""
@@ -531,7 +531,9 @@ class InstrumentWindow(QtGui.QWidget):
         """run a method from SingleLine class which refresh the availiable ports"""
         
         self.AVAILABLE_PORTS = Tool.refresh_device_port_list()
+        
         for line in self.lines:
+            
             line.refresh_port_cbb(self.AVAILABLE_PORTS)
 
     def load_settings(self, fname):
@@ -619,6 +621,11 @@ class InstrumentWindow(QtGui.QWidget):
                                     logging.warning(self.AVAILABLE_PORTS)
                                     logging.warning("the port '%s' is not available,\
 please check your connectic or your settings file\n"%(port))
+                                    
+                                    #should check if it is an IP port
+                                    new_line.port_cbb.addItem(port)
+                                    new_line.port_cbb.setCurrentIndex(
+                                    new_line.port_cbb.findText(port))
     
                         #fills the parameter combobox with instrument parameters
                         new_line.param_cbb.clear()
@@ -708,7 +715,10 @@ def connect_instrument_hub(parent, signal = True):
 
     if signal:
         
-        [instr_name_list, dev_list, param_list] = parent.collect_instruments()
+        [instr_name_list, dev_list, param_list] = \
+                    parent.widgets['InstrumentWidget'].collect_device_info()
+        
+        logging.debug("Information sent to the connect_hub method")
         logging.debug([instr_name_list, dev_list, param_list])
         
         actual_instrument_number = len(
@@ -749,11 +759,16 @@ different than " + str(actual_instrument_number)
 
         logging.debug("The instrument list : " \
                       + str(parent.instr_hub.get_instrument_list()))
-                      
-        #show a plot by default
-        parent.create_pdw(settings = parent.plot_window_settings)
+              
         
-        parent.actual_pdw = parent.get_last_window()
+        try:
+            #show a plot by default if used for LabGui
+            parent.create_pdw(settings = parent.plot_window_settings)
+            
+            parent.actual_pdw = parent.get_last_window()
+            
+        except:
+            pass
 
 
 
@@ -867,7 +882,8 @@ def test_load_settings():
     app = QtGui.QApplication(sys.argv)
     ex = InstrumentWindow(debug = True)
 
-    ex.load_settings("C:\\Users\\pfduc\\Documents\\labgui_github\\test_settings.set")
+    ex.load_settings("C:\\Users\\pfduc\\Documents\\labgui_github\\settings\\default_settings.txt")
+    print ex.collect_device_info(units = True)
     ex.show()
 
     sys.exit(app.exec_())
@@ -888,7 +904,7 @@ def test_main():
 if __name__ == "__main__":
     import logging.config
     import os
-    ABS_PATH = "C:\\Users\\admin\\Documents\\Labgui_github"
-    logging.config.fileConfig(os.path.join(ABS_PATH,"logging.conf"))
+#    ABS_PATH = "C:\\Users\\admin\\Documents\\Labgui_github"
+#    logging.config.fileConfig(os.path.join(ABS_PATH,"logging.conf"))
 
     test_load_settings()

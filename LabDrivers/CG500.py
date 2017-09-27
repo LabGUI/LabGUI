@@ -30,7 +30,7 @@ class Instrument(Tool.MeasInstr):
     # probably think about this function again
     def measure(self, channel='HeLevel'):
         if channel in self.last_measure:
-            if not self.debug:
+            if not self.DEBUG:
                 chan = self.get_channel()
                 if channel == 'HeLevel2':
                     answer = self.ask('MEAS? ' + chan)

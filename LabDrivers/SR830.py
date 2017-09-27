@@ -23,7 +23,19 @@ class Instrument(Tool.MeasInstr):
     """ Class to communicate with Stanford Research Systems SR830 lock-in"""
     
     def __init__(self, resource_name, debug = False, **kwargs):
-        super(Instrument, self).__init__(resource_name, 'SR830', debug=debug, interface=INTERFACE, **kwargs)
+        
+        #manage the presence of the keyword interface which will determine
+        #which method of communication protocol this instrument will use
+        if 'interface' in kwargs.keys():
+
+            interface = kwargs.pop('interface')
+
+        else:
+
+            interface = INTERFACE
+            
+        super(Instrument, self).__init__(resource_name, 'SR830', debug=debug, 
+                                         interface = interface, **kwargs)
 
     def measure(self, channel):
         """ Measure the specified 'channel' and return the result. The list

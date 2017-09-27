@@ -29,6 +29,7 @@ SCRIPT_ID = "SCRIPT"
 DEBUG_ID = "DEBUG"
 SAVE_DATA_PATH_ID = "DATA_PATH"
 SETTINGS_ID = "SETTINGS"
+WIDGETS_ID = "USER_WIDGETS"
 LOAD_DATA_FILE_ID = "DATAFILE"
 GPIB_INTF_ID = "GPIB_INTF"
 
@@ -290,7 +291,17 @@ file located at %s\n"%(setting,setting_value, config_file_path))
 def get_settings_name(**kwargs):
     return get_config_setting(SETTINGS_ID,**kwargs)
 
-
+def get_user_widgets(**kwargs):
+    """ collect the widget names the user would like to run"""
+    widgets = get_config_setting(WIDGETS_ID,**kwargs)
+    if widgets == None:
+        
+        return []
+    
+    else:
+        
+        return widgets.split(';')
+    
 def get_script_name(**kwargs):
     return get_config_setting("SCRIPT",**kwargs)
 
@@ -390,8 +401,20 @@ def load_file_windows(fname, splitchar = ', ', headers = True, hdr_only = False)
                 
             elif label_id == 'C':
                 
-                label['channel_labels'] = line.split(', u')
                 
+                #old file were saved that way
+                label['channel_labels'] = line.split(', u')
+
+                if len(label['channel_labels']) == 1:
+   
+                    label['channel_labels'] = \
+                        label['channel_labels'][0].split(splitchar)
+                  
+                else:
+                    
+                    label['channel_labels'][0] = \
+                        label['channel_labels'][0][1:]
+                    
             #this is user comments we only save the ones that are 
             #before the label_id, other lines will be ignored
             if i < end_normal_hdr_idx:
@@ -619,6 +642,7 @@ def match_value2index(array1D, val):
 if __name__ == "__main__":
     import time
     ts = time.time()
-    d,l = load_file_windows("test_load.dat")
-    print l
-    print time.time()-ts
+    fname = "C:\\Users\\pfduc\\OneDrive - McGill University\\G2 Lab\\PF\\1D Helium\\Analyse\\20170908-0911_B24_K8_55nm_diam\\temperature_dependance\\20170911_BF_B24_K8_Vsuperfluid_SF_part.a5dat"
+    d,l = load_file_windows(fname)
+    print(l)
+    print(time.time()-ts)

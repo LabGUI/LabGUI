@@ -187,8 +187,8 @@ class MatplotlibZoomWidget(MatplotlibWidget):
 
     def mousePressEvent(self, event):
         if event.button() == QtCore.Qt.LeftButton:
-            print "MouseMode:", self.mouseMode
-            print "AutoScale", self.autoscale_X_on, self.autoscale_L_on, self.autoscale_R_on
+#            print "MouseMode:", self.mouseMode
+#            print "AutoScale", self.autoscale_X_on, self.autoscale_L_on, self.autoscale_R_on
             if self.mouseMode == self.PAN_MODE:
                 if self.mouseMode == self.PAN_MODE:
                     self.setCursor(QtGui.QCursor(QtCore.Qt.ClosedHandCursor))
@@ -495,13 +495,20 @@ class ActionManager():
         return action    
         
     def update_current_widget(self, current_widget):
+        """this is used when there are multiple plot widgets that have 
+        different zoom settings"""
+        
         self.current_widget = current_widget
 
         mode = current_widget.mouseMode
-        self.plotDragZoomAction.setChecked(mode==current_widget.ZOOM_MODE)
-        self.plotPanAction.setChecked(mode==current_widget.PAN_MODE)
-        self.plotSelectAction.setChecked(mode==self.current_widget.SELECT_MODE)
         
+        #compare the mouse mode with the different mode and toggle the
+        #shared mouse options (zoom, select, grab)
+        self.plotDragZoomAction.setChecked(mode == ZOOM_MODE)
+        self.plotPanAction.setChecked(mode == PAN_MODE)
+        self.plotSelectAction.setChecked(mode == SELECT_MODE)
+        
+        #actualize the axis scale modes (auto or manual)
         self.plotAutoScaleXAction.setChecked(current_widget.autoscale_X_on)
         self.plotAutoScaleLAction.setChecked(current_widget.autoscale_L_on)
         self.plotAutoScaleRAction.setChecked(current_widget.autoscale_R_on)
