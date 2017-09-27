@@ -7,11 +7,22 @@ REAL_HDR="realvalues#"
 
 
 class LabeledData(object):
-    """ This class contains two attributes a n by m matrix and a m element list which labels the colums of the matrix"""
-    def __init__(self,data=None,labels=None,fname=None,dataset_name=""):
+    """ This class contains four attributes 
+    data : a n by m matrix
+    labels : a m element (string) list which labels the colums of the matrix
+    header_info : any information included in the file with # starting the line
+    dataset_name : the name of the file the data was loaded from (if applicable)
+    
+    The idea is to have all information contained into one file that can be
+    read by a human and which is loaded in a structure such that one never mixes
+    up two columns.
+    """
+    def __init__(self, data = None, labels = None, fname = None,
+                 header_info = "", dataset_name = ""):
         		
         self.data = data
         self.labels = labels
+        self.header_info = header_info
         self.dataset_name = dataset_name
         
         if not fname == None:
@@ -47,21 +58,39 @@ class LabeledData(object):
         pp(self.data)
         print("#####-----------------#####")
 
-    def save_to_file(self,fname):
+    def save_to_file(self, fname, user_header_info = ""):
         """this method will save the data into a folder with the labels as header """
+        
+        
+        if isinstance(user_header_info, str):
+            #combine the additional header info with the preexisting one
+            user_header_info = "\n%s%s"%(user_header_info, self.header_info)
+            
+        else:
+            
+            user_header_info = ""
         
         header_txt=""
 
         for l in self.labels:
+            
             header_txt="%s\t%s"%(header_txt,l)        
         
         if np.iscomplex(self.data).any():
             #prepare the header line with the labels
             header_txt = COMPLEX_HDR + header_txt
-            np.savetxt(fname,self.data.view(float),header=header_txt)
+            
+            header_txt = "%s%s"%(header_txt, user_header_info)
+            
+            np.savetxt(fname,self.data.view(float), header = header_txt)
+            
         else:
+            
             header_txt = REAL_HDR + header_txt
-            np.savetxt(fname,self.data,header=header_txt)
+            
+            header_txt = "%s%s"%(header_txt, user_header_info)
+            
+            np.savetxt(fname,self.data, header = header_txt)
         
         
     def load_from_file(self,fname=None):
@@ -69,10 +98,25 @@ class LabeledData(object):
         
             filestream =  open(fname, "r")
             #read the headerline
-            labels=filestream.readline()
+            labels = filestream.readline()
             #get rid of the "# " at the beginning and the "\n" at the end
-            labels=labels[2:-1].split("\t")
+            labels = labels[2:-1].split("\t")
+            
+            line = filestream.readline()
+            
+            header_info = ""
+            
+            while line[0] == '#':
+                
+                header_info = "%s\n%s"%(header_info, line[2:-1])
+                
+                line = filestream.readline()
+                
             filestream.close()
+            
+            #because the first instance of header_info is "" there is a leading
+            #\n character, so we remove it now
+            header_info = header_info[1:]
 
             #the first string of the line describes whether the format of the values is complex or real     
             if labels[0] == COMPLEX_HDR:
@@ -91,17 +135,19 @@ class LabeledData(object):
             
             if self.ncols == self.nlabels:       
             
-                self.data=data
-                self.labels=labels
+                self.data = data
+                self.labels = labels
                 
             elif self.nlines == self.nlabels:
                 
-                self.data=np.transpose(data)
-                self.labels=labels
+                self.data = np.transpose(data)
+                self.labels = labels
+                
             else:
                     logging.error("There is %i labels for %i columns in the data matrix"%(self.nlabels,self.ncols))
                     
                     
+            self.header_info = header_info
             """here we can call an external function that will look for an attribute for the dataset_name and assign it or give the name None"""
             """Was a bit confused by this one -> I'm assuming that you meant a way to access a way that will distinguish the different files loaded
                 Using date as a marker"""
@@ -192,45 +238,66 @@ def test_labels_class_LabeledData(labels=["a","b","c"]):
 
     mydat.display()
 
-    num_test=6
+    num_test=7
     test_passed=0    
     
     if (mydat[0:2]==np.array([[1,2,3],[4,5,6]])).all():
         logging.info("the indexing with a slice for the first argument alone works")
         test_passed+=1
+    else:
+        logging.warning("the indexing with a slice for the first argument alone fails")
         
     if (mydat[labels[0]] == np.array([1,4,7])).all():
         logging.info("the indexing by label in first argument alone works")
         test_passed+=1
+    else:
+        logging.warning("the indexing by label in first argument alone fails")
         
     if (mydat[:,labels[1]] == np.array([2,5,8])).all():
         logging.info("the indexing by label in second argument with a slice for the first argument works")
         test_passed+=1
+    else:
+        logging.warning("the indexing by label in second argument with a slice for the first argument fails")
         
     if mydat[1,labels[1]] == 5:
         logging.info("the indexing by label in second argument with a index for the first argument works")
         test_passed+=1
+    else:
+        logging.warning("the indexing by label in second argument with a index for the first argument fails")
     
     if (mydat[-1] == np.array([7, 8, 9])).all():
         logging.info("the negative indexing by index in first argument alone works")
-        test_passed+=1    
+        test_passed+=1
+    else:
+        logging.warning("the negative indexing by index in first argument alone fails")
         
-    mydat.save_to_file("test_fonction.txt")
+    test_header = "I want to make sure this works\nOn more than one line"
+    mydat.save_to_file("test_fonction.txt", test_header)
     
-    mydat_duplicate=LabeledData(fname="test_fonction.txt")
+    mydat_duplicate = LabeledData(fname = "test_fonction.txt")
     
     if (mydat.data == mydat_duplicate.data).all() and (mydat.labels == mydat_duplicate.labels):
         logging.info("the save to file and reload the same instance works")
         test_passed+=1 
     else:
+        logging.warning("the save to file and reload the same instance fails")
         print mydat.display()
+        print mydat_duplicate.display()
+        
+    if (mydat_duplicate.header_info == test_header):
+        logging.info("the save to file and reload the same instance works")
+        test_passed+=1 
+    else:
+        logging.warning("the save to file and reload the same instance fails")
+        print "'%s'"%(mydat_duplicate.header_info)
+        print "'%s'"%(test_header)
         print mydat_duplicate.display()
     
 #    mydat
     print("test passed : %i over %i"%(test_passed,num_test))
       
 if __name__=="__main__":
-    
+    logging.basicConfig(level = logging.WARNING)
 #    test_labels_class_LabeledData(labels=[1.1,2.3,3.5])
 #    ex = LabeledData(fname = "C:\\Users\\User\\Documents\\AcousticBlackHole\\GuiTools\\test2.txt")
     test_labels_class_LabeledData()
