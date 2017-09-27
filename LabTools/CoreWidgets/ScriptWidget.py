@@ -7,10 +7,19 @@ License: see LICENSE.txt file
 """
 
 import sys
-import re
 
-from PyQt4.QtGui import *
-from PyQt4.QtCore import SIGNAL
+from LocalVars import USE_PYQT5
+
+if  USE_PYQT5:
+    
+    from PyQt5.QtWidgets import (QWidget, QLabel, QLineEdit, QPushButton, 
+                                 QFileDialog, QHBoxLayout, QApplication)
+    
+else:
+    
+    from PyQt4.QtGui import (QWidget, QLabel, QLineEdit, QPushButton, 
+                                 QFileDialog, QHBoxLayout, QApplication)
+
 
 from LabTools.IO import IOTool
 
@@ -36,11 +45,7 @@ class ScriptWidget(QWidget):
 
         self.scriptFileLineEdit.setText(IOTool.get_script_name())
 
-        # make the magic function names/decorators work!
-        # self.retranslateUi(StartWidget)
-
-        self.connect(self.scriptFileButton, SIGNAL(
-            'clicked()'), self.on_scriptFileButton_clicked)
+        self.scriptFileButton.clicked.connect(self.on_scriptFileButton_clicked)
 
     def on_outputFileButton_clicked(self):
         fname = str(QFileDialog.getSaveFileName(self, 'Save output file as',
