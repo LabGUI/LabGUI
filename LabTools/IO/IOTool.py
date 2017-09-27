@@ -128,7 +128,7 @@ def open_therm_file(config_file_name='config.txt'):
     return file_name
 
 
-def get_file_name(config_file_name='config.txt'):
+def get_file_name(config_file_path = CONFIG_FILE_PATH):
     """
         returns the filename of output file as it is in the config file
     """
@@ -138,11 +138,15 @@ def get_file_name(config_file_name='config.txt'):
     sample_name = ""
     file_format = ".dat"
     try:
-        config_file = open(config_file_name)
+        
+        config_file = open(config_file_path, 'r')
+        
         for line in config_file:
+            
             [left, right] = line.split("=")
             left = left.strip()
             right = right.strip()
+            
             if left == "COOLDOWN":
                 cooldown = right
                 cooldown = cooldown + "_"
@@ -158,16 +162,20 @@ def get_file_name(config_file_name='config.txt'):
                 file_format = eval(right)
 
         try:
+            
             file_name = data_path + sample_name + "_" + \
                 cooldown + "_" + time.strftime("%m%d")
             file_name = data_path + \
                 time.strftime("%y%m%d") + "_" + cooldown + sample_name
             n = 1
+            
             # make sure the file doesn't already exist by incrementing the
             # number
+            
             while os.path.exists(file_name + "_%3.3d%s" % (n, file_format)):
                 n += 1
             file_name = file_name + "_%3.3d%s" % (n, file_format)
+            
         except:
             file_name = "No output file choosen"
 

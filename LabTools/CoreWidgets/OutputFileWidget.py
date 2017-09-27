@@ -20,7 +20,7 @@ import logging
 
 class OutputFileWidget(QtGui.QWidget):
 
-    def __init__(self, parent = None):
+    def __init__(self, parent = None, fname = IOTool.get_file_name()):
         super(OutputFileWidget, self).__init__(parent)
 
         # main layout of the form is the verticallayout
@@ -51,7 +51,7 @@ class OutputFileWidget(QtGui.QWidget):
 
         self.setLayout(self.verticalLayout)
 
-        self.outputFileLineEdit.setText(IOTool.get_file_name())
+        self.outputFileLineEdit.setText(fname)
 
         self.connect(self.outputFileButton, SIGNAL(
             'clicked()'), self.on_outputFileButton_clicked)
@@ -96,7 +96,10 @@ def add_widget_into_main(parent):
     create a QDock widget and store a reference to the widget
     """
     
-    mywidget = OutputFileWidget(parent = parent)
+    ofname = IOTool.get_file_name(config_file_path = parent.config_file)
+    
+    mywidget = OutputFileWidget(parent = parent, fname = ofname)
+    
     outDockWidget = QtGui.QDockWidget("Output file and header text", parent)
     outDockWidget.setObjectName("OutputFileDockWidget")
     outDockWidget.setAllowedAreas(
