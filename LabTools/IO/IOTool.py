@@ -650,6 +650,7 @@ def match_value2index(array1D, val):
 if __name__ == "__main__":
     import time
     ts = time.time()
-    d,l = load_file_windows("test_load.dat")
-    print l
-    print time.time()-ts
+    fname = "C:\\Users\\pfduc\\OneDrive - McGill University\\G2 Lab\\PF\\1D Helium\\Analyse\\20170908-0911_B24_K8_55nm_diam\\temperature_dependance\\20170911_BF_B24_K8_Vsuperfluid_SF_part.a5dat"
+    d,l = load_file_windows(fname)
+    print(l)
+    print(time.time()-ts)
