@@ -12,3 +12,4 @@ scratch/*
 !scripts/script.py
 LabDrivers/ArduinoUno.py
 scripts/script.py
+config_*
