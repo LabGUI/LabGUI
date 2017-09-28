@@ -40,11 +40,11 @@ from LocalVars import USE_PYQT5
 
 if  USE_PYQT5:
     
-    from PyQt5.QtCore import QObject
+    from PyQt5.QtCore import QObject, pyqtSignal
     
 else:
     
-    from PyQt4.QtCore import SIGNAL,QObject
+    from PyQt4.QtCore import SIGNAL, QObject
 
 try:
     
@@ -627,8 +627,11 @@ class InstrumentHub(QObject):
         experiment)
         
     """
-
+    
+    trigger = pyqtSignal(bool, name = "DEBUG_mode_changed(bool)")
     def __init__(self, parent = None, debug = False, **kwargs):
+
+#        self.
 
         if parent != None:
             
@@ -636,8 +639,14 @@ class InstrumentHub(QObject):
             self.parent = parent
             # connect with its parent to change the debug mode throught a
             # signal
-            self.connect(parent, SIGNAL(
-                "DEBUG_mode_changed(bool)"), self.set_debug_state)
+            if USE_PYQT5:
+                
+#                self.trigger = pyqtSignal(bool, name = "DEBUG_mode_changed(bool)")
+                self.trigger.connect(self.set_debug_state)
+                
+            else:
+                self.connect(parent, SIGNAL(
+                    "DEBUG_mode_changed(bool)"), self.set_debug_state)
 
         else:
             

@@ -40,13 +40,15 @@ if  USE_PYQT5:
                                  QFileDialog, QHBoxLayout, QApplication)
                                  
     import PyQt5.QtWidgets as QtGui
+    
+    from PyQt5.QtGui import QIcon
     # just grab the parts we need from QtCore
     from PyQt5.QtCore import Qt, QReadWriteLock, QSettings
     
     
 else:
     
-    from PyQt4.QtGui import (QWidget, QLabel, QLineEdit, QPushButton, 
+    from PyQt4.QtGui import (QWidget, QLabel, QLineEdit, QPushButton, QIcon,
                                  QFileDialog, QHBoxLayout, QApplication)
                      
     import PyQt4.QtGui as QtGui               
@@ -1084,13 +1086,13 @@ the pyqt window option is disabled")
     def option_display_debug_state(self):
         """Visualy let the user know the programm is in DEBUG mode"""
 
-        self.setWindowIcon(QtGui.QIcon('images/icon_debug_py%s.png'%(PYTHON_VERSION)))
+        self.setWindowIcon(QIcon('images/icon_debug_py%s.png'%(PYTHON_VERSION)))
         self.setWindowTitle("-" * 3 + "DEBUG MODE" + "-" * 3 + " (python%s)"%(PYTHON_VERSION))
         self.setWindowOpacity(0.92)
         
     def option_display_normal_state(self):
         """Visualy let the user know the programm is in DEBUG mode"""
-        self.setWindowIcon(QtGui.QIcon('images/icon_normal_py%s.png'%(PYTHON_VERSION)))
+        self.setWindowIcon(QIcon('images/icon_normal_py%s.png'%(PYTHON_VERSION)))
         self.setWindowTitle("LabGui (python%s)"%(PYTHON_VERSION))
         self.setWindowOpacity(1)
 
