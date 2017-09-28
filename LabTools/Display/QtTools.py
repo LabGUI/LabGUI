@@ -8,9 +8,23 @@ License: see LICENSE.txt file
 
 import sys
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
-from PyQt4 import QtGui
+
+from LocalVars import USE_PYQT5
+
+if  USE_PYQT5:
+    
+    import PyQt5.QtWidgets as QtGui
+    import PyQt5.QtCore as QtCore
+    from PyQt5.QtCore import Qt
+    
+else:
+
+    import PyQt4.QtGui as QtGui
+    import PyQt4.QtCore as QtCore
+    from PyQt4.QtCore import Qt      
+    from PyQt4.QtCore import SIGNAL
+
+
 
 #global variables used to know what mode the mouse is in
 ZOOM_MODE = 0
@@ -33,9 +47,9 @@ class printerceptor():
         self.old_stoud.flush()
         
 def create_action(parent, text, slot=None, shortcut=None, icon=None, tip=None, checkable=False, signal="triggered()"):
-    action = QAction(text, parent)
+    action = QtGui.QAction(text, parent)
     if icon is not None:
-        action.setIcon(QIcon("./images/%s.png" % icon))
+        action.setIcon(QtGui.QIcon("./images/%s.png" % icon))
     if shortcut is not None:
         action.setShortcut(shortcut)
     if tip is not None:
@@ -66,7 +80,7 @@ def clear_layout(layout):
 
 # Code from Giovanni Bajo via
 # http://www.riverbankcomputing.com/pipermail/pyqt/2008-July/020042.html
-class QAutoHideDockWidgets(QToolBar):
+class QAutoHideDockWidgets(QtGui.QToolBar):
     """
     QMainWindow "mixin" which provides auto-hiding support for dock widgets
     (not toolbars).
@@ -79,8 +93,8 @@ class QAutoHideDockWidgets(QToolBar):
     }
 
     def __init__(self, area, parent, name="AUTO_HIDE"):
-        QToolBar.__init__(self, parent)
-        assert isinstance(parent, QMainWindow)
+        QtGui.QToolBar.__init__(self, parent)
+        assert isinstance(parent, QtGui.QMainWindow)
         assert area in self.DOCK_AREA_TO_TB
         self._area = area
         self.setObjectName(name)
@@ -88,10 +102,10 @@ class QAutoHideDockWidgets(QToolBar):
 
         self.setFloatable(False)
         self.setMovable(False)
-        w = QWidget(None)
+        w = QtGui.QWidget(None)
         w.resize(10, 100)
-        self.setSizePolicy(QSizePolicy(QSizePolicy.Fixed,
-                                       QSizePolicy.MinimumExpanding))
+        self.setSizePolicy(QtGui.QSizePolicy(QtGui.QSizePolicy.Fixed,
+                                       QtGui.QSizePolicy.MinimumExpanding))
         self.addWidget(w)
 
         self.setAllowedAreas(self.DOCK_AREA_TO_TB[self._area])
@@ -103,20 +117,21 @@ class QAutoHideDockWidgets(QToolBar):
 
     def _dockWidgets(self):
         mw = self.parent()
-        for w in mw.findChildren(QDockWidget):
+        for w in mw.findChildren(QtGui.QDockWidget):
             if mw.dockWidgetArea(w) == self._area and not w.isFloating():
                 yield w
 
     def paintEvent(self, event):
-        p = QPainter(self)
+
+        p = QtGui.QPainter(self)
         p.setPen(Qt.black)
         p.setBrush(Qt.black)
         if self._area == Qt.LeftDockWidgetArea:
-            p.translate(QPointF(0, self.height() / 2 - 5))
-            p.drawPolygon(QPointF(2, 0), QPointF(8, 5), QPointF(2, 10))
+            p.translate(QtCore.QPointF(0, self.height() / 2 - 5))
+            p.drawPolygon(QtCore.QPointF(2, 0), QtCore.QPointF(8, 5), QtCore.QPointF(2, 10))
         elif self._area == Qt.RightDockWidgetArea:
-            p.translate(QPointF(0, self.height() / 2 - 5))
-            p.drawPolygon(QPointF(8, 0), QPointF(2, 5), QPointF(8, 10))
+            p.translate(QtCore.QPointF(0, self.height() / 2 - 5))
+            p.drawPolygon(QtCore.QPointF(8, 0), QtCore.QPointF(2, 5), QtCore.QPointF(8, 10))
 
     def _multiSetVisible(self, widgets, state):
         if state:
@@ -134,9 +149,9 @@ class QAutoHideDockWidgets(QToolBar):
 
     def enterEvent(self, event):
         self.showDockWidgets()
-
+        
     def eventFilter(self, obj, event):
-        if event.type() == QEvent.Enter:
+        if event.type() == QtCore.QEvent.Enter:
             assert obj == self.parent().centralWidget()
             self.hideDockWidgets()
         return False

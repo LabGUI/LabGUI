@@ -7,7 +7,19 @@
 #
 # WARNING! All changes made in this file will be lost!
 
-from PyQt4 import QtCore, QtGui
+from LocalVars import USE_PYQT5
+
+if  USE_PYQT5:
+                                 
+    import PyQt5.QtWidgets as QtGui
+    import PyQt5.QtCore as QtCore
+
+    
+else:
+
+    import PyQt4.QtGui as QtGui     
+    import PyQt4.QtCore as QtCore 
+
 
 from QtTools import clear_layout
 

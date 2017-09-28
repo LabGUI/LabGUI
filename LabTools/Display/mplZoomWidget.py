@@ -8,16 +8,28 @@ License: see LICENSE.txt file
 
 import sys
 
-from PyQt4 import QtCore, QtGui
-from PyQt4.QtGui import QAction, QIcon
-from PyQt4.QtCore import SIGNAL
-from matplotlibwidget import MatplotlibWidget
+
+
 import numpy as np
 import matplotlib as mpl
 import logging
 
-from QtTools import ZOOM_MODE, PAN_MODE, SELECT_MODE
+from LocalVars import USE_PYQT5
 
+if  USE_PYQT5:
+                                 
+    import PyQt5.QtWidgets as QtGui
+    import PyQt5.QtCore as QtCore
+    from PyQt5.QtCore import Qt  
+    
+else:
+
+    import PyQt4.QtGui as QtGui     
+    import PyQt4.QtCore as QtCore 
+    from PyQt4.QtCore import SIGNAL
+
+from QtTools import ZOOM_MODE, PAN_MODE, SELECT_MODE
+from matplotlibwidget import MatplotlibWidget
 
 class MatplotlibZoomWidget(MatplotlibWidget):
 
@@ -480,9 +492,9 @@ class ActionManager():
                                                        icon=None, tip="Save the current figure")
                                                        
     def create_action(self, parent, text, slot=None, shortcut=None, icon=None, tip=None, checkable=False, signal="triggered()"):
-        action = QAction(text, parent)
+        action = QtGui.QAction(text, parent)
         if icon is not None:
-            action.setIcon(QIcon("./images/%s.png" % icon))
+            action.setIcon(QtGui.QIcon("./images/%s.png" % icon))
         if shortcut is not None:
             action.setShortcut(shortcut)
         if tip is not None:

@@ -17,28 +17,37 @@ TODO:
 
 from __future__ import division
 import time
+import datetime
 
-#from PyQt4.QtSvg import *
-import PyQt4.QtGui as QtGui
-from PyQt4.QtCore import  SIGNAL, Qt, QRect,QSize
+import numpy as np
+
+from matplotlib import dates
+from matplotlib import ticker
+
+from collections import OrderedDict
+
+from LocalVars import USE_PYQT5
+
+if  USE_PYQT5:
+                                 
+    import PyQt5.QtWidgets as QtGui
+    from PyQt5.QtCore import Qt  
+    
+else:
+
+    import PyQt4.QtGui as QtGui     
+    from PyQt4.QtCore import Qt, QRect, QRectF 
+    from PyQt4.QtCore import SIGNAL
 
 
 import QtTools
 
-import numpy as np, matplotlib.pyplot as plt
-
-
-from matplotlib.ticker import MultipleLocator, FormatStrFormatter
-
 
 from mplZoomWidget import MatplotlibZoomWidget
 import ui_plotdisplaywindow
-from matplotlib import dates
-from matplotlib import ticker
-from PlotPreferences import marker_set,line_set,color_blind_friendly_colors
-import datetime
 
-from collections import OrderedDict
+from PlotPreferences import marker_set,line_set,color_blind_friendly_colors
+
 
 #this label is used to know when the axis should be a formated time
 #year, month, day, hours, mintues etc... 
@@ -508,9 +517,13 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
 
 
     def set_axis_ticks(self,ticks):
+        
         if not len(ticks)==3:
-            print "some ticks are missing, you should have ticks for X, YL and YR axes"
+            
+            print("some ticks are missing, you should have ticks for X, YL and YR axes")
+            
         else:
+            
             for t in ticks[1]:
                 self.channel_objects["groupBox_Y"][t].setCheckState(True)
 #                print "Y",str(self.lineEdit_Name[t].text())
@@ -902,14 +915,14 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
     def print_figure(self, file_name = "unknown"):
         """Sends the current plot to a printer"""
         
-        printer = QPrinter()
+        printer = QtGui.QPrinter()
         
         # Get the printer information from a QPrinter dialog box
-        dlg = QPrintDialog(printer)        
-        if(dlg.exec_()!= QDialog.Accepted):
+        dlg = QtGui.QPrintDialog(printer)        
+        if(dlg.exec_()!= QtGui.QDialog.Accepted):
              return
              
-        p = QPainter(printer)
+        p = QtGui.QPainter(printer)
         
         # dpi*3 because otherwise it looks pixelated (not sure why, bug?)
         dpi = printer.resolution()
@@ -970,9 +983,9 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
         # plot limits. Below is what would be used for temp.svg
         #svg = QtSvg.QSvgRenderer("temp.svg")
         #svg.render(p, QRectF(margin_top,margin_left, 8*dpi, 5*dpi))
-
+        
         p.drawImage(QRectF(margin_top,margin_left, width*dpi, height*dpi), 
-                    QImage("temp.png", format='png'))
+                    QtGui.QImage("temp.png", format='png'))
         p.drawText(margin_left, 600, "Data recorded to: " + file_name)    
         p.end() 
         
@@ -981,7 +994,7 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
         return True
         
 def convert_timestamp(timestamp):
-    print timestamp
+    print(timestamp)
     dts = map(datetime.datetime.fromtimestamp, timestamp)
     return dates.date2num(dts) # converted    
         
@@ -1118,7 +1131,7 @@ class MultiplePlotDisplayWindow(PlotDisplayWindow):
                 
             #if there is more instruments than channel numbers we expand the channels on the window
             while self.num_channels < num_channels:
-                print "MultiplePlotDisplayWindow.update_plot : adding more channel"
+                print("MultiplePlotDisplayWindow.update_plot : adding more channel")
                 self.add_channel_controls()
 
             

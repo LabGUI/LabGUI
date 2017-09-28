@@ -8,7 +8,7 @@ License: see LICENSE.txt file
 
 #from PyQt4.QtGui import *
 #from PyQt4.QtCore import Qt
-#from PyQt4.QtCore import SIGNAL
+#
 import sys
 import os
 
@@ -19,24 +19,27 @@ if  USE_PYQT5:
     
     from PyQt5.QtWidgets import (QWidget, QLabel, QLineEdit, QPushButton, 
                              QFileDialog, QHBoxLayout, QApplication, 
-                             QVBoxLayout, QPlainTextEdit)
+                             QVBoxLayout, QPlainTextEdit, QDockWidget)
     
 else:
     
     from PyQt4.QtGui import (QWidget, QLabel, QLineEdit, QPushButton, 
                              QFileDialog, QHBoxLayout, QApplication, 
-                             QVBoxLayout, QPlainTextEdit)
+                             QVBoxLayout, QPlainTextEdit, QDockWidget)
+    
+    from PyQt4.QtCore import SIGNAL
+    from PyQt4.QtCore import Qt
 
 
-#from collections import OrderedDict
-#from LabTools.Display import PlotDisplayWindow
-#from types import MethodType
-#from LabTools.DataStructure import LabeledData
-#from LabTools.IO import IOTool
+from collections import OrderedDict
+from LabTools.Display import PlotDisplayWindow
+from types import MethodType
+from LabTools.DataStructure import LabeledData
+from LabTools.IO import IOTool
 
-#import numpy as np
+import numpy as np
 
-#import logging
+import logging
 
 
 class LoadPlotWidget(QWidget):
@@ -190,126 +193,126 @@ class LoadPlotWidget(QWidget):
             
             self.headerTextEdit.setPlainText(new_text)
 
-#
-#def create_plw(parent, load_fname = None):
-#    """
-#        add a new plot load window in the MDI area. The data and channels 
-#        are loaded from a file
-#    """
-#    # maintain the previous functionality if file name not passed in
-#    if not load_fname:
-#        load_fname = str(parent.widgets["loadPlotWidget"].load_file_name())
-#        
-#    logging.info("loading %s for plot"%(load_fname))
-#
-#    extension = load_fname.rsplit('.')[len(load_fname.rsplit('.')) - 1]
-##        print extension
-#
-#    if extension == "ldat":
-#        lb_data = LabeledData(fname = load_fname)
-#        data = lb_data.data
-#        labels = {}
-#        labels["param"] = lb_data.labels
-#    else:
-#        [data, labels] = IOTool.load_file_windows(load_fname)
-#        #add the header to the header text area
-#        parent.widgets["loadPlotWidget"].header_text(labels['hdr'])
-#                
-#        #update the name information in the widget
-#        parent.widgets["loadPlotWidget"].load_file_name(load_fname)          
-#                
-#        #store the hdr is there is more than one file
-#        parent.loaded_data_header[load_fname] = labels['hdr']
-#
-#    chan_contr = OrderedDict()
-#    chan_contr["groupBox_Name"] = ["Channel", "lineEdit"]
-#    chan_contr["groupBox_X"] = ["X", "radioButton"]
-#    chan_contr["groupBox_Y"] = ["YL", "checkBox"]
-#    chan_contr["groupBox_YR"] = ["YR", "checkBox"]
-#    chan_contr["groupBox_fit"] = ["fit", "radioButton"]
-#    chan_contr["groupBox_invert"] = ["+/-", "checkBox"]
-#    chan_contr["groupBox_marker"] = ["M", "comboBox"]
-#    chan_contr["groupBox_line"] = ["L", "comboBox"]
-#
-#    logging.info("channel names are ", labels)
-##        print data
-#    nb_channels = np.size(data, 1)
-#    logging.info("%i channels in total"% (nb_channels))
-#    plw = PlotDisplayWindow.PlotDisplayWindow(
-#        data_array = data, 
-#        name = PlotDisplayWindow.PLOT_WINDOW_TITLE_PAST + load_fname, 
-#        window_type = PlotDisplayWindow.PLOT_WINDOW_TYPE_PAST,
-#        default_channels = nb_channels, 
-#        channel_controls = chan_contr)
-#    
-#    
-#    parent.connect(plw.mplwidget, SIGNAL(
-#        "limits_changed(int,PyQt_PyObject)"), parent.emit_axis_lim)
-#        
-#    parent.connect(parent.widgets['AnalyseDataWidget'], SIGNAL(
-#        "data_set_updated(PyQt_PyObject)"), plw.update_plot)
-#        
-#    parent.connect(parent.widgets['AnalyseDataWidget'], SIGNAL(
-#        "update_fit(PyQt_PyObject)"), plw.update_fit)
-#        
-#    parent.connect(parent, SIGNAL("remove_fit()"), plw.remove_fit)
-#
-#    try:
-#        for i, param in enumerate(labels['channel_labels']):
-#            plw.lineEdit_Name[i].setText(param)
-#    except:
-#        pass
-#    
-#    try:
-#        plw.set_axis_ticks(IOTool.load_pset_file(load_fname, labels['param']))
-#    except:
-#        pass
-#
-##        self.dataAnalyseWidget.refresh_active_set()
-#    
-#    plw.update_labels(labels['channel_labels'])
-#    parent.widgets['AnalyseDataWidget'].update_data_and_fit(data)
-##        plw.update_plot(data)
-#    parent.zoneCentrale.addSubWindow(plw)
-#    plw.show()
-#
-#def add_widget_into_main(parent):
-#    """add a widget into the main window of LabGuiMain
-#    
-#    create a QDock widget and store a reference to the widget
-#    """
-#        
-#    mywidget = LoadPlotWidget(parent = parent)
-#    
-#    #create a QDockWidget
-#    loadPlotDockWidget = QDockWidget("Load previous data file", parent)
-#    loadPlotDockWidget.setObjectName("loadPlotDockWidget")
-#    loadPlotDockWidget.setAllowedAreas(
-#        Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea)
-#        
-#    loadPlotDockWidget.setWidget(mywidget)
-#    parent.addDockWidget(Qt.RightDockWidgetArea, loadPlotDockWidget)
-#    
-#    #fill the dictionnary with the widgets added into LabGuiMain
-#    parent.widgets["loadPlotWidget"] = mywidget
-#    
-#    #Enable the toggle view action
-#    parent.windowMenu.addAction(loadPlotDockWidget.toggleViewAction())
-#    
-#    loadPlotDockWidget.hide()
-#    
-#    #assign a method to the LabGuiMain class to be run to create a 
-#    #plot window with previous data
-#    parent.create_plw = MethodType(create_plw, parent, parent.__class__)
-#    
-#    #create this dictionnary to remember the header text associated to
-#    #each loaded file
-#    parent.__class__.loaded_data_header = {}
-#    
-#    #connects the plot button clicked signal with the method to create a 
-#    #plot window with previous data
-#    parent.connect(parent.widgets["loadPlotWidget"].plotButton,
-#                 SIGNAL("clicked()"), parent.create_plw)
+
+def create_plw(parent, load_fname = None):
+    """
+        add a new plot load window in the MDI area. The data and channels 
+        are loaded from a file
+    """
+    # maintain the previous functionality if file name not passed in
+    if not load_fname:
+        load_fname = str(parent.widgets["loadPlotWidget"].load_file_name())
+        
+    logging.info("loading %s for plot"%(load_fname))
+
+    extension = load_fname.rsplit('.')[len(load_fname.rsplit('.')) - 1]
+#        print extension
+
+    if extension == "ldat":
+        lb_data = LabeledData(fname = load_fname)
+        data = lb_data.data
+        labels = {}
+        labels["param"] = lb_data.labels
+    else:
+        [data, labels] = IOTool.load_file_windows(load_fname)
+        #add the header to the header text area
+        parent.widgets["loadPlotWidget"].header_text(labels['hdr'])
+                
+        #update the name information in the widget
+        parent.widgets["loadPlotWidget"].load_file_name(load_fname)          
+                
+        #store the hdr is there is more than one file
+        parent.loaded_data_header[load_fname] = labels['hdr']
+
+    chan_contr = OrderedDict()
+    chan_contr["groupBox_Name"] = ["Channel", "lineEdit"]
+    chan_contr["groupBox_X"] = ["X", "radioButton"]
+    chan_contr["groupBox_Y"] = ["YL", "checkBox"]
+    chan_contr["groupBox_YR"] = ["YR", "checkBox"]
+    chan_contr["groupBox_fit"] = ["fit", "radioButton"]
+    chan_contr["groupBox_invert"] = ["+/-", "checkBox"]
+    chan_contr["groupBox_marker"] = ["M", "comboBox"]
+    chan_contr["groupBox_line"] = ["L", "comboBox"]
+
+    logging.info("channel names are ", labels)
+#        print data
+    nb_channels = np.size(data, 1)
+    logging.info("%i channels in total"% (nb_channels))
+    plw = PlotDisplayWindow.PlotDisplayWindow(
+        data_array = data, 
+        name = PlotDisplayWindow.PLOT_WINDOW_TITLE_PAST + load_fname, 
+        window_type = PlotDisplayWindow.PLOT_WINDOW_TYPE_PAST,
+        default_channels = nb_channels, 
+        channel_controls = chan_contr)
+    
+    
+    parent.connect(plw.mplwidget, SIGNAL(
+        "limits_changed(int,PyQt_PyObject)"), parent.emit_axis_lim)
+        
+    parent.connect(parent.widgets['AnalyseDataWidget'], SIGNAL(
+        "data_set_updated(PyQt_PyObject)"), plw.update_plot)
+        
+    parent.connect(parent.widgets['AnalyseDataWidget'], SIGNAL(
+        "update_fit(PyQt_PyObject)"), plw.update_fit)
+        
+    parent.connect(parent, SIGNAL("remove_fit()"), plw.remove_fit)
+
+    try:
+        for i, param in enumerate(labels['channel_labels']):
+            plw.lineEdit_Name[i].setText(param)
+    except:
+        pass
+    
+    try:
+        plw.set_axis_ticks(IOTool.load_pset_file(load_fname, labels['param']))
+    except:
+        pass
+
+#        self.dataAnalyseWidget.refresh_active_set()
+    
+    plw.update_labels(labels['channel_labels'])
+    parent.widgets['AnalyseDataWidget'].update_data_and_fit(data)
+#        plw.update_plot(data)
+    parent.zoneCentrale.addSubWindow(plw)
+    plw.show()
+
+def add_widget_into_main(parent):
+    """add a widget into the main window of LabGuiMain
+    
+    create a QDock widget and store a reference to the widget
+    """
+        
+    mywidget = LoadPlotWidget(parent = parent)
+    
+    #create a QDockWidget
+    loadPlotDockWidget = QDockWidget("Load previous data file", parent)
+    loadPlotDockWidget.setObjectName("loadPlotDockWidget")
+    loadPlotDockWidget.setAllowedAreas(
+        Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea)
+        
+    loadPlotDockWidget.setWidget(mywidget)
+    parent.addDockWidget(Qt.RightDockWidgetArea, loadPlotDockWidget)
+    
+    #fill the dictionnary with the widgets added into LabGuiMain
+    parent.widgets["loadPlotWidget"] = mywidget
+    
+    #Enable the toggle view action
+    parent.windowMenu.addAction(loadPlotDockWidget.toggleViewAction())
+    
+    loadPlotDockWidget.hide()
+    
+    #assign a method to the LabGuiMain class to be run to create a 
+    #plot window with previous data
+    parent.create_plw = MethodType(create_plw, parent, parent.__class__)
+    
+    #create this dictionnary to remember the header text associated to
+    #each loaded file
+    parent.__class__.loaded_data_header = {}
+    
+    #connects the plot button clicked signal with the method to create a 
+    #plot window with previous data
+    parent.connect(parent.widgets["loadPlotWidget"].plotButton,
+                 SIGNAL("clicked()"), parent.create_plw)
 
 
 if __name__ == "__main__":

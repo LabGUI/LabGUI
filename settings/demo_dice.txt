@@ -1,2 +1,2 @@
-TIME(s), TIME, , dt
-Dice(), DICE, COM14, Roll
+dt(s), TIME, , dt
+Roll(), DICE, COM14, Roll

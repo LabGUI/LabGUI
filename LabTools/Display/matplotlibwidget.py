@@ -18,14 +18,21 @@ Copyright © 2005 Florent Rougon, 2006 Darren Dale
 
 __version__ = "1.0.0"
 
-from PyQt4.QtGui import QSizePolicy
-from PyQt4.QtCore import QSize
-
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as Canvas
 from matplotlib.figure import Figure
 
 from matplotlib import rcParams
 rcParams['font.size'] = 9
+
+from LocalVars import USE_PYQT5
+
+if  USE_PYQT5:
+    
+    import PyQt5.QtWidgets as QtGui
+    
+else:
+
+    import PyQt4.QtGui as QtGui
 
 
 class MatplotlibWidget(Canvas):
@@ -83,16 +90,16 @@ class MatplotlibWidget(Canvas):
         Canvas.__init__(self, self.figure)
         self.setParent(parent)
 
-        Canvas.setSizePolicy(self, QSizePolicy.Expanding,
-                             QSizePolicy.Expanding)
+        Canvas.setSizePolicy(self, QtGui.QSizePolicy.Expanding,
+                             QtGui.QSizePolicy.Expanding)
         Canvas.updateGeometry(self)
 
     def sizeHint(self):
         w, h = self.get_width_height()
-        return QSize(w, h)
+        return QtGui.QSize(w, h)
 
     def minimumSizeHint(self):
-        return QSize(10, 10)
+        return QtGui.QSize(10, 10)
 
 
 #=========================================================================

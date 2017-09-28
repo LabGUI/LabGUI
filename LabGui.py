@@ -11,10 +11,7 @@ http://victorlin.me/posts/2012/08/26/good-logging-practice-in-python
 
 """
 import sys
-import PyQt4.QtGui as QtGui
 
-# just grab the parts we need from QtCore
-from PyQt4.QtCore import Qt, SIGNAL, QReadWriteLock, QSettings
 #from file_treatment_general_functions import load_experiment
 import py_compile
 #import plot_menu_and_toolbar
@@ -35,6 +32,27 @@ logging.config.fileConfig(os.path.join(ABS_PATH,"logging.conf"))
 
 from importlib import import_module
 
+from LocalVars import USE_PYQT5
+
+
+if  USE_PYQT5:
+    
+    from PyQt5.QtWidgets import (QWidget, QLabel, QLineEdit, QPushButton, 
+                                 QFileDialog, QHBoxLayout, QApplication)
+                                 
+    import PyQt5.QtWidgets as QtGui
+    # just grab the parts we need from QtCore
+    from PyQt5.QtCore import Qt, QReadWriteLock, QSettings
+    
+    
+else:
+    
+    from PyQt4.QtGui import (QWidget, QLabel, QLineEdit, QPushButton, 
+                                 QFileDialog, QHBoxLayout, QApplication)
+                     
+    import PyQt4.QtGui as QtGui               
+                     
+    from PyQt4.QtCore import Qt, SIGNAL, QReadWriteLock, QSettings
 
 from LabTools.IO import IOTool
 from LabTools.Display import QtTools, PlotDisplayWindow, mplZoomWidget
@@ -379,9 +397,14 @@ have the right format, '%s' will be used instead"%(self.config_file,
                 widget_module = import_module("." + widget_name, 
                                           package = USERWIDGETS_PACKAGE_NAME)
                 
-            
-            self.add_widget(widget_module.add_widget_into_main)        
-        
+            try:
+                
+                self.add_widget(widget_module.add_widget_into_main)
+                
+            except AttributeError as e:
+                
+                logging.error(widget_module)
+                raise(e)
         
 ###### FILE MENU SETUP ######
 
