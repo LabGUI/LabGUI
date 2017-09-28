@@ -34,7 +34,6 @@ from importlib import import_module
 
 from LocalVars import USE_PYQT5
 
-
 if  USE_PYQT5:
     
     from PyQt5.QtWidgets import (QWidget, QLabel, QLineEdit, QPushButton, 

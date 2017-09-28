@@ -281,17 +281,17 @@ def test_labels_class_LabeledData(labels=["a","b","c"]):
         test_passed+=1 
     else:
         logging.warning("the save to file and reload the same instance fails")
-        print mydat.display()
-        print mydat_duplicate.display()
+        print(mydat.display())
+        print(mydat_duplicate.display())
         
     if (mydat_duplicate.header_info == test_header):
         logging.info("the save to file and reload the same instance works")
         test_passed+=1 
     else:
         logging.warning("the save to file and reload the same instance fails")
-        print "'%s'"%(mydat_duplicate.header_info)
-        print "'%s'"%(test_header)
-        print mydat_duplicate.display()
+        print("'%s'"%(mydat_duplicate.header_info))
+        print("'%s'"%(test_header))
+        print(mydat_duplicate.display())
     
 #    mydat
     print("test passed : %i over %i"%(test_passed,num_test))

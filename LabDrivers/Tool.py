@@ -8,12 +8,43 @@ import sys, io
 from collections import OrderedDict
 from importlib import import_module
 
-from numpy import nan
-
-from PyQt4.QtGui import QApplication,QWidget,QVBoxLayout,QHBoxLayout,QLabel,QPlainTextEdit,QPushButton,QComboBox,QPalette,QColor
-from PyQt4.QtCore import SIGNAL,QObject
-
 import numpy as np
+
+import logging
+logging.basicConfig(level = logging.DEBUG)
+
+try:
+    
+    import serial
+    serial_available = True
+    
+except ImportError:
+    
+    serial_available = False
+    print("pyserial package not installed")
+
+try:
+    
+    import visa
+    visa_available = True
+    
+except ImportError:
+    
+    visa_available = False
+    print("pyvisa package not installed")
+
+
+import socket
+
+from LocalVars import USE_PYQT5
+
+if  USE_PYQT5:
+    
+    from PyQt5.QtCore import QObject
+    
+else:
+    
+    from PyQt4.QtCore import SIGNAL,QObject
 
 try:
     
@@ -23,28 +54,9 @@ except:
     
     import utils
 
-try:
-    
-    import visa
-    visa_available = True
-    
-except:
-    
-    visa_available = False
-    print("you will need visa to use most drivers")
-
-try:
-    
-    import serial
-    serial_available = True
-    
-except:
-    
-    serial_available = False
-    print("pyserial not available")
 
 
-import socket
+
 
 # Use these constants to identify interface type.
 # Avoids case-sensitivity/typo issues if you were to use the strings directly
@@ -53,8 +65,7 @@ import socket
 from utils import INTF_VISA, INTF_SERIAL, INTF_PROLOGIX, INTF_NONE, INTF_GPIB \
                     ,PROLOGIX_COM_PORT, refresh_device_port_list
 
-import logging
-logging.basicConfig(level=logging.DEBUG)
+
 
 old_visa = True
 try:
@@ -738,7 +749,7 @@ argument is not the good one")
         
         #check if the port is already used in our list
         if device_port in self.instrument_list:
-            print 'Instrument already exists at' + device_port
+            print('Instrument already exists at' + device_port)
            
             #the instrument we are trying to connect is not the same as the
             #instrument already connected to this device_port
@@ -947,9 +958,9 @@ def test_prologix_Hub():
 
     for inst in insts:
 
-        if inst != None:
+        if inst is not None:
 
-            print insts[inst].identify()
+            print(insts[inst].identify())
 
     print(h.get_prologix_gpib_ports())
 
@@ -971,8 +982,8 @@ def test_hub_connect_inst():
     h.connect_hub(['TIME', 'PARO1000', 'PARO1000','TIME'], [
                   'COM1', 'COM4', '132.206.186.166:48371:COM4', ''], ['Time', 'PRESSURE', 'PRESSURE', 'dt'])
     
-    print h.instrument_list
-    print h.port_param_pairs
+    print(h.instrument_list)
+    print(h.port_param_pairs)
     
     
 def test_hub_connect_virtual_inst():
@@ -981,17 +992,17 @@ def test_hub_connect_virtual_inst():
     h.connect_hub(['TIME', 'PARO1000', 'LS370','TIME'], [
                   'COM1', '132.206.186.166:48372:COM4', '132.206.186.71:48371:GPIB0::12::INSTR', ''], ['Time', '4K flange', '50K flange', 'dt'])
     
-    print h.instrument_list
-    print h.port_param_pairs
+    print(h.instrument_list)
+    print(h.port_param_pairs)
     
 #    ls = h.instrument_list['132.206.186.71:48371:GPIB0::12::INSTR']
 #    print ls.measure('4K flange')
 #    print ls.measure('50K flange')
     ls = h.instrument_list['132.206.186.166:48372:COM4']
 
-    print ls.use_method("measure",2,87)
-    print ls.use_method("identify",3,87)
-    print ls.resource_name
+    print(ls.use_method("measure",2,87))
+    print(ls.use_method("identify",3,87))
+    print(ls.resource_name)
 
     
 if __name__ == "__main__":

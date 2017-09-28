@@ -6,12 +6,20 @@ Copyright (C) 10th april 2015 Pierre-Francois Duc
 License: see LICENSE.txt file
 """
 
-from PyQt4.QtCore import SIGNAL, QObject, Qt, QMutex, QThread
-
 import py_compile
 
 from LabTools.IO import IOTool
 import time
+
+from LocalVars import USE_PYQT5
+
+if  USE_PYQT5:
+    
+    from PyQt5.QtCore import QObject, Qt, QMutex, QThread
+    
+else:
+    
+    from PyQt4.QtCore import SIGNAL,QObject, Qt, QMutex, QThread
 
 
 class DataTaker(QThread):
