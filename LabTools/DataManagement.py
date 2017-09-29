@@ -15,7 +15,7 @@ from LocalVars import USE_PYQT5
 
 if  USE_PYQT5:
     
-    from PyQt5.QtCore import QObject, Qt, QMutex, QThread
+    from PyQt5.QtCore import QObject, Qt, QMutex, QThread, pyqtSignal
     
 else:
     
@@ -29,13 +29,29 @@ class DataTaker(QThread):
         As it is child from QThread one can launch it using its inherited .start() method.
     """
 
+    #creating signals
+    if  USE_PYQT5:
+        #emitted when the data array changes
+        data = pyqtSignal('PyQt_PyObject')
+        #emitted upon completion of the script
+        script_finished = pyqtSignal(bool)
+
     def __init__(self, lock, instr_hub, parent=None):
         print("DTT created")
         super(DataTaker, self).__init__(parent)
 
         self.instr_hub = instr_hub
-        self.connect(self.instr_hub, SIGNAL(
-            "changed_list()"), self.reset_lists)
+        
+        if  USE_PYQT5:
+            
+            self.instr_hub.changed_list.connect(self.reset_lists)
+        
+        else:
+            
+            self.connect(self.instr_hub, SIGNAL(
+                "changed_list()"), self.reset_lists)
+            
+            
         self.lock = lock
         self.stopped = True
         self.paused = False
@@ -155,7 +171,14 @@ user variable")
 #            print
 
         self.completed = True
-        self.emit(SIGNAL("script_finished(bool)"), self.completed)
+        
+        if USE_PYQT5:
+            
+            self.script_finished.emit(self.completed)
+        
+        else:
+            
+            self.emit(SIGNAL("script_finished(bool)"), self.completed)
 #        self.stopped = True
 
         print("DTT run over")
@@ -191,9 +214,6 @@ user variable")
                 return self.stopped
             time.sleep(0.1)
 
-    def read_spectrum(self, port):
-        spectrum_data = self.instruments[port].aquire_spectrum
-        self.emit(SIGNAL("spectrum_data(PyQt_PyObject)"), spectrum_data)
 
     def read_data(self):
         """
@@ -220,8 +240,13 @@ user variable")
 #                param_set.append('')
 
         # send data back to the mother ship as an array of floats, but only
-#        self.emit(SIGNAL("data(PyQt_PyObject)"), np.array(data_set))
-        self.emit(SIGNAL("data(PyQt_PyObject)"), data_set)
+        if USE_PYQT5:
+            
+            self.data.emit(data_set)
+        
+        else:
+            
+            self.emit(SIGNAL("data(PyQt_PyObject)"), data_set)
 
 
 class DataDisplayer(QObject):

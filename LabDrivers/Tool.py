@@ -628,7 +628,11 @@ class InstrumentHub(QObject):
         
     """
     
-    trigger = pyqtSignal(bool, name = "DEBUG_mode_changed(bool)")
+    if  USE_PYQT5:
+        #creating a signal
+        changed_list = pyqtSignal()
+    
+    
     def __init__(self, parent = None, debug = False, **kwargs):
 
 #        self.
@@ -642,7 +646,7 @@ class InstrumentHub(QObject):
             if USE_PYQT5:
                 
 #                self.trigger = pyqtSignal(bool, name = "DEBUG_mode_changed(bool)")
-                self.trigger.connect(self.set_debug_state)
+                self.parent.debug_mode_changed.connect(self.set_debug_state)
                 
             else:
                 self.connect(parent, SIGNAL(

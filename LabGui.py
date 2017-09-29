@@ -43,7 +43,7 @@ if  USE_PYQT5:
     
     from PyQt5.QtGui import QIcon
     # just grab the parts we need from QtCore
-    from PyQt5.QtCore import Qt, QReadWriteLock, QSettings
+    from PyQt5.QtCore import Qt, QReadWriteLock, QSettings, pyqtSignal
     
     
 else:
@@ -120,6 +120,10 @@ class LabGuiMain(QtGui.QMainWindow):
         A wiki should be created to help understand and contribute to this project
     """
 #    cmdwin = None
+    if USE_PYQT5:
+        #creating a signal
+        debug_mode_changed = pyqtSignal(bool)
+
 
     def __init__(self, argv = []):
         
@@ -283,12 +287,22 @@ have the right format, '%s' will be used instead"%(self.config_file,
 
         # handle data emitted by datataker (basically stuff it into a shared,
         # central array)
-        self.connect(self.datataker, SIGNAL(
-            "data(PyQt_PyObject)"), self.update_data_array)
+        if USE_PYQT5:
+            
+            self.datataker.data.connect(self.update_data_array)
+            
+            self.datataker.script_finished.connect(self.finished_DTT)
+            
+        else:
+            
+            self.connect(self.datataker, SIGNAL(
+                "data(PyQt_PyObject)"), self.update_data_array)
+                
+            self.connect(self.datataker, SIGNAL(
+            "script_finished(bool)"), self.finished_DTT)
 
         #a signal to signify the data taking script is over
-        self.connect(self.datataker, SIGNAL(
-            "script_finished(bool)"), self.finished_DTT)
+        
             
         #the array in which the data will be stored
         self.data_array = np.array([])
