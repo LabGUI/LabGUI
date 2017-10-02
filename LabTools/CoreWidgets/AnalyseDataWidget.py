@@ -4,29 +4,33 @@ Created on Wed Nov 27 11:11:45 2013
 
 @author: pf
 """
-#import matplotlib.pyplot as plt
-import PyQt4.QtCore as QtCore
-from PyQt4.QtCore import Qt
-import PyQt4.QtGui as QtGui
-#from PyQt4.QtGui import *
+
 import sys
-#from He4Properties import T_lambda
+import numpy as np
+
 import logging
 logging.basicConfig(level=logging.DEBUG)
+import logging.config
+
+from LocalVars import USE_PYQT5
+
+if  USE_PYQT5:
+    
+    from PyQt5.QtCore import Qt, pyqtSignal
+    import PyQt5.QtWidgets as QtGui
+    
+else:
+    import PyQt4.QtGui as QtGui
+    from PyQt4.QtCore import SIGNAL, Qt
+
 
 from LabTools.Display.QtTools import ZOOM_MODE, PAN_MODE, SELECT_MODE
 
 from collections import OrderedDict
 from LabTools.Fitting import analyse_data as ad
-#import matplotlib.pyplot as plt
 
-import numpy as np
 from LabTools.IO import IOTool as io
 
-import logging.config
-import os
-#ABS_PATH=os.path.abspath("C:\Users\pfduc\Documents\g2gui\g2python")
-#logging.config.fileConfig(os.path.join(ABS_PATH,"logging.conf"))
 
 FONCTIONS_MODULE = "Functions"
 FONCTIONS_PKG = "LabTools.Fitting"
@@ -45,7 +49,7 @@ def clear_layout(layout):
             widget.setParent(None)
         except:
             pass
-        if not widget == None:
+        if not widget is None:
             widget.close()
 
 def toggle_layout(layout,state):
@@ -54,7 +58,7 @@ def toggle_layout(layout,state):
     """
     widgets = (layout.itemAt(i).widget() for i in range(layout.count())) 
     for w in widgets:
-        if not w == None:
+        if not w is None:
             w.setEnabled(state)
 
 
@@ -125,42 +129,59 @@ class FittingWidget(QtGui.QWidget):
     
     live_widgets = []
     past_widgets = []
+    
+    if USE_PYQT5:
+        
+        update_fit = pyqtSignal('PyQt_PyObject')
 
-    def __init__(self, parent=None, fonctions_module = FONCTIONS_MODULE, fonctions_pkg = FONCTIONS_PKG):
+    def __init__(self, parent = None, fonctions_module = FONCTIONS_MODULE, 
+                 fonctions_pkg = FONCTIONS_PKG):
+                     
         super(FittingWidget, self).__init__(parent)
         
        
         
-        if not parent == None:
+        if not parent is None:
             
             #this will be triggered whenever the user changes the plot limits 
             #or whenever the software changes increases the dataset
-            self.connect(parent, QtCore.SIGNAL(
+            
+            if USE_PYQT5:
+                
+                parent.selections_limits.connect(self.update_selection_limits)
+                    
+                #this will call update_experiment whenever the dataset is updated
+                parent.data_array_updated.connect(self.update_data_and_fit)
+                parent.instrument_hub_connected.connect(
+                    self.update_instruments_information)
+         
+                parent.removed_selection_box.connect(self.selection_removed) 
+         
+                parent.plotwindowtype_changed.connect(self.data_type_changed) 
+        
+            else:
+                
+                self.connect(parent, SIGNAL(
                 "selections_limits(PyQt_PyObject,int,int,int,int)"), self.update_selection_limits)
                 
-            #this will call update_experiment whenever the dataset is updated
-            self.connect(parent, QtCore.SIGNAL(
-                "data_array_updated(PyQt_PyObject)"), self.update_data_and_fit)
-            self.connect(parent, QtCore.SIGNAL(
-                "instrument_hub_connected(PyQt_PyObject)"), self.update_instruments_information)
-     
-            self.connect(parent, QtCore.SIGNAL("removed_selection_box()"), self.selection_removed) 
-     
-            self.connect(parent, QtCore.SIGNAL("plotwindowtype_changed(PyQt_PyObject)"),self.data_type_changed)     
+                #this will call update_experiment whenever the dataset is updated
+                self.connect(parent, SIGNAL(
+                    "data_array_updated(PyQt_PyObject)"), self.update_data_and_fit)
+                self.connect(parent, SIGNAL(
+                    "instrument_hub_connected(PyQt_PyObject)"), self.update_instruments_information)
+         
+                self.connect(parent, SIGNAL("removed_selection_box()"), self.selection_removed) 
+         
+                self.connect(parent, SIGNAL("plotwindowtype_changed(PyQt_PyObject)"),self.data_type_changed) 
      
         #loads the lists of functions from a module
         self.fonctions_pkg = fonctions_pkg     
      
-        if parent == None:
-            self.fonctions_module = fonctions_module
-         
-            self.fit_funcs_names = io.list_module_func(self.fonctions_module)
-        else:
-            self.fonctions_module = ".%s"%(fonctions_module)
-            self.fit_funcs_names = io.list_module_func(
-                self.fonctions_module, package=self.fonctions_pkg)    
-    
 
+        self.fonctions_module = ".%s"%(fonctions_module)
+        self.fit_funcs_names = io.list_module_func(self.fonctions_module, 
+                                               package = self.fonctions_pkg)    
+    
         # main layout of the form is the verticallayout
         self.verticalLayout = QtGui.QVBoxLayout()
         self.verticalLayout.setObjectName("verticalLayout")
@@ -182,12 +203,10 @@ class FittingWidget(QtGui.QWidget):
         
     
         #initializes the fonction list in the ComboBox for the first time
-        if parent == None:
-            self.fit_func = io.import_module_func(
-                self.fonctions_module, str(self.fitCombo.currentText()))
-        else:
-            self.fit_func = io.import_module_func(self.fonctions_module, str(
-                self.fitCombo.currentText()), package=self.fonctions_pkg)
+
+        self.fit_func = io.import_module_func(self.fonctions_module, 
+                                      str(self.fitCombo.currentText()), 
+                                      package = self.fonctions_pkg)
         
         #assigns the name of the fit fonction (python2 and python3)
         try:
@@ -220,21 +239,17 @@ class FittingWidget(QtGui.QWidget):
         
         self.setLayout(self.verticalLayout)
 
-        self.connect(self.fitCombo, QtCore.SIGNAL(
-            "currentIndexChanged(int)"), self.fit_func_changed)
+        self.fitCombo.currentIndexChanged.connect(self.fit_func_changed)
         
-        self.connect(self.live_fitButton, QtCore.SIGNAL(
-            'clicked()'), self.on_live_fitButton_clicked)    
+        self.live_fitButton.clicked.connect(self.on_live_fitButton_clicked)    
             
         #this helps to toggle all the button according to the state False
         #it starts in True)
         self.on_live_fitButton_clicked()
             
-        self.connect(self.save_fitButton, QtCore.SIGNAL(
-            'clicked()'), self.on_save_fitButton_clicked)
+        self.save_fitButton.clicked.connect(self.on_save_fitButton_clicked)
             
-        self.connect(self.save_setButton, QtCore.SIGNAL(
-            'clicked()'), self.on_save_setButton_clicked)
+        self.save_setButton.clicked.connect(self.on_save_setButton_clicked)
 
     def update_instruments_information(self, information):
         self.parameters = information
@@ -277,7 +292,7 @@ class FittingWidget(QtGui.QWidget):
         """
         
         logging.debug(data_type)
-        if data_type == None:
+        if data_type is None:
             if self.data_type == "Live":
                 self.data_type = "Past"
             elif self.data_type == "Past":
@@ -526,7 +541,7 @@ class FittingWidget(QtGui.QWidget):
         fit, actualize the fit curve and send it through a signal
         """
 
-        if not data == None:
+        if not data is None:
             if not isnparray(data) == True:
                 raise isnparray(data) 
                 
@@ -597,8 +612,14 @@ class FittingWidget(QtGui.QWidget):
                 passover_fitp["fit_func"] = self.fit_func
                 passover_fitp["fitp_val"] = fitp_val
 
-                self.emit(QtCore.SIGNAL("update_fit(PyQt_PyObject)"),
-                          passover_fitp)
+                if USE_PYQT5:
+                    
+                    self.update_fit.emit(passover_fitp)
+                    
+                else:
+                    
+                    self.emit(SIGNAL("update_fit(PyQt_PyObject)"),
+                              passover_fitp)
 
 
     def get_lineedit_value(self,id_label):
@@ -762,7 +783,7 @@ class FittingWidget(QtGui.QWidget):
         self.state
         logging.debug("Just called fit Layout")        
         
-        if fparam_list == None:
+        if fparam_list is None:
             fparam_list = io.get_func_variables(self.fit_func)
             # the first variable is the x axis coordinate, is it not a fit
             # parameter
@@ -804,13 +825,12 @@ class FittingWidget(QtGui.QWidget):
                 
             self.aCheckBox = QtGui.QCheckBox(self)       
             self.aCheckBox.setObjectName("ch_%s"%(fparam))
-            self.connect(self.aCheckBox,QtCore.SIGNAL(
-            'clicked()'), self.checkbox_handler)
+            self.aCheckBox.clicked.connect(self.checkbox_handler)
             self.fit_paramLayout.addWidget(self.aCheckBox)
             
             self.aValue = QtGui.QLineEdit(self)
             self.aValue.setObjectName("le_%s"%(fparam))
-            self.connect(self.aValue,QtCore.SIGNAL("editingFinished()"),self.lineedit_handler)            
+            self.aValue.editingFinished.connect(self.lineedit_handler)            
             
             self.fit_paramLayout.addWidget(self.aValue)
 #

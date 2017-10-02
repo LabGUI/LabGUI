@@ -19,7 +19,7 @@ labtools_path = os.path.join(repository,'LabTools')
 sys.path.append(labtools_path)
 
 sys.path.append(os.path.join(labtools_path,'Display'))
-
+sys.path.append(os.path.join(labtools_path,'Fitting'))
 
 try:
     
