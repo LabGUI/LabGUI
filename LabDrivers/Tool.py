@@ -35,7 +35,6 @@ except ImportError:
 
 
 import socket
-
 from LocalVars import USE_PYQT5
 
 if  USE_PYQT5:
@@ -44,7 +43,7 @@ if  USE_PYQT5:
     
 else:
     
-    from PyQt4.QtCore import SIGNAL, QObject
+    from PyQt4.QtCore import SIGNAL, QObject, pyqtSignal
 
 try:
     
