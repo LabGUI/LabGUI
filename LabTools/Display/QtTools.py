@@ -15,7 +15,8 @@ if  USE_PYQT5:
     
     import PyQt5.QtWidgets as QtGui
     import PyQt5.QtCore as QtCore
-    from PyQt5.QtCore import Qt
+    from PyQt5.QtCore import Qt, pyqtSignal
+    from PyQt5.QtGui import QKeySequence, QIcon
     
 else:
 
@@ -23,6 +24,7 @@ else:
     import PyQt4.QtCore as QtCore
     from PyQt4.QtCore import Qt      
     from PyQt4.QtCore import SIGNAL
+    from PyQt4.QtGui import QKeySequence, QIcon
 
 
 
@@ -35,28 +37,56 @@ SELECT_MODE =2
 # A silly little class to replace stdout that both prints and emits the text as a signal
 class printerceptor():
 
-    def __init__(self, parent=None):
+    if USE_PYQT5:
+        
+        print_to_console = pyqtSignal('PyQt_PyObject')
+
+    def __init__(self, parent = None):
+        
         self.old_stdout = sys.stdout
         self.parent = parent
 
     def write(self, stri):
         self.old_stdout.write(stri)
-        self.parent.emit(SIGNAL("print_to_console(PyQt_PyObject)"), stri)
+        if USE_PYQT5:
+            
+            self.print_to_console.emit(stri)
+            
+        else:
+            
+            self.parent.emit(SIGNAL("print_to_console(PyQt_PyObject)"), stri)
 
     def flush(self):
-        self.old_stoud.flush()
+        self.old_stdout.flush()
         
 def create_action(parent, text, slot=None, shortcut=None, icon=None, tip=None, checkable=False, signal="triggered()"):
     action = QtGui.QAction(text, parent)
+    
     if icon is not None:
-        action.setIcon(QtGui.QIcon("./images/%s.png" % icon))
+        action.setIcon(QIcon("./images/%s.png" % icon))
+        
     if shortcut is not None:
+        
         action.setShortcut(shortcut)
+        
     if tip is not None:
+        
         action.setToolTip(tip)
         action.setStatusTip(tip)
+        
     if slot is not None:
-        parent.connect(action, SIGNAL(signal), slot)
+        
+        if USE_PYQT5:
+#                print(signal)
+#                keyw = {signal : signal}
+#                action.pyqtConfigure(**keyw)
+            action.pyqtConfigure(triggered = slot)
+            
+        else:
+                
+            parent.connect(action, SIGNAL(signal), slot)        
+        
+
     if checkable:
         action.setCheckable(True)
     return action
@@ -166,6 +196,10 @@ class QAutoHideDockWidgets(QtGui.QToolBar):
 
 class DialogBox(QtGui.QWidget):
 
+    if USE_PYQT5:
+        
+        dialogboxanswer = pyqtSignal('QString')
+
     def __init__(self, label="", windowname="", parent=None):
         super(DialogBox, self).__init__(parent)
 
@@ -188,10 +222,17 @@ class DialogBox(QtGui.QWidget):
         self.setWindowTitle(windowname)
         self.resize(200, 120)
 
-        self.connect(self.bt_ok, SIGNAL("clicked()"), self.button_click)
+        self.bt_ok.clicked.connect(self.button_click)
 
     def button_click(self):
-        self.emit(SIGNAL("dialogboxanswer(QString)"), self.txt.text())
+        if USE_PYQT5:
+            
+            self.dialogboxanswer.emit(self.txt.text())
+            
+        else:
+            
+            self.emit(SIGNAL("dialogboxanswer(QString)"), self.txt.text())
+            
         self.txt.setText("")
         self.hide()
 

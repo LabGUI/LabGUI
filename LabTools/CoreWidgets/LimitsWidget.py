@@ -44,7 +44,15 @@ class LimitsWidget(QtGui.QWidget):
         
         if parent is not None:
             
-            parent.selections_limits.connect(self.updated_selection)
+            if USE_PYQT5:
+                
+                parent.selections_limits.connect(self.updated_selection)
+            
+            else:
+                
+                self.connect(parent, QtCore.SIGNAL(
+                    "selections_limits(PyQt_PyObject,int,int,int)"), 
+                    self.updated_selection)
             
             
     def add_label(self, label):

@@ -20,6 +20,8 @@ sys.path.append(labtools_path)
 
 sys.path.append(os.path.join(labtools_path,'Display'))
 sys.path.append(os.path.join(labtools_path,'Fitting'))
+sys.path.append(os.path.join(labtools_path,'CoreWidgets'))
+sys.path.append(os.path.join(labtools_path,'UserWidgets'))
 
 try:
     

@@ -41,7 +41,7 @@ if  USE_PYQT5:
                                  
     import PyQt5.QtWidgets as QtGui
     
-    from PyQt5.QtGui import QIcon
+    from PyQt5.QtGui import QIcon, QKeySequence
     # just grab the parts we need from QtCore
     from PyQt5.QtCore import Qt, QReadWriteLock, QSettings, pyqtSignal
     
@@ -51,7 +51,9 @@ else:
     from PyQt4.QtGui import (QWidget, QLabel, QLineEdit, QPushButton, QIcon,
                                  QFileDialog, QHBoxLayout, QApplication)
                      
-    import PyQt4.QtGui as QtGui               
+    import PyQt4.QtGui as QtGui     
+
+    from PyQt4.QtGui import QIcon, QKeySequence          
                      
     from PyQt4.QtCore import Qt, SIGNAL, QReadWriteLock, QSettings
 
@@ -65,9 +67,9 @@ from LabTools.DataStructure import LabeledData
 
 PYTHON_VERSION = int(sys.version[0])
 
-COREWIDGETS_PACKAGE_NAME = "LabTools.CoreWidgets"
+COREWIDGETS_PACKAGE_NAME = "LabTools"
 
-USERWIDGETS_PACKAGE_NAME = "LabTools.UserWidgets"
+USERWIDGETS_PACKAGE_NAME = "LabTools"
 
 CONFIG_FILE = IOTool.CONFIG_FILE_PATH
 
@@ -123,6 +125,25 @@ class LabGuiMain(QtGui.QMainWindow):
     if USE_PYQT5:
         #creating a signal
         debug_mode_changed = pyqtSignal(bool)
+        
+        triggered = pyqtSignal()
+        
+        colorsChanged = pyqtSignal('PyQt_PyObject')
+        
+        labelsChanged = pyqtSignal('PyQt_PyObject')
+#        print(triggered.__dict__)
+        
+        selections_limits = pyqtSignal('PyQt_PyObject',int,int,int,int)
+        
+        data_array_updated = pyqtSignal('PyQt_PyObject')
+        
+        remove_fit = pyqtSignal()
+        
+        DEBUG_mode_changed = pyqtSignal(bool)
+        
+        #should be loaded directly form InstrumentWidget
+        
+        instrument_hub_connected =  pyqtSignal('PyQt_PyObject')
 
 
     def __init__(self, argv = []):
@@ -337,17 +358,17 @@ have the right format, '%s' will be used instead"%(self.config_file,
         # start/stop/pause buttons 
         self.start_DTT_action = QtTools.create_action(
             self, "Start DTT", slot = self.start_DTT, 
-            shortcut = QtGui.QKeySequence("F5"), icon = "start",
+            shortcut = QKeySequence("F5"), icon = "start",
             tip = "Start script")
             
         self.stop_DTT_action = QtTools.create_action(
             self, "Stop DTT", slot = self.stop_DTT,
-            shortcut = QtGui.QKeySequence("F6"), icon = "stop",
+            shortcut = QKeySequence("F6"), icon = "stop",
             tip = "stop script")
             
         self.pause_DTT_action = QtTools.create_action(
             self, "Pause DTT", slot = self.pause_DTT, 
-            shortcut = QtGui.QKeySequence("F7"), icon = "pause", 
+            shortcut = QKeySequence("F7"), icon = "pause", 
             tip = "pause script")
             
         self.pause_DTT_action.setEnabled(False)
@@ -404,12 +425,13 @@ have the right format, '%s' will be used instead"%(self.config_file,
         for widget in widgets_list:
             
             widget_name = widget
+
             try:
-                widget_module = import_module("." + widget_name, 
+                widget_module = import_module(widget_name, 
                                           package = COREWIDGETS_PACKAGE_NAME)
             except ImportError:
                 
-                widget_module = import_module("." + widget_name, 
+                widget_module = import_module(widget_name, 
                                           package = USERWIDGETS_PACKAGE_NAME)
                 
             try:
@@ -417,7 +439,7 @@ have the right format, '%s' will be used instead"%(self.config_file,
                 self.add_widget(widget_module.add_widget_into_main)
                 
             except AttributeError as e:
-                
+
                 logging.error(widget_module)
                 raise(e)
         
@@ -425,12 +447,12 @@ have the right format, '%s' will be used instead"%(self.config_file,
 
         self.fileSaveSettingsAction = QtTools.create_action(self,
         "Save Instrument Settings", slot = self.file_save_settings, 
-        shortcut = QtGui.QKeySequence.SaveAs,
+        shortcut = QKeySequence.SaveAs,
         icon = None, tip = "Save the current instrument settings")
 
         self.fileLoadSettingsAction = QtTools.create_action(self, 
         "Load Instrument Settings", slot = self.file_load_settings,
-        shortcut = QtGui.QKeySequence.Open,
+        shortcut = QKeySequence.Open,
         icon = None, tip = "Load instrument settings from file")
 
         self.fileLoadDataAction = QtTools.create_action(self, 
@@ -438,7 +460,7 @@ have the right format, '%s' will be used instead"%(self.config_file,
         icon = None, tip = "Load previous data from file")
                                                                     
         """this is not working I will leave it commented right now"""
-#        self.filePrintAction = QtTools.create_action(self, "&Print Report", slot=self.file_print, shortcut=QtGui.QKeySequence.Print,
+#        self.filePrintAction = QtTools.create_action(self, "&Print Report", slot=self.file_print, shortcut=QKeySequence.Print,
 #                                                     icon=None, tip="Print the figure along with relevant information")
                 
         self.fileSaveCongfigAction = QtTools.create_action(self,
@@ -483,7 +505,7 @@ the script path and the data output path into the config file")
         
         self.connect_hub = QtTools.create_action(self, "Connect Instruments", 
         slot = self.connect_instrument_hub, 
-        shortcut = QtGui.QKeySequence("Ctrl+I"), icon=None,
+        shortcut = QKeySequence("Ctrl+I"), icon=None,
         tip="Refresh the list of selected instruments")
 
         self.refresh_ports_list_action = QtTools.create_action(self, 
@@ -1014,7 +1036,14 @@ the pyqt window option is disabled")
         self.emit(SIGNAL("data_array_updated(PyQt_PyObject)"), self.data_array)
 
     def remove_fit(self):
-        self.emit(SIGNAL("remove_fit()"))
+        
+        if USE_PYQT5:
+            
+            self.remove_fit.emit()
+            
+        else:
+            
+            self.emit(SIGNAL("remove_fit()"))
 
     def file_save_config(self):
         """
@@ -1231,6 +1260,14 @@ def test_user_variable_widget():
 if __name__ == "__main__":
 #    print("Launching LabGUI")
     launch_LabGui()
+#    a = import_module('ConsoleWidget')
+#    print(a)
+#    
+#    a = import_module('ConsoleWidget', package = "LabTools")
+#    print(a)    
+#    
+#    a = import_module('ConsoleWidget', package = "LabTools.CoreWidgets")
+#    print(a)
 #    test_automatic_fitting()
     
 

@@ -101,7 +101,14 @@ def add_widget_into_main(parent):
     
     parent.update_console = MethodType(update_console, parent, parent.__class__)    
     
-    parent.print_to_console.connect(parent.update_console) 
+    if USE_PYQT5:
+        
+        parent.print_to_console.connect(parent.update_console) 
+        
+    else:
+        
+        parent.connect(parent, QtCore.SIGNAL(
+            "print_to_console(PyQt_PyObject)"), parent.update_console)
 
 
 

@@ -49,12 +49,17 @@ else:
 try:
     
     from .utils import INTF_VISA, INTF_SERIAL, INTF_PROLOGIX, INTF_NONE, \
-                       INTF_GPIB, PROLOGIX_COM_PORT, refresh_device_port_list
+                       INTF_GPIB, PROLOGIX_COM_PORT, refresh_device_port_list,\
+                       is_IP_port, PrologixController, LABDRIVER_PACKAGE_NAME,\
+                       list_serial_ports, list_GPIB_ports
     
 except:
     
     from utils import INTF_VISA, INTF_SERIAL, INTF_PROLOGIX, INTF_NONE, \
-                       INTF_GPIB, PROLOGIX_COM_PORT, refresh_device_port_list
+                       INTF_GPIB, PROLOGIX_COM_PORT, refresh_device_port_list,\
+                       is_IP_port, PrologixController,LABDRIVER_PACKAGE_NAME,\
+                       list_serial_ports, list_GPIB_ports
+                       
 
 
 
@@ -152,7 +157,7 @@ class MeasInstr(object):
                     # it was the COM PORT number so we initiate an instance
                     # of prologix controller
                     if "COM" in kwargs[INTF_PROLOGIX]:
-                        self.connection = utils.PrologixController(
+                        self.connection = PrologixController(
                             kwargs[INTF_PROLOGIX])
 
                 else:
@@ -169,7 +174,7 @@ class MeasInstr(object):
 
             else:
                 # the connection doesn't exist so we create it
-                self.connection = utils.PrologixController()
+                self.connection = PrologixController()
 
         # load the parameters and their unit for an instrument from the values
         # contained in the global variable of the latter's module
@@ -178,11 +183,11 @@ class MeasInstr(object):
             try:
                 
                 module_name = import_module(
-                    "." + name, package = utils.LABDRIVER_PACKAGE_NAME)
+                    "." + name, package = LABDRIVER_PACKAGE_NAME)
                     
             except ImportError:
                 module_name = import_module(
-                    name, package = utils.LABDRIVER_PACKAGE_NAME)
+                    name, package = LABDRIVER_PACKAGE_NAME)
 #            else:
 #                module_name=import_module("."+name,package=LABDRIVER_PACKAGE_NAME)
             self.channels = []
@@ -198,7 +203,7 @@ class MeasInstr(object):
         # establishs a connection with the instrument
         # this check should be based on interface, not resource_name
         # the check is now performed in self.connect, deprecating this if statement
-        # if not resource_name == None:
+        # if not resource_name is None:
         self.connect(resource_name, **kwargs)
 
     def initialize(self):
@@ -220,7 +225,7 @@ class MeasInstr(object):
             
             id_string = str(self.ask('*IDN?'))
             
-            if not id_string == None:
+            if not id_string is None:
                 
                 return msg + id_string
                 
@@ -242,7 +247,7 @@ class MeasInstr(object):
 
             elif self.interface == INTF_SERIAL or self.interface == INTF_PROLOGIX:
                 
-                if not num_bytes == None:
+                if not num_bytes is None:
                     
                     answer = self.connection.read(num_bytes)
                     
@@ -281,7 +286,7 @@ class MeasInstr(object):
                 # check for that, might be not)
                 self.connection.write("++addr %s" % (self.resource_name))
                 
-            if not self.connection == None:
+            if not self.connection is None:
                 
                 answer = self.connection.write(msg + self.term_chars)
             
@@ -397,7 +402,7 @@ with the instrument %s"%(self.ID_name))
             elif self.interface == INTF_NONE:
                 # instruments like TIME and DICE don't have a resource name
                 # so just set it to their ID name
-                if resource_name == None:
+                if resource_name is None:
                     #keep track of the port used with the instrument
                     self.resource_name = self.ID_name
                     
@@ -421,7 +426,7 @@ file to see which are the ones implemented"%(self.ID_name,resource_name))
 
     def close(self):
         """Close the connection to the instrument"""
-        if not self.connection == None:
+        if not self.connection is None:
             
             try:
                 
@@ -434,7 +439,7 @@ file to see which are the ones implemented"%(self.ID_name,resource_name))
 
     def clear(self):
         """Clear the conneciton to the instrument"""
-        if not self.connection == None:
+        if not self.connection is None:
             
             try:
                 
@@ -489,9 +494,9 @@ def create_virtual_inst(parent_class):
 
             self.DEBUG = debug
 
-            if utils.is_IP_port(resource_name):
+            if is_IP_port(resource_name):
 
-                self.host, self.port, self.device_port = utils.is_IP_port(
+                self.host, self.port, self.device_port = is_IP_port(
                         resource_name, return_vals = True)
                 
 #                self.host = int(self.host)
@@ -682,7 +687,7 @@ class InstrumentHub(QObject):
                 # of prologix controller
                 if "COM" in kwargs[INTF_PROLOGIX]:
                     
-                    self.prologix_com_port = utils.PrologixController(
+                    self.prologix_com_port = PrologixController(
                         kwargs[INTF_PROLOGIX])
 
             else:
@@ -702,7 +707,7 @@ argument is not the good one")
         else:
         
             # the connection doesn't exist so we create it
-            self.prologix_com_port = utils.PrologixController()
+            self.prologix_com_port = PrologixController()
 
     def __del__(self):
         #free the existing connections
@@ -758,7 +763,7 @@ argument is not the good one")
         else:
             
             class_inst = import_module("." + instr_name,
-                                       package = utils.LABDRIVER_PACKAGE_NAME)
+                                       package = LABDRIVER_PACKAGE_NAME)
         
         #check if the port is already used in our list
         if device_port in self.instrument_list:
@@ -789,7 +794,7 @@ which is connected to %s " % ( param, instr_name, device_port))
             #let the instrument be connected if it isn't one of these two strings
             if instr_name != '' and instr_name != 'NONE':
 
-                if utils.is_IP_port(device_port):
+                if is_IP_port(device_port):
                     
                         logging.debug("Creation of a virtual instrument")
                         
@@ -802,7 +807,7 @@ which is connected to %s " % ( param, instr_name, device_port))
                     obj = class_inst.Instrument(
                         device_port, self.DEBUG, prologix = self.prologix_com_port)
 
-                elif class_inst.INTERFACE == INTF_PROLOGIX and self.prologix_com_port == None:
+                elif class_inst.INTERFACE == INTF_PROLOGIX and self.prologix_com_port is None:
                     
                     logging.error(
                         "The interface is PROLOGIX but the controller object is not provided")
@@ -812,7 +817,7 @@ which is connected to %s " % ( param, instr_name, device_port))
                     
                     #I should do the check here if the device port can be 
                     #assimilated to an IP address
-#                    if utils.is_IP_port(device_port):
+#                    if is_IP_port(device_port):
 #                        print "the address passed is of the good format"
 #                        virtual_class = create_virtual_inst(class_inst.Instrument)
 #                        
@@ -859,9 +864,9 @@ which is connected to %s " % ( param, instr_name, device_port))
 
     def get_connectable_ports(self):
         """get the names of all ports on the computer that see an instrument"""
-        return utils.list_serial_ports() +\
+        return list_serial_ports() +\
         self.prologix_com_port.get_open_gpib_ports() +\
-        utils.list_GPIB_ports()
+        list_GPIB_ports()
 
     def set_debug_state(self, state):
         """change the DEBUG property of the IntrumentHub instance"""

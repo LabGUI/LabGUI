@@ -20,18 +20,34 @@ if  USE_PYQT5:
                                  
     import PyQt5.QtWidgets as QtGui
     import PyQt5.QtCore as QtCore
-    from PyQt5.QtCore import Qt  
+    from PyQt5.QtCore import Qt, pyqtSignal
+    from PyQt5.QtGui import QKeySequence, QIcon
     
 else:
 
     import PyQt4.QtGui as QtGui     
     import PyQt4.QtCore as QtCore 
     from PyQt4.QtCore import SIGNAL
+    from PyQt4.QtGui import QKeySequence, QIcon
 
 from QtTools import ZOOM_MODE, PAN_MODE, SELECT_MODE
 from matplotlibwidget import MatplotlibWidget
 
 class MatplotlibZoomWidget(MatplotlibWidget):
+
+
+    if USE_PYQT5:
+        
+        removed_selection_box = pyqtSignal()
+        
+        data_array_updated = pyqtSignal('PyQt_PyObject')
+        
+        area_selected = pyqtSignal('PyQt_PyObject')
+
+        limits_changed= pyqtSignal(int,'PyQt_PyObject')
+        
+#        mousePressed = pyqtSignal('PyQt_PyObject')
+
 
     def __init__(self, parent=None, title='', xlabel='', ylabel='',
                  xlim=None, ylim=None, xscale='linear', yscale='linear',
@@ -77,6 +93,8 @@ class MatplotlibZoomWidget(MatplotlibWidget):
 
         # Put a legend to the right of the current axis
         #self.legend = self.axes.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+
+
 
     def set_mouse_mode(self, mode):
         """ Set the mouse mode to zoom, pan or select
@@ -182,8 +200,15 @@ class MatplotlibZoomWidget(MatplotlibWidget):
                                 scale_y=self.autoscale_R_on)
 
         selection_limits = [self.axes.get_xlim(), self.axes.get_ylim()]
-        self.emit(QtCore.SIGNAL("limits_changed(int,PyQt_PyObject)"),
-                  3, np.array(selection_limits))
+        
+        if USE_PYQT5:
+                
+            self.limits_changed.emit(3, np.array(selection_limits))
+                
+        else:
+            
+            self.emit(QtCore.SIGNAL("limits_changed(int,PyQt_PyObject)"),
+                      3, np.array(selection_limits))
 
         self.redraw()
 
@@ -216,8 +241,16 @@ class MatplotlibZoomWidget(MatplotlibWidget):
                     self.__YLim_0_L, self.height())
                 self.__yScale_R = calculate_scaling(
                     self.__YLim_0_R, self.height())
-                self.emit(QtCore.SIGNAL("mousePressed(PyQt_PyObject)"), [
-                          self.__mousePressX, self.__mousePressY])
+                    
+                if USE_PYQT5:
+                
+                    self.mousePressed.emit([self.__mousePressX, 
+                                            self.__mousePressY])
+                
+                else:                    
+                    
+                    self.emit(QtCore.SIGNAL("mousePressed(PyQt_PyObject)"), [
+                              self.__mousePressX, self.__mousePressY])
 
             elif self.mouseMode == self.ZOOM_MODE or self.mouseMode == self.SELECT_MODE:
                 inv = self.axes.transAxes.inverted()
@@ -297,9 +330,24 @@ class MatplotlibZoomWidget(MatplotlibWidget):
 
                     self.figure.canvas.draw()
 
-                    self.emit(QtCore.SIGNAL("area_selected(PyQt_PyObject)"),
-                              [x_min, x_max, y_min, y_max])
-        self.emit(QtCore.SIGNAL("limits_changed(int,PyQt_PyObject)"),
+
+                    if USE_PYQT5:
+                        
+                        self.area_selected.emit([x_min, x_max, y_min, y_max])
+                        
+                    else:
+
+                        self.emit(QtCore.SIGNAL("area_selected(PyQt_PyObject)"),
+                                  [x_min, x_max, y_min, y_max])
+                                  
+        if USE_PYQT5:
+            
+            self.limits_changed.emit(self.mouseMode, 
+                                     np.array(selection_limits))
+
+        else:
+            
+            self.emit(QtCore.SIGNAL("limits_changed(int,PyQt_PyObject)"),
                   self.mouseMode, np.array(selection_limits))
 
 
@@ -448,26 +496,26 @@ class ActionManager():
     def __init__(self, parent):
         self.parent = parent
         
-        self.plotAutoScaleXAction = self.create_action(parent, "Auto Scale X", slot=self.toggleAutoScaleX, shortcut=QtGui.QKeySequence("Ctrl+A"),
+        self.plotAutoScaleXAction = self.create_action(parent, "Auto Scale X", slot=self.toggleAutoScaleX, shortcut = QKeySequence("Ctrl+A"),
                                                           icon="toggleAutoScaleX", tip="Turn autoscale X on or off", checkable=True)
 
-        self.plotAutoScaleLAction = self.create_action(parent, "Auto Scale L", slot=self.toggleAutoScaleL, shortcut=QtGui.QKeySequence("Ctrl+D"),
+        self.plotAutoScaleLAction = self.create_action(parent, "Auto Scale L", slot=self.toggleAutoScaleL, shortcut = QKeySequence("Ctrl+D"),
                                                           icon="toggleAutoScaleL", tip="Turn autoscale Left Y on or off", checkable=True)
 
-        self.plotAutoScaleRAction = self.create_action(parent, "Auto Scale R", slot=self.toggleAutoScaleR, shortcut=QtGui.QKeySequence("Ctrl+E"),
+        self.plotAutoScaleRAction = self.create_action(parent, "Auto Scale R", slot=self.toggleAutoScaleR, shortcut = QKeySequence("Ctrl+E"),
                                                           icon="toggleAutoScaleR", tip="Turn autoscale Right Y on or off", checkable=True)
 
-        self.plotDragZoomAction = self.create_action(parent, "Drag to zoom", slot=self.toggleDragZoom, shortcut=QtGui.QKeySequence("Ctrl+Z"),
+        self.plotDragZoomAction = self.create_action(parent, "Drag to zoom", slot=self.toggleDragZoom, shortcut = QKeySequence("Ctrl+Z"),
                                                         icon="zoom", tip="Turn drag to zoom on or off", checkable=True)
 
-        self.plotPanAction = self.create_action(parent, "Drag to Pan", slot=self.togglePan, shortcut=QtGui.QKeySequence("Ctrl+P"),
+        self.plotPanAction = self.create_action(parent, "Drag to Pan", slot=self.togglePan, shortcut = QKeySequence("Ctrl+P"),
                                                    icon="pan", tip="Turn drag to Pan on or off", checkable=True)
 
-        self.plotSelectAction = self.create_action(parent, "Drag to Select", slot=self.toggleSelect, shortcut=QtGui.QKeySequence("Ctrl+L"),
+        self.plotSelectAction = self.create_action(parent, "Drag to Select", slot=self.toggleSelect, shortcut = QKeySequence("Ctrl+L"),
                                                       icon="select", tip="Turn drag to Select on or off", checkable=True)
 
-        self.plotClearSelectAction = self.create_action(parent, "Hide selection box", slot=self.hide_selection_box,
-                                                           icon="clear_select", tip="Hide Selection box", checkable=False)
+        self.plotClearSelectAction = self.create_action(parent, "Hide selection box", slot = self.hide_selection_box,
+                                                           icon="clear_select", tip="Hide Selection box", checkable = False)
 
         self.changeXscale = self.create_action(parent, "Set X log", slot=self.setXscale, shortcut=None,
                                                   icon="logX", tip="Set the x scale to log")
@@ -488,20 +536,34 @@ class ActionManager():
                         self.changeXscale, self.changeYscale, self.changeYRscale]
                        # self.clearPlotAction]
 
-        self.saveFigAction = self.create_action(parent, "&Save Figure", slot=self.save_fig, shortcut=QtGui.QKeySequence.Save,
+        self.saveFigAction = self.create_action(parent, "&Save Figure", slot=self.save_fig, shortcut = QKeySequence.Save,
                                                        icon=None, tip="Save the current figure")
                                                        
     def create_action(self, parent, text, slot=None, shortcut=None, icon=None, tip=None, checkable=False, signal="triggered()"):
+        
         action = QtGui.QAction(text, parent)
+        
         if icon is not None:
-            action.setIcon(QtGui.QIcon("./images/%s.png" % icon))
+            action.setIcon(QIcon("./images/%s.png" % icon))
+            
         if shortcut is not None:
             action.setShortcut(shortcut)
+            
         if tip is not None:
             action.setToolTip(tip)
             action.setStatusTip(tip)
+            
         if slot is not None:
-            parent.connect(action, SIGNAL(signal), slot)
+            if USE_PYQT5:
+#                print(signal)
+#                keyw = {signal : signal}
+#                action.pyqtConfigure(**keyw)
+                action.pyqtConfigure(triggered = slot)
+            
+            else:
+                
+                parent.connect(action, SIGNAL(signal), slot)
+            
         if checkable:
             action.setCheckable(True)
         return action    
@@ -560,7 +622,13 @@ class ActionManager():
             self.current_widget.select_rectangle.remove()
             self.current_widget.selection_showing = False
             self.current_widget.figure.canvas.draw()
-            self.current_widget.emit(SIGNAL("removed_selection_box()"))
+            if USE_PYQT5:
+                
+                self.removed_selection_box.emit()
+                
+            else:
+                
+                self.current_widget.emit(SIGNAL("removed_selection_box()"))
 
     def setXscale(self):
         self.set_Xaxis_scale(self.current_widget.axes)
@@ -573,7 +641,14 @@ class ActionManager():
 
     def clear_plot(self):
         self.data_array = np.array([])
-        self.current_widget.emit(SIGNAL("data_array_updated(PyQt_PyObject)"),
+        
+        if USE_PYQT5:
+                
+                self.data_array_updated.emit(self.data_array)
+                
+        else:
+            
+            self.current_widget.emit(SIGNAL("data_array_updated(PyQt_PyObject)"),
                                  self.data_array)
 
         
@@ -602,7 +677,14 @@ class ActionManager():
             self.current_widget.figure.savefig(fname, dpi = 600)
     
     def remove_fit(self):
-        self.current_widget.emit(SIGNAL("remove_fit()"))
+        
+        if USE_PYQT5:
+                
+            self.current_widget.remove_fit.emit()
+                
+        else:
+            
+            self.current_widget.emit(SIGNAL("remove_fit()"))
 
     def updateZoomSettings(self):
 

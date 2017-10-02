@@ -155,9 +155,9 @@ class FittingWidget(QtGui.QWidget):
                 parent.instrument_hub_connected.connect(
                     self.update_instruments_information)
          
-                parent.removed_selection_box.connect(self.selection_removed) 
+#                parent.removed_selection_box.connect(self.selection_removed) 
          
-                parent.plotwindowtype_changed.connect(self.data_type_changed) 
+#                parent.plotwindowtype_changed.connect(self.data_type_changed) 
         
             else:
                 
@@ -167,12 +167,13 @@ class FittingWidget(QtGui.QWidget):
                 #this will call update_experiment whenever the dataset is updated
                 self.connect(parent, SIGNAL(
                     "data_array_updated(PyQt_PyObject)"), self.update_data_and_fit)
+                    
                 self.connect(parent, SIGNAL(
                     "instrument_hub_connected(PyQt_PyObject)"), self.update_instruments_information)
          
-                self.connect(parent, SIGNAL("removed_selection_box()"), self.selection_removed) 
+#                self.connect(parent, SIGNAL("removed_selection_box()"), self.selection_removed) 
          
-                self.connect(parent, SIGNAL("plotwindowtype_changed(PyQt_PyObject)"),self.data_type_changed) 
+#                self.connect(parent, SIGNAL("plotwindowtype_changed(PyQt_PyObject)"),self.data_type_changed) 
      
         #loads the lists of functions from a module
         self.fonctions_pkg = fonctions_pkg     
