@@ -6,14 +6,23 @@ Copyright (C) 10th april 2015 Pierre-Francois Duc
 License: see LICENSE.txt file
 """
 
-import PyQt4.QtGui as QtGui
-from PyQt4.QtCore import Qt
-from PyQt4.QtCore import SIGNAL
+
 
 import sys
 
 from types import MethodType
 
+from LocalVars import USE_PYQT5
+
+if  USE_PYQT5:
+    
+    import PyQt5.QtWidgets as QtGui
+    import PyQt5.QtCore as QtCore
+
+else:
+
+    import PyQt4.QtGui as QtGui
+    from PyQt4.QtCore import Qt, SIGNAL
 
 class SingleLineWidget(QtGui.QWidget):
     """a line of QWidget representing a user variable
@@ -22,6 +31,14 @@ class SingleLineWidget(QtGui.QWidget):
     one tick box to choose to update the variable or not
     
     """
+    
+    if USE_PYQT5:
+        
+        valueChanged = QtCore.pyqtSignal('int')
+        
+    else:
+        
+        valueChanged = SIGNAL("valueChanged(int)")
     
     def __init__(self, parent = None, line_num = None):    
         super(SingleLineWidget, self).__init__(parent)
@@ -67,8 +84,8 @@ class SingleLineWidget(QtGui.QWidget):
         le.setObjectName("param_name_le")
         
         #set up a signal to be triggered upon editing by a user
-        self.connect(le, SIGNAL("textEdited(QString)"), self.lineEdit_handler)
-        
+        le.textEdited.connect(self.lineEdit_handler)
+
         if isinstance(label_text,str):
             
             le.insert(label_text)
@@ -84,7 +101,7 @@ class SingleLineWidget(QtGui.QWidget):
         
         tb.setObjectName("checkBox")
         #set up a signal to be triggered upon ticking/unticking
-        self.connect(tb, SIGNAL("stateChanged(int)"), self.tickbox_handler)
+        tb.stateChanged.connect(self.tickbox_handler)
         
         return tb
 
@@ -95,7 +112,13 @@ class SingleLineWidget(QtGui.QWidget):
         emit a signal with the line number        
         
         """
-        self.emit(SIGNAL("valueChanged(int)"),self.line_num)
+        if USE_PYQT5:
+            
+            self.valueChanged.emit(self.line_num)            
+            
+        else:
+            
+            self.emit(SIGNAL("valueChanged(int)"),self.line_num)
 
 
     def tickbox_handler(self):
@@ -104,7 +127,13 @@ class SingleLineWidget(QtGui.QWidget):
         emit a signal with the line number
         
         """
-        self.emit(SIGNAL("valueChanged(int)"),self.line_num)
+        if USE_PYQT5:
+            
+            self.valueChanged.emit(self.line_num)            
+            
+        else:
+            
+            self.emit(SIGNAL("valueChanged(int)"),self.line_num)
         
 
 
@@ -115,6 +144,11 @@ class UserVariableWidget(QtGui.QWidget):
     emission of a SIGNAL that can be processed by listeners
     
     """
+    
+    if USE_PYQT5:
+        
+        updateUserVariables = QtCore.pyqtSignal('PyQt_PyObject')
+    
     def __init__(self, parent=None, load_fname='5'):
         super(UserVariableWidget, self).__init__(parent)
 
@@ -171,14 +205,14 @@ class UserVariableWidget(QtGui.QWidget):
         self.setLayout(self.vertical_layout)
         
         #establishing the signal trigger within the class
-        self.connect(self.generateVariableButton, SIGNAL(
-            'clicked()'), self.on_generateVariableButton_clicked)
+        self.generateVariableButton.clicked.connect(
+            self.on_generateVariableButton_clicked)
             
-        self.connect(self.deleteVariableButton, SIGNAL(
-            'clicked()'), self.on_deleteVariableButton_clicked)            
+        self.deleteVariableButton.clicked.connect(
+            self.on_deleteVariableButton_clicked)            
         
-        self.connect(self.updateVariableButton, SIGNAL(
-            'clicked()'), self.on_updateVariableButton_clicked)
+        self.updateVariableButton.clicked.connect(
+            self.on_updateVariableButton_clicked)
 
 
         self.lines = []
@@ -191,7 +225,14 @@ class UserVariableWidget(QtGui.QWidget):
         """
         new_line = SingleLineWidget(line_num = line_num)
 
-        self.connect(new_line, SIGNAL("valueChanged(int)"), self.value_changed)
+        if USE_PYQT5:
+            
+            new_line.valueChanged.connect(self.value_changed)
+            
+        else:
+            
+            self.connect(new_line, SIGNAL("valueChanged(int)"), 
+                         self.value_changed)
         
         self.lines.append(new_line)
         self.line_layout.addWidget(new_line)
@@ -298,7 +339,13 @@ class UserVariableWidget(QtGui.QWidget):
                 adict[key] = value
         
         #send the signal with the dict
-        self.emit(SIGNAL("updateUserVariables(PyQt_PyObject)"), adict)
+        if USE_PYQT5:
+            
+            self.updateUserVariables.emit(adict)
+            
+        else:
+            
+            self.emit(SIGNAL("updateUserVariables(PyQt_PyObject)"), adict)
 
         #the button is disabled to keep track of the data sent
         self.updateVariableButton.setEnabled(False)
@@ -346,9 +393,16 @@ def add_widget_into_main(parent):
                                               parent.__class__)
     
     #connect a trigger to that method
-    parent.connect(parent.widgets["userVariableWidget"],
-                   SIGNAL("updateUserVariables(PyQt_PyObject)"), 
-                   parent.update_user_variables)
+    if USE_PYQT5:
+  
+        parent.widgets["userVariableWidget"].updateUserVariables.connect(
+                       parent.update_user_variables)
+    
+    else:
+        
+        parent.connect(parent.widgets["userVariableWidget"],
+                       SIGNAL("updateUserVariables(PyQt_PyObject)"), 
+                       parent.update_user_variables)
 
 
 if __name__ == "__main__":

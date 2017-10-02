@@ -7,14 +7,24 @@ License: see LICENSE.txt file
 """
 
 import sys
-import PyQt4.QtGui as QtGui
-import PyQt4.QtCore as QtCore
+
+
+from LocalVars import USE_PYQT5
+
+if  USE_PYQT5:
+    
+    import PyQt5.QtCore as QtCore
+    import PyQt5.QtWidgets as QtGui
+    
+else:
+    import PyQt4.QtGui as QtGui
+    import PyQt4.QtCore as QtCore
 
 
 class LimitsWidget(QtGui.QWidget):
     """This class handles the selections, axis and data limits"""
 
-    def __init__(self, parent=None):
+    def __init__(self, parent = None):
         super(LimitsWidget, self).__init__(parent)
 
         self.verticalLayout = QtGui.QVBoxLayout()
@@ -31,9 +41,12 @@ class LimitsWidget(QtGui.QWidget):
         self.add_label("AXIS")
         self.add_line(self.axisLayout, labels)
         self.setLayout(self.verticalLayout)
-
-        self.connect(parent, QtCore.SIGNAL("selections_limits(PyQt_PyObject,int,int,int)"), self.updated_selection)
-
+        
+        if parent is not None:
+            
+            parent.selections_limits.connect(self.updated_selection)
+            
+            
     def add_label(self, label):
 
         layout = QtGui.QHBoxLayout()

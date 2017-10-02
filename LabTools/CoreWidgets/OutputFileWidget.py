@@ -8,13 +8,24 @@ License: see LICENSE.txt file
 
 import sys
 import re
+import logging
 
-import PyQt4.QtGui as QtGui
-from PyQt4.QtCore import SIGNAL, Qt
+
+from LocalVars import USE_PYQT5
+
+if  USE_PYQT5:
+    
+    import PyQt5.QtWidgets as QtGui
+    from PyQt5.QtCore import pyqtSignal, Qt
+    
+else:
+    
+    import PyQt4.QtGui as QtGui
+    from PyQt4.QtCore import SIGNAL, Qt
 
 from LabTools.IO import IOTool
 
-import logging
+
 
 
 
@@ -52,9 +63,8 @@ class OutputFileWidget(QtGui.QWidget):
         self.setLayout(self.verticalLayout)
 
         self.outputFileLineEdit.setText(fname)
-
-        self.connect(self.outputFileButton, SIGNAL(
-            'clicked()'), self.on_outputFileButton_clicked)
+            
+        self.outputFileButton.clicked.connect(self.on_outputFileButton_clicked)
 
         self.setSizePolicy(QtGui.QSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Maximum))
         

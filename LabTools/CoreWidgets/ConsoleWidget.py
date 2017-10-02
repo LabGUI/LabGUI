@@ -14,10 +14,22 @@ License: see LICENSE.txt file
 """
 
 import sys
-import PyQt4.QtGui as QtGui
-import PyQt4.QtCore as QtCore
+
 from types import MethodType
 import logging
+
+from LocalVars import USE_PYQT5
+
+if  USE_PYQT5:
+    
+    import PyQt5.QtCore as QtCore
+    import PyQt5.QtWidgets as QtGui
+    
+else:
+    import PyQt4.QtGui as QtGui
+    import PyQt4.QtCore as QtCore
+
+
 
 from LabTools.Display import QtTools
 
@@ -89,8 +101,8 @@ def add_widget_into_main(parent):
     
     parent.update_console = MethodType(update_console, parent, parent.__class__)    
     
-    parent.connect(parent, QtCore.SIGNAL(
-            "print_to_console(PyQt_PyObject)"), parent.update_console) 
+    parent.print_to_console.connect(parent.update_console) 
+
 
 
 def update_console(parent, stri):
