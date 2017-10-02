@@ -91,12 +91,19 @@ PLOT_WINDOW_TITLE_PAST = "Past data file : "
 def get_groupBox_purpouse(name):
     return name.split("_")[1]
     
-class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWindow):
+class PlotDisplayWindow(QtGui.QMainWindow,
+                        ui_plotdisplaywindow.Ui_PlotDisplayWindow):
     """
-    The argument 'channel_controls' should be an OrderedDict object (from collections import OrderedDict)\n
-    Each key will be a unique identifier of the channel control, the item should consist of a list for which the first element is the label of the channel control and the second element, the type of QtQui.\n
-    It need to be either 'lineEdit','radioButton','checkBox' or 'comboBox', any other keyword will create an error.\n
-    What callback function is associated with each control can be defined in the method 'add_channel_control'
+    The argument 'channel_controls' should be an OrderedDict object 
+    (from collections import OrderedDict)\n 
+    Each key will be a unique identifier of the channel control, 
+    the item should consist of a list for which the first element 
+    is the label of the channel control and the second element, 
+    the type of QtQui.\n
+    It need to be either 'lineEdit','radioButton','checkBox' or 'comboBox', 
+    any other keyword will create an error.\n
+    What callback function is associated with each control can be defined 
+    in the method 'add_channel_control'
     
     """
     def __init__(self, parent = None, data_array = np.array([]),
@@ -108,7 +115,7 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
         
         self.window_type = window_type
             
-        #store the choice of channel controls parameters
+        # store the choice of channel controls parameters
         self.channel_controls = channel_controls
         
         self.color_set=color_blind_friendly_colors(default_channels)
@@ -116,8 +123,10 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
         self.setupUi(self,self.channel_controls)
         self.customizeUi(default_channels)
 
-        #Create an instance of auto-hiding widget which will contain the channel controls
-        self.autoHide =  QtTools.QAutoHideDockWidgets(Qt.RightDockWidgetArea, self) 
+        # Create an instance of auto-hiding widget which will contain 
+        # the channel controls
+        self.autoHide =  QtTools.QAutoHideDockWidgets(Qt.RightDockWidgetArea, 
+                                                      self) 
         
         # axes and figure initialization - short names for convenience   
         self.fig = self.mplwidget.figure
@@ -126,10 +135,13 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
         self.ax = self.mplwidget.axes
         self.axR = self.mplwidget.axesR
 
-        self.ax.xaxis.set_major_formatter(ticker.ScalarFormatter(useOffset = False))
+        self.ax.xaxis.set_major_formatter(ticker.ScalarFormatter
+                                                (useOffset = False))
         self.major_locator = self.ax.xaxis.get_major_locator()
-        self.ax.yaxis.set_major_formatter(ticker.ScalarFormatter(useOffset = False))
-        self.axR.yaxis.set_major_formatter(ticker.ScalarFormatter(useOffset = False))
+        self.ax.yaxis.set_major_formatter(ticker.ScalarFormatter
+                                                (useOffset = False))
+        self.axR.yaxis.set_major_formatter(ticker.ScalarFormatter
+                                                (useOffset = False))
   
         self.fig.canvas.draw()              
         
@@ -148,8 +160,11 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
             self.update_labels(labels)        
         
         else:
-            #Fills self.lineEdit_Name = [], self.comboBox_Type = [], self.comboBox_Instr = []. self.comboBox_Param = []
-            #Whenever connect(obbject,SIGNAL(),function) is used it will call the function whenever the object is manipulated or something emits the same SIGNAL()
+            # Fills self.lineEdit_Name = [], self.comboBox_Type = [], 
+            # self.comboBox_Instr = []. self.comboBox_Param = []
+            # Whenever connect(obbject,SIGNAL(),function) is used 
+            # it will call the function whenever the object is manipulated 
+            # or something emits the same SIGNAL()
             for i in range (default_channels):   
                 self.add_channel_controls()
         
@@ -166,8 +181,11 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
 ###### OPTION MENU SETUP ######         
         
         self.optionMenu = self.menuBar().addMenu("Options")  
-        self.displayLegendsAction = QtTools.create_action(self,"Display/hide legends", slot=self.change_legend_box_state,
-                                        icon=None, tip="Display/hide legends on the figure")                   
+        self.displayLegendsAction = QtTools.create_action(self,
+                                    "Display/hide legends", 
+                                    slot=self.change_legend_box_state,
+                                    icon=None, 
+                                    tip="Display/hide legends on the figure")                   
 
         self.optionMenu.addAction(self.displayLegendsAction)
 
@@ -184,8 +202,8 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
     def customizeUi(self, default_channels):       
        
        
-        #this will be a dictionnary with the same keys as self.channel_controls corresponding to list
-        #of 'N_channel' control Qwidgets.
+        # this will be a dictionary with the same keys as self.channel_controls
+        # corresponding to list of 'N_channel' control Qwidgets.
         self.channel_objects={}
         for name,item in self.channel_controls.items():
             self.channel_objects[name]=[]
@@ -205,7 +223,8 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
     
     def add_channel_controls (self):
         """
-        create an instance of each of the channel control objects for a new channel, assign the settings and link to the callback function.\n
+        create an instance of each of the channel control objects for 
+        a new channel, assign the settings and link to the callback function.
         It also create an empty line for each axis.
         """
         #index of boxes to create
@@ -221,65 +240,98 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
       
         
         for name,item in self.channel_controls.items():
-            #this value is set to true if there is one new QtGui object per line
+            # this value is set to true if there is one new QtGui object  
+            # per line
             multiple_item = True  
             if item[1]=="radioButton":                
-                self.channel_objects[name].append(QtGui.QRadioButton(self.groupBoxes[name]))
+                self.channel_objects[name].append(QtGui.QRadioButton
+                                                    (self.groupBoxes[name]))
                 self.channel_objects[name][i].setText("")
                 if name == "groupBox_X":
-                    self.connect(self.channel_objects[name][i], SIGNAL("toggled(bool)"),self.XRadioButtonHandler)  
+                    self.connect(self.channel_objects[name][i], 
+                                 SIGNAL("toggled(bool)"),
+                                    self.XRadioButtonHandler)  
             
             elif item[1]=="checkBox":
-                self.channel_objects[name].append(QtGui.QCheckBox(self.groupBoxes[name]))
+                self.channel_objects[name].append(QtGui.QCheckBox
+                                                    (self.groupBoxes[name]))
                 self.channel_objects[name][i].setText("")
-                self.connect(self.channel_objects[name][i], SIGNAL("stateChanged(int)"), self.YCheckBoxHandler)
+                self.connect(self.channel_objects[name][i], 
+                             SIGNAL("stateChanged(int)"), 
+                                self.YCheckBoxHandler)
 
             elif item[1]=="comboBox":
-                self.channel_objects[name].append(QtGui.QComboBox(self.groupBoxes[name]))
+                self.channel_objects[name].append(QtGui.QComboBox
+                                                    (self.groupBoxes[name]))
                 if get_groupBox_purpouse(name)=="marker":
                     cbb_list=marker_set
                 elif get_groupBox_purpouse(name)=="line":
                     cbb_list=line_set
                 self.channel_objects[name][i].addItems(cbb_list)
-#                self.channel_objects[name][i].setStyleSheet ("QComboBox::drop-down {border-width: 0px;} QComboBox::down-arrow {image: url(noimg); border-width: 0px;}")
+#                self.channel_objects[name][i].setStyleSheet 
+                                #("QComboBox::drop-down {border-width: 0px;} 
+                                # QComboBox::down-arrow {image: url(noimg); 
+                                # border-width: 0px;}")
                 self.channel_objects[name][i].setMaxVisibleItems(len(cbb_list))
-                self.connect(self.channel_objects[name][i], SIGNAL("currentIndexChanged(int)"), self.ComboBoxHandler)
+                self.connect(self.channel_objects[name][i], 
+                             SIGNAL("currentIndexChanged(int)"), 
+                                self.ComboBoxHandler)
           
             elif item[1]=="lineEdit":
-                self.channel_objects[name].append(QtGui.QLineEdit(self.groupBoxes[name]))
-                self.channel_objects[name][i].setText(QtGui.QApplication.translate("RecordSweepWindow", "", None, QtGui.QApplication.UnicodeUTF8))
-                self.connect(self.channel_objects[name][i], SIGNAL("textEdited(QString)"), self.lineEditHandler)
+                self.channel_objects[name].append(QtGui.QLineEdit(
+                                                self.groupBoxes[name]))
+                self.channel_objects[name][i].setText(
+                            QtGui.QApplication.translate(
+                                    "RecordSweepWindow", 
+                                            "", 
+                                            None, 
+                                            QtGui.QApplication.UnicodeUTF8))
+                self.connect(self.channel_objects[name][i], 
+                             SIGNAL("textEdited(QString)"), 
+                                self.lineEditHandler)
             
             elif item[1]=="colorButton":
-                self.channel_objects[name].append(QtGui.QPushButton(self.groupBoxes[name]))               
+                self.channel_objects[name].append(QtGui.QPushButton
+                                                    (self.groupBoxes[name]))               
                 color=self.color_set[np.mod(i,len(self.color_set))]
                 line1.set_color(color)
                 line2.set_color(color)
-                self.channel_objects[name][i].setStyleSheet('QPushButton {background-color: %s}'%color)
+                self.channel_objects[name][i].setStyleSheet(
+                                'QPushButton {background-color: %s}'%color)
                 self.channel_objects[name][i].setFixedSize(15,15)
-                self.connect(self.channel_objects[name][i], SIGNAL("clicked()"),self.colorButtonHandler) 
+                self.connect(self.channel_objects[name][i], 
+                             SIGNAL("clicked()"),
+                                self.colorButtonHandler) 
             
             elif item[1]=="single_comboBox":
                 if self.channel_objects[name]==[]:
-                    self.channel_objects[name]=QtGui.QComboBox(self.groupBoxes[name])
+                    self.channel_objects[name]=QtGui.QComboBox(
+                                                    self.groupBoxes[name])
                     
-                    self.connect(self.channel_objects[name], SIGNAL("currentIndexChanged(int)"), self.singleComboBoxHandler)                
+                    self.connect(self.channel_objects[name], 
+                            SIGNAL("currentIndexChanged(int)"), 
+                                self.singleComboBoxHandler)                
                     self.channel_objects[name].setObjectName(name + item[1])
                 
                 multiple_item = False
             
             if multiple_item :
-                self.channel_objects[name][i].setObjectName(name + "#" + str(i))
-                self.channel_objects[name][i].setGeometry(QRect(7, 20*(i+1), 16, 16)) 
+                self.channel_objects[name][i].setObjectName(
+                                            name + "#" + str(i))
+                self.channel_objects[name][i].setGeometry(
+                                            QRect(7, 20*(i+1), 16, 16)) 
             else:
 
-                self.channel_objects[name].setGeometry(QRect(7, 10*(i+1), 70, 16))
+                self.channel_objects[name].setGeometry(
+                                            QRect(7, 10*(i+1), 70, 16))
             
             #resize the comboBoxes and the lineEdit
             if item[1]=="lineEdit":
-                self.channel_objects[name][i].setGeometry(QRect(10, pos_LE(i), 81, 16))
+                self.channel_objects[name][i].setGeometry(
+                                            QRect(10, pos_LE(i), 81, 16))
             elif item[1]=="comboBox" :
-                self.channel_objects[name][i].setGeometry(QRect(7, 20*(i+1), 32, 16))            
+                self.channel_objects[name][i].setGeometry(
+                                            QRect(7, 20*(i+1), 32, 16))            
             
 
             if multiple_item :
@@ -387,7 +439,8 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
         
         
     """#####################################################################"""
-    """These handler function take action when someone interact with the button, checkbox, lineEdit etc... the names are explicit"""
+    """These handler function take action when someone interact 
+    with the button, checkbox, lineEdit etc... the names are explicit"""
         
         
     def change_legend_box_state(self):
@@ -430,7 +483,8 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
                     
                     self.time_Xaxis = False
                     self.ax.xaxis.set_major_locator(self.major_locator)
-                    self.ax.xaxis.set_major_formatter(ticker.ScalarFormatter(useOffset = False))
+                    self.ax.xaxis.set_major_formatter(ticker.ScalarFormatter
+                                                        (useOffset = False))
                     
                     for tick in self.ax.xaxis.get_major_ticks():
                         tick.label.set_rotation('horizontal')
@@ -483,8 +537,10 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
             
     def singleComboBoxHandler(self,num):
         """
-        this takes care of the signal sent by a single combo box (as opposed to one combobox per row)
-        The single combo box should be used to plot X versus Y or YR for different data sets in a children class of this one
+        this takes care of the signal sent by a single combo box (as opposed to
+        one combobox per row)
+        The single combo box should be used to plot X versus Y or YR for 
+        different data sets in a children class of this one
         """
         pass
              
@@ -520,7 +576,8 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
         
         if not len(ticks)==3:
             
-            print("some ticks are missing, you should have ticks for X, YL and YR axes")
+            print('''some ticks are missing, you should have ticks for 
+                                                    X, YL and YR axes''')
             
         else:
             
@@ -642,7 +699,7 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
         self.axR.set_ylabel(newlabel)
 
     def is_any_checkbox_checked(self, group_box_name):
-        """loop through the checkbox of a list and look if at least one is on"""        
+        # loop through the checkbox of a list and look if at least one is on        
         
         answer = False
         
@@ -671,7 +728,8 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
             
             if self.data_array.size > 0:            
             
-                time_interval=self.data_array[-1,self.chan_X]-self.data_array[0,self.chan_X]
+                time_interval = self.data_array[-1,self.chan_X]-(
+                                            self.data_array[0,self.chan_X])
                 
                 if time_interval<500:
                     hfmt = dates.DateFormatter('%m/%d %H:%M:%S')
@@ -740,13 +798,17 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
         if self.legend_box:
             handles=[]
             legends=[]
-            for i,handle, legend, in zip(range(self.num_channels),self.ax.lines,self.data_legends['L']):
+            for i,handle, legend, in zip(range(self.num_channels),
+                                         self.ax.lines,
+                                             self.data_legends['L']):
                 if legend == "no data":
                     pass
                 else:
                     legends.append(legend)
                     handles.append(handle)
-            for i,handle, legend, in zip(range(self.num_channels),self.axR.lines,self.data_legends['R']):
+            for i,handle, legend, in zip(range(self.num_channels),
+                                         self.axR.lines,
+                                             self.data_legends['R']):
                 if legend == "no data":
                     pass
                 else:
@@ -761,7 +823,9 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
         
     def update_plot(self, data_array = None): 
         """
-            take a matrix (data_array) with a number of rows equal to the number of channel/lines in the window and plot them along the line direction
+            take a matrix (data_array) with a number of rows equal to the 
+            number of channel/lines in the window and plot them along the 
+            line direction
             it only plots if the checkbox of the line is checked
         """
         
@@ -779,40 +843,49 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
             except:
                 num_channels = np.size(self.data_array,1)             
             
-            #if there is more instruments than channel numbers we expand the channels on the window
+            # if there is more instruments than channel numbers 
+            # we expand the channels on the window
             while self.num_channels < num_channels:
                 self.add_channel_controls()
 
-            #there is a different treatment if x is choosen to be a time axis or quantity measured by an instrument                
+            # there is a different treatment if x is choosen to be a time axis 
+            # or quantity measured by an instrument                
             if self.time_Xaxis:
                 xdata = self.set_axis_time()
             else:
                 xdata = self.data_array[:,self.chan_X]   
 
             self.data_legends = {'L':[],'R':[]}
-            #go through the channels and update the lines for those who are checked
-            for chan_Y, [line_L, line_R] in enumerate(zip (self.ax.lines, self.axR.lines)):
+            # go through the channels and update the lines 
+            # for those who are checked
+            for chan_Y, [line_L, line_R] in enumerate(
+                                        zip (self.ax.lines, self.axR.lines)):
                 
                 if self.data_array.size>0:
                     
-                    if self.channel_objects["groupBox_invert"][chan_Y].isChecked():
+                    if self.channel_objects[
+                                        "groupBox_invert"][chan_Y].isChecked():
                         ydata = -self.data_array[:, chan_Y]
                     else:
                         ydata = self.data_array[:, chan_Y]                  
                     
                     
                     #look which checkbox is checked and plot corresponding data
-                    if self.channel_objects["groupBox_Y"][chan_Y].isChecked() and self.data_array.size>0:
+                    if (self.channel_objects["groupBox_Y"][chan_Y].isChecked() 
+                                                and self.data_array.size>0):
                         line_L.set_data(xdata, ydata)
-                        self.data_legends['L'].append(str(self.channel_objects["groupBox_Name"][chan_Y].text()))
+                        self.data_legends['L'].append(str(
+                        self.channel_objects["groupBox_Name"][chan_Y].text()))
                     else:
                         line_L.set_data([],[])
                         self.data_legends['L'].append("no data")
                         
                     #look which checkbox is checked and plot corresponding data    
-                    if self.channel_objects["groupBox_YR"][chan_Y].isChecked() and self.data_array.size>0:
+                    if (self.channel_objects["groupBox_YR"][chan_Y].isChecked() 
+                                                and self.data_array.size>0):
                         line_R.set_data(xdata, ydata)
-                        self.data_legends['R'].append(str(self.channel_objects["groupBox_Name"][chan_Y].text()))
+                        self.data_legends['R'].append(str(
+                        self.channel_objects["groupBox_Name"][chan_Y].text()))
                     else:
                         line_R.set_data([],[]) 
                         self.data_legends['R'].append("no data")
@@ -860,10 +933,14 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
 
     def update_fit(self,fitp):
         """
-            take a matrix (data_array) with a number of lines equal to 2 and a number of rows equal the number of lines in self.data_array
+            take a matrix (data_array) with a number of lines equal to 2 
+            and a number of rows equal the number of lines in self.data_array
             and plot line 1 as a function of line 2
-            right now there is only the possibility to create one fit at the time as we wanted to be able to access the line number and modify the fit or delete it. 
-            we can always plot more things on the plot area but we wanted to have some control on the objects
+            right now there is only the possibility to create one fit 
+            at the time as we wanted to be able to access the line number 
+            and modify the fit or delete it. 
+            we can always plot more things on the plot area but we wanted 
+            to have some control on the objects
         """
 
         logging.debug(fitp)
@@ -873,10 +950,11 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
             line, = self.ax.plot([],[],"-", color = "#e62e00",linewidth = 2)
             line, = self.ax.plot([],[],"--", color = "#e62e00",linewidth = 2)
 
-        #if there is a resctiction on the data set        
+        # if there is a resctiction on the data set        
         idx_start = int(fitp["limits"][0])
         idx_stop = int(fitp["limits"][1])
-        #there is a different treatment if x is choosen to be a time axis or quantity measured by an instrument                
+        # there is a different treatment if x is choosen to be a time 
+        # axis or quantity measured by an instrument                
         if self.time_Xaxis:
             xdataw=self.set_axis_time()
         else:
@@ -906,7 +984,9 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
         
     def remove_fit(self):
         """
-            remove the last line on the ax as this position is by default reserved for the fit function. There is probaly a cleverer way to do so...
+            remove the last line on the ax as this position is by default 
+            reserved for the fit function. There is probaly a cleverer way 
+            to do so...
         """
         if self.num_channels < len(self.ax.lines):
             self.ax.lines[-1].set_data([], [])
@@ -933,7 +1013,8 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
 #        ax = fig2.add_subplot(1,1,1)
 #        for line in self.ax.lines:
 #            if line.get_xdata() != []:
-#                ax.plot (line.get_xdata(), line.get_ydata(), label= line.get_label())
+#                ax.plot (
+#                  line.get_xdata(), line.get_ydata(), label= line.get_label())
 #        ax.set_xlim(self.ax.get_xlim())
 #        ax.set_ylim(self.ax.get_ylim())
 #        ax.set_xlabel(self.ax.get_xlabel())
@@ -949,7 +1030,7 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
         # Put a legend to the right of the current axis
         #ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
         
-        # goal: print the figure with the same aspect ratio as it's shown on the 
+        # goal: print the figure with the same aspect ratio as it's shown on  
         # screen, but fixed width to fill the page nicely
  
         margin_inches = 0.5
@@ -1004,8 +1085,10 @@ def convert_timestamp(timestamp):
         
         
 """
-This describe what element will be displayed on each line of the window option panel.
-It does it row by row, chan_contr contain each row element which consist of the label and the type of the objet.
+This describe what element will be displayed on each line of the window 
+option panel.
+It does it row by row, chan_contr contain each row element which consist 
+of the label and the type of the objet.
 The label can be any string, the type has to be predifined
 """
 chan_contr=OrderedDict()
@@ -1024,15 +1107,25 @@ chan_contr["groupBox_line"]= ["L","comboBox"]
     
 class MultiplePlotDisplayWindow(PlotDisplayWindow):
     """
-    The argument 'channel_controls' should be an OrderedDict object (from collections import OrderedDict)\n
-    Each key will be a unique identifier of the channel control, the item should consist of a list for which the first element is the label of the channel control and the second element, the type of QtQui.\n
-    It need to be either 'lineEdit','radioButton','checkBox' or 'comboBox', any other keyword will create an error.\n
-    What callback function is associated with each control can be defined in the method 'add_channel_control'
+    The argument 'channel_controls' should be an OrderedDict object (from 
+    collections import OrderedDict)
+    Each key will be a unique identifier of the channel control, the item 
+    should consist of a list for which the first element is the label of the 
+    channel control and the second element, the type of QtQui.\n
+    It need to be either 'lineEdit','radioButton','checkBox' or 'comboBox', 
+    any other keyword will create an error.\n
+    What callback function is associated with each control can be defined 
+    in the method 'add_channel_control'
     The data sets should be in LabeledData instances
     """
-    def __init__(self, parent=None, data_array=np.array([]),name="Main Window",default_channels=10,channel_controls=chan_contr):
+    def __init__(self, parent=None, data_array=np.array([]),
+                 name="Main Window",default_channels=10,
+                     channel_controls=chan_contr):
         # run the initializer of the class inherited from
-        super(MultiplePlotDisplayWindow, self).__init__(parent=parent,data_array=data_array,name=name,default_channels=default_channels,channel_controls=channel_controls)
+        super(MultiplePlotDisplayWindow, self).__init__(parent=parent,
+                data_array=data_array,name=name,
+                    default_channels=default_channels,
+                        channel_controls=channel_controls)
         
         
         self.sets_to_plot=[]
@@ -1041,14 +1134,16 @@ class MultiplePlotDisplayWindow(PlotDisplayWindow):
 
         
     """#####################################################################"""
-    """These handler function take action when someone interact with the button, checkbox, lineEdit etc... the names are explicit"""
+    """These handler function take action when someone interact with the 
+    button, checkbox, lineEdit etc... the names are explicit"""
 
 
 
 
 
     def YCheckBoxHandler(self):  
-        """Update which data is used for the Y axis (both left and right) and chooses to activate or not a set"""   
+        """Update which data is used for the Y axis (both left and right) 
+        and chooses to activate or not a set"""   
         obj=self.sender()         
         name=obj.objectName()
         
@@ -1057,10 +1152,12 @@ class MultiplePlotDisplayWindow(PlotDisplayWindow):
         #number of the checkbox in the list (from 0 to self.num_channels)
         sender_ID=int(sender_ID)
         
-        #If the last box is being played with, then it means that we want to either select all of them or deselect all of them
+        # If the last box is being played with, then it means that we want to 
+        # either select all of them or deselect all of them
         if sender_ID == self.num_channels:
             #This is the current state of this button
-            check_all = self.channel_objects[name][self.num_channels].isChecked()
+            check_all = (
+                self.channel_objects[name][self.num_channels].isChecked())
 
             #then somebody just clicked on that button and we need to change
             for box in self.channel_objects[name]:
@@ -1108,11 +1205,15 @@ class MultiplePlotDisplayWindow(PlotDisplayWindow):
         
                 
         super(MultiplePlotDisplayWindow, self).update_labels(label_list)
-        self.channel_objects["groupBox_Name"][self.num_channels].setText("Select all") 
+        self.channel_objects["groupBox_Name"][self.num_channels].setText(
+                                                                "Select all") 
 
     def update_plot(self, data_array = VOID_NPARRAY): 
         """
-            take a LabeledData vector of LabeledData (data_array with labels) with a number of elements equal to the number of channel/lines in the window and plot the matrix (where the X and YR and YL are predifined)
+            take a LabeledData vector of LabeledData (data_array with labels) 
+            with a number of elements equal to the number of channel/lines 
+            in the window and plot the matrix (where the X and YR and YL 
+            are predifined)
             it only plots if the checkbox of the line is checked
         """
         
@@ -1129,14 +1230,20 @@ class MultiplePlotDisplayWindow(PlotDisplayWindow):
             except:
                 num_channels = self.data_array.size                
                 
-            #if there is more instruments than channel numbers we expand the channels on the window
+            # if there is more instruments than channel numbers we expand 
+            # the channels on the window
             while self.num_channels < num_channels:
-                print("MultiplePlotDisplayWindow.update_plot : adding more channel")
+                print(
+                "MultiplePlotDisplayWindow.update_plot : adding more channel")
                 self.add_channel_controls()
 
             
             #go through the channels and update the lines for those who are checked
-            for data,chan_Y, line_L, line_R in zip (self.data_array.columns(), np.arange(self.num_channels),self.ax.lines, self.axR.lines):
+            for data,chan_Y, line_L, line_R in zip (
+                self.data_array.columns(), 
+                    np.arange(self.num_channels),
+                        self.ax.lines, 
+                            self.axR.lines):
                 
                 if self.data_array.ncols>0:
                     
@@ -1144,18 +1251,23 @@ class MultiplePlotDisplayWindow(PlotDisplayWindow):
                     if self.channel_objects["groupBox_X"][chan_Y].isChecked():
                         
                         #look which checkbox is checked and plot corresponding data
-                        if self.channel_objects["groupBox_Y"][chan_Y].isChecked() and self.data_array.ncols>0:
+                        if (
+                        self.channel_objects["groupBox_Y"][chan_Y].isChecked()
+                            and self.data_array.ncols>0):
                             line_L.set_data(data[:,0], data[:,1])
                         else:
                             line_L.set_data([],[])
                             
                         #look which checkbox is checked and plot corresponding data    
-                        if self.channel_objects["groupBox_YR"][chan_Y].isChecked() and self.data_array.ncols>0:
+                        if (
+                        self.channel_objects["groupBox_YR"][chan_Y].isChecked() 
+                            and self.data_array.ncols>0):
                             line_R.set_data(data[:,0], data[:,2]) #
                         else:
                             line_R.set_data([],[])    
                     else:
-                        #if one unticked the Set checkbox, it should disable the set and therefore the plot
+                        # if one unticked the Set checkbox, 
+                        # it should disable the set and therefore the plot
                         line_L.set_data([],[])
                         line_R.set_data([],[])
         else:   
@@ -1168,10 +1280,13 @@ class MultiplePlotDisplayWindow(PlotDisplayWindow):
     
 
 """
-This describe what element will be displayed on each line of the window option panel.
-It does it row by row, chan_contr contain each row element which consist of the label and the type of the objet.
+This describe what element will be displayed on each line of the window 
+option panel.
+It does it row by row, chan_contr contain each row element which consist 
+of the label and the type of the objet.
 The label can be any string, the type has to be predifined.
-If you choose the type single_comboBox there will be only one combobox for all the rows
+If you choose the type single_comboBox there will be only one combobox 
+for all the rows
 """
 chan_contr=OrderedDict()
 chan_contr["groupBox_Name"]=["Channel","lineEdit"]
@@ -1187,13 +1302,21 @@ chan_contr["groupBox_line"]= ["L","comboBox"]
         
 class SetsPlotDisplayWindow(PlotDisplayWindow):
     """
-    The argument 'channel_controls' should be an OrderedDict object (from collections import OrderedDict)\n
-    Each key will be a unique identifier of the channel control, the item should consist of a list for which the first element is the label of the channel control and the second element, the type of QtQui.\n
-    It need to be either 'lineEdit','radioButton','checkBox', 'comboBox' or single_comboBox any other keyword will create an error.\n
-    What callback function is associated with each control can be defined in the method 'add_channel_control'
+    The argument 'channel_controls' should be an OrderedDict object 
+    (from collections import OrderedDict)
+    Each key will be a unique identifier of the channel control, 
+    the item should consist of a list for which the first element 
+    is the label of the channel control and the second element, 
+    the type of QtGui.
+    It need to be either 'lineEdit','radioButton','checkBox', 'comboBox' 
+    or single_comboBox any other keyword will create an error.
+    What callback function is associated with each control can be defined 
+    in the method 'add_channel_control'
     The data sets should be in LabeledData instances
     """
-    def __init__(self, parent=None, data_sets_array=VOID_NPARRAY,name="Main Window",default_channels=10,channel_controls=chan_contr):
+    def __init__(self, parent=None, 
+                 data_sets_array=VOID_NPARRAY,name="Main Window",
+                     default_channels=10,channel_controls=chan_contr):
         
         
         num_channels=np.size(data_sets_array)
@@ -1201,7 +1324,10 @@ class SetsPlotDisplayWindow(PlotDisplayWindow):
             num_channels = default_channels
         
         # run the initializer of the class inherited from
-        super(SetsPlotDisplayWindow, self).__init__(parent=parent,name=name,default_channels=num_channels,channel_controls=channel_controls)
+        super(SetsPlotDisplayWindow, self).__init__(
+            parent=parent,name=name,
+                default_channels=num_channels,
+                    channel_controls=channel_controls)
         
         
         #these names shall correspond to the column name of the LabeledData instances one wants to plot
@@ -1217,14 +1343,16 @@ class SetsPlotDisplayWindow(PlotDisplayWindow):
 ###### OPTION MENU SETUP ######         
         
         self.optionMenu = self.menuBar().addMenu("Options")  
-        self.displayLegendsAction = QtTools.create_action(self,"Display/hide legends", slot=self.change_legend_box_state,
-                                        icon=None, tip="Display/hide legends on the figure")                   
+        self.displayLegendsAction = QtTools.create_action(
+            self,"Display/hide legends", slot=self.change_legend_box_state,
+            icon=None, tip="Display/hide legends on the figure")                   
 
         self.optionMenu.addAction(self.displayLegendsAction)
         
         
     """#####################################################################"""
-    """These handler function take action when someone interact with the button, checkbox, lineEdit etc... the names are explicit"""
+    """These handler function take action when someone interact with the 
+    button, checkbox, lineEdit etc... the names are explicit"""
 
     def singleComboBoxHandler(self,num):
         obj=self.sender()         
@@ -1251,7 +1379,8 @@ class SetsPlotDisplayWindow(PlotDisplayWindow):
         self.update_legends()
         
     def change_single_comboBox_items(self,groupbox_id,newItems):
-        """change the list of items of the comboBox that has the given groupbox_id"""
+        """change the list of items of the comboBox 
+        that has the given groupbox_id"""
         
         if groupbox_id in self.channel_objects.keys():
             #clear the comboBox
@@ -1260,7 +1389,9 @@ class SetsPlotDisplayWindow(PlotDisplayWindow):
             self.channel_objects[groupbox_id].addItems(newItems)
             self.channel_objects[groupbox_id].setMaxVisibleItems(len(newItems))
         else:
-            logging.warning("The groupbox_id '%s' is unknown, please use one groupbox_id among this list"%(groupbox_id))
+            logging.warning('''The groupbox_id '%s' is unknown, 
+                                please use one groupbox_id among this list'''
+                                    %(groupbox_id))
             logging.warning(self.channel_objects.keys())
             
         
@@ -1290,22 +1421,26 @@ class SetsPlotDisplayWindow(PlotDisplayWindow):
                 
 
             if test_labels_consistency.all() == True:
-                logging.debug("All the labels of LabeledData instances are the same")
+                logging.debug(
+                    "All the labels of LabeledData instances are the same")
                 for gb_id in ["groupBox_X","groupBox_Y"]:
                     self.change_single_comboBox_items(gb_id,labels)
                 self.change_single_comboBox_items("groupBox_Y",labels)
                 for i,le in enumerate(self.channel_objects["groupBox_Name"]):
                     le.setText(self.data_sets_array[i].dataset_name)
             else:
-                logging.warning("Some labels of LabeledData instances are not the same")
+                logging.warning(
+                    "Some labels of LabeledData instances are not the same")
         else:
-            logging.warning("The data sets array is empty, so it wasn't updated")
+            logging.warning(
+                "The data sets array is empty, so it wasn't updated")
             
     def update_legends(self):
         if self.legend_box:
             handles=[]
             legends=[]
-            for i,handle, legend, in zip(range(self.num_channels),self.ax.lines,self.data_legends):
+            for i,handle, legend, in zip(range(self.num_channels),
+                                         self.ax.lines,self.data_legends):
                 if legend == "no data":
                     pass
                 else:
@@ -1320,7 +1455,10 @@ class SetsPlotDisplayWindow(PlotDisplayWindow):
         
     def update_plot(self, data_sets_array = []): 
         """
-            take a LabeledData vector of LabeledData (data_array with labels) with a number of elements equal to the number of channel/lines in the window and plot the matrix (where the X and YR and YL are predifined)
+            take a LabeledData vector of LabeledData (data_array with labels) 
+            with a number of elements equal to the number of channel/lines 
+            in the window and plot the matrix (where the X and YR and YL 
+            are predifined)
             it only plots if the checkbox of the line is checked
         """
 
@@ -1331,13 +1469,18 @@ class SetsPlotDisplayWindow(PlotDisplayWindow):
 
         self.data_legends=[]
         #go through the channels and update the lines for those who are checked
-        for data,chan_set, line_L, line_R in zip (self.data_sets_array,np.arange(self.num_channels),self.ax.lines, self.axR.lines):
+        for data,chan_set, line_L, line_R in zip (
+            self.data_sets_array,np.arange(self.num_channels),
+                self.ax.lines, self.axR.lines):
             
                 
                 #If the Set checkbox is unticked the data will not be displayed
-                if self.channel_objects["groupBox_setnum"][chan_set].isChecked():
-                    line_L.set_data(data[self.X_axis_name], data[self.Y_axis_name])
-                    self.data_legends.append(str(self.channel_objects["groupBox_Name"][chan_set].text()))
+                if (
+                self.channel_objects["groupBox_setnum"][chan_set].isChecked()):
+                    line_L.set_data(
+                            data[self.X_axis_name], data[self.Y_axis_name])
+                    self.data_legends.append(str(
+                    self.channel_objects["groupBox_Name"][chan_set].text()))
                 else:
                     self.data_legends.append("no data")
                     line_L.set_data([],[])
@@ -1377,7 +1520,8 @@ def test_timestamp():
             d.append(np.nan)
         else:
             d.append(random.random())
-        t.append((now - datetime.timedelta(seconds = i) - EPOCH_DATE).total_seconds())
+        t.append((now - datetime.timedelta(seconds = i) - 
+                                                EPOCH_DATE).total_seconds())
 
     data = np.transpose(np.vstack([t,d]))    
     
@@ -1399,11 +1543,16 @@ def test_pdw_load_setting():
     form = PlotDisplayWindow()
     
     lines = []
-    lines.append(['Time(s)', '1', '-2', '0', '0', '0', '#117733' , 's', '-'])
-    lines.append(['dt(s)', '0', 'er', '0', '0', '0', '#88CCEE', 'None', '-'])
-    lines.append(['PRESSURE(psi)', '0', '0', '0', '0', '0', '#332288', 'None', '-'])
-    lines.append(['dt(s)', '0', '0', '1', '0', '0', '#FFFF', 'o', '-'])
-    lines.append(['2(Torr)', '0', '0', '1', '0', '0', '#CC6677', 'None', '-'])    
+    lines.append(['Time(s)', '1', '-2', '0', '0', '0', 
+                                                      '#117733' , 's', '-'])
+    lines.append(['dt(s)', '0', 'er', '0', '0', '0', 
+                                                      '#88CCEE', 'None', '-'])
+    lines.append(['PRESSURE(psi)', '0', '0', '0', '0', '0', 
+                                                      '#332288', 'None', '-'])
+    lines.append(['dt(s)', '0', '0', '1', '0', '0', 
+                                                      '#FFFF', 'o', '-'])
+    lines.append(['2(Torr)', '0', '0', '1', '0', '0', 
+                                                      '#CC6677', 'None', '-'])    
     
     
     form.set_channels_values(lines)
