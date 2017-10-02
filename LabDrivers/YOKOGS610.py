@@ -9,7 +9,10 @@ Created on Mon Aug 12 16:16:02 2013
 #!/usr/bin/env python
 import time
 import random
-import Tool
+try:
+    from . import Tool
+except:
+    import Tool
 
 
 param = {'V': 'V'}
@@ -49,9 +52,9 @@ class Instrument(Tool.MeasInstr):
 #        actual_range = self.ask(':SOUR:RANG?')
 #        actual_range = float(actual_range)
 
-        print "actual", actual_voltage
+        print("actual", actual_voltage)
         if abs(actual_voltage - val) > 0.3:
-            print "voltage increment is too high (>0.3)-->change refused"
+            print("voltage increment is too high (>0.3)-->change refused")
 
 #        """ WARNING: if val has more precision (digits) that the actual range allows,
 #            yoko crashes and go to 0.00000 so fix that"""
@@ -86,9 +89,9 @@ class Instrument(Tool.MeasInstr):
                 s = ':SOUR:VOLT:LEV %f' % voltage
                 self.write(s)
             else:
-                print "Voltage step is too large!"
+                print("Voltage step is too large!")
         else:
-            print "voltage set to " + str(voltage) + " on " + self.ID_name
+            print("voltage set to " + str(voltage) + " on " + self.ID_name)
 
     def enable_output(self):
         if not self.debug:
@@ -155,7 +158,7 @@ class Instrument(Tool.MeasInstr):
             while current_voltage < p_target_voltage:
                 # Stop if it needs to
                 if p_reader.isStopped():
-                    print "Stopping"
+                    print("Stopping")
                     return 0
                 # Increment the current voltage by a safe amount
                 current_voltage += step
@@ -168,7 +171,7 @@ class Instrument(Tool.MeasInstr):
             while current_voltage > p_target_voltage:
                 # Stop if it needs to
                 if p_reader.isStopped():
-                    print "Stopping"
+                    print("Stopping")
                     return 0
                 # Decrement the current voltage by a safe amount
                 current_voltage -= step
@@ -248,9 +251,9 @@ class Instrument(Tool.MeasInstr):
 if __name__ == "__main__":
 
     BPO = Instrument("GPIB0::11")
-    print BPO.identify()
+    print(BPO.identify())
     BPO.set_voltage(0)
-    print BPO.ask(':SOUR:VOLT:LEV?')
-    print BPO.ask(':SOUR:VOLT:LEV?')
+    print(BPO.ask(':SOUR:VOLT:LEV?'))
+    print(BPO.ask(':SOUR:VOLT:LEV?'))
 #    BPO.measure('V')
 #    print BPO.measure('V')

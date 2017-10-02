@@ -48,11 +48,13 @@ else:
 
 try:
     
-    import LabDrivers.utils as utils
+    from .utils import INTF_VISA, INTF_SERIAL, INTF_PROLOGIX, INTF_NONE, \
+                       INTF_GPIB, PROLOGIX_COM_PORT, refresh_device_port_list
     
 except:
     
-    import utils
+    from utils import INTF_VISA, INTF_SERIAL, INTF_PROLOGIX, INTF_NONE, \
+                       INTF_GPIB, PROLOGIX_COM_PORT, refresh_device_port_list
 
 
 
@@ -62,8 +64,6 @@ except:
 # Avoids case-sensitivity/typo issues if you were to use the strings directly
 # these are imported by the instrument drivers so keep them there even if your
 # editor tells you that utils.INTF_NONE isn't used
-from utils import INTF_VISA, INTF_SERIAL, INTF_PROLOGIX, INTF_NONE, INTF_GPIB \
-                    ,PROLOGIX_COM_PORT, refresh_device_port_list
 
 
 

@@ -15,9 +15,15 @@ Could be updated with compliance if coupled with DMMs used as amperemeters...
 import numpy as np
 import time
 import random
-import Tool # changed from "from . import Tool" (Simon, 2016-09-11)
+
 from struct import pack, unpack
 import pylab as plt
+
+try:
+    from . import Tool
+except:
+    import Tool
+
 
 param = {'CH1': 'V', 'CH2': 'V', 'phase': 'deg', 'Z': 'Ohm', 'Z2': 'Ohm'}
 
@@ -102,7 +108,7 @@ if __name__ == "__main__":
     i=Instrument("COM7")
     
 #    i.write('SNDT 4,"GAIN"')
-    print i.ask("*IDN?")
+    print(i.ask("*IDN?"))
     i.enable_output(4)
 #    i.set_voltage(5,5)
 #    i.set_voltage(4,4)
