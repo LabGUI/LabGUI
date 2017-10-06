@@ -35,13 +35,15 @@ SELECT_MODE =2
 
 
 # A silly little class to replace stdout that both prints and emits the text as a signal
-class printerceptor():
+class printerceptor(QtCore.QObject):
 
     if USE_PYQT5:
         
         print_to_console = pyqtSignal('PyQt_PyObject')
 
     def __init__(self, parent = None):
+        
+        super(printerceptor, self).__init__()        
         
         self.old_stdout = sys.stdout
         self.parent = parent

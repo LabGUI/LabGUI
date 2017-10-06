@@ -99,15 +99,22 @@ def add_widget_into_main(parent):
     # redirect print statements to show a copy on "console"
     sys.stdout = QtTools.printerceptor(parent)
     
-    parent.update_console = MethodType(update_console, parent, parent.__class__)    
+
+    if sys.version_info[0] > 2:   
+    
+        parent.update_console = MethodType(update_console, parent)    
+    
+    else:
+        
+        parent.update_console = MethodType(update_console, parent, parent.__class__)
     
     if USE_PYQT5:
         
-        parent.print_to_console.connect(parent.update_console) 
+        sys.stdout.print_to_console.connect(parent.update_console) 
         
     else:
         
-        parent.connect(parent, QtCore.SIGNAL(
+        parent.connect(sys.stdout, QtCore.SIGNAL(
             "print_to_console(PyQt_PyObject)"), parent.update_console)
 
 
