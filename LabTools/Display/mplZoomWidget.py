@@ -559,7 +559,7 @@ class ActionManager(QtCore.QObject):
         self.saveFigAction = self.create_action(parent, "&Save Figure", slot=self.save_fig, shortcut = QKeySequence.Save,
                                                        icon=None, tip="Save the current figure")
                                                        
-    def create_action(self, parent, text, slot=None, shortcut=None, icon=None, tip=None, checkable=False, signal="triggered()"):
+    def create_action(self, parent, text, slot=None, shortcut=None, icon=None, tip=None, checkable=False, signal="triggered(bool)"):
         
         action = QtGui.QAction(text, parent)
         
@@ -575,10 +575,11 @@ class ActionManager(QtCore.QObject):
             
         if slot is not None:
             if USE_PYQT5:
-#                print(signal)
-#                keyw = {signal : signal}
+                print(signal)
+                print(slot)
+                action.triggered.connect(slot)
 #                action.pyqtConfigure(**keyw)
-                action.pyqtConfigure(triggered = slot)
+#                action.pyqtConfigure(triggered = slot)
             
             else:
                 
@@ -607,37 +608,48 @@ class ActionManager(QtCore.QObject):
         self.plotAutoScaleLAction.setChecked(current_widget.autoscale_L_on)
         self.plotAutoScaleRAction.setChecked(current_widget.autoscale_R_on)
 
-    def toggleAutoScaleX(self):
+    def toggleAutoScaleX(self, triggered):
         self.updateZoomSettings()
 
-    def toggleAutoScaleL(self):
+    def toggleAutoScaleL(self, triggered):
         self.updateZoomSettings()
 
-    def toggleAutoScaleR(self):
+    def toggleAutoScaleR(self, triggered):
         self.updateZoomSettings()
 
-    def toggleDragZoom(self):
+#    @QtCore.pyqtSlot()
+    def toggleDragZoom(self, triggered):
+        
         if self.plotPanAction.isChecked():
+            
             self.plotPanAction.setChecked(False)
+            
         if self.plotSelectAction.isChecked():
+            
             self.plotSelectAction.setChecked(False)
+            
         self.updateZoomSettings()    
 
-    def togglePan(self):
+#    @QtCore.pyqtSlot()
+    def togglePan(self, triggered):
+        
+        print("togglePan")
         if self.plotDragZoomAction.isChecked():
             self.plotDragZoomAction.setChecked(False)
         if self.plotSelectAction.isChecked():
             self.plotSelectAction.setChecked(False)
         self.updateZoomSettings()
 
-    def toggleSelect(self):
+#    @QtCore.pyqtSlot()
+    def toggleSelect(self, triggered):
+        print("toggleSelect")
         if self.plotDragZoomAction.isChecked():
             self.plotDragZoomAction.setChecked(False)
         if self.plotPanAction.isChecked():
             self.plotPanAction.setChecked(False)
         self.updateZoomSettings()
 
-    def hide_selection_box(self):
+    def hide_selection_box(self, triggered):
         if self.current_widget.selection_showing:
             self.current_widget.select_rectangle.remove()
             self.current_widget.selection_showing = False
@@ -721,16 +733,28 @@ class ActionManager(QtCore.QObject):
 
     def updateZoomSettings(self):
 
+        print(self.plotDragZoomAction.isChecked())
+        print(self.plotPanAction.isChecked())
+        print(self.plotSelectAction.isChecked())
+
+
         if self.plotDragZoomAction.isChecked():
             self.current_widget.set_mouse_mode(self.current_widget.ZOOM_MODE)
+            
         elif self.plotPanAction.isChecked():
             self.current_widget.set_mouse_mode(self.current_widget.PAN_MODE)
+            
         elif self.plotSelectAction.isChecked():
             self.current_widget.set_mouse_mode(self.current_widget.SELECT_MODE)
 
-        self.current_widget.set_autoscale_x(self.plotAutoScaleXAction.isChecked())
-        self.current_widget.set_autoscale_yL(self.plotAutoScaleLAction.isChecked())
-        self.current_widget.set_autoscale_yR(self.plotAutoScaleRAction.isChecked())
+        self.current_widget.set_autoscale_x(
+            self.plotAutoScaleXAction.isChecked())
+            
+        self.current_widget.set_autoscale_yL(
+            self.plotAutoScaleLAction.isChecked())
+            
+        self.current_widget.set_autoscale_yR(
+            self.plotAutoScaleRAction.isChecked())
         
         
         
