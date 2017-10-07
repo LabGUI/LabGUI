@@ -47,13 +47,13 @@ class LoadPlotWidget(QtGui.QWidget):
         super(LoadPlotWidget, self).__init__(parent)
 
         # main layout of the form is the verticallayout
-        self.verticalLayout = QtGui.QVBoxLayout(self)
+        self.verticalLayout = QtGui.QVBoxLayout()
         self.verticalLayout.setObjectName("verticalLayout")
 
         
         #first line contains a text zone and a browse button to
         #write the path to the data file to load
-        self.loadLayout = QtGui.QHBoxLayout(self)
+        self.loadLayout = QtGui.QHBoxLayout()
         self.loadLayout.setObjectName("fileLayout")
 
         #label for the user
@@ -77,7 +77,7 @@ class LoadPlotWidget(QtGui.QWidget):
         self.verticalLayout.addLayout(self.loadLayout)
 
         #second line is a button to load and plot the data
-        self.plotLayout = QtGui.QHBoxLayout(self)
+        self.plotLayout = QtGui.QHBoxLayout()
         self.plotLayout.setObjectName("plotLayout")
         
         #plot button
@@ -91,7 +91,7 @@ class LoadPlotWidget(QtGui.QWidget):
         self.verticalLayout.addLayout(self.plotLayout)
 
         #third line is the name of the file (without the path)
-        self.fileInfoLayout = QtGui.QHBoxLayout(self)
+        self.fileInfoLayout = QtGui.QHBoxLayout()
         self.fileInfoLayout.setObjectName("fileInfoLayout")
 
         #label
@@ -110,7 +110,7 @@ class LoadPlotWidget(QtGui.QWidget):
         self.verticalLayout.addLayout(self.fileInfoLayout)
 
         #fourth line is a large text zone to load the header of the file
-        self.hdrtextLayout = QtGui.QHBoxLayout(self)
+        self.hdrtextLayout = QtGui.QHBoxLayout()
         self.hdrtextLayout.setObjectName("hdrtextLayout")
         
         #large text zone
