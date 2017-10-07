@@ -21,14 +21,14 @@ if  USE_PYQT5:
     import PyQt5.QtWidgets as QtGui
     import PyQt5.QtCore as QtCore
     from PyQt5.QtCore import Qt, pyqtSignal
-    from PyQt5.QtGui import QKeySequence, QIcon
+    from PyQt5.QtGui import QKeySequence, QIcon, QCursor
     
 else:
 
     import PyQt4.QtGui as QtGui     
     import PyQt4.QtCore as QtCore 
     from PyQt4.QtCore import SIGNAL
-    from PyQt4.QtGui import QKeySequence, QIcon
+    from PyQt4.QtGui import QKeySequence, QIcon, QCursor
 
 from QtTools import ZOOM_MODE, PAN_MODE, SELECT_MODE
 from matplotlibwidget import MatplotlibWidget
@@ -38,15 +38,13 @@ class MatplotlibZoomWidget(MatplotlibWidget):
 
     if USE_PYQT5:
         
-        removed_selection_box = pyqtSignal()
-        
         data_array_updated = pyqtSignal('PyQt_PyObject')
         
         area_selected = pyqtSignal('PyQt_PyObject')
 
         limits_changed= pyqtSignal(int,'PyQt_PyObject')
         
-#        mousePressed = pyqtSignal('PyQt_PyObject')
+        mousePressed = pyqtSignal('PyQt_PyObject')
 
 
     def __init__(self, parent=None, title='', xlabel='', ylabel='',
@@ -105,13 +103,13 @@ class MatplotlibZoomWidget(MatplotlibWidget):
         
         self.mouseMode = mode
         if mode == self.ZOOM_MODE:
-            self.setCursor(QtGui.QCursor(QtCore.Qt.CrossCursor))
+            self.setCursor(QCursor(QtCore.Qt.CrossCursor))
         elif mode == self.PAN_MODE:
-            self.setCursor(QtGui.QCursor(QtCore.Qt.OpenHandCursor))
+            self.setCursor(QCursor(QtCore.Qt.OpenHandCursor))
         elif mode == self.SELECT_MODE:
-            self.setCursor(QtGui.QCursor(QtCore.Qt.ArrowCursor))
+            self.setCursor(QCursor(QtCore.Qt.ArrowCursor))
         else:
-            self.setCursor(QtGui.QCursor(QtCore.Qt.ArrowCursor))
+            self.setCursor(QCursor(QtCore.Qt.ArrowCursor))
 
     def autoscale_axes(self, axes=None, scale_x=True, scale_y=True, span_x=0,
                        margin_x=0, margin_y=0.05):
@@ -229,7 +227,7 @@ class MatplotlibZoomWidget(MatplotlibWidget):
 #            print "AutoScale", self.autoscale_X_on, self.autoscale_L_on, self.autoscale_R_on
             if self.mouseMode == self.PAN_MODE:
                 if self.mouseMode == self.PAN_MODE:
-                    self.setCursor(QtGui.QCursor(QtCore.Qt.ClosedHandCursor))
+                    self.setCursor(QCursor(QtCore.Qt.ClosedHandCursor))
                 self.__mousePressX = event.x()
                 self.__mousePressY = event.y()
 
@@ -299,9 +297,9 @@ class MatplotlibZoomWidget(MatplotlibWidget):
         # if self.__mousePressPos is not None:
         super(MatplotlibZoomWidget, self).mouseReleaseEvent(event)
         if True:  # event.buttons() == QtCore.Qt.LeftButton:
-
+            print("Mouse mode : %s"%(self.mouseMode))
             if self.mouseMode == self.PAN_MODE:
-                self.setCursor(QtGui.QCursor(QtCore.Qt.OpenHandCursor))
+                self.setCursor(QCursor(QtCore.Qt.OpenHandCursor))
                 selection_limits = [self.axes.get_xlim(), self.axes.get_ylim()]
 
             if self.mouseMode == self.ZOOM_MODE or self.mouseMode == self.SELECT_MODE:
@@ -385,7 +383,14 @@ class MatplotlibZoomWidget(MatplotlibWidget):
 
     def wheelEvent(self, event):
         # zoom 10% for each "click" of scroll wheel
-        zoom = 1 - event.delta() / 1200.0
+    
+        if USE_PYQT5:
+            
+            zoom = 1 - event.pixelDelta() / 1200.0
+        
+        else:
+        
+            zoom = 1 - event.delta() / 1200.0
 
         # correct for difference in coordinate systems (note Y is top left in widget, bottom left in figure)
         # X, Y in axes coordinates (0 to 1, 0,0 in lower left corner)
@@ -432,8 +437,17 @@ class MatplotlibZoomWidget(MatplotlibWidget):
 
         self.rescale_and_draw()
         #this might be superfluous as rescale_and_draw() already sends this with code 3
-        self.emit(QtCore.SIGNAL("limits_changed(int,PyQt_PyObject)"), -1,
+        
+        if USE_PYQT5:
+            
+            self.limits_changed.emit(-1,
                   np.array([self.axes.get_xlim(), self.axes.get_ylim()]))
+                  
+        else:
+            
+            self.emit(QtCore.SIGNAL("limits_changed(int,PyQt_PyObject)"), -1,
+                      np.array([self.axes.get_xlim(), self.axes.get_ylim()]))
+                  
         super(MatplotlibZoomWidget, self).wheelEvent(event)
 
     def keyPressEvent(self, event):
@@ -493,7 +507,12 @@ class MatplotlibZoomWidget(MatplotlibWidget):
         print("line " + str(selected) + " selected!")
 
 
-class ActionManager():
+class ActionManager(QtCore.QObject):
+    
+    if USE_PYQT5:
+        
+        removed_selection_box = pyqtSignal()
+    
     def __init__(self, parent):
         self.parent = parent
         
@@ -623,6 +642,7 @@ class ActionManager():
             self.current_widget.select_rectangle.remove()
             self.current_widget.selection_showing = False
             self.current_widget.figure.canvas.draw()
+            
             if USE_PYQT5:
                 
                 self.removed_selection_box.emit()
@@ -645,7 +665,7 @@ class ActionManager():
         
         if USE_PYQT5:
                 
-                self.data_array_updated.emit(self.data_array)
+            self.data_array_updated.emit(self.data_array)
                 
         else:
             
@@ -672,9 +692,21 @@ class ActionManager():
             axis.set_yscale('log')
 
     def save_fig(self):
-        fname = str(QtGui.QFileDialog.getSaveFileName(
+        
+        if USE_PYQT5:
+            
+            fname, fmt = QtGui.QFileDialog.getSaveFileName(
+            self.parent, 'Open settings file', './')
+            
+            fname = str(fname)
+            
+        else:
+            
+            fname = str(QtGui.QFileDialog.getSaveFileName(
             self.parent, 'Open settings file', './'))
+            
         if fname:
+            
             self.current_widget.figure.savefig(fname, dpi = 600)
     
     def remove_fit(self):

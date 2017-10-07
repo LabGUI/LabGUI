@@ -522,6 +522,7 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
                         if i==1:
                             n = tick.label.get_text()
                             label_i = n.split(" ")[0]
+                            
                         tick.label.set_rotation(45)
                         
                 else:
@@ -755,8 +756,18 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
         return answer
 
     def convert_timestamp(self, timestamp):
-        dts = map(datetime.datetime.fromtimestamp, timestamp)
-        return dates.date2num(dts) # converted        
+        
+        try:
+            
+            dts = [datetime.datetime.fromtimestamp(ts) for ts in timestamp]
+            
+            dts = np.array(dts)
+    
+            return dates.date2num(dts) # converted    
+            
+        except:
+            
+            return timestamp
 
     def set_axis_time(self,want_format = False):
         """
@@ -771,14 +782,14 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
             
                 time_interval=self.data_array[-1,self.chan_X]-self.data_array[0,self.chan_X]
                 
-                if time_interval<500:
+                if time_interval < 500:
                     hfmt = dates.DateFormatter('%m/%d %H:%M:%S')
                
                 
             return hfmt
             
         else:
-            
+   
             time_data = self.convert_timestamp(self.data_array[:,self.chan_X])
             
             return time_data
@@ -1090,15 +1101,6 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
     def is_plot_display_window(self):
         """used to differentiate PlotDisplayWindow from LoadPlotWindow"""
         return True
-        
-def convert_timestamp(timestamp):
-    print(timestamp)
-    dts = map(datetime.datetime.fromtimestamp, timestamp)
-    return dates.date2num(dts) # converted    
-        
-        
-        
-        
         
         
 """
