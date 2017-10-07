@@ -647,26 +647,55 @@ the pyqt window option is disabled")
                                         name="Live Data Window",
                                         default_channels = num_channels)  
         
-        self.connect(self, SIGNAL("data_array_updated(PyQt_PyObject)"),
-                     pdw.update_plot)
-                     
-        self.connect(pdw.mplwidget, SIGNAL(
-            "limits_changed(int,PyQt_PyObject)"), self.emit_axis_lim)
+        if USE_PYQT5:
 
-        # this is here temporary, I would like to change the plw when the live
-        # fit is ticked
-        self.connect(self.widgets['AnalyseDataWidget'], SIGNAL(
-            "data_set_updated(PyQt_PyObject)"), pdw.update_plot)
-        self.connect(self.widgets['AnalyseDataWidget'], SIGNAL(
-            "update_fit(PyQt_PyObject)"), pdw.update_fit)
-        self.connect(self, SIGNAL("remove_fit()"), pdw.remove_fit)
-
-        self.connect(self, SIGNAL("colorsChanged(PyQt_PyObject)"),
-                     pdw.update_colors)
-        self.connect(self, SIGNAL("labelsChanged(PyQt_PyObject)"),
-                     pdw.update_labels)
-        self.connect(self, SIGNAL(
-            "markersChanged(PyQt_PyObject)"), pdw.update_markers)
+            self.data_array_updated.connect(pdw.update_plot)
+                         
+            pdw.mplwidget.limits_changed.connect(self.emit_axis_lim)
+    
+            # this is here temporary, I would like to change the plw when the live
+            # fit is ticked
+            self.widgets['AnalyseDataWidget'].data_set_updated.connect(
+                pdw.update_plot)
+                
+            self.widgets['AnalyseDataWidget'].update_fit.connect(
+                pdw.update_fit)
+                
+            self.remove_fit().connect(pdw.remove_fit)
+    
+            self.colorsChanged.connect(pdw.update_colors)
+                         
+            self.labelsChanged.connect(pdw.update_labels)
+                         
+            self.markersChanged.connect(pdw.update_markers)
+                    
+            
+        else:
+        
+            self.connect(self, SIGNAL("data_array_updated(PyQt_PyObject)"),
+                         pdw.update_plot)
+                         
+            self.connect(pdw.mplwidget, SIGNAL(
+                "limits_changed(int,PyQt_PyObject)"), self.emit_axis_lim)
+    
+            # this is here temporary, I would like to change the plw when the live
+            # fit is ticked
+            self.connect(self.widgets['AnalyseDataWidget'], SIGNAL(
+                "data_set_updated(PyQt_PyObject)"), pdw.update_plot)
+                
+            self.connect(self.widgets['AnalyseDataWidget'], SIGNAL(
+                "update_fit(PyQt_PyObject)"), pdw.update_fit)
+                
+            self.connect(self, SIGNAL("remove_fit()"), pdw.remove_fit)
+    
+            self.connect(self, SIGNAL("colorsChanged(PyQt_PyObject)"),
+                         pdw.update_colors)
+                         
+            self.connect(self, SIGNAL("labelsChanged(PyQt_PyObject)"),
+                         pdw.update_labels)
+                         
+            self.connect(self, SIGNAL(
+                "markersChanged(PyQt_PyObject)"), pdw.update_markers)
         
         if settings == None:
             
@@ -730,13 +759,25 @@ the pyqt window option is disabled")
         color_list = self.widgets['InstrumentWidget'].get_color_list() \
                      + self.widgets['CalcWidget'].get_color_list()
 
-        self.emit(SIGNAL("colorsChanged(PyQt_PyObject)"), color_list)
+        if USE_PYQT5:
+            
+            self.colorsChanged.emit(color_list)
+            
+        else:
+
+            self.emit(SIGNAL("colorsChanged(PyQt_PyObject)"), color_list)
 
     def update_labels(self):
         label_list = self.widgets['InstrumentWidget'].get_label_list() \
                      + self.widgets['CalcWidget'].get_label_list()
-                     
-        self.emit(SIGNAL("labelsChanged(PyQt_PyObject)"), label_list)
+                   
+        if USE_PYQT5:
+            
+            self.labelsChanged.emit(label_list)
+            
+        else:
+
+            self.emit(SIGNAL("labelsChanged(PyQt_PyObject)"), label_list)
 
 
 
@@ -785,8 +826,20 @@ the pyqt window option is disabled")
                 xmax = limits[0][1]
                 imin = IOTool.match_value2index(x, xmin)
                 imax = IOTool.match_value2index(x, xmax)
-                self.emit(SIGNAL("selections_limits(PyQt_PyObject,int,int,int,int)"), np.array(
-                    [imin, imax, xmin, xmax]), paramX, paramY, paramYfit, mode)
+                
+                if USE_PYQT5:
+                    
+                    self.selections_limits.emit(
+                        np.array([imin, imax, xmin, xmax]),
+                        paramX, paramY, paramYfit, mode)
+                        
+                else:
+                
+                    self.emit(SIGNAL(
+                        "selections_limits(PyQt_PyObject,int,int,int,int)"), 
+                        np.array([imin, imax, xmin, xmax]),
+                        paramX, paramY, paramYfit, mode)
+                        
             except IndexError:
                 logging.debug("There is apparently no data generated yet")
             except:
@@ -925,11 +978,6 @@ the pyqt window option is disabled")
                 self.output_file.write(stri + '\n')
                 print('>>' + stri)
 
-    def update_spectrum_data(self, spectrum_data):
-        chan_num = 0
-        self.emit(SIGNAL("spectrum_data_updated(PyQt_PyObject)"),
-                  spectrum_data, chan_num)
-
     def update_data_array(self, data_set):
         """ slot for when the thread emits data """
 
@@ -961,7 +1009,13 @@ the pyqt window option is disabled")
             except:
                 self.data_array = data
 
-        self.emit(SIGNAL("data_array_updated(PyQt_PyObject)"), self.data_array)
+        if USE_PYQT5:
+            
+            self.data_array_updated.emit(self.data_array)
+            
+        else:
+            
+            self.emit(SIGNAL("data_array_updated(PyQt_PyObject)"), self.data_array)
 
 #   
 
@@ -1033,7 +1087,14 @@ the pyqt window option is disabled")
 
     def clear_plot(self):
         self.data_array = np.array([])
-        self.emit(SIGNAL("data_array_updated(PyQt_PyObject)"), self.data_array)
+        
+        if USE_PYQT5:
+            
+            self.data_array_updated.emit(self.data_array)
+            
+        else:
+            
+            self.emit(SIGNAL("data_array_updated(PyQt_PyObject)"), self.data_array)        
 
     def remove_fit(self):
         
@@ -1157,7 +1218,14 @@ the pyqt window option is disabled")
                                   self.DEBUG, 
                                   config_file_path = self.config_file)
         
-        self.emit(SIGNAL("DEBUG_mode_changed(bool)"),self.DEBUG)
+        if USE_PYQT5:
+            
+            self.debug_mode_changed.emit(self.DEBUG)
+            
+        else:
+            
+            self.emit(SIGNAL("DEBUG_mode_changed(bool)"),self.DEBUG)        
+            
    
     def option_change_log_level(self):
         """change the file logging.conf's logging level"""

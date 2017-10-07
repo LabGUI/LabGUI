@@ -17,18 +17,15 @@ from LocalVars import USE_PYQT5
 
 if  USE_PYQT5:
     
-    from PyQt5.QtWidgets import (QWidget, QLabel, QLineEdit, QPushButton, 
-                             QFileDialog, QHBoxLayout, QApplication, 
-                             QVBoxLayout, QPlainTextEdit, QDockWidget)
+    import PyQt5.QtWidgets as QtGui
+    
+    from PyQt5.QtCore import Qt, pyqtSignal
     
 else:
     
-    from PyQt4.QtGui import (QWidget, QLabel, QLineEdit, QPushButton, 
-                             QFileDialog, QHBoxLayout, QApplication, 
-                             QVBoxLayout, QPlainTextEdit, QDockWidget)
+    import PyQt4.QtGui as QtGui
     
-    from PyQt4.QtCore import SIGNAL
-    from PyQt4.QtCore import Qt
+    from PyQt4.QtCore import Qt, SIGNAL
 
 
 from collections import OrderedDict
@@ -42,7 +39,7 @@ import numpy as np
 import logging
 
 
-class LoadPlotWidget(QWidget):
+class LoadPlotWidget(QtGui.QWidget):
     """this widget is used to replot previously measured data"""
     
     def __init__(self, parent = None, load_fname = ''):
@@ -50,25 +47,25 @@ class LoadPlotWidget(QWidget):
         super(LoadPlotWidget, self).__init__(parent)
 
         # main layout of the form is the verticallayout
-        self.verticalLayout = QVBoxLayout(self)
+        self.verticalLayout = QtGui.QVBoxLayout(self)
         self.verticalLayout.setObjectName("verticalLayout")
 
         
         #first line contains a text zone and a browse button to
         #write the path to the data file to load
-        self.loadLayout = QHBoxLayout(self)
+        self.loadLayout = QtGui.QHBoxLayout(self)
         self.loadLayout.setObjectName("fileLayout")
 
         #label for the user
-        self.loadFileLabel = QLabel(self)
+        self.loadFileLabel = QtGui.QLabel(self)
         self.loadFileLabel.setText("data file to load:")
         
         #text zone
-        self.loadFileLineEdit = QLineEdit(self)
+        self.loadFileLineEdit = QtGui.QLineEdit(self)
         self.loadFileLineEdit.setText(load_fname)
         
         #browse button
-        self.loadFileButton = QPushButton(self)
+        self.loadFileButton = QtGui.QPushButton(self)
         self.loadFileButton.setText("Browse")
         
         #add the 3 widgets to the horizontal layout
@@ -80,11 +77,11 @@ class LoadPlotWidget(QWidget):
         self.verticalLayout.addLayout(self.loadLayout)
 
         #second line is a button to load and plot the data
-        self.plotLayout = QHBoxLayout(self)
+        self.plotLayout = QtGui.QHBoxLayout(self)
         self.plotLayout.setObjectName("plotLayout")
         
         #plot button
-        self.plotButton = QPushButton(self)
+        self.plotButton = QtGui.QPushButton(self)
         self.plotButton.setText("Plot")
 
         #add the widget to the layout
@@ -94,15 +91,15 @@ class LoadPlotWidget(QWidget):
         self.verticalLayout.addLayout(self.plotLayout)
 
         #third line is the name of the file (without the path)
-        self.fileInfoLayout = QHBoxLayout(self)
+        self.fileInfoLayout = QtGui.QHBoxLayout(self)
         self.fileInfoLayout.setObjectName("fileInfoLayout")
 
         #label
-        self.loadFileLabelLabel = QLabel(self)
+        self.loadFileLabelLabel = QtGui.QLabel(self)
         self.loadFileLabelLabel.setText("File :")
         
         #filename
-        self.loadFileNameLabel = QLabel(self)
+        self.loadFileNameLabel = QtGui.QLabel(self)
         self.loadFileNameLabel.setText("")
         
         #add the widget to the layout
@@ -113,11 +110,11 @@ class LoadPlotWidget(QWidget):
         self.verticalLayout.addLayout(self.fileInfoLayout)
 
         #fourth line is a large text zone to load the header of the file
-        self.hdrtextLayout = QHBoxLayout(self)
+        self.hdrtextLayout = QtGui.QHBoxLayout(self)
         self.hdrtextLayout.setObjectName("hdrtextLayout")
         
         #large text zone
-        self.headerTextEdit = QPlainTextEdit("")
+        self.headerTextEdit = QtGui.QPlainTextEdit("")
         fontsize = self.headerTextEdit.fontMetrics()
         self.headerTextEdit.setFixedHeight(fontsize.lineSpacing() * 8)
         
@@ -146,7 +143,7 @@ class LoadPlotWidget(QWidget):
             
             default_path = './'        
         
-        fname = str(QFileDialog.getOpenFileName(self, 
+        fname = str(QtGui.QFileDialog.getOpenFileName(self, 
                                                 'Load data from', 
                                                 default_path))
         
@@ -285,7 +282,7 @@ def add_widget_into_main(parent):
     mywidget = LoadPlotWidget(parent = parent)
     
     #create a QDockWidget
-    loadPlotDockWidget = QDockWidget("Load previous data file", parent)
+    loadPlotDockWidget = QtGui.QDockWidget("Load previous data file", parent)
     loadPlotDockWidget.setObjectName("loadPlotDockWidget")
     loadPlotDockWidget.setAllowedAreas(
         Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea)
@@ -303,7 +300,17 @@ def add_widget_into_main(parent):
     
     #assign a method to the LabGuiMain class to be run to create a 
     #plot window with previous data
-    parent.create_plw = MethodType(create_plw, parent, parent.__class__)
+    #depending on the python version this fonction take different arguments
+    if sys.version_info[0] > 2:   
+        
+        parent.create_plw = MethodType(create_plw, parent)        
+        
+    else:
+    
+        parent.create_plw = MethodType(create_plw, parent, parent.__class__)    
+    
+   
+    
     
     #create this dictionnary to remember the header text associated to
     #each loaded file
@@ -311,13 +318,21 @@ def add_widget_into_main(parent):
     
     #connects the plot button clicked signal with the method to create a 
     #plot window with previous data
-    parent.connect(parent.widgets["loadPlotWidget"].plotButton,
+
+    if USE_PYQT5:  
+        
+        parent.widgets["loadPlotWidget"].plotButton.clicked.connect(
+                  parent.create_plw)
+        
+    else:
+    
+        parent.connect(parent.widgets["loadPlotWidget"].plotButton,
                  SIGNAL("clicked()"), parent.create_plw)
 
 
 if __name__ == "__main__":
 
-    app = QApplication(sys.argv)
+    app = QtGui.QApplication(sys.argv)
     ex = LoadPlotWidget()
     ex.show()
     sys.exit(app.exec_())

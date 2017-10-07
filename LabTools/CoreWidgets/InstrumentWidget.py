@@ -327,10 +327,8 @@ class InstrumentWindow(QtGui.QWidget):
     color_set = color_blind_friendly_colors(10)
 
     if USE_PYQT5:
-        
-        lineChanged = pyqtSignal()
-        
-        colorChanged = pyqtSignal()
+                
+        colorsChanged = pyqtSignal()
         
         connectInstrumentHub = pyqtSignal('bool')
         
@@ -543,11 +541,11 @@ class InstrumentWindow(QtGui.QWidget):
         """
         if USE_PYQT5:
             
-            self.colorChanged.emit()
+            self.colorsChanged.emit()
             
         else:
                 
-            self.emit(SIGNAL("colorChanged()"))        
+            self.emit(SIGNAL("colorsChanged()"))        
         
         
     def bt_connecthub_clicked(self):
@@ -744,11 +742,11 @@ please check your connectic or your settings file\n"%(port))
     
             if USE_PYQT5:
                 
-                self.colorChanged.emit()
+                self.colorsChanged.emit()
                 
             else:
                     
-                self.emit(SIGNAL("colorChanged()"))  
+                self.emit(SIGNAL("colorsChanged()"))  
                 
             #check if the list isn't empty
             if window_settings:
@@ -881,47 +879,6 @@ different than " + str(actual_instrument_number)
 
 
 
-def connect_instrument(parent, connection_param):
-    """
-        When the button "Connect" is clicked this method actualise the InstrumentHub
-        according to what the user choosed in the command window. 
-        It cannot change while the DataTaker is running though
-    """
-    [instr_name, dev_port, param] = connection_param
-
-#        cmdwin_instrument_number=len(instr_name_list)
-    # if the datataker is running the user should not modify the length of
-    # the instrument list and connect it
-    connect = False
-    if parent.isrunning():
-        print("As data are being recorded now, you are not allowed to connect "\
-              + instr_name + " to " + dev_port)
-#            if actual_instrument_number == cmdwin_instrument_number or actual_instrument_number==0:
-#                connect=True
-    else:
-        connect = True
-
-    actual_instrument_number = len(parent.instr_hub.get_instrument_list())
-    print("number of instruments connected (b)", actual_instrument_number)
-    
-    if connect:
-        
-        print("Connect single instrument...")
-        parent.instr_hub.connect_instrument(instr_name, dev_port, param)
-        print("...single instrument connected")
-#«            self.emit(SIGNAL("instrument_hub_connected(PyQt_PyObject)"),None)
-    else:
-        
-        print()
-        
-        print("You cannot connect a number of instrument different than " + \
-        str(actual_instrument_number) + " when the datataker is running")
-        
-        print()
-        
-    actual_instrument_number = len(parent.instr_hub.get_instrument_list())
-    print("number of instruments connected (a)", actual_instrument_number)
-
 
 def add_widget_into_main(parent):
     """add a widget into the main window of LabGuiMain
@@ -962,41 +919,34 @@ def add_widget_into_main(parent):
 
     #add a series of signals tiggers
 
-
-    parent.connect_instrument_hub = MethodType(connect_instrument_hub,
-                                               parent, parent.__class__)    
+    #assigning a method to the parent class
+    #depending on the python version this fonction take different arguments
+    if sys.version_info[0] > 2: 
         
-    parent.connect_instrument = MethodType(connect_instrument,
-                                                   parent, parent.__class__)    
+        
+        parent.connect_instrument_hub = MethodType(connect_instrument_hub,
+                                               parent)    
+        
+    else:
+
+        parent.connect_instrument_hub = MethodType(connect_instrument_hub,
+                                               parent, parent.__class__)       
     
     if USE_PYQT5:
 
         parent.widgets['InstrumentWidget'].connectInstrumentHub.connect(
             parent.connect_instrument_hub) 
-    
-        parent.widgets['InstrumentWidget'].connectInstrument.connect(
-            parent.connect_instrument)
             
         parent.widgets['InstrumentWidget'].colorsChanged.connect(
             parent.update_colors)
-            
-        parent.widgets['InstrumentWidget'].labelsChanged.connect(
-            parent.update_labels)
         
     else:
     
         parent.connect(parent.widgets['InstrumentWidget'], SIGNAL(
-                "ConnectInstrumentHub(bool)"), parent.connect_instrument_hub)     
-    
-        parent.connect(parent.widgets['InstrumentWidget'], SIGNAL(
-            "ConnectInstrument(PyQt_PyObject)"), parent.connect_instrument)
-            
+                "ConnectInstrumentHub(bool)"), parent.connect_instrument_hub)                 
         
         parent.connect(parent.widgets['InstrumentWidget'], SIGNAL(
             "colorsChanged()"), parent.update_colors)
-            
-        parent.connect(parent.widgets['InstrumentWidget'], SIGNAL(
-            "labelsChanged()"), parent.update_labels)
         
             
      

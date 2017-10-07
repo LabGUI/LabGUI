@@ -99,7 +99,8 @@ def add_widget_into_main(parent):
     # redirect print statements to show a copy on "console"
     sys.stdout = QtTools.printerceptor(parent)
     
-
+    #assigning a method to the parent class
+    #depending on the python version this fonction take different arguments
     if sys.version_info[0] > 2:   
     
         parent.update_console = MethodType(update_console, parent)    

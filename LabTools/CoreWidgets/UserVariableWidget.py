@@ -17,7 +17,7 @@ from LocalVars import USE_PYQT5
 if  USE_PYQT5:
     
     import PyQt5.QtWidgets as QtGui
-    import PyQt5.QtCore as QtCore
+    from PyQt5.QtCore import Qt, pyqtSignal
 
 else:
 
@@ -34,11 +34,8 @@ class SingleLineWidget(QtGui.QWidget):
     
     if USE_PYQT5:
         
-        valueChanged = QtCore.pyqtSignal('int')
+        valueChanged = pyqtSignal('int')
         
-    else:
-        
-        valueChanged = SIGNAL("valueChanged(int)")
     
     def __init__(self, parent = None, line_num = None):    
         super(SingleLineWidget, self).__init__(parent)
@@ -147,7 +144,7 @@ class UserVariableWidget(QtGui.QWidget):
     
     if USE_PYQT5:
         
-        updateUserVariables = QtCore.pyqtSignal('PyQt_PyObject')
+        updateUserVariables = pyqtSignal('PyQt_PyObject')
     
     def __init__(self, parent=None, load_fname='5'):
         super(UserVariableWidget, self).__init__(parent)
@@ -388,9 +385,17 @@ def add_widget_into_main(parent):
     userVariableDockWidget.hide()
     
     #add a method to the 'parent' instance
-    parent.update_user_variables = MethodType(update_user_variables, 
-                                              parent, 
-                                              parent.__class__)
+    #depending on the python version this fonction take different arguments
+    if sys.version_info[0] > 2:  
+        
+        parent.update_user_variables = MethodType(update_user_variables, 
+                                                  parent)
+        
+    else:
+        
+        parent.update_user_variables = MethodType(update_user_variables, 
+                                                  parent, 
+                                                  parent.__class__)
     
     #connect a trigger to that method
     if USE_PYQT5:

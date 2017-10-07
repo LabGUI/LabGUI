@@ -7,32 +7,32 @@ Created on Wed Apr 05 23:24:14 2017
 
 
 import sys
+import socket
+import numpy as np
 
-from importlib import import_module
+from LocalVars import USE_PYQT5
 
-import PyQt4.QtCore as QtCore
+if  USE_PYQT5:
+    
+    import PyQt5.QtWidgets as QtGui
+    
+    from PyQt5.QtCore import Qt, pyqtSignal, QMutex, QThread
+    
+else:
 
-import PyQt4.QtGui as QtGui
+    import PyQt4.QtGui as QtGui
 
-from PyQt4.QtGui import QApplication,QWidget,QVBoxLayout,QHBoxLayout,QLabel,\
-QPlainTextEdit,QPushButton,QComboBox,QPalette,QColor,QDockWidget
-
-from PyQt4.QtCore import SIGNAL, Qt
+    from PyQt4.QtCore import Qt, SIGNAL, QMutex, QThread
 
 from LabDrivers import Tool
 
-import socket
-
-import numpy as np
-
-import LabDrivers.utils as utils
 
 CLIENT = '132.206.186.166'
 HOST = '132.206.186.166'  # Symbolic name meaning all available interfaces
 PORT = 48372 
 
 
-class DataServer(QtCore.QThread):
+class DataServer(QThread):
     """
         allows to communicate with instruments connected to other computers
         the user can use the same methods as defined in the instrument class
@@ -74,13 +74,23 @@ class DataServer(QtCore.QThread):
         #the data server is linked to an instrument hub    
         self.instr_hub = instrument_hub
         
-        self.connect(self.instr_hub, QtCore.SIGNAL(
-        "instrument_hub_connected()"), self.reset_lists)
+        if USE_PYQT5:
+            
+            self.instr_hub.instrument_hub_connected.connect(self.reset_lists)
+            
+            parent.serverOver.connect(self.stop)
+        
+        else:
+            
+            self.connect(self.instr_hub, SIGNAL(
+            "instrument_hub_connected()"), self.reset_lists)
+            
+            self.connect(parent,SIGNAL("ServerOver()"),self.stop)
         
         self.instruments = None
         self.port_param_pairs = None
         
-        self.connect(parent,QtCore.SIGNAL("ServerOver()"),self.stop)
+
 
         self.stopped = False
 
@@ -101,7 +111,7 @@ class DataServer(QtCore.QThread):
         #listen to request until stopped by the user
         while not self.stopped:
             
-            print "in the loop", self.stopped
+            print("in the loop", self.stopped)
             #accept connections from outside
             
             try:
@@ -141,7 +151,7 @@ class DataServer(QtCore.QThread):
                     
         self.stopped = True
         self.completed = False
-        print "Server is Over"
+        print("Server is Over")
     
     def stop(self):
         self.stopped = True
@@ -168,13 +178,9 @@ class DataServer(QtCore.QThread):
                 print(self.instruments[port].ID_name, param)
                 print(port)
 
-#                print self.port_param_pairs[port]
-#                print self.instruments[port]
-#                print self.instruments[port]
-
     def manage_request(self, client_request):
         
-        print "client_request", client_request
+        print("client_request", client_request)
         
         #default answer
         answer = np.nan
@@ -257,11 +263,15 @@ class DataServer(QtCore.QThread):
 
 
 
-class ServerWidget(QWidget):
+class ServerWidget(QtGui.QWidget):
     """
     this widget displays a combobox with a list of instruments which the
     user can connect to, it also has a refresh button
     """
+
+    if USE_PYQT5:
+        
+        serverOver = pyqtSignal()
 
     def __init__(self, parent = None, debug = False):
         super(ServerWidget, self).__init__(parent)
@@ -270,7 +280,7 @@ class ServerWidget(QWidget):
 
         self.DEBUG = debug
         
-        self.data_mutex = QtCore.QMutex()
+        self.data_mutex = QMutex()
             
         try:
             
@@ -342,14 +352,29 @@ instruments connected in the instrument\n hub over IP address.")
         #a button to start the server
         self.bt_start_server = QtGui.QPushButton(self)
         self.bt_start_server.setText("Start Server")
-        self.connect(self.bt_start_server, QtCore.SIGNAL(
-            'clicked()'), self.on_bt_start_server_clicked)
+        
             
         #a button to stop the server
         self.bt_stop_server = QtGui.QPushButton(self)
         self.bt_stop_server.setText("Stop Server")
-        self.connect(self.bt_stop_server, QtCore.SIGNAL(
-            'clicked()'), self.on_bt_stop_server_clicked)
+        
+        #assign triggers for the buttons
+        if USE_PYQT5:
+            
+            self.bt_start_server.clicked.connect(
+                self.on_bt_start_server_clicked)
+                
+            self.bt_stop_server.clicked.connect(
+                self.on_bt_stop_server_clicked)
+                
+        else:
+            
+            self.connect(self.bt_start_server, SIGNAL(
+                'clicked()'), self.on_bt_start_server_clicked)
+                
+            self.connect(self.bt_stop_server, SIGNAL(
+                'clicked()'), self.on_bt_stop_server_clicked)
+
             
         hlayout.addWidget(self.bt_start_server)
         hlayout.addWidget(self.bt_stop_server)
@@ -379,7 +404,14 @@ instruments connected in the instrument\n hub over IP address.")
 
     def on_bt_stop_server_clicked(self):
         """Stop the server"""
-        self.emit(QtCore.SIGNAL("ServerOver()"))
+        
+        if USE_PYQT5:
+            
+            self.serverOver.emit()
+            
+        else:
+            
+            self.emit(SIGNAL("ServerOver()"))
         
 #    def le_host_edited(self):
 #        obj = self.sender()
@@ -403,7 +435,7 @@ def add_widget_into_main(parent):
     mywidget = ServerWidget(parent = parent)
     
     #create a QDockWidget
-    simpleconnectDockWidget = QDockWidget("Server",
+    simpleconnectDockWidget = QtGui.QDockWidget("Server",
                                                 parent)
     simpleconnectDockWidget.setObjectName("serverWidgetDockWidget")
     simpleconnectDockWidget.setAllowedAreas(
@@ -423,7 +455,7 @@ def add_widget_into_main(parent):
         
 if __name__ == "__main__":
 
-    app = QApplication(sys.argv)
+    app = QtGui.QApplication(sys.argv)
     ex = ServerWidget()
     ex.show()
     sys.exit(app.exec_())

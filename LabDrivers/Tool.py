@@ -636,6 +636,8 @@ class InstrumentHub(QObject):
     if  USE_PYQT5:
         #creating a signal
         changed_list = pyqtSignal()
+        
+        instrument_hub_connected = pyqtSignal()
     
     
     def __init__(self, parent = None, debug = False, **kwargs):
@@ -741,9 +743,18 @@ argument is not the good one")
 
         if self.parent != None:
             #notify that the list of instuments has been modified
-            self.emit(SIGNAL("changed_list()"))
         
-            self.emit(SIGNAL("instrument_hub_connected()"))
+            if USE_PYQT5:
+                
+                self.changed_list.emit()
+
+                self.instrument_hub_connected.emit()                
+                
+            else:
+                
+                self.emit(SIGNAL("changed_list()"))
+            
+                self.emit(SIGNAL("instrument_hub_connected()"))
         
         logging.debug("Connect_hub : the lists of instrument and port-params")
         logging.debug(self.port_param_pairs)
@@ -847,8 +858,14 @@ which is connected to %s " % ( param, instr_name, device_port))
             self.port_param_pairs.append([None, None])
 
         if send_signal:
+            
+            if USE_PYQT5:
+                
+                self.changed_list.emit()
+                
+            else:
             #            print "sending the signal"
-            self.emit(SIGNAL("changed_list()"))
+                self.emit(SIGNAL("changed_list()"))
 
     def get_instrument_list(self):
         """get the port name together with the instrument instance"""

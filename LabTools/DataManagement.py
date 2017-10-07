@@ -255,8 +255,14 @@ class DataDisplayer(QObject):
         super(DataDisplayer, self).__init__(parent)
         self.debug = debug
 #        self.lock = lock
-        self.connect(datataker, SIGNAL("data(PyQt_PyObject)"),
-                     self.displayer, Qt.QueuedConnection)
+        if USE_PYQT5:
+            
+            datataker.data.connect(self.displayer, Qt.QueuedConnection)
+            
+        else:
+            
+            self.connect(datataker, SIGNAL("data(PyQt_PyObject)"),
+                         self.displayer, Qt.QueuedConnection)
 
     def displayer(self, data):
 
@@ -279,8 +285,15 @@ class DataWriter(QObject):
     def __init__(self, datataker, debug=False, parent=None):
         super(DataWriter, self).__init__(parent)
         self.debug = debug
-        self.connect(datataker, SIGNAL("data(PyQt_PyObject)"),
-                     self.writer, Qt.QueuedConnection)
+        
+        if USE_PYQT5:
+            
+            datataker.data.connect(self.displayer, Qt.QueuedConnection)
+            
+        else:
+            
+            self.connect(datataker, SIGNAL("data(PyQt_PyObject)"),
+                         self.writer, Qt.QueuedConnection)        
 
     def writer(self, data):
 
