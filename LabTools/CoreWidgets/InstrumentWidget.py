@@ -886,7 +886,7 @@ def add_widget_into_main(parent):
     create a QDock widget and store a reference to the widget
     """    
 
-    mywidget = InstrumentWindow(parent = parent)  
+    mywidget = InstrumentWindow(parent = parent, debug = parent.DEBUG)  
     
     parent.instrument_connexion_setting_fname=""  
     

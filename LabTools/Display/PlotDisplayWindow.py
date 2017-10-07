@@ -31,7 +31,7 @@ from LocalVars import USE_PYQT5
 if  USE_PYQT5:
                                  
     import PyQt5.QtWidgets as QtGui
-    from PyQt5.QtCore import Qt  
+    from PyQt5.QtCore import Qt, pyqtSignal, QRect, QRectF
     
 else:
 
@@ -194,7 +194,10 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
         # custom matplotlib zoom widget inside it. This way it expands to fill
         # the space, and we don't need to customize the ui_recordsweep.py file
         self.gridLayout_2 = QtGui.QGridLayout(self.plot_holder)
-        self.gridLayout_2.setMargin(0)
+        
+        if not USE_PYQT5:
+            self.gridLayout_2.setMargin(0)
+            
         self.gridLayout_2.setObjectName("gridLayout_2")
         
         self.mplwidget = MatplotlibZoomWidget(self.plot_holder)
@@ -218,73 +221,168 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
         line1, = self.ax.plot([], [])     
         line2, = self.axR.plot([], [])
         
-      
-        
         for name,item in self.channel_controls.items():
             #this value is set to true if there is one new QtGui object per line
             multiple_item = True  
-            if item[1]=="radioButton":                
-                self.channel_objects[name].append(QtGui.QRadioButton(self.groupBoxes[name]))
-                self.channel_objects[name][i].setText("")
-                if name == "groupBox_X":
-                    self.connect(self.channel_objects[name][i], SIGNAL("toggled(bool)"),self.XRadioButtonHandler)  
             
-            elif item[1]=="checkBox":
-                self.channel_objects[name].append(QtGui.QCheckBox(self.groupBoxes[name]))
+            if item[1] == "radioButton":     
+                
+                self.channel_objects[name].append(QtGui.QRadioButton(
+                    self.groupBoxes[name]))
                 self.channel_objects[name][i].setText("")
-                self.connect(self.channel_objects[name][i], SIGNAL("stateChanged(int)"), self.YCheckBoxHandler)
+                
+                if name == "groupBox_X":
+                    
+                    if USE_PYQT5:
+                        
+                        self.channel_objects[name][i].toggled.connect(
+                            self.XRadioButtonHandler)                          
+                        
+                    else:
+                        
+                        self.connect(self.channel_objects[name][i], 
+                                     SIGNAL("toggled(bool)"),
+                                     self.XRadioButtonHandler)  
+            
+            elif item[1] == "checkBox":
+                
+                self.channel_objects[name].append(
+                    QtGui.QCheckBox(self.groupBoxes[name]))
+                self.channel_objects[name][i].setText("")
+                
+                if USE_PYQT5:
+                            
+                    self.channel_objects[name][i].stateChanged.connect(
+                        self.YCheckBoxHandler)
+                    
+                else:                
+                    
+                    self.connect(self.channel_objects[name][i], 
+                                 SIGNAL("stateChanged(int)"),
+                                 self.YCheckBoxHandler)
 
-            elif item[1]=="comboBox":
-                self.channel_objects[name].append(QtGui.QComboBox(self.groupBoxes[name]))
-                if get_groupBox_purpouse(name)=="marker":
-                    cbb_list=marker_set
-                elif get_groupBox_purpouse(name)=="line":
-                    cbb_list=line_set
+            elif item[1] == "comboBox":
+                
+                self.channel_objects[name].append(
+                    QtGui.QComboBox(self.groupBoxes[name]))
+                    
+                if get_groupBox_purpouse(name) == "marker":
+                    
+                    cbb_list = marker_set
+                    
+                elif get_groupBox_purpouse(name) == "line":
+                    
+                    cbb_list = line_set
+                    
                 self.channel_objects[name][i].addItems(cbb_list)
 #                self.channel_objects[name][i].setStyleSheet ("QComboBox::drop-down {border-width: 0px;} QComboBox::down-arrow {image: url(noimg); border-width: 0px;}")
                 self.channel_objects[name][i].setMaxVisibleItems(len(cbb_list))
-                self.connect(self.channel_objects[name][i], SIGNAL("currentIndexChanged(int)"), self.ComboBoxHandler)
+                
+                if USE_PYQT5:
+                    
+                    self.channel_objects[name][i].currentIndexChanged.connect(
+                        self.ComboBoxHandler)
+                    
+                else:                
+                    
+                    self.connect(self.channel_objects[name][i],
+                                 SIGNAL("currentIndexChanged(int)"), 
+                                 self.ComboBoxHandler)
+                
           
-            elif item[1]=="lineEdit":
-                self.channel_objects[name].append(QtGui.QLineEdit(self.groupBoxes[name]))
-                self.channel_objects[name][i].setText(QtGui.QApplication.translate("RecordSweepWindow", "", None, QtGui.QApplication.UnicodeUTF8))
-                self.connect(self.channel_objects[name][i], SIGNAL("textEdited(QString)"), self.lineEditHandler)
+            elif item[1] == "lineEdit":
+                
+                self.channel_objects[name].append(
+                    QtGui.QLineEdit(self.groupBoxes[name]))
+                self.channel_objects[name][i].setText(
+                    QtGui.QApplication.translate("RecordSweepWindow", 
+                                                 "",
+                                                 None))
+                if USE_PYQT5:
+                    
+                    self.channel_objects[name][i].textEdited.connect(
+                        self.lineEditHandler)
             
-            elif item[1]=="colorButton":
-                self.channel_objects[name].append(QtGui.QPushButton(self.groupBoxes[name]))               
-                color=self.color_set[np.mod(i,len(self.color_set))]
+                else:                
+                    
+                    self.connect(self.channel_objects[name][i], 
+                                 SIGNAL("textEdited(QString)"), 
+                                 self.lineEditHandler)
+            
+            elif item[1] == "colorButton":
+                
+                self.channel_objects[name].append(
+                    QtGui.QPushButton(self.groupBoxes[name]))
+                    
+                color = self.color_set[np.mod(i, len(self.color_set))]
+                
                 line1.set_color(color)
                 line2.set_color(color)
-                self.channel_objects[name][i].setStyleSheet('QPushButton {background-color: %s}'%color)
+                
+                self.channel_objects[name][i].setStyleSheet(
+                    'QPushButton {background-color: %s}'%color)
                 self.channel_objects[name][i].setFixedSize(15,15)
-                self.connect(self.channel_objects[name][i], SIGNAL("clicked()"),self.colorButtonHandler) 
-            
-            elif item[1]=="single_comboBox":
-                if self.channel_objects[name]==[]:
-                    self.channel_objects[name]=QtGui.QComboBox(self.groupBoxes[name])
+                
+                if USE_PYQT5:
                     
-                    self.connect(self.channel_objects[name], SIGNAL("currentIndexChanged(int)"), self.singleComboBoxHandler)                
+                    self.channel_objects[name][i].clicked.connect(
+                        self.colorButtonHandler)
+            
+                else:                
+                    
+                    self.connect(self.channel_objects[name][i],
+                                 SIGNAL("clicked()"),
+                                 self.colorButtonHandler) 
+            
+            elif item[1] == "single_comboBox":
+                
+                if self.channel_objects[name]==[]:
+                    self.channel_objects[name] = QtGui.QComboBox(
+                                                    self.groupBoxes[name])
+                    
+                    if USE_PYQT5:
+                        
+                        self.channel_objects[name].currentIndexChanged.connect(
+                            self.singleComboBoxHandler) 
+                    else:
+                         
+                        self.connect(self.channel_objects[name], 
+                                     SIGNAL("currentIndexChanged(int)"),
+                                     self.singleComboBoxHandler)                
+                    
                     self.channel_objects[name].setObjectName(name + item[1])
                 
                 multiple_item = False
             
             if multiple_item :
-                self.channel_objects[name][i].setObjectName(name + "#" + str(i))
-                self.channel_objects[name][i].setGeometry(QRect(7, 20*(i+1), 16, 16)) 
+                
+                self.channel_objects[name][i].setObjectName("%s#%i"%(name, i))
+                self.channel_objects[name][i].setGeometry(QRect(7, 20*(i+1),
+                                                                16, 16)) 
+                
             else:
 
-                self.channel_objects[name].setGeometry(QRect(7, 10*(i+1), 70, 16))
+                self.channel_objects[name].setGeometry(QRect(7, 10*(i+1), 
+                                                             70, 16))
             
             #resize the comboBoxes and the lineEdit
-            if item[1]=="lineEdit":
-                self.channel_objects[name][i].setGeometry(QRect(10, pos_LE(i), 81, 16))
-            elif item[1]=="comboBox" :
-                self.channel_objects[name][i].setGeometry(QRect(7, 20*(i+1), 32, 16))            
+            if item[1] == "lineEdit":
+                
+                self.channel_objects[name][i].setGeometry(QRect(10, pos_LE(i),
+                                                                81, 16))
+                
+            elif item[1] == "comboBox" :
+                
+                self.channel_objects[name][i].setGeometry(QRect(7, 20*(i+1),
+                                                                32, 16))            
             
 
             if multiple_item :
+                
                 self.channel_objects[name][i].show()
+                
             else :
+                
                 self.channel_objects[name].show()
 #        self.radio
         #create line objects and append them to self.ax[R].lines autoatically
@@ -646,7 +744,7 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
         
         answer = False
         
-        if self.channel_objects.has_key(group_box_name):
+        if group_box_name in self.channel_objects:
         
             for box in self.channel_objects[group_box_name]:
                 
@@ -834,10 +932,10 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
             
         except ValueError as e:
             
-            if "left cannot be >= right" in e:
+            if "left cannot be >= right" in str(e):
                 pass
                 #it seems to be a platform dependent error
-            elif "ordinal must be >= 1" in e:
+            elif "ordinal must be >= 1" in str(e):
                 try:
                     
                     initial_array = [time.time()]

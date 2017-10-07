@@ -216,7 +216,8 @@ class MatplotlibZoomWidget(MatplotlibWidget):
         try :
             self.figure.canvas.draw()
         except ValueError as e: 
-            if "ordinal must be >= 1" in e:
+
+            if "ordinal must be >= 1" in str(e):
                 pass
                 #whenever the time format is on and the data array is empty
             else:

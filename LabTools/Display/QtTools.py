@@ -16,7 +16,7 @@ if  USE_PYQT5:
     import PyQt5.QtWidgets as QtGui
     import PyQt5.QtCore as QtCore
     from PyQt5.QtCore import Qt, pyqtSignal
-    from PyQt5.QtGui import QKeySequence, QIcon
+    from PyQt5.QtGui import QKeySequence, QIcon, QPainter
     
 else:
 
@@ -24,7 +24,7 @@ else:
     import PyQt4.QtCore as QtCore
     from PyQt4.QtCore import Qt      
     from PyQt4.QtCore import SIGNAL
-    from PyQt4.QtGui import QKeySequence, QIcon
+    from PyQt4.QtGui import QKeySequence, QIcon, QPainter
 
 
 
@@ -155,7 +155,7 @@ class QAutoHideDockWidgets(QtGui.QToolBar):
 
     def paintEvent(self, event):
 
-        p = QtGui.QPainter(self)
+        p = QPainter(self)
         p.setPen(Qt.black)
         p.setBrush(Qt.black)
         if self._area == Qt.LeftDockWidgetArea:
