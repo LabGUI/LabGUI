@@ -297,7 +297,7 @@ class MatplotlibZoomWidget(MatplotlibWidget):
         # if self.__mousePressPos is not None:
         super(MatplotlibZoomWidget, self).mouseReleaseEvent(event)
         if True:  # event.buttons() == QtCore.Qt.LeftButton:
-            print("Mouse mode : %s"%(self.mouseMode))
+#            print("Mouse mode : %s"%(self.mouseMode))
             if self.mouseMode == self.PAN_MODE:
                 self.setCursor(QCursor(QtCore.Qt.OpenHandCursor))
                 selection_limits = [self.axes.get_xlim(), self.axes.get_ylim()]
@@ -386,10 +386,12 @@ class MatplotlibZoomWidget(MatplotlibWidget):
     
         if USE_PYQT5:
             
-            zoom = 1 - event.pixelDelta() / 1200.0
+            point = event.angleDelta()           
+            
+            zoom = 1 - point.y() / 1200.0
         
         else:
-        
+
             zoom = 1 - event.delta() / 1200.0
 
         # correct for difference in coordinate systems (note Y is top left in widget, bottom left in figure)
@@ -514,85 +516,113 @@ class ActionManager(QtCore.QObject):
         removed_selection_box = pyqtSignal()
     
     def __init__(self, parent):
+        
+        super(ActionManager,self).__init__(parent)        
+        
         self.parent = parent
         
-        self.plotAutoScaleXAction = self.create_action(parent, "Auto Scale X", slot=self.toggleAutoScaleX, shortcut = QKeySequence("Ctrl+A"),
-                                                          icon="toggleAutoScaleX", tip="Turn autoscale X on or off", checkable=True)
+        self.plotAutoScaleXAction = self.create_action(parent, "Auto Scale X", 
+            slot = self.toggleAutoScaleX, shortcut = QKeySequence("Ctrl+A"),
+            icon = "toggleAutoScaleX", tip = "Turn autoscale X on or off", 
+            checkable = True)
 
-        self.plotAutoScaleLAction = self.create_action(parent, "Auto Scale L", slot=self.toggleAutoScaleL, shortcut = QKeySequence("Ctrl+D"),
-                                                          icon="toggleAutoScaleL", tip="Turn autoscale Left Y on or off", checkable=True)
+        self.plotAutoScaleLAction = self.create_action(parent, "Auto Scale L", 
+            slot = self.toggleAutoScaleL, shortcut = QKeySequence("Ctrl+D"),
+            icon = "toggleAutoScaleL", tip = "Turn autoscale Left Y on or off", 
+            checkable = True)
 
-        self.plotAutoScaleRAction = self.create_action(parent, "Auto Scale R", slot=self.toggleAutoScaleR, shortcut = QKeySequence("Ctrl+E"),
-                                                          icon="toggleAutoScaleR", tip="Turn autoscale Right Y on or off", checkable=True)
+        self.plotAutoScaleRAction = self.create_action(parent, "Auto Scale R", 
+            slot = self.toggleAutoScaleR, shortcut = QKeySequence("Ctrl+E"),
+            icon = "toggleAutoScaleR", tip = "Turn autoscale Right Y on or off" 
+            , checkable = True)
 
-        self.plotDragZoomAction = self.create_action(parent, "Drag to zoom", slot=self.toggleDragZoom, shortcut = QKeySequence("Ctrl+Z"),
-                                                        icon="zoom", tip="Turn drag to zoom on or off", checkable=True)
+        self.plotDragZoomAction = self.create_action(parent, "Drag to zoom", 
+            slot = self.toggleDragZoom, shortcut = QKeySequence("Ctrl+Z"),
+            icon = "zoom", tip = "Turn drag to zoom on or off", 
+            checkable = True)
 
-        self.plotPanAction = self.create_action(parent, "Drag to Pan", slot=self.togglePan, shortcut = QKeySequence("Ctrl+P"),
-                                                   icon="pan", tip="Turn drag to Pan on or off", checkable=True)
+        self.plotPanAction = self.create_action(parent, "Drag to Pan",
+            slot = self.togglePan, shortcut = QKeySequence("Ctrl+P"),
+            icon = "pan", tip = "Turn drag to Pan on or off",
+            checkable = True)
 
-        self.plotSelectAction = self.create_action(parent, "Drag to Select", slot=self.toggleSelect, shortcut = QKeySequence("Ctrl+L"),
-                                                      icon="select", tip="Turn drag to Select on or off", checkable=True)
+        self.plotSelectAction = self.create_action(parent, "Drag to Select",
+            slot = self.toggleSelect, shortcut = QKeySequence("Ctrl+L"),
+            icon = "select", tip = "Turn drag to Select on or off", 
+            checkable = True)
 
-        self.plotClearSelectAction = self.create_action(parent, "Hide selection box", slot = self.hide_selection_box,
-                                                           icon="clear_select", tip="Hide Selection box", checkable = False)
+        self.plotClearSelectAction = self.create_action(parent, 
+            "Hide selection box", slot = self.hide_selection_box,
+            icon = "clear_select", tip = "Hide Selection box",
+            checkable = False)
 
-        self.changeXscale = self.create_action(parent, "Set X log", slot=self.setXscale, shortcut=None,
-                                                  icon="logX", tip="Set the x scale to log")
-        self.changeYscale = self.create_action(parent, "Set Y log", slot=self.setYscale, shortcut=None,
-                                                  icon="logY", tip="Set the y scale to log")
-        self.changeYRscale = self.create_action(parent, "Set YR log", slot=self.setYRscale, shortcut=None,
-                                                   icon="logY", tip="Set the yr scale to log")
-
-        #self.clearPlotAction = self.create_action(parent, "Clear Plot", slot=self.clear_plot, shortcut=None,
-        #                                            icon="clear_plot", tip="Clears the data arrays")
-
-                 
-        self.actions = [self.plotAutoScaleXAction, 
-                        self.plotAutoScaleLAction, self.plotAutoScaleRAction,
-                        self.plotDragZoomAction, self.plotDragZoomAction,
-                        self.plotPanAction, self.plotSelectAction,
-                        self.plotClearSelectAction, self.plotClearSelectAction,
-                        self.changeXscale, self.changeYscale, self.changeYRscale]
-                       # self.clearPlotAction]
-
-        self.saveFigAction = self.create_action(parent, "&Save Figure", slot=self.save_fig, shortcut = QKeySequence.Save,
-                                                       icon=None, tip="Save the current figure")
-                                                       
-    def create_action(self, parent, text, slot=None, shortcut=None, icon=None, tip=None, checkable=False, signal="triggered(bool)"):
+        self.changeXscale = self.create_action(parent, "Set X log",
+            slot = self.setXscale, shortcut = None,
+            icon = "logX", tip = "Set the x scale to log")
+            
+        self.changeYscale = self.create_action(parent, "Set Y log",
+            slot = self.setYscale, shortcut = None,
+            icon = "logY", tip = "Set the y scale to log")
+            
+        self.changeYRscale = self.create_action(parent, "Set YR log",
+            slot = self.setYRscale, shortcut = None,
+            icon = "logY", tip = "Set the yr scale to log")
         
+                 
+        self.actions = [self.plotAutoScaleXAction, self.plotAutoScaleLAction, 
+                        self.plotAutoScaleRAction, self.plotDragZoomAction, 
+                        self.plotDragZoomAction, self.plotPanAction,
+                        self.plotSelectAction, self.plotClearSelectAction,
+                        self.plotClearSelectAction, self.changeXscale,
+                        self.changeYscale, self.changeYRscale]
+
+
+        self.saveFigAction = self.create_action(parent, "&Save Figure", 
+            slot = self.save_fig, shortcut = QKeySequence.Save,
+            icon = None, tip = "Save the current figure")
+                                                       
+    def create_action(self, parent, text, slot = None, shortcut = None, 
+                      icon = None, tip = None, checkable = False):
+        """
+        create a QAction and assign a trigger slot (fonction or method) to it
+        
+        it also allow to define keyboard shortcut, icon, help text and
+        """
+        
+        #create the action
         action = QtGui.QAction(text, parent)
         
+        #change the icon
         if icon is not None:
+            
             action.setIcon(QIcon("./images/%s.png" % icon))
             
+        #assign a shortcut
         if shortcut is not None:
+            
             action.setShortcut(shortcut)
             
+        #assign a tip (help text)
         if tip is not None:
+            
             action.setToolTip(tip)
             action.setStatusTip(tip)
             
+        #assign a slot to the action trigger signal
         if slot is not None:
-            if USE_PYQT5:
-                print(signal)
-                print(slot)
-                action.triggered.connect(slot)
-#                action.pyqtConfigure(**keyw)
-#                action.pyqtConfigure(triggered = slot)
             
-            else:
-                
-                parent.connect(action, SIGNAL(signal), slot)
+            action.triggered.connect(slot)            
             
         if checkable:
+            
             action.setCheckable(True)
+            
         return action    
         
     def update_current_widget(self, current_widget):
         """this is used when there are multiple plot widgets that have 
         different zoom settings"""
-        
+
         self.current_widget = current_widget
 
         mode = current_widget.mouseMode
@@ -617,8 +647,7 @@ class ActionManager(QtCore.QObject):
     def toggleAutoScaleR(self, triggered):
         self.updateZoomSettings()
 
-#    @QtCore.pyqtSlot()
-    def toggleDragZoom(self, triggered):
+    def toggleDragZoom(self,triggered):
         
         if self.plotPanAction.isChecked():
             
@@ -630,27 +659,34 @@ class ActionManager(QtCore.QObject):
             
         self.updateZoomSettings()    
 
-#    @QtCore.pyqtSlot()
     def togglePan(self, triggered):
         
-        print("togglePan")
         if self.plotDragZoomAction.isChecked():
+            
             self.plotDragZoomAction.setChecked(False)
+            
         if self.plotSelectAction.isChecked():
+            
             self.plotSelectAction.setChecked(False)
+            
         self.updateZoomSettings()
 
-#    @QtCore.pyqtSlot()
     def toggleSelect(self, triggered):
-        print("toggleSelect")
+        
         if self.plotDragZoomAction.isChecked():
+            
             self.plotDragZoomAction.setChecked(False)
+            
         if self.plotPanAction.isChecked():
+            
             self.plotPanAction.setChecked(False)
+            
         self.updateZoomSettings()
 
     def hide_selection_box(self, triggered):
+        
         if self.current_widget.selection_showing:
+            
             self.current_widget.select_rectangle.remove()
             self.current_widget.selection_showing = False
             self.current_widget.figure.canvas.draw()
@@ -663,16 +699,21 @@ class ActionManager(QtCore.QObject):
                 
                 self.current_widget.emit(SIGNAL("removed_selection_box()"))
 
-    def setXscale(self):
+    def setXscale(self, triggered):
+                
         self.set_Xaxis_scale(self.current_widget.axes)
 
-    def setYscale(self):
+    def setYscale(self, triggered):
+        
         self.set_Yaxis_scale(self.current_widget.axes)
 
-    def setYRscale(self):
+    def setYRscale(self, triggered):
+        
         self.set_Yaxis_scale(self.current_widget.axesR)
 
     def clear_plot(self):
+        """replace the data by an empty array"""
+        
         self.data_array = np.array([])
         
         if USE_PYQT5:
@@ -685,17 +726,23 @@ class ActionManager(QtCore.QObject):
                                  self.data_array)
 
         
-    # change the x axis scale to linear if it was log and reverse
+    
     def set_Xaxis_scale(self, axis):
+        """change the x axis scale to linear if it was log and reverse"""
         curscale = axis.get_xscale()
-#        print curscale
+
         if curscale == 'log':
+            
             axis.set_xscale('linear')
+            
         elif curscale == 'linear':
+            
             axis.set_xscale('log')
 
-    # change the y axis scale to linear if it was log and reverse
+
     def set_Yaxis_scale(self, axis):
+        """change the x axis scale to linear if it was log and reverse"""
+    
         curscale = axis.get_yscale()
 #        print curscale
         if curscale == 'log':
@@ -733,11 +780,6 @@ class ActionManager(QtCore.QObject):
 
     def updateZoomSettings(self):
 
-        print(self.plotDragZoomAction.isChecked())
-        print(self.plotPanAction.isChecked())
-        print(self.plotSelectAction.isChecked())
-
-
         if self.plotDragZoomAction.isChecked():
             self.current_widget.set_mouse_mode(self.current_widget.ZOOM_MODE)
             
@@ -755,6 +797,8 @@ class ActionManager(QtCore.QObject):
             
         self.current_widget.set_autoscale_yR(
             self.plotAutoScaleRAction.isChecked())
+            
+        
         
         
         
@@ -775,10 +819,6 @@ def convert_lim(axis, lim):
         return [10**lim[0], 10**lim[1]]
     else:
         return lim
-
-class Printer(QtGui.QWidget):
-    def to_print(self,mode, limits):
-        print(mode, limits)
 
 
 class ExamplePlotDisplay(QtGui.QMainWindow):

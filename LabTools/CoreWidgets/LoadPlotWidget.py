@@ -143,9 +143,19 @@ class LoadPlotWidget(QtGui.QWidget):
             
             default_path = './'        
         
-        fname = str(QtGui.QFileDialog.getOpenFileName(self, 
+        if USE_PYQT5:
+            
+            fname, fmt = QtGui.QFileDialog.getOpenFileName(self, 
                                                 'Load data from', 
-                                                default_path))
+                                                default_path)
+            
+            fname = str(fname)
+            
+        else:
+            
+            fname = str(QtGui.QFileDialog.getOpenFileName(self, 
+                                                'Load data from', 
+                                                default_path))   
         
         #activate the plot button
         self.fname_changed()

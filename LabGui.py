@@ -1088,10 +1088,20 @@ the script path and the data output path into the config file")
             markers, linestyles and user defined parameters for the window
         """
         
-        if fname == None:
+        if fname is None:
             
-            fname = str(QtGui.QFileDialog.getSaveFileName(
-                self, 'Save settings file as', './'))
+            if USE_PYQT5:
+                
+                fname, fmt = QtGui.QFileDialog.getSaveFileName(
+                self, 'Save settings file as', './')
+                
+                fname = str(fname)
+                
+            else:
+                
+                fname = str(QtGui.QFileDialog.getSaveFileName(
+                self, 'Save settings file as', './'))                 
+            
                 
         if fname:
             
@@ -1118,10 +1128,19 @@ the script path and the data output path into the config file")
             for the instrument and which axis to select for plotting, colors,
             markers, linestyles and user defined parameters for the window
         """
-        if fname == None:
+        if fname is None:
             
-            fname = str(QtGui.QFileDialog.getOpenFileName(
-            self, 'Open settings file', './'))
+            if USE_PYQT5:
+                
+                fname, fmt = QtGui.QFileDialog.getOpenFileName(
+                self, 'Open settings file', './')
+                
+                fname = str(fname)
+                
+            else:
+                
+                fname = str(QtGui.QFileDialog.getOpenFileName(
+                self, 'Open settings file', './'))          
             
         if fname:
             
@@ -1138,7 +1157,17 @@ the script path and the data output path into the config file")
             
             default_path = './'
             
-        fname = str(QtGui.QFileDialog.getOpenFileName(
+            
+        if USE_PYQT5:
+            
+            fname, fmt = QtGui.QFileDialog.getOpenFileName(
+            self, 'Open settings file', default_path)
+            
+            fname = str(fname)
+            
+        else:
+            
+            fname = str(QtGui.QFileDialog.getOpenFileName(
             self, 'Open settings file', default_path))
             
         if fname:
