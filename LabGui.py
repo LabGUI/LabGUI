@@ -709,11 +709,13 @@ the script path and the data output path into the config file")
             
             pdw = self.zoneCentrale.subWindowList()[-1].widget()
         
+            return pdw
+            
         except IndexError:
             
             logging.error("No pdw available")
         
-        return pdw
+        
             
 
     def update_colors(self):

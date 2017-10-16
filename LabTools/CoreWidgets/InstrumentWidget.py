@@ -45,7 +45,7 @@ class SingleLineWidget(QtGui.QWidget):
         colorChanged = pyqtSignal()
       
     # I'm thinking of modifying the design of the CommandWindow so that it just has a set of this object instead of the many different arrays of cbb to take care of.
-    def __init__(self, available_ports=["GPIB0::" + str(i) for i in range(30)], color = None, parent=None):    
+    def __init__(self, available_ports=["GPIB0::" + str(i) for i in range(30)], color = None, parent = None):    
         super(SingleLineWidget, self).__init__(parent)
         
         self.AVAILABLE_PORTS = available_ports
@@ -55,16 +55,21 @@ class SingleLineWidget(QtGui.QWidget):
             
         # TickBoxes
         self.color_btn = self.create_color_btn(color)
+        
         # Empty text boxes called Line Edit where the user can write which ever
         # title for plotting purposes
-        self.param_name_le= self.create_lineedit(label_text="dt(s)")
+        self.param_name_le= self.create_lineedit(label_text = "dt(s)")
+        
         # Contains the names of the instruments' driver's modules
-        self.instr_name_cbb = self.create_combobox("Instr name", label_text="Type")
+        self.instr_name_cbb = self.create_combobox("Instr name", 
+                                                   label_text = "Type")
         # Contains the ports (GPIB/COM address) of the instruments
-        self.port_cbb = self.create_combobox("Port", label_text="GPIB/COM Port")
+        self.port_cbb = self.create_combobox("Port", 
+                                             label_text = "GPIB/COM Port")
         
         # Contains the lists of parameters of the instruments
-        self.param_cbb = self.create_combobox("Param", label_text="Measurement")
+        self.param_cbb = self.create_combobox("Param", 
+                                              label_text = "Measurement")
         
         self.horizontal_layout = QtGui.QHBoxLayout(self)
 #        self.horizontal_layout.addWidget(self.color_btn)
@@ -369,30 +374,42 @@ class InstrumentWindow(QtGui.QWidget):
         """"This method is used to initialise a user defined number of lines of comboboxes, each line will hold information about one instrument"""
 
         if num_channels < 2 and num_channels > -1:
+            
             num_channels = 2
 
         if num_channels == -1:
+            
             first_init = True
             num_channels = 5
 
         else:
+            
             first_init = False
             self.remove_all_lines()
+            
         #self.num_channels = num_channels
         # sets the headers for the buttons
         if num_channels > 0:
             self.headers = ["Color", "Name", "Instr", "Port", "Param"]
+            
             widths = [None, None,width_instr, width_port, width_param]
+            
             self.header_layout = QtGui.QHBoxLayout()
+            
             for i, hdr_text in enumerate(self.headers):
+                
                 header = QtGui.QLabel(hdr_text)
+                
                 if widths[i]:
+                    
                     header.setFixedWidth(widths[i])
+                    
                 self.header_layout.addWidget(header)
             self.line_layout.addLayout(self.header_layout)
             
             
             for i in range(num_channels):
+                
                 self.create_line()
 
             if first_init:
@@ -432,31 +449,44 @@ class InstrumentWindow(QtGui.QWidget):
                 self.vertical_layout.addItem(spacer_item)
 
                 self.setLayout(self.vertical_layout)
+                
             else:
+                
                 pass
                 # add the button 'Connect' at the end of the instrument list
 #                self.line_layout.addWidget(self.bt_connecthub, self.num_channels+1,3,1,1)
                 # this is an inside class defined function that clear all the
                 # widgets on the windows as well as emptying the lists
         else:
+            
             if first_init:
+                
                 pass
+            
             else:
+                
                 self.resetLayout()
+
 
     def create_line(self, msg="", color=None):
         
                 
         self.color_set = color_blind_friendly_colors(len(self.lines)+1)
+        
 #        if color==None:
+        
 #            self.color_set = color_blind_friendly_colors(len(self.lines)+1)
 #            color = self.color_set[-1]
         
 #        print 'line created'
         new_line = SingleLineWidget(self.AVAILABLE_PORTS)
+        
         self.lines.append(new_line)
+        
         self.line_layout.addWidget(new_line)
+        
         for line,color in zip(self.lines,self.color_set):
+            
             line.set_color(color)
 
         if USE_PYQT5:
@@ -471,7 +501,9 @@ class InstrumentWindow(QtGui.QWidget):
             self.connect(new_line, SIGNAL("colorChanged()"), self.update_colors)
 
         self.update_colors()
+        
         return new_line
+
 
     def remove_lastline(self):
         # decrease the number of channels by one

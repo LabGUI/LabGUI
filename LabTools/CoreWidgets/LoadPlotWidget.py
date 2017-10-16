@@ -19,7 +19,7 @@ if  USE_PYQT5:
     
     import PyQt5.QtWidgets as QtGui
     
-    from PyQt5.QtCore import Qt, pyqtSignal
+    from PyQt5.QtCore import Qt
     
 else:
     
@@ -252,17 +252,24 @@ def create_plw(parent, load_fname = None):
         default_channels = nb_channels, 
         channel_controls = chan_contr)
     
+    if USE_PYQT5:
     
-    parent.connect(plw.mplwidget, SIGNAL(
-        "limits_changed(int,PyQt_PyObject)"), parent.emit_axis_lim)
-        
-    parent.connect(parent.widgets['AnalyseDataWidget'], SIGNAL(
-        "data_set_updated(PyQt_PyObject)"), plw.update_plot)
-        
-    parent.connect(parent.widgets['AnalyseDataWidget'], SIGNAL(
-        "update_fit(PyQt_PyObject)"), plw.update_fit)
-        
-    parent.connect(parent, SIGNAL("remove_fit()"), plw.remove_fit)
+        plw.mplwidget.limits_changed.connect(parent.emit_axis_lim)    
+    
+        parent.widgets['AnalyseDataWidget'].update_fit.connect(
+            plw.update_fit)    
+            
+        parent.signal_remove_fit.connect(plw.remove_fit)
+    
+    else:
+    
+        parent.connect(plw.mplwidget, SIGNAL(
+            "limits_changed(int,PyQt_PyObject)"), parent.emit_axis_lim)
+            
+        parent.connect(parent.widgets['AnalyseDataWidget'], SIGNAL(
+            "update_fit(PyQt_PyObject)"), plw.update_fit)
+            
+        parent.connect(parent, SIGNAL("remove_fit()"), plw.remove_fit)
 
     try:
         for i, param in enumerate(labels['channel_labels']):
