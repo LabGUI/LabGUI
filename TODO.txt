@@ -1,0 +1,3 @@
+the inline configuration file argument parsing doesn't seem to work well
+
+the output console doesn't seem to work
