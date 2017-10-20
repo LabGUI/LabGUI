@@ -10,6 +10,7 @@ Created on Mon Aug 12 16:16:02 2013
 import time
 import random
 import Tool
+import numpy as np
 
 
 param = {'V': 'V'}
@@ -31,17 +32,29 @@ class Instrument(Tool.MeasInstr):
     def standard_setup(self):
         if not self.DEBUG:
             self.write(':OUTP 1')
-            # self.enable_output()
+#             self.enable_output()
 
     def measure(self, channel='V'):  # Do I nead to write the channel argument here?
-        """ This method does not measure, it asks what value is
-            displayed on the screen (asks the source level) """
+        """ This mecthod does not measure, it asks what value is
+            displayed on the screen (asks the soure level) """
         if not self.DEBUG:
             answer = self.ask(':SOUR:LEV?')
-            answer = float(answer.split(',', 1)[0])
+            print answer
+#            answer = self.ask(':MEAS?')            
+            try:
+                answer = float(answer[:-1])
+            except ValueError:
+                answer.replace('>','.')
+                try:
+                    answer = float(answer[:-1])
+                except ValueError:
+                    print "The Yokogawa output is buggy again :( : '%s'"%answer
+                    answer = self.last_measure[channel]
         else:
             answer = random.random()
 
+        self.last_measure[channel] = answer
+        
         return answer
 
     def set_value(self, val):  # for interferometer program
@@ -258,8 +271,9 @@ class Instrument(Tool.MeasInstr):
 
 if __name__ == "__main__":
 
-    BPO = Instrument("GPIB0::19")
-    print BPO.identify()
-    BPO.set_voltage(0)
-#    print BPO.measure('V')
+    YOKO = Instrument("GPIB0::19")
+#    print YOKO.ask("*IDN?")
+#    YOKO.reset()
+#    print YOKO.configure_output('CURR',0)
+    print YOKO.measure('V')
 

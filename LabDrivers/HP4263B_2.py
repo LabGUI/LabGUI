@@ -8,14 +8,14 @@ import string
 import random
 
 
-param = {'': ''}
+param = {'1': "mH", '2': "mH"}
 
 INTERFACE = Tool.INTF_GPIB
 
 class Instrument(Tool.MeasInstr):
 
     def __init__(self, resource_name, debug=False, **kwargs):
-        super(Instrument, self).__init__(resource_name, 'HP4263B', debug=debug,
+        super(Instrument, self).__init__(resource_name, 'HP4263B_2', debug=debug,
                                          interface = INTERFACE, **kwargs)
 
     def identify(self, msg=''):
@@ -29,7 +29,7 @@ class Instrument(Tool.MeasInstr):
         if channel in self.last_measure:
             if not self.DEBUG:
                 # to be changed to measure wanted quantities
-                answer = self.read_data()
+                answer = self.read_data(channel)
             else:
                 answer = random.random()
             self.last_measure[channel] = answer
@@ -43,11 +43,11 @@ class Instrument(Tool.MeasInstr):
         if not self.DEBUG:
             self.write(':TRIG:IMM')
 
-    def read_data(self):
+    def read_data(self,channel):
         if not self.DEBUG:
             string_data = self.ask(':FETC?')
             list_data = string.split(string_data, ',')
-            return float(list_data[2])
+            return float(list_data[int(channel)])
         else:
             return 123.4
 
@@ -67,8 +67,9 @@ class Instrument(Tool.MeasInstr):
     def raw_to_mK(self, raw_value):
         return -4.36894 / (-raw_value * 1000 + 2.93629)
 
- # if run as own program
-if (__name__ == '__main__'):
-    LCR = Instrument("GPIB0::17")
-    print LCR.identify()
-    
+    # if run as own program
+    # if (__name__ == '__main__'):
+
+     #   lockin = device('dev9')
+     #   lockin.set_ref_internal  # no averaging
+     #   lockin.close()

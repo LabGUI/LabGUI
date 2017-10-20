@@ -79,6 +79,7 @@ class OutputFileWidget(QtGui.QWidget):
 
     def get_header_text(self):
         text = str(self.headerTextEdit.toPlainText())
+        print text
         if text:
             text = "# " + text.replace("\n", "\n#") + "\n"
             return text

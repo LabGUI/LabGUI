@@ -696,9 +696,12 @@ the pyqt window option is disabled")
 
     def finished_DTT(self, completed):
         if completed:
-            self.start_DTT_action.setEnabled(True)
-            self.pause_DTT_action.setEnabled(False)
-            self.stop_DTT_action.setEnabled(False)
+            
+            self.stop_DTT()
+            
+#            self.start_DTT_action.setEnabled(True)
+#            self.pause_DTT_action.setEnabled(False)
+#            self.stop_DTT_action.setEnabled(False)
 
             self.widgets['OutputFileWidget'].increment_filename()
             

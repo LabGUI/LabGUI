@@ -8,7 +8,7 @@ try:
 except:
     import Tool
 
-CHANNELS_IDX = {"1K Pot":"LS_1","Still":"LS_2","ICP":"LS_3","MC":"LS_4"}
+CHANNELS_IDX = {"1K Pot":1,"Still":2,"ICP":3,"MC":4}
 
 param = {'heater': '%',"1K Pot":"K","Still":"K","ICP":"K","MC":"K"}
 
@@ -39,7 +39,7 @@ class Instrument(Tool.MeasInstr):
 
     def read_channel(self, chan):
         if not self.DEBUG:
-            data = self.ask('RDGR? ' + str(chan[-1]))
+            data = self.ask('RDGR? %02d'%(chan))
 
             try:
                 return float(data)

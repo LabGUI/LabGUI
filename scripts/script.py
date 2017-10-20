@@ -23,6 +23,8 @@ the namespace of DataTakerThread.
 #        snooze_timers[id_name]=-1
 #        if not id_name in instr_id_names:
 #            instr_id_names.append(id_name)
+#i = self.instruments['FridgeServer']
+
 
 print("INIT DONE")
 #print self.instruments
@@ -30,9 +32,15 @@ while self.isStopped() == False:
     
     
     #This initiates the measure sequence in datatakerthread
-    self.read_data()
-    time.sleep(1)
-    self.check_stopped_or_paused()
+
+
+    if self.isPaused():
+#        print i.change_htr_val(41)
+        self.check_stopped_or_paused()
+    else:
+        self.read_data()
+        time.sleep(0.5)
+        
     
     #The following is tha basic alarm sequence, uncomment this block to activate it
 

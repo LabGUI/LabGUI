@@ -13,8 +13,9 @@ param = OrderedDict([('X','V'), ('Y', 'V'),('X2','V'), ('Y2', 'V'),('X3','V'), (
 INTERFACE = Tool.INTF_NONE  
 
 class Instrument(Tool.MeasInstr):  
-    def __init__(self, name, debug = False): 
-        super(Instrument, self).__init__(None, name = 'ZH_HF2', debug=debug, interface = INTERFACE)
+    def __init__(self, name, debug = False):
+        resource_name = 'ZH_HF2'
+        super(Instrument, self).__init__(resource_name, name = 'ZH_HF2', debug=debug, interface=INTERFACE)
         #self.ID_name=name
        # self.debug=debug
        # self.resource_name = name

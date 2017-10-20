@@ -33,7 +33,7 @@ class Instrument(Tool.MeasInstr):
 #        print 'SEND %i,"%s"'%(chan_num,msg)
         self.write('CONN %i,"xyz"'%chan_num)
         answer=self.ask('%s'%(msg))
-        i.write("xyz")
+        self.write("xyz")
         return answer
 #        return i.ask('SNDT %i,"%s"'%(chan_num,msg))
         
@@ -42,27 +42,28 @@ class Instrument(Tool.MeasInstr):
         
     def set_voltage(self, chan_num, voltage):
         if not self.debug:
-            i.write('CONN %i,"xyz"'%chan_num)
-            i.write("VOLT %f"% voltage)
-            i.write("xyz")
+            self.write('CONN %i,"xyz"'%chan_num)
+            self.write("VOLT %f"% voltage)
+            self.write("xyz")
         else:
             print("voltage set to " + str(voltage) + " on channel " + chan_num)
             
     def enable_output(self,chan_num):
         if not self.debug:
-            i.write('CONN %i,"xyz"'%chan_num)
-            i.write("OPON")
-            i.write("xyz")
+            self.write('CONN %i,"xyz"'%chan_num)
+            self.write("OPON")
+            self.write("xyz")
 
     def disable_output(self,chan_num):
         if not self.debug:
-            i.write('CONN %i,"xyz"'%chan_num)
-            i.write("OPOF")
-            i.write("xyz")
+            self.write('CONN %i,"xyz"'%chan_num)
+            self.write("OPOF")
+            self.write("xyz")
             
-    def move_voltage(self, p_reader, chan_num, p_target_voltage, step=0.002, wait=0.001):
+    def move_voltage(self, p_reader, chan_num, p_target_voltage, step=0.002, wait=0.005):
 #    def move_voltage(self, p_reader, p_target_voltage, step=0.001, wait=0.005):
-#        print 'Moving voltage'        
+#        print 'Moving voltage'
+        print(self.get_voltage(chan_num))
         current_voltage = float(self.get_voltage(chan_num))
         # Parse move direction cases
         if current_voltage < p_target_voltage:  # If keithley needs to move up
@@ -99,16 +100,7 @@ class Instrument(Tool.MeasInstr):
         
 if __name__ == "__main__":
     
-    i=Instrument("COM7")
+    i=Instrument("COM6",debug=False)    
+    print(i.identify())
     
-#    i.write('SNDT 4,"GAIN"')
-    print i.ask("*IDN?")
-    i.enable_output(4)
-#    i.set_voltage(5,5)
-#    i.set_voltage(4,4)
-#    print(i.get_voltage(5))
-#    print(i.get_voltage(4))
-#    i.move_voltage(5,0)
-#    i.move_voltage(4,0)
-#    print(i.get_voltage(5))
-#    print(i.get_voltage(4))
+    print(i.get_voltage(4))

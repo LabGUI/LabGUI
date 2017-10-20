@@ -90,7 +90,7 @@ class DataTaker(QThread):
 
         self.completed = True
         self.emit(SIGNAL("script_finished(bool)"), self.completed)
-        self.stopped = True
+#        self.stopped = True
 
         print("DTT run over")
 

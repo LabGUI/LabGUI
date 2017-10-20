@@ -97,5 +97,5 @@ def T_to_R(T):
     return resistance
 
 if __name__ == "__main__":
-    print(R_to_T(5166.86))
-#    print(T_to_R(40))
+#    print(R_to_T(2191.98))
+    print(T_to_R(40))

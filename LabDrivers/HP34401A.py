@@ -59,7 +59,6 @@ class Instrument(Tool.MeasInstr):
     def read_voltage_DC(self):
         if not self.DEBUG:
             string_data = self.ask(':MEAS:VOLT:DC?')
-            print(string_data)
             return float(string_data)
         else:
             return 123.4
@@ -92,9 +91,9 @@ class Instrument(Tool.MeasInstr):
         else:
             return 123.4
 
-    # if run as own program
-    # if (__name__ == '__main__'):
+#     if run as own program
+if (__name__ == '__main__'):
 
-     #   lockin = device('dev9')
-     #   lockin.set_ref_internal  # no averaging
-     #   lockin.close()
+    HP = Instrument("GPIB0::4::INSTR")
+    print HP.measure('V_DC')
+    HP.identify()
