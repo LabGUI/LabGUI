@@ -18,10 +18,21 @@ INTERFACE = Tool.INTF_SERIAL
 class Instrument(Tool.MeasInstr):
 
     def __init__(self, resource_name, debug = False, **kwargs):
+        
+        #manage the presence of the keyword interface which will determine
+        #which method of communication protocol this instrument will use
+        if 'interface' in kwargs.keys():
+
+            interface = kwargs.pop('interface')
+
+        else:
+
+            interface = INTERFACE
+
         super(Instrument, self).__init__(resource_name,
                                          'PARO1000', debug=debug, 
-                                         interface = INTERFACE, 
-                                         term_chars='\r\n', **kwargs)    
+                                         interface = interface, 
+                                         term_chars='\r\n', **kwargs) 
 
     def measure(self, channel='PRESSURE'):
         if channel in self.last_measure:
@@ -43,9 +54,12 @@ class Instrument(Tool.MeasInstr):
 
     def identify(self, msg=''):
         if not self.DEBUG:
+            
             answer = self.ask('*0100MN')
             answer = "PARO" + answer[8:]
+            
         else:
+            
             answer = self.ID_name
 
         return msg + answer

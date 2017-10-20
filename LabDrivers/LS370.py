@@ -8,9 +8,11 @@ try:
 except:
     import Tool
 
-CHANNELS_IDX = {"1K Pot":1,"Still":2,"ICP":3,"MC":4}
 
-param = {'heater': '%',"1K Pot":"Ohm","Still":"Ohm","ICP":"Ohm","MC":"Ohm"}
+CHANNELS_IDX = {"50K flange":1,"4K flange":2,"Magnet":3,"Still flange":5,"T MXC flange":6,"R MXC flange":6,"CH7":7,"T_CH8":8,"R_CH8":8}
+
+param = {'heater': 'A',"50K flange":"K","4K flange":"K","Magnet":"K","Still flange":"K","T MXC flange":"K","R MXC flange":"Ohm","CH7":"Ohm","T_CH8":"K","R_CH8":"Ohm"}
+
 
 TEMP_CONTROL_PARAM = ['channel', 'filter','units', 'delay', 'current/power','htr limit', 'htr resistance']
 
@@ -24,8 +26,19 @@ MANUAL_HTR_MAX_CURRENT = 0.091
 class Instrument(Tool.MeasInstr):
 
     def __init__(self, resource_name, debug = False, **kwargs):
-        super(Instrument, self).__init__(resource_name, 'LS370', debug=debug,
-                                         interface = INTERFACE, **kwargs)
+        
+        #manage the presence of the keyword interface which will determine
+        #which method of communication protocol this instrument will use
+        if 'interface' in kwargs.keys():
+
+            interface = kwargs.pop('interface')
+
+        else:
+
+            interface = INTERFACE
+        
+        super(Instrument, self).__init__(resource_name, 'LS370', debug = debug,
+                                         interface = interface, **kwargs)
 
     def measure(self, channel):
         if channel in self.last_measure:

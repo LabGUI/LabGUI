@@ -132,9 +132,90 @@ def find_prologix_ports():
 
     return result
 
+def is_IP_port(device_port, return_vals = False):
+    """
+        decides whether the given port can be considered as an IP address with
+        a port and a unique identifier (for client instrument use)
+    """
+    
+    #I should make sure I identify the IP device port in a unique way
+    #maybe the presence of two ":" character plus the presence of three "." in
+    #the IP part should be good enough
+    #IP:ip_port:device_port
+    #IP : IP address XXX.XXX.XXX.XXX
+    #port : something like 4XXXX
+    #device_port, the device port of the instrument which has a physical 
+    #connection on the server side (to be able to uniquely identify)
+    info = device_port.split(':')
+    
+    #format should be IP:ip_port:device_port
+    if len(info) == 3:
+        
+        ip, ip_port, device_port = info
+    
+    #if device_port contains ':' it might be still a correct format 
+    elif len(info) > 3:
+        
+        #gets the first two parameters, IP and ip_port
+        ip, ip_port = info[0:2]
+        
+        #the beginning of the server_port
+        device_port = info[2]
+        
+        #iterate through successive instances of ':' to get the server_port
+        for part in info[3:]:
+                
+            device_port = "%s:%s"%(device_port, part) 
 
- 
+    else:
+        #format of the input is wrong
+        return False
 
+    #the IP address should have 3 dots and 4 components 
+    ip_nums = ip.split('.')
+    
+    if len(ip_nums) == 4:
+
+        for ip_num in ip_nums:
+            
+            #test if the component is a number
+            try:
+                
+                num = int(ip_num)
+                
+            except ValueError:
+                #the component isn't an integer number
+                return False
+            
+            #test if the component is between 0 and 255
+            if num < 0 and num > 255:
+                
+                return False
+        
+    else:
+        #the format of the IP address is wrong
+        return False
+    
+    #test the format of the port number
+    try:
+        
+        int(ip_port)
+        
+    except ValueError:
+        #the port isn't an integer number
+        return False
+    
+    
+    #the device port can oly be a COM or a GPIB port
+    if not ("COM" in device_port or "GPIB" in device_port):
+        logging.warning("The device port '%s' you specified is not GPIB nor \
+COM"%(device_port))
+        return False
+    
+    if return_vals:
+        return ip, int(ip_port), device_port
+    else:
+        return True
 
 def list_drivers(interface = [INTF_VISA,INTF_PROLOGIX,INTF_SERIAL,INTF_NONE]):
     """
@@ -265,6 +346,14 @@ class PrologixController(object):
                  self.connection = None
                  logging.error("The port %s isn't related to a Prologix contro\
 ller (try to plug and unplug the cable if it is there nevertheless)"%(com_port))
+        
+             logging.info("%s is connected on the port '%s'"%(version_number[:-2],
+                                                              com_port))
+         else:
+             
+             logging.info("The connection to the Prologix connector failed")
+                                                             
+             
      
      def __str__(self):
          if not self.connection == None:

@@ -19,6 +19,8 @@ from PyQt4.QtCore import Qt, SIGNAL, QReadWriteLock, QSettings
 import py_compile
 #import plot_menu_and_toolbar
 
+import getopt
+
 import os
 from os.path import exists
 
@@ -28,7 +30,7 @@ from collections import OrderedDict
 import logging
 import logging.config
 
-ABS_PATH=os.path.abspath(os.curdir)
+ABS_PATH = os.path.abspath(os.curdir)
 logging.config.fileConfig(os.path.join(ABS_PATH,"logging.conf"))
 
 from importlib import import_module
@@ -44,7 +46,9 @@ from LabTools.DataStructure import LabeledData
 
 PYTHON_VERSION = int(sys.version[0])
 
-LABWIDGETS_PACKAGE_NAME = "LabTools.CoreWidgets"
+COREWIDGETS_PACKAGE_NAME = "LabTools.CoreWidgets"
+
+USERWIDGETS_PACKAGE_NAME = "LabTools.UserWidgets"
 
 CONFIG_FILE = IOTool.CONFIG_FILE_PATH
 
@@ -98,47 +102,134 @@ class LabGuiMain(QtGui.QMainWindow):
     """
 #    cmdwin = None
 
-    outputfile = None
-    
-    DEBUG = True
-
-    def __init__(self):
+    def __init__(self, argv = []):
+        
         # run the initializer of the class inherited from6
         super(LabGuiMain, self).__init__()
 
         self.settings = QSettings(self)
         self.settings.setValue("state", self.saveState())
+    
+        #debug parameter used to run labgui even when there is no instrument
+        #to connect to, used to plot past data or test the code
+        self.DEBUG = True
         
-        #check whether a config file exists or not
-        if exists(CONFIG_FILE) == False:
-            logging.warning("A config.txt file has been generated for you.")           
-            logging.warning("Please modify it to change the default \
-script, settings and data locations, or to enter debug mode.")
+        
+        #variable to store the configfile name
+        self.config_file = ''
+        
+        
+       #parse the argument(s) passed inline
+        try:
+            #option c is to provide a name for config file
+            opts, args = getopt.getopt(argv,"c:")
+            
+            #loop through the arguments on the inline command
+            for opt, arg in opts:
+        
+                #user passed configfile 
+                if opt == '-c':
+                    
+                    self.config_file = arg
+            
+        except getopt.GetoptError:
+            
+            logging.error('configuration file : option -c argument missing')
 
-            # creates a config.txt with basic needs
-            IOTool.create_config_file()
+          
+        #verify if the config file passed by the user is valid and exists
+        if self.config_file:
+            
+            if not exists(self.config_file):
                 
+                logging.error("The config file you provided ('%s') doesn't \
+exist, '%s' will be used instead"%(self.config_file, CONFIG_FILE))
+                
+                self.config_file = CONFIG_FILE
+            
+        else:
+            
+            #check whether the default config file exists or not
+            if exists(CONFIG_FILE) == False:
+                
+                logging.warning("A '%s' file has been generated for you."%(
+                        CONFIG_FILE))           
+                logging.warning("Please modify it to change the default \
+    script, settings and data locations, or to enter debug mode.")
+    
+                # creates a config.txt with basic needs
+                IOTool.create_config_file()
+                
+            #sets default config file name
+            self.config_file = CONFIG_FILE
+        
+        
+        
+        #to make sure the config file is of the right format
+        #ie that the user didn't specify the name of an existing file which
+        #isn't a configuration file
+        config_file_ok = False
+        
+        while not config_file_ok:
+        
+            try:
+                #try to read the DEBUG parameter from the configuration file
+                #as a test of the good formatting of the file
+                self.DEBUG = IOTool.get_debug_setting(
+                        config_file_path = self.config_file)
+                
+                #if this didn't generate errors we allow to get out of the loop
+                config_file_ok = True
+                
+            except IOError:
+                
+                logging.error("The config file you provided ('%s') doesn't \
+have the right format, '%s' will be used instead"%(self.config_file,
+                                                   CONFIG_FILE))
+                
+                #check whether the default config file exists or not
+                if exists(CONFIG_FILE) == False:
+                    
+                    logging.warning("A '%s' file has been generated for you."%(
+                        CONFIG_FILE))           
+                    logging.warning("Please modify it to change the default \
+    script, settings and data locations, or to enter debug mode.")
+    
+                    # creates a config.txt with basic needs
+                    IOTool.create_config_file()
+                    
+                #sets default config file name
+                self.config_file = CONFIG_FILE
+            
+        print("Configuration loaded from : %s"%(self.config_file))
+        
+        
+        
+        if self.DEBUG == True:
+            
+            print("*" * 20)
+            print("Debug mode is set to True")
+            print("*" * 20)
+            
+            self.option_display_debug_state()
+            
+        else:
+            
+            self.option_display_normal_state()
+            
+            
         #create the central part of the application
         self.zoneCentrale = QtGui.QMdiArea()
         self.zoneCentrale.subWindowActivated.connect(self.update_current_window)
         self.setCentralWidget(self.zoneCentrale)
-
-        #read the DEBUG parameter from the configuration file (True/False)
-        self.DEBUG = IOTool.get_debug_setting()
-       
-        if self.DEBUG == True:
-            print("*" * 20)
-            print("Debug mode is set to True")
-            print("*" * 20)
-            self.option_display_debug_state()
-        else:
-            self.option_display_normal_state()
             
+        
         #load the parameter for the GPIB interface setting of the instruments
-        interface = IOTool.get_interface_setting()
+        interface = IOTool.get_interface_setting(config_file_path = self.config_file)
         
         #test if the parameter is correct
         if interface not in [Tool.INTF_VISA,Tool.INTF_PROLOGIX]:
+            
             msg = """The %s variable of the config file '%s' is not correct
             The only two allowed values are : '%s' and '%s' """%(
                                                         IOTool.GPIB_INTF_ID,
@@ -147,9 +238,11 @@ script, settings and data locations, or to enter debug mode.")
                                                         Tool.INTF_PROLOGIX
                                                         )
             logging.warning(msg)
+            #default setting
             Tool.INTF_GPIB = Tool.INTF_PROLOGIX
                                        
-        else:            
+        else:           
+            
             Tool.INTF_GPIB = interface
             
         print("*" * 20)
@@ -163,7 +256,7 @@ script, settings and data locations, or to enter debug mode.")
         # InstrumentHub is responsible for storing and managing the user
         # choices about which instrument goes on which port
         self.instr_hub = Tool.InstrumentHub(parent = self,
-                                            debug = IOTool.get_debug_setting())
+                                            debug = self.DEBUG)
         
         # DataTaker is responsible for taking data from instruments in the
         # InstrumentHub object
@@ -202,6 +295,8 @@ script, settings and data locations, or to enter debug mode.")
         self.windowMenu = self.menuBar().addMenu("&Window")
         self.optionMenu = self.menuBar().addMenu("&Options")
         
+        self.loggingSubMenu = self.optionMenu.addMenu("&Logger output level")        
+        
         self.plotToolbar = self.addToolBar("Plot")
         self.instToolbar = self.addToolBar("Instruments")
         
@@ -237,8 +332,6 @@ script, settings and data locations, or to enter debug mode.")
         self.widgets = {}
         
         cur_path = os.path.dirname(__file__)
-        #    widget_path = os.path.join(cur_path,'LabTools')
-        #    widget_path = os.path.join(widget_path,'Widgets')
 
         #find the path to the widgets folders
         widget_path = os.path.join(cur_path,'LabTools')
@@ -249,15 +342,43 @@ script, settings and data locations, or to enter debug mode.")
         #these are widgets which were added by users
         user_widget_path = os.path.join(widget_path,'UserWidgets')
         
-        widgets_list = [o for o in os.listdir(core_widget_path) 
+        #this is the legitimate list of core widgets
+        widgets_list = [o.rstrip('.py') for o in os.listdir(core_widget_path) 
                         if o.endswith(".py") and not "__init__" in o]
+
+        #this is the legitimate list of user widgets
+        user_widgets_list = [o.rstrip('.py') for o in os.listdir(user_widget_path) 
+                        if o.endswith(".py") and not "__init__" in o]
+        
+        #the user widgets the user would like to run, given in the config file
+        user_widgets = IOTool.get_user_widgets(config_file_path = self.config_file)
+        
+        if user_widgets:
+            
+            for user_widget in user_widgets:        
+                #check that the given widget is legitimate
+                if user_widget in user_widgets_list:
+                    #add the given widget to the widget list which will be 
+                    #loaded
+                    widgets_list.append(user_widget)
+                    
+                else:
+                    
+                    logging.warning("The user widget '%s' is not found at %s"%(
+                    user_widget, user_widget_path))
 
         #add the widgets to the interface
         for widget in widgets_list:
             
-            widget_name = widget.rstrip('.py')
-            widget_module = import_module("." + widget_name, 
-                                          package = LABWIDGETS_PACKAGE_NAME)
+            widget_name = widget
+            try:
+                widget_module = import_module("." + widget_name, 
+                                          package = COREWIDGETS_PACKAGE_NAME)
+            except ImportError:
+                
+                widget_module = import_module("." + widget_name, 
+                                          package = USERWIDGETS_PACKAGE_NAME)
+                
             
             self.add_widget(widget_module.add_widget_into_main)        
         
@@ -367,23 +488,43 @@ the pyqt window option is disabled")
         shortcut = None, icon = None,
         tip = "Change the state of the debug mode")
         
+#        self.toggle_debug_state = QtTools.create_action(self, 
+#        "Change debug mode", slot = self.option_change_debug_state, 
+#        shortcut = None, icon = None,
+#        tip = "Change the state of the debug mode")
 
         self.optionMenu.addAction(self.toggle_debug_state)
         
-        
+        for log_level in ["DEBUG", "INFO", "WARNING", "ERROR"]:
+            action = QtTools.create_action(self, 
+            log_level, slot = self.option_change_log_level, 
+            shortcut = None, icon = None,
+            tip = "Change the state of the logger to %s" % log_level)
+            
+            self.loggingSubMenu.addAction(action)
         
 ###############################
 
         #Load the user settings for the instrument connectic and parameters
-        self.default_settings_fname = 'settings/default_settings.txt'
+        
+        self.default_settings_fname = IOTool.get_settings_name(config_file_path = self.config_file)
+        
+        if not exists(self.default_settings_fname):
+            
+            logging.warning("The filename '%s' wasn't found, using '%s'"%(
+                self.default_settings_fname,'settings/default_settings.txt'))
+                
+            self.default_settings_fname = 'settings/default_settings.txt'
         
         if os.path.isfile(self.default_settings_fname):  
+            
+            self.widgets['CalcWidget'].load_settings(
+                    self.default_settings_fname)            
             
             self.widgets['InstrumentWidget'].load_settings(
                     self.default_settings_fname)
             
-            self.widgets['CalcWidget'].load_settings(
-                    self.default_settings_fname)
+           
 
         # Create the object responsible to display information send by the
         # datataker
@@ -402,11 +543,11 @@ the pyqt window option is disabled")
             # the objects are not actually deleted, just hidden
 
 
-    def add_widget(self,widget_creation,action_fonctions = None,**kwargs):
+    def add_widget(self,widget_creation, action_fonctions = None, **kwargs):
         """adds a widget to the MainArea Window
         
         this is a rough stage of this fonction, it calls a fonction from
-        another module to add this widget
+        another module to add its widget to the Qdocks
         
         """
         widget_creation(self)
@@ -699,9 +840,9 @@ the pyqt window option is disabled")
             
             self.stop_DTT()
             
-#            self.start_DTT_action.setEnabled(True)
-#            self.pause_DTT_action.setEnabled(False)
-#            self.stop_DTT_action.setEnabled(False)
+            self.start_DTT_action.setEnabled(True)
+            self.pause_DTT_action.setEnabled(False)
+            self.stop_DTT_action.setEnabled(False)
 
             self.widgets['OutputFileWidget'].increment_filename()
             
@@ -765,6 +906,7 @@ the pyqt window option is disabled")
 #   
 
     def collect_instruments(self):
+        """list properties of the connected instruments (comport, parameter)"""
         return self.widgets['InstrumentWidget'].collect_device_info()
 
     def refresh_ports_list(self):
@@ -777,6 +919,9 @@ the pyqt window option is disabled")
         ''' this changes what self.<object> refers to so that the same shared toolbars can modify whichever plot window has focus right now '''        
         
         current_window = self.zoneCentrale.activeSubWindow()
+        
+       
+        
         if current_window:
             self.action_manager.update_current_widget(
                         current_window.widget().mplwidget)
@@ -786,10 +931,32 @@ the pyqt window option is disabled")
             
             window_type = getattr(current_widget, "window_type", "unknown")
             
+          
+            
             if window_type == "unknown":                
                 msg = "The type of PlotDisplayWindow '%s' is unknown"%(window_type)
                 raise ValueError(msg)
             else:     
+                
+                if window_type in PlotDisplayWindow.PLOT_WINDOW_TYPE_PAST:
+
+                    #get the title of the window
+                    title = str(current_window.windowTitle())
+                    
+                    #extract the file name from the window title
+                    #see LoadPlotWidget for more info on that
+                    load_fname = title.split(
+                    PlotDisplayWindow.PLOT_WINDOW_TITLE_PAST)
+                    
+                    load_fname = load_fname[1]
+                    
+                    #replace the header text by the one stored in memory
+                    self.widgets["loadPlotWidget"].header_text(
+                    self.loaded_data_header[load_fname])
+                    
+                    #update the file information in the widget
+                    self.widgets["loadPlotWidget"].load_file_name(load_fname)
+                    
                 # this is only used by Print Figure (which doesn't work anyways)
                 self.current_pdw = current_widget
                 
@@ -816,13 +983,13 @@ the pyqt window option is disabled")
         this function get the actual values of parameters and save them into the config file
         """
         script_fname=str(self.widgets['SciptWidget'].scriptFileLineEdit.text())
-        IOTool.set_config_setting(IOTool.SCRIPT_ID,script_fname,CONFIG_FILE)
+        IOTool.set_config_setting(IOTool.SCRIPT_ID,script_fname,self.config_file)
         
         output_path = os.path.dirname(self.widgets['OutputFileWidget'].get_output_fname())+os.path.sep
-        IOTool.set_config_setting(IOTool.SAVE_DATA_PATH_ID,output_path,CONFIG_FILE)
+        IOTool.set_config_setting(IOTool.SAVE_DATA_PATH_ID,output_path,self.config_file)
         
         if not self.instrument_connexion_setting_fname == "":
-            IOTool.set_config_setting(IOTool.SETTINGS_ID,self.instrument_connexion_setting_fname,CONFIG_FILE)
+            IOTool.set_config_setting(IOTool.SETTINGS_ID,self.instrument_connexion_setting_fname,self.config_file)
 
     def file_save_settings(self, fname = None):
         """save the settings for the instruments and plot window into a file
@@ -875,12 +1042,18 @@ the pyqt window option is disabled")
             self.instrument_connexion_setting_fname = fname
 
     def file_load_data(self):
-        default_path = IOTool.get_config_setting("DATAFILE")
+        default_path = IOTool.get_config_setting("DATAFILE",
+                                                 config_file_path = self.config_file)
+        
         if not default_path:
+            
             default_path = './'
+            
         fname = str(QtGui.QFileDialog.getOpenFileName(
             self, 'Open settings file', default_path))
+            
         if fname:
+            
             self.create_plw(fname)
             
     def file_print(self):
@@ -901,6 +1074,7 @@ the pyqt window option is disabled")
 
     def option_change_debug_state(self):
         """Togggle the debug state"""
+        
         if self.DEBUG:
             self.option_display_normal_state()
             self.DEBUG = False
@@ -909,14 +1083,30 @@ the pyqt window option is disabled")
             self.option_display_debug_state()
             self.DEBUG = True
         
+        #if DEBUG is false, the port list needs to be fetched
         self.refresh_ports_list()
-        IOTool.set_config_setting(IOTool.DEBUG_ID,self.DEBUG,CONFIG_FILE)
+        
+        IOTool.set_config_setting(IOTool.DEBUG_ID, 
+                                  self.DEBUG, 
+                                  config_file_path = self.config_file)
+        
         self.emit(SIGNAL("DEBUG_mode_changed(bool)"),self.DEBUG)
    
+    def option_change_log_level(self):
+        """change the file logging.conf's logging level"""
+        
+        log_level = str(self.sender().text())
+
+        IOTool.set_config_setting("level", log_level, 
+                                  os.path.join(ABS_PATH,"logging.conf"))
+                                  
+        logging.config.fileConfig(os.path.join(ABS_PATH,"logging.conf"))
+
+
 
 def launch_LabGui():
     app = QtGui.QApplication(sys.argv)
-    ex = LabGuiMain()
+    ex = LabGuiMain(sys.argv[1:])
     ex.show()
     sys.exit(app.exec_())
 
@@ -944,6 +1134,7 @@ def test_save_settings(idx = 0):
     """connect the Hub and save the settings"""
     app = QtGui.QApplication(sys.argv)
     ex = LabGuiMain()
+    
     if idx == 0:
         ex.connect_instrument_hub()
 
@@ -962,7 +1153,12 @@ def test_load_settings(idx = 0):
     if idx == 0:
         ex.connect_instrument_hub()
     
+    elif idx == 1:
+        #tries to load an unexisting file
+        ex.file_load_settings("doesnt_exist_settings.set")
+    
     ex.show()
+
     sys.exit(app.exec_())
 
 def test_load_previous_data(data_path = os.path.join(ABS_PATH,'scratch','example_output.dat')):
@@ -977,13 +1173,34 @@ def test_load_previous_data(data_path = os.path.join(ABS_PATH,'scratch','example
     ex.show()
     sys.exit(app.exec_())
 
+def test_user_variable_widget():
+    """
+    open a new plot window with previous data
+    """
+    app = QtGui.QApplication(sys.argv)
+    ex = LabGuiMain()
 
+    ex.file_load_settings("test_settings.set")    
+    
+
+    ex.connect_instrument_hub()
+
+#    ex.widgets["userVariableWidget"].on_updateVariableButton_clicked()
+
+    ex.show()
+    sys.exit(app.exec_())
 
 if __name__ == "__main__":
-    print("Launching LabGUI")
+#    print("Launching LabGUI")
     launch_LabGui()
 #    test_automatic_fitting()
-#    test_load_previous_data()
+    
+
+#    test_load_previous_data(fname)
+
 #    test_save_settings(0)
+#    test_load_settings(1)
 #    test_load_settings(0)
+#    test_user_variable_widget()
+
 

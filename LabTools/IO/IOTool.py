@@ -21,7 +21,7 @@ abs_file = os.path.abspath(os.path.dirname(__file__))
 MAIN_DIR = os.sep.join(abs_file.split(os.sep)[:-2]) + os.sep
 CONFIG_FILE =  "config.txt"
 CONFIG_FILE_PATH = MAIN_DIR + CONFIG_FILE
-print("configuration from: " + CONFIG_FILE_PATH)
+
 
 
 #these are the key words used in the configfile, they are defined here only
@@ -29,6 +29,7 @@ SCRIPT_ID = "SCRIPT"
 DEBUG_ID = "DEBUG"
 SAVE_DATA_PATH_ID = "DATA_PATH"
 SETTINGS_ID = "SETTINGS"
+WIDGETS_ID = "USER_WIDGETS"
 LOAD_DATA_FILE_ID = "DATAFILE"
 GPIB_INTF_ID = "GPIB_INTF"
 
@@ -127,7 +128,7 @@ def open_therm_file(config_file_name='config.txt'):
     return file_name
 
 
-def get_file_name(config_file_name='config.txt'):
+def get_file_name(config_file_path = CONFIG_FILE_PATH):
     """
         returns the filename of output file as it is in the config file
     """
@@ -137,11 +138,15 @@ def get_file_name(config_file_name='config.txt'):
     sample_name = ""
     file_format = ".dat"
     try:
-        config_file = open(config_file_name)
+        
+        config_file = open(config_file_path, 'r')
+        
         for line in config_file:
+            
             [left, right] = line.split("=")
             left = left.strip()
             right = right.strip()
+            
             if left == "COOLDOWN":
                 cooldown = right
                 cooldown = cooldown + "_"
@@ -157,16 +162,20 @@ def get_file_name(config_file_name='config.txt'):
                 file_format = eval(right)
 
         try:
+            
             file_name = data_path + sample_name + "_" + \
                 cooldown + "_" + time.strftime("%m%d")
             file_name = data_path + \
                 time.strftime("%y%m%d") + "_" + cooldown + sample_name
             n = 1
+            
             # make sure the file doesn't already exist by incrementing the
             # number
+            
             while os.path.exists(file_name + "_%3.3d%s" % (n, file_format)):
                 n += 1
             file_name = file_name + "_%3.3d%s" % (n, file_format)
+            
         except:
             file_name = "No output file choosen"
 
@@ -189,23 +198,28 @@ def get_config_setting(setting, config_file_path = CONFIG_FILE_PATH):
 
         #loop through all the lines
         for line in config_file:
-            #the setting should have a = sign in the line
-            [left, right] = line.split("=")
             
-            #separate the setting name from its value
-            left = left.strip() #name
-            right = right.strip() #value
-            
-            #if the name corresponds to the setting we want, we read the value
-            if left == setting:
+            # the dash caracter is used as comment
+            if line[0] != '#':
                 
-                value = right
+                #the setting should have a = sign in the line
+                [left, right] = line.split("=")
+                
+                #separate the setting name from its value
+                left = left.strip() #name
+                right = right.strip() #value
+                
+                #if the name corresponds to the setting we want, we read the value
+                if left == setting:
+                    
+                    value = right
                 
         if not value:
             
             print("Configuration file does not contain a'" 
                   + setting + "=' line.")
             print("returning the keyword None")
+            
         config_file.close()
         
     except IOError:
@@ -213,32 +227,58 @@ def get_config_setting(setting, config_file_path = CONFIG_FILE_PATH):
         print("No configuration file " + config_file_path + " found")
         value = None
         
+    except ValueError as e:
+        
+        #if this is this error it means the command .split failed and
+        #it is likely due to the fact that the file doesn't have the config
+        #file format
+        if "too many values to unpack" in e:
+            
+            err = IOError("The configuration file doesn't have the \
+right format")
+            raise(err)
+        else:
+            
+            raise(e)
+        
     return value
 
-def set_config_setting(setting, setting_value, config_file_path=CONFIG_FILE_PATH):
+def set_config_setting(setting, setting_value, config_file_path = CONFIG_FILE_PATH):
     """
         sets a setting to a given value inside the configuration file
     """
     try:
         #open the file
-        config_file = open(config_file_name,'r')
-
+        config_file = open(config_file_path,'r')
+    
         #read the lines into a list
         lines = config_file.readlines()
         
         #loop through all the lines
         for i,line in enumerate(lines):
             #the setting should have a = sign in the line
-            [left, right] = line.split("=")
+            try:
+                [left, right] = line.split("=")
             
-            #separate the setting name from its value
-            left = left.strip() #name
-            right = right.strip() #value
-            
-            #if the name corresponds to the setting we want, we write the value
-            if left == setting:
+                #separate the setting name from its value
+                left = left.strip() #name
+                right = right.strip() #value
                 
-                lines[i]="%s=%s\n"%(setting,setting_value)
+                #if the name corresponds to the setting we want, we write the value
+                if left == setting:
+                    
+                    lines[i]="%s=%s\n"%(setting,setting_value)
+            
+            except ValueError as e:
+                
+                if "need more than 1 value to unpack" in e:
+                    
+                    pass
+                
+                else:
+                   
+                    raise e
+            
         
         config_file.close()
         
@@ -247,7 +287,7 @@ def set_config_setting(setting, setting_value, config_file_path=CONFIG_FILE_PATH
         config_file.writelines(lines)
         config_file.close()
         
-        print(("The parameter %s in the config file was \
+        print(("The parameter '%s' in the config file was \
 successfully changed to %s"%(setting,setting_value)))
         
     except:
@@ -256,15 +296,25 @@ successfully changed to %s"%(setting,setting_value)))
 file located at %s\n"%(setting,setting_value, config_file_path))
         
 
-def get_settings_name():
-    return get_config_setting(SETTINGS_ID)
+def get_settings_name(**kwargs):
+    return get_config_setting(SETTINGS_ID,**kwargs)
 
+def get_user_widgets(**kwargs):
+    """ collect the widget names the user would like to run"""
+    widgets = get_config_setting(WIDGETS_ID,**kwargs)
+    if widgets == None:
+        
+        return []
+    
+    else:
+        
+        return widgets.split(';')
+    
+def get_script_name(**kwargs):
+    return get_config_setting("SCRIPT",**kwargs)
 
-def get_script_name():
-    return get_config_setting("SCRIPT")
-
-def get_debug_setting():
-    setting = get_config_setting(DEBUG_ID)
+def get_debug_setting(**kwargs):
+    setting = get_config_setting(DEBUG_ID,**kwargs)
     if setting:
         # case insensitive check of the debug setting. get_config_setting already performed strip() of whitespace characters
         if setting.upper() == 'TRUE':
@@ -276,8 +326,8 @@ def get_debug_setting():
         debug = False
     return debug
 
-def get_interface_setting():
-    return get_config_setting(GPIB_INTF_ID)
+def get_interface_setting(**kwargs):
+    return get_config_setting(GPIB_INTF_ID,**kwargs)
 
 
 def get_drivers(drivers_path):
@@ -359,8 +409,20 @@ def load_file_windows(fname, splitchar = ', ', headers = True, hdr_only = False)
                 
             elif label_id == 'C':
                 
-                label['channel_labels'] = line.split(', u')
                 
+                #old file were saved that way
+                label['channel_labels'] = line.split(', u')
+
+                if len(label['channel_labels']) == 1:
+   
+                    label['channel_labels'] = \
+                        label['channel_labels'][0].split(splitchar)
+                  
+                else:
+                    
+                    label['channel_labels'][0] = \
+                        label['channel_labels'][0][1:]
+                    
             #this is user comments we only save the ones that are 
             #before the label_id, other lines will be ignored
             if i < end_normal_hdr_idx:
@@ -588,6 +650,7 @@ def match_value2index(array1D, val):
 if __name__ == "__main__":
     import time
     ts = time.time()
-    d,l = load_file_windows("test_load.dat")
-    print l
-    print time.time()-ts
+    fname = "C:\\Users\\pfduc\\OneDrive - McGill University\\G2 Lab\\PF\\1D Helium\\Analyse\\20170908-0911_B24_K8_55nm_diam\\temperature_dependance\\20170911_BF_B24_K8_Vsuperfluid_SF_part.a5dat"
+    d,l = load_file_windows(fname)
+    print(l)
+    print(time.time()-ts)

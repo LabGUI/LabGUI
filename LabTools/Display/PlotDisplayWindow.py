@@ -40,6 +40,9 @@ import datetime
 
 from collections import OrderedDict
 
+#this label is used to know when the axis should be a formated time
+#year, month, day, hours, mintues etc... 
+TIME_LABEL = "Time(s)"
 
 import logging
 logging.basicConfig(level = logging.DEBUG)
@@ -72,8 +75,9 @@ chan_contr["groupBox_color"]= ["Col","colorButton"]
 chan_contr["groupBox_marker"]= ["M","comboBox"]
 chan_contr["groupBox_line"]= ["L","comboBox"]
 
-
-
+PLOT_WINDOW_TYPE_LIVE = "Live" 
+PLOT_WINDOW_TYPE_PAST = "Past" 
+PLOT_WINDOW_TITLE_PAST = "Past data file : "
 
 def get_groupBox_purpouse(name):
     return name.split("_")[1]
@@ -87,7 +91,7 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
     
     """
     def __init__(self, parent = None, data_array = np.array([]),
-                 name = "Main Window", window_type = "Live", 
+                 name = "Main Window", window_type = PLOT_WINDOW_TYPE_LIVE, 
                  default_channels = 10, channel_controls = chan_contr,
                  labels = []):
         # run the initializer of the class inherited from
@@ -109,6 +113,7 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
         # axes and figure initialization - short names for convenience   
         self.fig = self.mplwidget.figure
         self.setWindowTitle(name)
+
         self.ax = self.mplwidget.axes
         self.axR = self.mplwidget.axesR
 
@@ -126,6 +131,8 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
         self.left_lines = [] 
         self.right_lines = [] 
         
+        self.legend_box = False
+        self.data_legends = []
         
 
         if labels:
@@ -145,6 +152,15 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
         self.data_array = data_array
         self.chan_X = 0
         self.time_Xaxis=False
+
+
+###### OPTION MENU SETUP ######         
+        
+        self.optionMenu = self.menuBar().addMenu("Options")  
+        self.displayLegendsAction = QtTools.create_action(self,"Display/hide legends", slot=self.change_legend_box_state,
+                                        icon=None, tip="Display/hide legends on the figure")                   
+
+        self.optionMenu.addAction(self.displayLegendsAction)
 
     def closeEvent(self, event):
         """
@@ -318,7 +334,7 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
         
             set state of the window controls given an array of string
         """
-        print lines
+#        print lines
         for i, line in enumerate(lines):
             
             if line:
@@ -364,6 +380,11 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
     """#####################################################################"""
     """These handler function take action when someone interact with the button, checkbox, lineEdit etc... the names are explicit"""
         
+        
+    def change_legend_box_state(self):
+        self.legend_box= not self.legend_box
+        self.update_legends()        
+        
     def XRadioButtonHandler(self):
 #        print "X clicked"  
         obj=self.sender()   
@@ -377,7 +398,7 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
                 label = self.channel_objects["groupBox_Name"][num].text()
                 self.ax.set_xlabel(label)
                 
-                if label == "Time(s)":
+                if label == TIME_LABEL :
                     
                     self.time_Xaxis = True
 
@@ -414,9 +435,9 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
         """Update which data is used for the Y axis (both left and right)"""
         tot_label = []
 #        print "Y clicked"     
-        obj=self.sender()         
-        name=obj.objectName()
-        name=str(name.split("#")[0])
+        obj = self.sender()         
+        name = obj.objectName()
+        name = str(name.split("#")[0])
 
         for num, box in enumerate(self.channel_objects[name]):
             if box.isChecked():
@@ -444,10 +465,12 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
         if get_groupBox_purpouse(name) == "marker":
             
             self.set_marker(idx,str(obj.currentText()))
+            self.update_legends()
             
         elif get_groupBox_purpouse(name) == "line":
             
             self.set_linestyle(idx,str(obj.currentText()))
+            self.update_legends()
             
     def singleComboBoxHandler(self,num):
         """
@@ -480,7 +503,8 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
         if self.channel_objects["groupBox_X"][idx].isChecked():
             self.set_X_axis_label(self.channel_objects[name][idx].text())
             self.update_plot()
-
+            
+        self.update_legends()
 
 
     def set_axis_ticks(self,ticks):
@@ -629,13 +653,16 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
         """
 
         if want_format:
-            time_interval=self.data_array[-1,self.chan_X]-self.data_array[0,self.chan_X]
+
+            hfmt = dates.DateFormatter('%m/%d %H:%M')            
             
-            if time_interval<500:
-                hfmt = dates.DateFormatter('%m/%d %H:%M:%S')
+            if self.data_array.size > 0:            
+            
+                time_interval=self.data_array[-1,self.chan_X]-self.data_array[0,self.chan_X]
                 
-            else:
-                hfmt = dates.DateFormatter('%m/%d %H:%M')
+                if time_interval<500:
+                    hfmt = dates.DateFormatter('%m/%d %H:%M:%S')
+               
                 
             return hfmt
             
@@ -695,24 +722,50 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
             self.channel_objects["groupBox_Name"][idx].setText(label_text)             
 
         
+    def update_legends(self):
+        """update the property of the lines in the legend box"""
+        if self.legend_box:
+            handles=[]
+            legends=[]
+            for i,handle, legend, in zip(range(self.num_channels),self.ax.lines,self.data_legends['L']):
+                if legend == "no data":
+                    pass
+                else:
+                    legends.append(legend)
+                    handles.append(handle)
+            for i,handle, legend, in zip(range(self.num_channels),self.axR.lines,self.data_legends['R']):
+                if legend == "no data":
+                    pass
+                else:
+                    legends.append(legend)
+                    handles.append(handle)
+            self.ax.legend(handles, legends,numpoints = 1,frameon = False)
+        else:
+            self.ax.legend([],[],frameon = False)
+
+                
+        self.mplwidget.rescale_and_draw()        
+        
     def update_plot(self, data_array = None): 
         """
             take a matrix (data_array) with a number of rows equal to the number of channel/lines in the window and plot them along the line direction
             it only plots if the checkbox of the line is checked
         """
         
+
         if isnparray(data_array) == True :
             logging.debug("update the data_array")
             self.data_array = data_array
+        
 
 
-        if self.data_array.size>0 :
+        if self.data_array.size > 0 :
             # if the number of columns is more than the number of control boxes
             try:
                 num_channels = self.data_array.shape[1]
             except:
-                num_channels = self.data_array.size                
-                
+                num_channels = np.size(self.data_array,1)             
+            
             #if there is more instruments than channel numbers we expand the channels on the window
             while self.num_channels < num_channels:
                 self.add_channel_controls()
@@ -723,6 +776,7 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
             else:
                 xdata = self.data_array[:,self.chan_X]   
 
+            self.data_legends = {'L':[],'R':[]}
             #go through the channels and update the lines for those who are checked
             for chan_Y, [line_L, line_R] in enumerate(zip (self.ax.lines, self.axR.lines)):
                 
@@ -732,18 +786,23 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
                         ydata = -self.data_array[:, chan_Y]
                     else:
                         ydata = self.data_array[:, chan_Y]                  
-                        
+                    
+                    
                     #look which checkbox is checked and plot corresponding data
                     if self.channel_objects["groupBox_Y"][chan_Y].isChecked() and self.data_array.size>0:
                         line_L.set_data(xdata, ydata)
+                        self.data_legends['L'].append(str(self.channel_objects["groupBox_Name"][chan_Y].text()))
                     else:
                         line_L.set_data([],[])
+                        self.data_legends['L'].append("no data")
                         
                     #look which checkbox is checked and plot corresponding data    
                     if self.channel_objects["groupBox_YR"][chan_Y].isChecked() and self.data_array.size>0:
                         line_R.set_data(xdata, ydata)
+                        self.data_legends['R'].append(str(self.channel_objects["groupBox_Name"][chan_Y].text()))
                     else:
-                        line_R.set_data([],[])      
+                        line_R.set_data([],[]) 
+                        self.data_legends['R'].append("no data")
         else:
             #if an empty array was given we set the lines to empty arrays
             for line_L, line_R in zip (self.ax.lines, self.axR.lines):
@@ -752,18 +811,39 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
                          
                 
         self.mplwidget.rescale_and_draw()
-
+        
+        self.update_legends()
 
         #rescale the ticks so that we can always read them
         try:
+            
             self.fig.tight_layout()
+            
         except ValueError as e:
+            
             if "left cannot be >= right" in e:
                 pass
                 #it seems to be a platform dependent error
+            elif "ordinal must be >= 1" in e:
+                try:
+                    
+                    initial_array = [time.time()]
+                    
+                    for i in range(self.num_channels - 1):
+                        
+                        initial_array.append(np.nan)
+                        
+                    self.update_plot(np.array([initial_array]))
+                except:
+                    pass
+                    #whenever the time format is on and the data array is empty
             else:
                 raise e
-                
+        
+        except RuntimeError:
+            pass
+            #whenever the time format is on and the data array is empty
+            #this is an ugly fix but at least the error doesn,t show anymore
 
     def update_fit(self,fitp):
         """
@@ -965,10 +1045,10 @@ class MultiplePlotDisplayWindow(PlotDisplayWindow):
         sender_ID=int(sender_ID)
         
         #If the last box is being played with, then it means that we want to either select all of them or deselect all of them
-        if sender_ID==self.num_channels:
+        if sender_ID == self.num_channels:
             #This is the current state of this button
-            check_all=self.channel_objects[name][self.num_channels].isChecked()
-            print check_all
+            check_all = self.channel_objects[name][self.num_channels].isChecked()
+
             #then somebody just clicked on that button and we need to change
             for box in self.channel_objects[name]:
                 box.setChecked(check_all)
@@ -1154,7 +1234,7 @@ class SetsPlotDisplayWindow(PlotDisplayWindow):
         
     def change_legend_box_state(self):
         self.legend_box= not self.legend_box
-        print self.legend_box
+#        print self.legend_box
         self.update_legends()
         
     def change_single_comboBox_items(self,groupbox_id,newItems):
@@ -1289,7 +1369,7 @@ def test_timestamp():
     data = np.transpose(np.vstack([t,d]))    
     
     app = QtGui.QApplication(sys.argv)
-    form = PlotDisplayWindow(labels = ['Time(s)', 'data(arb)'])
+    form = PlotDisplayWindow(labels = [TIME_LABEL, 'data(arb)'])
     form.update_plot(data)
     form.show()
     app.exec_() 
@@ -1306,10 +1386,10 @@ def test_pdw_load_setting():
     form = PlotDisplayWindow()
     
     lines = []
-    lines.append(['Time(s', '1', '-2', '0', '0', '0', '#117733' , 's', '-'])
+    lines.append(['Time(s)', '1', '-2', '0', '0', '0', '#117733' , 's', '-'])
     lines.append(['dt(s)', '0', 'er', '0', '0', '0', '#88CCEE', 'None', '-'])
     lines.append(['PRESSURE(psi)', '0', '0', '0', '0', '0', '#332288', 'None', '-'])
-    lines.append(['dt(s)', '1', '0', '1', '0', '0', '#FFFF', 'o', '-'])
+    lines.append(['dt(s)', '0', '0', '1', '0', '0', '#FFFF', 'o', '-'])
     lines.append(['2(Torr)', '0', '0', '1', '0', '0', '#CC6677', 'None', '-'])    
     
     

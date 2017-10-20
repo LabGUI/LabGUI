@@ -11,8 +11,9 @@ import sys
 import PyQt4.QtGui as QtGui
 from types import MethodType
 
-
 import LabDrivers.Tool as Tool
+
+
 import LabDrivers.utils
 from LabTools.Display.PlotPreferences import color_blind_friendly_colors
 
@@ -102,26 +103,36 @@ class SingleLineWidget(QtGui.QWidget):
         cbb = QtGui.QComboBox(self)
         cbb.setObjectName("comboBox")
         cbb.setStyleSheet(
-            "QComboBox::drop-down {border-width: 0px;} QComboBox::down-arrow {image: url(noimg); border-width: 0px;}")
+            "QComboBox::drop-down {border-width: 0px;} \
+QComboBox::down-arrow {image: url(noimg); border-width: 0px;}")
+        
         if name == 'Instr name':
+            
             cbb.addItems(self.INSTRUMENT_TYPES)
             cbb.setCurrentIndex(cbb.findText("TIME"))
             self.connect(cbb, SIGNAL("currentIndexChanged(int)"),
                          self.combobox_handler)
-            cbb.setFixedWidth(width_instr)                         
+            cbb.setFixedWidth(width_instr)  
+                       
         if name == 'Port':
             
             #when creating a line the instrument TIME comes first so there is no port to connect to it
             cbb.addItem("")
   
 #            self.connect(cbb, SIGNAL("activated(int)"), self.combobox_dev_port_handler)
-            cbb.setFixedWidth(width_port)            
+            cbb.setFixedWidth(width_port)      
+            
+            #this allow the user to edit the content of the combobox input
+            cbb.setEditable(True)
+            
         if name == "Param":
+            
             cbb.addItems(self.AVAILABLE_PARAMS['TIME'])
             cbb.setCurrentIndex(cbb.findText("dt"))
             self.connect(cbb, SIGNAL("currentIndexChanged(int)"),
                          self.combobox_unit_handler)
             cbb.setFixedWidth(width_param*1.5) 
+            
         return cbb
 
     def combobox_handler(self):
@@ -160,23 +171,9 @@ class SingleLineWidget(QtGui.QWidget):
         """update the lineEdit with unit corresponding to the instrument parameter upon its selection"""
 
         # select the items on the line corresponding to the same instrument
-        le = self.param_name_le
-        instr = self.instr_name_cbb.currentText()
-        instr_params = self.AVAILABLE_PARAMS[str(instr)]
-
         current_param = self.param_cbb.currentText()
-        label = str(le.text())
-        label = label.split('(')[0]
 
-        # if there is no existing label it puts the param name
-        if label == "":
-            label = current_param
-
-        # if there is no user define param name different from the instrument params
-        # it puts the correct param name
-        if label in self.UNITS:
-            label = current_param
-        le.setText(label + self.get_unit())
+        self.param_name_le.setText(current_param + self.get_unit())
 
         # After changes the user should be able to update the instrumentHub by
         # clicking on the button 'Connect'
@@ -243,7 +240,7 @@ class SingleLineWidget(QtGui.QWidget):
 
         for p in [self.instr_name_cbb, self.port_cbb, self.param_cbb]:
             device_info.append(str(p.currentText()))
-
+        
         return device_info
 
     def get_descriptor(self):
@@ -275,7 +272,7 @@ class SingleLineWidget(QtGui.QWidget):
         return str(self.color_btn.palette().color(1).name())
     
     def get_label(self):
-        return self.param_name_le.text()
+        return str(self.param_name_le.text())
 
 
 class InstrumentWindow(QtGui.QWidget):
@@ -473,9 +470,11 @@ class InstrumentWindow(QtGui.QWidget):
         """if any line is changed the color of the connect button is changed so that one can notice """
         self.bt_connecthub.setStyleSheet("background-color : Window")
 
+
     def update_colors(self):
         """this simply send the triggered signal from a Single line instance to the LabGui instance (and any other listeners)"""
         self.emit(SIGNAL("colorsChanged()"))
+        
         
     def bt_connecthub_clicked(self):
         """when this method is called (upon button 'Connect' interaction) it send a signal, which will be treated in the main window"""
@@ -485,6 +484,7 @@ class InstrumentWindow(QtGui.QWidget):
 
             self.emit(SIGNAL("ConnectInstrumentHub(bool)"), True)
 
+
     def bt_add_line_clicked(self):
         """when this method is called (upon button 'Connect' interaction) it send a signal, which will be treated in the main window"""
         if self.bt_remove_last.isEnabled:
@@ -492,6 +492,7 @@ class InstrumentWindow(QtGui.QWidget):
             self.emit(SIGNAL("AddedInstrument(bool)"), True)
             # the lines have changed - call the relevant function!            
             self.lines_changed()           
+            
             
     def bt_remove_last_clicked(self):
         """when this method is called (upon button 'Connect' interaction) it send a signal, which will be treated in the main window"""
@@ -530,7 +531,9 @@ class InstrumentWindow(QtGui.QWidget):
         """run a method from SingleLine class which refresh the availiable ports"""
         
         self.AVAILABLE_PORTS = Tool.refresh_device_port_list()
+        
         for line in self.lines:
+            
             line.refresh_port_cbb(self.AVAILABLE_PORTS)
 
     def load_settings(self, fname):
@@ -539,107 +542,117 @@ class InstrumentWindow(QtGui.QWidget):
         try:
             
             settings_file = open(fname,'r')
-        
+            settings_file_ok = True
         except IOError:
             
+            settings_file_ok = False
             print("No such file exists : %s"%(fname))
 
-        #the new settings will overwrite existing ones
-        self.remove_all_lines()
-
-        window_settings = []
-
-        for setting_line in settings_file:
-            
-            # file format is comma-separated list of settings for each channel
-            setting_line = setting_line.strip()
-            settings = setting_line.split(',')
-            
-            if settings[0] and settings[0] != 'CALC':
-                
-                logging.debug(setting_line)
-                
-                new_line = self.create_line()
-                
-                param_name = settings[0].strip()
+        if settings_file_ok:
     
-                new_line.param_name_le.setText(param_name)                
+            #the new settings will overwrite existing ones
+            self.remove_all_lines()
+    
+            window_settings = []
+    
+            for setting_line in settings_file:
                 
-
+                # file format is comma-separated list of settings for each channel
+                setting_line = setting_line.strip()
+                settings = setting_line.split(',')
                 
-                
-                # For backwards compatibility with old settings files, leave 
-                # this part in.
-                # The TIME module was renamed because there is
-                # already the built-in time module
-
-                instr_type = settings[1].strip()
-
-                if instr_type == 'TIME':
-                    instr_type == 'Internal'
-
-                
-                if not instr_type in self.INSTRUMENT_TYPES:
+                if settings[0] and settings[0] != 'CALC':
                     
-                     logging.warning("No module for %s available"%(instr_type))
-                     
-                else:
+                    logging.debug(setting_line)
                     
-                    # set the index to the index corresponding to the instrument
-                    # type (found using the findtext function)
-                    new_line.instr_name_cbb.setCurrentIndex(
-                        new_line.instr_name_cbb.findText(instr_type))
-
-                    if instr_type == "Internal":
+                    new_line = self.create_line()
+                    
+                    param_name = settings[0].strip()
+        
+                    new_line.param_name_le.setText(param_name)                
+                    
+    
+                    
+                    
+                    # For backwards compatibility with old settings files, leave 
+                    # this part in.
+                    # The TIME module was renamed because there is
+                    # already the built-in time module
+    
+                    instr_type = settings[1].strip()
+    
+                    if 'TIME' in instr_type:
                         
-                        new_line.port_cbb.clear()
-                        new_line.port_cbb.addItem('Internal')
+                        pass
+                        #instr_type = 'Internal'
+    
+                    
+                    if not instr_type in self.INSTRUMENT_TYPES:
                         
+                         logging.warning("No module for %s available"%(instr_type))
+                         
                     else:
                         
-                        port = settings[2].strip().upper()
-
-                        # if the port appears to be valid, select it in the box
-                        # otherwise add it, but show an icon indicating the
-                        # problem
-                        if port in self.AVAILABLE_PORTS:
+                        # set the index to the index corresponding to the instrument
+                        # type (found using the findtext function)
+                        new_line.instr_name_cbb.setCurrentIndex(
+                            new_line.instr_name_cbb.findText(instr_type))
+    
+                        if 'TIME' in instr_type:
                             
-                            new_line.port_cbb.setCurrentIndex(
-                                new_line.port_cbb.findText(port))
-
+                            new_line.port_cbb.clear()
+                            new_line.port_cbb.addItem('')
+                            
                         else:
                             
-                            if not self.DEBUG:
+                            port = settings[2].strip().upper()
+    
+                            # if the port appears to be valid, select it in the box
+                            # otherwise add it, but show an icon indicating the
+                            # problem
+                            if port in self.AVAILABLE_PORTS:
                                 
-                                logging.warning("the port %s is not available,\
- please check your connectic or your settings file\n"%(port))
-
-                    #fills the parameter combobox with instrument parameters
-                    new_line.param_cbb.clear()
-                    new_line.param_cbb.addItems(
-                        self.AVAILABLE_PARAMS[instr_type])
-                        
-                    #modify the parameter combobox with the chosen parameter
-                    param = settings[3].strip()
-
-                    if param in self.AVAILABLE_PARAMS[instr_type]:
-                        new_line.param_cbb.setCurrentIndex(
-                            new_line.param_cbb.findText(param))
-                          
+                                new_line.port_cbb.setCurrentIndex(
+                                    new_line.port_cbb.findText(port))
+    
+                            else:
+                                
+                                if not self.DEBUG:
+                                    logging.warning(self.AVAILABLE_PORTS)
+                                    logging.warning("the port '%s' is not available,\
+please check your connectic or your settings file\n"%(port))
+                                    
+                                    #should check if it is an IP port
+                                    new_line.port_cbb.addItem(port)
+                                    new_line.port_cbb.setCurrentIndex(
+                                    new_line.port_cbb.findText(port))
+    
+                        #fills the parameter combobox with instrument parameters
+                        new_line.param_cbb.clear()
+                        new_line.param_cbb.addItems(
+                            self.AVAILABLE_PARAMS[instr_type])
+                            
+                        #modify the parameter combobox with the chosen parameter
+                        param = settings[3].strip()
+    
+                        if param in self.AVAILABLE_PARAMS[instr_type]:
+                            new_line.param_cbb.setCurrentIndex(
+                                new_line.param_cbb.findText(param))
+                              
+                #check if the list isn't empty
+                if settings[4:]:
+                    #collect the settings for the window    
+                    window_settings.append([s.strip().replace("'",'') 
+                                            for s in settings[4:]])
+                
+            settings_file.close()
+    
+            self.emit(SIGNAL("colorsChanged()"))
+            
             #check if the list isn't empty
-            if settings[4:]:
-                #collect the settings for the window    
-                window_settings.append([s.strip().replace("'",'') 
-                                        for s in settings[4:]])
-            
-        settings_file.close()
-
-        self.emit(SIGNAL("colorsChanged()"))
-        
-        #check if the list isn't empty
-        if window_settings:
-            
-            return window_settings
+            if window_settings:
+                
+                return window_settings
 
     def save_settings(self, fname, window_settings):
         """Generates a settings file that can be read with load_settings."""
@@ -702,7 +715,10 @@ def connect_instrument_hub(parent, signal = True):
 
     if signal:
         
-        [instr_name_list, dev_list, param_list] = parent.collect_instruments()
+        [instr_name_list, dev_list, param_list] = \
+                    parent.widgets['InstrumentWidget'].collect_device_info()
+        
+        logging.debug("Information sent to the connect_hub method")
         logging.debug([instr_name_list, dev_list, param_list])
         
         actual_instrument_number = len(
@@ -743,11 +759,16 @@ different than " + str(actual_instrument_number)
 
         logging.debug("The instrument list : " \
                       + str(parent.instr_hub.get_instrument_list()))
-                      
-        #show a plot by default
-        parent.create_pdw(settings = parent.plot_window_settings)
+              
         
-        parent.actual_pdw = parent.get_last_window()
+        try:
+            #show a plot by default if used for LabGui
+            parent.create_pdw(settings = parent.plot_window_settings)
+            
+            parent.actual_pdw = parent.get_last_window()
+            
+        except:
+            pass
 
 
 
@@ -861,7 +882,8 @@ def test_load_settings():
     app = QtGui.QApplication(sys.argv)
     ex = InstrumentWindow(debug = True)
 
-    print ex.load_settings("C:\\Users\\pfduc\\Documents\\labgui_github\\test_settings.set")
+    ex.load_settings("C:\\Users\\pfduc\\Documents\\labgui_github\\settings\\default_settings.txt")
+    print ex.collect_device_info(units = True)
     ex.show()
 
     sys.exit(app.exec_())
@@ -882,7 +904,7 @@ def test_main():
 if __name__ == "__main__":
     import logging.config
     import os
-    ABS_PATH = "C:\\Users\\pfduc\\Documents\\labgui_github"
-    logging.config.fileConfig(os.path.join(ABS_PATH,"logging.conf"))
+#    ABS_PATH = "C:\\Users\\admin\\Documents\\Labgui_github"
+#    logging.config.fileConfig(os.path.join(ABS_PATH,"logging.conf"))
 
     test_load_settings()

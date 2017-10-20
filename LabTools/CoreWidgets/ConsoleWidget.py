@@ -43,7 +43,7 @@ class ConsoleWidget(QtGui.QWidget):
         
         if new_text == None:
             
-            return str((self.consoleTextEdit.toPlainText()).rstrip())
+            return str((self.consoleTextEdit.toPlainText())).rstrip()
             
         else:
             

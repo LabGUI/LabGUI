@@ -36,9 +36,16 @@ class DataTaker(QThread):
         self.completed = False
         self.DEBUG = IOTool.get_debug_setting()
 
+
+        #the script which is run everytime the user call the routine "run"
         self.script_file_name = ''
+        
+        #a dict that can be populated by variable the user would like to change
+        #in real time while the script is ran
+        self.user_variables = {}        
+        
         self.t_start = None
-        # initialize the intruments and their parameters
+        # scriptize the intruments and their parameters
         self.reset_lists()
 
     def __del__(self):
@@ -64,6 +71,57 @@ class DataTaker(QThread):
         self.port_param_pairs = self.instr_hub.get_port_param_pairs()
         #print("\t...instruments updated in datataker")
 
+    
+    def update_user_variables(self, adict):
+        """
+        Replace the user variables by updated ones
+        """
+
+        if isinstance(adict, dict):
+            
+            self.user_variables = adict
+
+    def assign_user_variable(self, key, value_type = float, default = None):
+        """this is used to change variables while data are being taken
+        """
+        
+        #the key exists
+        if key in self.user_variables:
+            
+            if value_type == None:
+                
+                return self.user_variables[key]
+                
+            else:
+                
+                if isinstance(value_type, type):
+                    
+                    try:
+                        
+                        return value_type(self.user_variables[key])
+                        
+                    except ValueError:
+                        print("Wrong type conversion applied on \
+user variable")
+                        return self.user_variables[key]
+                        
+                else:
+                    
+                    print("Wrong type used for user variable")
+                    return self.user_variables[key]
+                
+        else:
+            
+            if default == None:
+                
+                print("The user variable key %s isn't defined" % key)
+                
+            else:
+                #assign the default value to the key entry
+                self.user_variables[key] = default
+                #make a recursive call to the method
+                return self.assign_user_variable(key, value_type) 
+                
     def run(self):
         print("DTT begin run")
         self.stopped = False
