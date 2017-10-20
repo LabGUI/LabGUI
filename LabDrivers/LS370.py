@@ -9,9 +9,9 @@ except:
     import Tool
 
 
-CHANNELS_IDX = {"50K flange":1,"4K flange":2,"Magnet":3,"Still flange":5,"T MXC flange":6,"R MXC flange":6,"CH7":7,"T_CH8":8,"R_CH8":8}
+CHANNELS_IDX = {"1K Pot":1,"Still":2,"ICP":3,"MC":4}
 
-param = {'heater': 'A',"50K flange":"K","4K flange":"K","Magnet":"K","Still flange":"K","T MXC flange":"K","R MXC flange":"Ohm","CH7":"Ohm","T_CH8":"K","R_CH8":"Ohm"}
+param = {'heater': '%',"1K Pot":"Ohm","Still":"Ohm","ICP":"Ohm","MC":"Ohm"}
 
 
 TEMP_CONTROL_PARAM = ['channel', 'filter','units', 'delay', 'current/power','htr limit', 'htr resistance']
