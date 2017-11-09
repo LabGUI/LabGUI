@@ -163,7 +163,32 @@ class LabGuiTest(unittest.TestCase):
         
         self.assertIsNone(self.form.plot_window_settings)
     
-    
+    '''
+    Shammamah's tests (incomplete!)
+    # Tests connect button  
+    def test_add_remove(self): 
+        print("\ntest_remove_instrument\n")
+        
+        remove_bt = self.form.widgets['ÍnstrumentWidget'].bt_remove_last         
+        add_bt = self.form.widgets['ÍnstrumentWidget'].bt_add_line
+        connect_bt = self.form.widgets['InstrumentWidget'].bt_connecthub
+        
+        QTest.mouseClick(add_bt, Qt.LeftButton)
+        QTest.mouseClick(connect_bt, Qt.LeftButton)        
+        QTest.mouseClick(remove_bt, Qt.LeftButton)
+        QTest.mouseClick(connect_bt, Qt.LeftButton)
+        
+        
+    # Config file testing: save config settings -> see if settings are loaded correctly 
+    # check data path, script, settings, datafile, debug mode 
+    def test_config_settings(self):
+        print("\ntest_remove_instrument\n")
+        save_conf = self.form.fileMenu.fileSaveCongfigAction
+        change_debug = self.form.optionMenu.option_change_debug_state
+        QTest.mouseClick(save_conf, Qt.LeftButton)
+        
+    # Test for successful output to console 
+  '''
 if __name__ == "__main__":
     
     unittest.main()    
