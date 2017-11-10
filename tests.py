@@ -129,7 +129,7 @@ class LabGuiTest(unittest.TestCase):
         self.assertEqual(1,1)        
         
     def test_save_instrument_settings(self):
-        
+        print("\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
         print("\ntest_save_instrument_settings\n")        
         
         self.set_simple_instrument_list()
@@ -146,7 +146,8 @@ class LabGuiTest(unittest.TestCase):
             print(line)
         
     def test_load_instrument_settings(self):
-        
+        print("\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
+      
         print("\ntest_load_instrument_settings\n")    
         
         self.form.file_load_settings(self.setting_fname)  
@@ -163,14 +164,16 @@ class LabGuiTest(unittest.TestCase):
         
         self.assertIsNone(self.form.plot_window_settings)
     
-    '''
-    Shammamah's tests (incomplete!)
+    
+    #Shammamah's tests (incomplete!)
     # Tests connect button  
     def test_add_remove(self): 
-        print("\ntest_remove_instrument\n")
+        print("\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
+
+        print("\ntest_add_remove\n")
         
-        remove_bt = self.form.widgets['ÍnstrumentWidget'].bt_remove_last         
-        add_bt = self.form.widgets['ÍnstrumentWidget'].bt_add_line
+        remove_bt = self.form.widgets['InstrumentWidget'].bt_remove_last         
+        add_bt = self.form.widgets['InstrumentWidget'].bt_add_line
         connect_bt = self.form.widgets['InstrumentWidget'].bt_connecthub
         
         QTest.mouseClick(add_bt, Qt.LeftButton)
@@ -182,13 +185,34 @@ class LabGuiTest(unittest.TestCase):
     # Config file testing: save config settings -> see if settings are loaded correctly 
     # check data path, script, settings, datafile, debug mode 
     def test_config_settings(self):
-        print("\ntest_remove_instrument\n")
-        save_conf = self.form.fileMenu.fileSaveCongfigAction
-        change_debug = self.form.optionMenu.option_change_debug_state
-        QTest.mouseClick(save_conf, Qt.LeftButton)
+        print("\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
+        print("\ntest_config_settings\n")
+        filemenu = self.form.fileMenu
+        optionmenu = self.form.optionMenu
+        change_debug = optionmenu.actions()[1]
+        save_config = filemenu.actions()[4]
+        change_debug.toggle()
+        save_config.toggle() 
+        # close LabGui and reopen to see if settings have loaded correctly 
+#       LabGui.LabGuiMain.closeEvent(self, QEvent.QCloseEvent())       
+        # not quite sure how to simulate closing the program   
+
+'''
+    # check if logger output level is changed correctly 
+    def test_logger_output_level(self):
+        print("\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
+        print("\ntest_logger_output_level\n")
+        optionmenu = self.form.optionMenu
+        change_output_lvl = optionmenu.actions()[0]
+    '''    
         
-    # Test for successful output to console 
-  '''
+
+#Logger output level
+#Change debug mode
+    # Test for successful output to console
+        
+    
+  
 if __name__ == "__main__":
     
     unittest.main()    
