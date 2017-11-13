@@ -9,6 +9,8 @@ import unittest
 import warnings
 
 import os
+import subprocess
+
 
 def test_start_normal():
     print("Normal start")
@@ -76,9 +78,16 @@ import LabGui
 
 app = QtGui.QApplication(sys.argv)
 
-class LabGuiTest(unittest.TestCase):
-    '''Test the LabGui GUI'''
+# relaunches the application
+def relaunch(): 
+    app.quit()
+    #app.exec_()
     
+    
+class LabGuiTest(unittest.TestCase):    
+
+        
+    '''Test the LabGui GUI'''  
     def setUp(self):
         '''Create the GUI'''
         self.form = LabGui.LabGuiMain()
@@ -193,20 +202,43 @@ class LabGuiTest(unittest.TestCase):
         save_config = filemenu.actions()[4]
         change_debug.toggle()
         save_config.toggle() 
+            
+        #a = subprocess.check_output("type logging.conf | findstr 'DEBUG*'")
+        #print(a)     
         # close LabGui and reopen to see if settings have loaded correctly 
-#       LabGui.LabGuiMain.closeEvent(self, QEvent.QCloseEvent())       
         # not quite sure how to simulate closing the program   
 
-'''
+
     # check if logger output level is changed correctly 
     def test_logger_output_level(self):
         print("\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
         print("\ntest_logger_output_level\n")
-        optionmenu = self.form.optionMenu
-        change_output_lvl = optionmenu.actions()[0]
-    '''    
+        save_config = self.form.fileMenu.actions()[4]
+        logmenu = self.form.loggingSubMenu.actions()
+        debug = logmenu[0]
+        info = logmenu[1] 
+        warning = logmenu[2] 
+        error = logmenu[3] 
         
-
+        print("Toggling debug...\n")
+        debug.toggle() 
+        save_config.toggle() 
+                
+        print("Toggling info...\n")
+        info.toggle() 
+        save_config.toggle()
+        print("Toggling warning...\n")
+        warning.toggle() 
+        save_config.toggle() 
+        print("Toggling error...\n")
+        error.toggle() 
+        save_config.toggle() 
+        
+    def test_relaunch(self) :
+        print("\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
+        print("\ntest_relaunch\n")
+        relaunch() 
+        
 #Logger output level
 #Change debug mode
     # Test for successful output to console
