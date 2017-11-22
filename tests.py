@@ -193,15 +193,31 @@ class LabGuiTest(unittest.TestCase):
         
     # Config file testing: save config settings -> see if settings are loaded correctly 
     # check data path, script, settings, datafile, debug mode 
-    def test_config_settings(self):
+    def test_config_debug(self):
         print("\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
-        print("\ntest_config_settings\n")
+        print("\ntest_config_debug\n")
         filemenu = self.form.fileMenu
         optionmenu = self.form.optionMenu
         change_debug = optionmenu.actions()[1]
         save_config = filemenu.actions()[4]
-        change_debug.toggle()
-        save_config.toggle() 
+
+        print("\nChanging debug state...")
+        change_debug.trigger()
+        f = open("config.txt","r")
+        lines = f.readlines()
+        for i in range(len(lines)): 
+            if("DEBUG" in lines[i]): 
+                print("config.txt: "+lines[i])
+        f.close()
+        print("\nChanging back debug state...")
+        change_debug.trigger()
+        f = open("config.txt","r")
+        lines = f.readlines()
+        for i in range(len(lines)): 
+            if("DEBUG" in lines[i]): 
+                print("config.txt: "+lines[i])
+        f.close()
+        #save_config.trigger()
             
         #a = subprocess.check_output("type logging.conf | findstr 'DEBUG*'")
         #print(a)     
@@ -220,19 +236,21 @@ class LabGuiTest(unittest.TestCase):
         warning = logmenu[2] 
         error = logmenu[3] 
         
-        print("Toggling debug...\n")
-        debug.toggle() 
-        save_config.toggle() 
-                
-        print("Toggling info...\n")
-        info.toggle() 
-        save_config.toggle()
-        print("Toggling warning...\n")
-        warning.toggle() 
-        save_config.toggle() 
-        print("Toggling error...\n")
-        error.toggle() 
-        save_config.toggle() 
+#        for item in logmenu: 
+#            print(item.iconText())
+ 
+        print("\nToggling debug...")
+        debug.trigger() 
+        #save_config.toggle() 
+            
+        print("\nToggling info...")
+        info.trigger() 
+        
+        print("\nToggling warning...")
+        warning.trigger()
+        
+        print("\nToggling error...")
+        error.trigger()
         
     def test_relaunch(self) :
         print("\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
