@@ -52,6 +52,13 @@ LABDRIVER_PACKAGE_NAME="LabDrivers"
 
 old_visa = True
 
+# Check for python version; required to determine whether to include
+# byte-like objects. 
+PYTHON_3 = False 
+
+if sys.version_info[0] == 3: 
+    PYTHON_3 = True 
+
 try:
     #poke at something that only exists in older versions of visa, as a probe for the version
     visa.term_chars_end_input
@@ -141,9 +148,20 @@ def find_prologix_ports():
     for port in serial_ports:
         try:
             s = serial.Serial(port,9600,timeout =0.2)
-            s.write("++mode 1\n++auto 1\n++ver\n")
+            if (PYTHON_3):
+                s.write("++mode 1\n++auto 1\n++ver\n".encode())
+            else: 
+                s.write("++mode 1\n++auto 1\n++ver\n")
+            
+            
             answer = s.readline()
-            if "Prologix GPIB-USB Controller" in answer:
+            
+            PROLOGIX_CONTROLLER = "Prologix GPIB-USB Controller"
+            
+            if (PYTHON_3): 
+                PROLOGIX_CONTROLLER = PROLOGIX_CONTROLLER.encode() 
+                
+            if PROLOGIX_CONTROLLER in answer:
                 result.append(port)
         except(OSError, serial.SerialException):
             pass
