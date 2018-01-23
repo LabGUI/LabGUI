@@ -12,6 +12,10 @@ import os
 import subprocess
 
 
+from LabDrivers import utils 
+
+
+
 def test_start_normal():
     print("Normal start")
     os.system("python LabGui.py")
@@ -256,6 +260,23 @@ class LabGuiTest(unittest.TestCase):
         print("\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
         print("\ntest_relaunch\n")
         relaunch() 
+        
+        
+    # Tests from utils.py
+    # (raising errors if the functions are copy/pasted into this file; 
+    #   right now, I just call the test functions in utils.py from here) 
+    
+    print("\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
+    print("\ntest_prologix_controller_creation_with_com\n")
+    utils.test_prologix_controller_creation_with_com(com_port = None)
+    
+    print("\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
+    print("\ntest_prologix_controller_creation_with_wrong_com\n")
+    utils.test_prologix_controller_creation_with_no_arg_conflict()
+    
+    print("\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
+    print("\ntest_prologix_controller_creation_with_no_arg_conflict()\n")
+    utils.test_prologix_controller_creation_with_wrong_com()
         
 #Logger output level
 #Change debug mode

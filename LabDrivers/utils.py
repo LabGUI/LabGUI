@@ -224,7 +224,7 @@ def is_IP_port(device_port, return_vals = False):
                 return False
             
             #test if the component is between 0 and 255
-            if num < 0 and num > 255:
+            if num < 0 or num > 255:
                 
                 return False
         
@@ -310,7 +310,7 @@ def list_drivers(interface = [INTF_VISA,INTF_PROLOGIX,INTF_SERIAL,INTF_NONE]):
     
     return [instruments, params, units]
     
-    
+
 def test_prologix_controller_creation_with_com(com_port = None):   
     if com_port is None:
         com_port = "COM3"
@@ -464,6 +464,7 @@ ller (try to plug and unplug the cable if it is there nevertheless)"%(com_port))
 
         return open_ports       
 
+
 def command_line_test(instrument_class):
     '''
     Launch an interactive debugging session. The user is prompted to enter
@@ -492,7 +493,7 @@ def command_line_test(instrument_class):
             print("Command not recognized.")
 
     inst.close()
-            
+
                 
 if __name__=="__main__":
     pass
