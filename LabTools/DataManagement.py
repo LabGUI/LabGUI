@@ -10,7 +10,9 @@ import py_compile
 
 from LabTools.IO import IOTool
 import time
-
+####
+import sys 
+####
 from LocalVars import USE_PYQT5
 
 if  USE_PYQT5:
@@ -152,8 +154,27 @@ user variable")
         # open another file which contains the script to follow for this
         # particular measurement
 #        try:
-        script = open(self.script_file_name)
-        print("open script " + self.script_file_name)
+        userScriptName = self.script_file_name
+        try:
+            script = open(userScriptName)
+            print("open script " + userScriptName)
+        # Sometimes (e.g., on a Mac) the script name will show up as
+        # "(/Users/..../script.py)", "All files" or something similar
+        # So if the name isn't loaded properly we try to strip the 
+        # string in the text window of everything unnecessary 
+        except: 
+            begin = userScriptName.find('/')
+            end = userScriptName.find(".py") + 3 
+        try:
+            script = open(userScriptName[begin:end]) 
+        except:
+            print ("+"*10)+"ERROR"+("+"*10)
+            print ("Your script file failed to open:\n")
+            print (userScriptName)
+            print ("Try manually entering the absolute path to the script instead of using the file explorer.")
+            print ("+"*10)+"ERROR"+("+"*10)
+            print
+            
         # check for syntax errors
         try:
             # py_compile.compile(script_file_name)
@@ -163,12 +184,6 @@ user variable")
             print("Syntax error detected")
 
         script.close()
-#        except:
-#            print ("+"*10)+"ERROR"+("+"*10)
-#            print "Your script file failed to open:\n"
-#            print self.script_file_name
-#            print ("+"*10)+"ERROR"+("+"*10)
-#            print
 
         self.completed = True
         
