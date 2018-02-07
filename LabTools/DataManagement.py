@@ -168,11 +168,18 @@ user variable")
         try:
             script = open(userScriptName[begin:end]) 
         except:
-            print ("+"*10)+"ERROR"+("+"*10)
+            # script not found/script invalid 
+            print (("+"*10)+"ERROR"+("+"*10))
             print ("Your script file failed to open:\n")
             print (userScriptName)
             print ("Try manually entering the absolute path to the script instead of using the file explorer.")
-            print ("+"*10)+"ERROR"+("+"*10)
+            print (("+"*10)+"ERROR"+("+"*10))
+            # stop data taker
+            self.completed = True
+            if USE_PYQT5: 
+                self.script_finished.emit(self.completed)
+            else:
+                self.emit(SIGNAL("script_finished(bool)"), self.completed)
             print
             
         # check for syntax errors
