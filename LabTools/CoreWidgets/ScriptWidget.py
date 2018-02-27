@@ -54,8 +54,14 @@ class ScriptWidget(QWidget):
             self.outputFileLineEdit.setText(fname)
 
     def on_scriptFileButton_clicked(self):
-        fname = str(QFileDialog.getOpenFileName(
-            self, 'Load script from', './scripts/'))
+        if USE_PYQT5:
+            fname, fmt = QFileDialog.getOpenFileName(
+                    self, 'Load script from', './scripts/',
+                    'Script files (*.py)')
+        else: 
+            fname = str(QFileDialog.getOpenFileName(
+                    self, 'Load script from', './scripts/',
+                    'Script files (*.py)'))
         if fname:
             self.scriptFileLineEdit.setText(fname)
 

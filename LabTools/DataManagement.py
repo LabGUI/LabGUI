@@ -79,7 +79,6 @@ class DataTaker(QThread):
 
     def initialize(self, first_time=False):
         self.stopped = False
-        self.completed = False
 
         if first_time:
             for key, inst in list(self.instruments.items()):
@@ -162,11 +161,6 @@ user variable")
         # "(/Users/..../script.py)", "All files" or something similar
         # So if the name isn't loaded properly we try to strip the 
         # string in the text window of everything unnecessary 
-        except: 
-            begin = userScriptName.find('/')
-            end = userScriptName.find(".py") + 3 
-        try:
-            script = open(userScriptName[begin:end]) 
         except:
             # script not found/script invalid 
             print (("+"*10)+"ERROR"+("+"*10))
