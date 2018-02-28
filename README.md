@@ -272,3 +272,7 @@ National Instruments GPIB to USB
 Agilent GPIB to USB
 
 RS232 (RS232 to USB adapters are available from various vendors and should all work with LabGUI)
+
+#Programming philosophy#
+##Connect instruments## The InstrumentWidget module contains the method it assigns to LabGuiMain to create instrument connections in the IntrumentHub class instance. All the code is present in the InstrumentWidget module
+

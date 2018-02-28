@@ -664,14 +664,17 @@ class InstrumentWindow(QtGui.QWidget):
     def load_settings(self, fname):
         """ Load in instrument and initial plot settings from a file"""
 
+        logging.debug("Filename : %s"%(fname))
+
         try:
             
             settings_file = open(fname,'r')
             settings_file_ok = True
+            logging.debug("Filename : %s"%(fname))
         except IOError:
             
             settings_file_ok = False
-            print("No such file exists : %s"%(fname))
+            print("No such file exists to load settings : %s"%(fname))
 
         if settings_file_ok:
     
@@ -695,9 +698,6 @@ class InstrumentWindow(QtGui.QWidget):
                     param_name = settings[0].strip()
         
                     new_line.param_name_le.setText(param_name)                
-                    
-    
-                    
                     
                     # For backwards compatibility with old settings files, leave 
                     # this part in.

@@ -1,3 +1,7 @@
 the inline configuration file argument parsing doesn't seem to work well
 
-the output console doesn't seem to work
+the output console doesn't seem to work with python2
+
+the instruments seem to not work in debug mode for python3, the dice output only 0's
+
+the fonction file_load_settings in LabGuiMain uses create_action function from QtTools module and it seems with PYQT5 it emits a boolean which take the spot of the argument "fname"

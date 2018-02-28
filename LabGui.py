@@ -557,8 +557,8 @@ the script path and the data output path into the config file")
 ###############################
 
         #Load the user settings for the instrument connectic and parameters
-        
-        self.default_settings_fname = IOTool.get_settings_name(config_file_path = self.config_file)
+        self.default_settings_fname = IOTool.get_settings_name(
+            config_file_path = self.config_file)
         
         if not exists(self.default_settings_fname):
             
@@ -569,12 +569,19 @@ the script path and the data output path into the config file")
         
         if os.path.isfile(self.default_settings_fname):  
             
+            logging.info("Using '%s' as setting file"%(
+                self.default_settings_fname))            
+            
             self.widgets['CalcWidget'].load_settings(
                     self.default_settings_fname)            
             
             self.widgets['InstrumentWidget'].load_settings(
                     self.default_settings_fname)
+                    
+        else:
             
+            logging.warning("The chosen file '%s' is not a setting file"%(
+                self.default_settings_fname))
            
 
         # Create the object responsible to display information send by the
@@ -589,9 +596,10 @@ the script path and the data output path into the config file")
             self.restoreState(self.settings.value("windowState").toByteArray())
             self.restoreGeometry(self.settings.value("geometry").toByteArray())
         except:
-            logging.info('Using default window configuration') # no biggie - probably means settings haven't been saved on this machine yet
+            logging.info('Using default window configuration')
+            #no biggie - probably means settings haven't been saved on this machine yet
             #hide some of the advanced widgets so they don't show for new users
-            # the objects are not actually deleted, just hidden
+            #the objects are not actually deleted, just hidden
 
 
     def add_widget(self,widget_creation, action_fonctions = None, **kwargs):
@@ -613,7 +621,7 @@ the script path and the data output path into the config file")
         if reply == QtGui.QMessageBox.Yes:
             
             #save the current settings
-            self.file_save_settings(self.default_settings_fname)
+#            self.file_save_settings(self.default_settings_fname)
             
             self.settings.setValue("windowState", self.saveState())
             self.settings.setValue("geometry", self.saveGeometry())
@@ -1123,18 +1131,19 @@ the script path and the data output path into the config file")
             
             self.instrument_connexion_setting_fname = fname
 
-    def file_load_settings(self, fname = None):
+    def file_load_settings(self, args, fname = None, **kwargs):
         """load the settings for the instruments and plot window
         
             the settings are instrument names, connection ports, parameters
             for the instrument and which axis to select for plotting, colors,
             markers, linestyles and user defined parameters for the window
         """
+
         if fname is None:
-            
+   
             if USE_PYQT5:
-                
-                fname, fmt = QtGui.QFileDialog.getOpenFileName(
+       
+                fname, fmt = QFileDialog.getOpenFileName(
                 self, 'Open settings file', './')
                 
                 fname = str(fname)
@@ -1145,7 +1154,7 @@ the script path and the data output path into the config file")
                 self, 'Open settings file', './'))          
             
         if fname:
-            
+
             self.plot_window_settings = \
             self.widgets['InstrumentWidget'].load_settings(fname)
             
@@ -1333,7 +1342,7 @@ def test_user_variable_widget():
 if __name__ == "__main__":
 #    print("Launching LabGUI")
 #    launch_LabGui()
-    test_save_fig()
+#    test_save_fig()
 #    a = import_module('ConsoleWidget')
 #    print(a)
 #    
@@ -1349,7 +1358,7 @@ if __name__ == "__main__":
 
 #    test_save_settings(0)
 #    test_load_settings(1)
-#    test_load_settings(0)
+    test_load_settings(0)
 #    test_user_variable_widget()
 
 
