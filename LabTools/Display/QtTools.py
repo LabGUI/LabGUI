@@ -61,7 +61,13 @@ class printerceptor(QtCore.QObject):
     def flush(self):
         self.old_stdout.flush()
         
+        
 def create_action(parent, text, slot=None, shortcut=None, icon=None, tip=None, checkable=False, signal="triggered()"):
+    """
+        Create a QAction, which can be used to trigger a reation when clicking
+        on a menu item
+    """
+    
     action = QtGui.QAction(text, parent)
     
     if icon is not None:
@@ -76,21 +82,21 @@ def create_action(parent, text, slot=None, shortcut=None, icon=None, tip=None, c
         action.setToolTip(tip)
         action.setStatusTip(tip)
         
+    #connect the slot (function or method to be executed) to the trigger signal
     if slot is not None:
         
         if USE_PYQT5:
-#                print(signal)
-#                keyw = {signal : signal}
-#                action.pyqtConfigure(**keyw)
-            action.pyqtConfigure(triggered = slot)
+
+            action.triggered.connect(slot)
             
         else:
                 
             parent.connect(action, SIGNAL(signal), slot)        
         
-
     if checkable:
+        
         action.setCheckable(True)
+        
     return action
 
 
