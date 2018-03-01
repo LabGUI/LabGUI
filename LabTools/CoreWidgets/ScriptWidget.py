@@ -24,8 +24,8 @@ else:
 from LabTools.IO import IOTool
 
 
-
 class ScriptWidget(QWidget):
+    """widget with a lineEdit and a browse button"""
 
     def __init__(self, parent = None):
         super(ScriptWidget, self).__init__(parent)
@@ -34,9 +34,12 @@ class ScriptWidget(QWidget):
 
         self.scriptFileLabel = QLabel(self)
         self.scriptFileLabel.setText("Script to run:")
+        
         self.scriptFileLineEdit = QLineEdit(self)
+        
         self.scriptFileButton = QPushButton(self)
         self.scriptFileButton.setText("Browse")
+        
         self.scriptLayout.addWidget(self.scriptFileLabel)
         self.scriptLayout.addWidget(self.scriptFileLineEdit)
         self.scriptLayout.addWidget(self.scriptFileButton)
@@ -48,17 +51,23 @@ class ScriptWidget(QWidget):
         self.scriptFileButton.clicked.connect(self.on_scriptFileButton_clicked)
 
     def on_outputFileButton_clicked(self):
+        
         fname = str(QFileDialog.getSaveFileName(self, 'Save output file as',
                                                 self.outputFileLineEdit.text()))
+                                                
         if fname:
+            
             self.outputFileLineEdit.setText(fname)
 
     def on_scriptFileButton_clicked(self):
+        
         if USE_PYQT5:
+            
             fname, fmt = QFileDialog.getOpenFileName(
                     self, 'Load script from', './scripts/',
                     'Script files (*.py)')
         else: 
+            
             fname = str(QFileDialog.getOpenFileName(
                     self, 'Load script from', './scripts/',
                     'Script files (*.py)'))
@@ -66,6 +75,7 @@ class ScriptWidget(QWidget):
             self.scriptFileLineEdit.setText(fname)
 
     def get_script_fname(self):
+        
         return str(self.scriptFileLineEdit.text())
 
 

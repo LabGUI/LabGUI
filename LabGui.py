@@ -76,6 +76,14 @@ USERWIDGETS_PACKAGE_NAME = "LabTools"
 
 CONFIG_FILE = IOTool.CONFIG_FILE_PATH
 
+DDT_CODE_STARTED = 'started'
+
+DDT_CODE_RESUMED = 'resumed'
+            
+DDT_CODE_ALREADY_RUNNING = 'start_error'
+
+
+
 class LabGuiMain(QtGui.QMainWindow):
     """
 
@@ -331,9 +339,6 @@ have the right format, '%s' will be used instead"%(self.config_file,
             self.connect(self.datataker, SIGNAL(
             "script_finished(bool)"), self.finished_DTT)
 
-        #a signal to signify the data taking script is over
-        
-            
         #the array in which the data will be stored
         self.data_array = np.array([])
         
@@ -360,7 +365,10 @@ have the right format, '%s' will be used instead"%(self.config_file,
         
         self.loggingSubMenu = self.optionMenu.addMenu("&Logger output level")        
         
+        #Contains the zooming options buttons
         self.plotToolbar = self.addToolBar("Plot")
+        
+        #Contains the Start, Stop and Pause buttons
         self.instToolbar = self.addToolBar("Instruments")
         
         
@@ -388,7 +396,8 @@ have the right format, '%s' will be used instead"%(self.config_file,
 
         self.instToolbar.addAction(self.start_DTT_action)
         self.instToolbar.addAction(self.pause_DTT_action)
-        self.instToolbar.addAction(self.stop_DTT_action)        
+        self.instToolbar.addAction(self.stop_DTT_action)
+        
         
         
         #this will contain the different widgets in the window
@@ -606,10 +615,10 @@ the script path and the data output path into the config file")
             #the objects are not actually deleted, just hidden
 
 
-    def add_widget(self,widget_creation, action_fonctions = None, **kwargs):
+    def add_widget(self,widget_creation, action_functions = None, **kwargs):
         """adds a widget to the MainArea Window
         
-        this is a rough stage of this fonction, it calls a fonction from
+        this is a rough stage of this function, it calls a function from
         another module to add its widget to the Qdocks
         
         """
@@ -826,7 +835,9 @@ the script path and the data output path into the config file")
         self.datataker.stop()
 
     def start_DTT(self):
+        
         if self.datataker.isStopped():
+            
             self.start_DTT_action.setEnabled(False)
             self.pause_DTT_action.setEnabled(True)
             self.stop_DTT_action.setEnabled(True)
@@ -869,6 +880,8 @@ the script path and the data output path into the config file")
             # this command is specific to Qthread, it will execute whatever is defined in
             # the method run() from DataManagement.py module
             self.datataker.start()
+            
+            return DDT_CODE_STARTED
 
         elif self.datataker.isPaused():
             # restarting from pause
@@ -877,8 +890,13 @@ the script path and the data output path into the config file")
             self.stop_DTT_action.setEnabled(True)
 
             self.datataker.resume()
+            
+            return DDT_CODE_RESUMED
+            
         else:
+            
             print("Couldn't start DTT - already running!")
+            return DDT_CODE_ALREADY_RUNNING
 
     def stop_DTT(self):
         if not self.datataker.isStopped():

@@ -11,6 +11,7 @@ import warnings
 import os
 import subprocess
 
+import time
 
 from LabDrivers import utils 
 
@@ -82,6 +83,10 @@ import LabGui
 
 app = QtGui.QApplication(sys.argv)
 
+from LabTools.IO import IOTool
+
+TEST_CONFIG_FNAME = "config_test.txt"
+
 # relaunches the application
 def relaunch(): 
     app.quit()
@@ -105,6 +110,29 @@ def create_test_setting_file(fname = "test_settings.set"):
         
     settings_file.close()
     
+def create_test_config_file(fname = TEST_CONFIG_FNAME):
+    """create a file with settings so the test can be run anywhere"""
+    cwd = os.getcwd()
+    
+    config_path = os.path.join(cwd, fname)
+    
+    #create a config file
+    IOTool.create_config_file(config_path)
+    
+    #change the value of the debug mode
+    IOTool.set_config_setting(IOTool.DEBUG_ID, True, 
+                           config_file_path = config_path)
+#    IOTool.SCRIPT_ID
+    
+    #SAVE_DATA_PATH_ID = "DATA_PATH"
+    #SETTINGS_ID = "SETTINGS"
+    #WIDGETS_ID = "USER_WIDGETS"
+    #LOAD_DATA_FILE_ID = "DATAFILE"
+    #GPIB_INTF_ID = "GPIB_INTF"
+    
+
+    
+    
     
 class LabGuiTest(unittest.TestCase):    
 #
@@ -112,8 +140,24 @@ class LabGuiTest(unittest.TestCase):
 #    '''Test the LabGui GUI'''  
     def setUp(self):
         '''Create the GUI'''
+        
+        #create a configuration file specially for the tests
+        create_test_config_file()        
+        
         self.form = LabGui.LabGuiMain(['-c','config_test.txt'])
         
+        #the button for starting the DTT
+        self.widget_start = self.form.instToolbar.widgetForAction(
+                                self.form.start_DTT_action)
+                                
+        #the button for stoping the DTT
+        self.widget_pause = self.form.instToolbar.widgetForAction(
+                                self.form.pause_DTT_action)                                
+                                
+        #the button for stoping the DTT
+        self.widget_stop = self.form.instToolbar.widgetForAction(
+                                self.form.stop_DTT_action)
+                                
         self.setting_fname = "test_settings.set"    
 
 #    def test_no_plot_window(self):
@@ -141,23 +185,41 @@ class LabGuiTest(unittest.TestCase):
         port = ['', instr_port, '']
         param = ['Time', instr_param, 'dt']
         
-        QTest.mouseClick(instr_widget.bt_add_line, Qt.LeftButton)
+        #check the number of instrument lines
+        num_lines = len(instr_widget.lines)
 
-        #Fill the lines with Time and dt encercling the instrument
+        if num_lines > 3:
+            
+            #remove any excess from 3
+            while num_lines != 3:
+                
+                QTest.mouseClick(instr_widget.bt_remove_last, Qt.LeftButton)
+                num_lines = len(instr_widget.lines)
+                
+        elif num_lines < 3:
+            
+            #add up to 3 lines
+            while num_lines != 3:
+                
+                QTest.mouseClick(instr_widget.bt_add_line, Qt.LeftButton)
+                num_lines = len(instr_widget.lines)
+
+        #Fill the lines with Time and dt sandwiching the instrument
         for i in range(len(instr)):
             
             #instrument name
             cbb = instr_widget.lines[i].instr_name_cbb
-            cbb.setCurrentIndex(cbb.findText(instr[i]))
-            
+            QTest.keyClicks(cbb, instr[i])
+
             #instrument port
-            cbb = instr_widget.lines[i].port_cbb            
+            cbb = instr_widget.lines[i].port_cbb
+            #find the empty port
             cbb.setCurrentIndex(cbb.findText(''))
             QTest.keyClicks(cbb, port[i])
             
             #instrument parameter
             cbb = instr_widget.lines[i].param_cbb            
-            cbb.setCurrentIndex(cbb.findText(param[i]))           
+            QTest.keyClicks(cbb, param[i])    
         
         if connect:
             #Click on connect
@@ -166,6 +228,9 @@ class LabGuiTest(unittest.TestCase):
     def test_number_of_instrument_connected_at_start(self):
         """the number of instrument connected at start should be 0"""
         
+        #print the test function name
+        print("### %s ###"%(sys._getframe().f_code.co_name))
+        
         num_instr = self.form.instr_hub.get_instrument_nb()
         
         self.assertEqual(num_instr,0)
@@ -173,6 +238,9 @@ class LabGuiTest(unittest.TestCase):
         
     def test_instr_widget_click_add_line_button(self):
         """click on the button 'Add line' should create a line"""
+        
+        #print the test function name
+        print("### %s ###"%(sys._getframe().f_code.co_name))
         
         #intrument widget instance
         instr_widget = self.form.widgets['InstrumentWidget']
@@ -193,6 +261,12 @@ class LabGuiTest(unittest.TestCase):
             after the user added an instrument line in the InstrumentWidget
             and clicked the InstrumentWidget 'Connect' button
         """
+
+        #print the test function name
+        print("### %s ###"%(sys._getframe().f_code.co_name))
+        
+        print("Intruments in the hub")
+        print(self.form.instr_hub.get_instrument_nb())      
         
         self.set_simple_instrument_list(connect = True)
         
@@ -200,7 +274,21 @@ class LabGuiTest(unittest.TestCase):
         
         self.assertEqual(num_instr_after,3)    
     
-#        
+    def test_start_DTT_produce_a_file(self):
+        
+        
+        #print the test function name
+        print("### %s ###"%(sys._getframe().f_code.co_name))
+
+        print("Intruments in the hub")
+        print(self.form.instr_hub.get_instrument_nb()) 
+        
+        QTest.mouseClick(self.widget_start, Qt.LeftButton)
+        
+        time.sleep(5)
+        
+        QTest.mouseClick(self.widget_stop, Qt.LeftButton)
+
 #    def test_dice_connect_and_play(self):
 #        '''test the modification of the instrument list
 #        click connect to connect the instrument hub
@@ -354,37 +442,47 @@ class LabGuiTest(unittest.TestCase):
 ##Logger output level
 ##Change debug mode
 ## Test for successful output to console
-#    
-#    # check if bad scripts are handled correctly    
-#    def test_bad_script(self):
-#        print("\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
-#        print("\ntest_bad_script\n")
-#        script = self.form.widgets['SciptWidget'].scriptFileLineEdit
-#        
-#        f = open("syntaxError.py", "w+")
-#        f.write('''
-#                prnt("this script doesn't compile")
-#                ''')
-#        f.close()
-#        
-#        badScripts = ["\'%s/notarealscript.py\'"%(os.getcwd()),
-#                      "\'%s/notapythonscript.c\'"%(os.getcwd()),
-#                      "\'%s/directory/\'"%(os.getcwd()),
-#                      "\'   \'",
-#                      "\'%s/script_example.py\'"%(os.getcwd())]
-#        
-#        for badScriptName in badScripts:
-#            print("Testing %s\n"%badScriptName)
-#            script.setText(badScriptName)
-#            self.form.datataker.run()
-#            print()
-#        
-#        os.remove("syntaxError.py")
+    
+    # check if bad scripts are handled correctly    
+    def test_bad_script(self):
+        
+        #print the test function name
+        print("### %s ###"%(sys._getframe().f_code.co_name))
+        
+        script = self.form.widgets['SciptWidget'].scriptFileLineEdit
+        
+        f = open("syntaxError.py", "w+")
+        f.write('''
+                prnt("this script doesn't compile")
+                ''')
+        f.close()
+        
+        badScripts = ["\'%s/notarealscript.py\'"%(os.getcwd()),
+                      "\'%s/notapythonscript.c\'"%(os.getcwd()),
+                      "\'%s/directory/\'"%(os.getcwd()),
+                      "\'   \'",
+                      "\'%s/script_example.py\'"%(os.getcwd())]
+        
+        for badScriptName in badScripts:
+            print("Testing %s\n"%badScriptName)
+            
+            #Change the script name
+            QTest.keyClicks(script, badScriptName)
+
+
+            QTest.mouseClick(self.widget_start, Qt.LeftButton)
+
+            print()
+        
+        os.remove("syntaxError.py")
+        
+        #Where is the "assert" which will pass or fail the test?
   
 if __name__ == "__main__":
 
-    unittest.main()    
     
+    unittest.main()    
+    os.remove(TEST_CONFIG_FNAME)
 #    test_start_normal()
     
 #    test_config_option_missing()

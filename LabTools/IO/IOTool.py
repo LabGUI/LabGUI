@@ -287,7 +287,7 @@ def set_config_setting(setting, setting_value, config_file_path = CONFIG_FILE_PA
         config_file.writelines(lines)
         config_file.close()
         
-        print(("The parameter '%s' in the config file was \
+        logging.info(("The parameter '%s' in the config file was \
 successfully changed to %s"%(setting,setting_value)))
         
     except:
