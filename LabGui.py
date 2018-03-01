@@ -40,6 +40,8 @@ if  USE_PYQT5:
                                  
     import PyQt5.QtWidgets as QtGui
     
+    from PyQt5.QtTest import QTest    
+    
     from PyQt5.QtGui import QIcon, QKeySequence
     # just grab the parts we need from QtCore
     from PyQt5.QtCore import Qt, QReadWriteLock, QSettings, pyqtSignal
@@ -51,6 +53,8 @@ else:
                                  QFileDialog, QHBoxLayout, QApplication)
                      
     import PyQt4.QtGui as QtGui     
+
+    from PyQt4.QtTest import QTest
 
     from PyQt4.QtGui import QIcon, QKeySequence          
                      

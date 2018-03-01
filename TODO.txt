@@ -3,3 +3,6 @@ the inline configuration file argument parsing doesn't seem to work well
 the output console doesn't seem to work with python2
 
 the instruments seem to not work in debug mode for python3, the dice output only 0's
+
+Good website describing testing practice
+https://code.tutsplus.com/tutorials/write-professional-unit-tests-in-python--cms-25835

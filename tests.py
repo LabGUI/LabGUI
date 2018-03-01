@@ -87,6 +87,24 @@ def relaunch():
     app.quit()
     #app.exec_()
     
+def create_test_setting_file(fname = "test_settings.set"):
+    """create a file with settings so the test can be run anywhere"""
+    
+    settings_file = open(os.path.join("settings",fname), 'w')
+
+    lines = [
+    "dt(s), TIME, , dt, 'dt(s)', 0, 0, 0, 0, 0, #4477AA, 'None', '-'\n",
+    "Roll(), DICE, COM14, Roll, 'Roll()', 0, 0, 0, 0, 0, #DDCC77, 'None', '-'\n",
+    "Roll(), DICE, COM14, Roll, 'Roll()', 0, 0, 0, 0, 0, #DDCC77, 's', '-'\n",
+    "Roll(), DICE, COM14, Roll, 'Roll()', 0, 0, 0, 0, 0, #DDCC77, 'None', '-'\n",
+    "PRESSURE(psi), PARO1000, GPIB0::01, PRESSURE, 'PRESSURE(psi)', 0, 0, 0, \
+0, 0, #CC6677, 'None', '-'"
+    ]
+    
+    settings_file.writelines(lines)
+        
+    settings_file.close()
+    
     
 class LabGuiTest(unittest.TestCase):    
 #
@@ -94,7 +112,7 @@ class LabGuiTest(unittest.TestCase):
 #    '''Test the LabGui GUI'''  
     def setUp(self):
         '''Create the GUI'''
-        self.form = LabGui.LabGuiMain()
+        self.form = LabGui.LabGuiMain(['-c','config_test.txt'])
         
         self.setting_fname = "test_settings.set"    
 
@@ -103,30 +121,85 @@ class LabGuiTest(unittest.TestCase):
 #        '''
 #
 #        self.assertRaises(IndexError, self.form.get_last_window())
-#
-#    def set_simple_instrument_list(self):
-#        
-#        self.form.widgets['InstrumentWidget'].set_lists(4)
-#        
-#        instr = ['TIME', 'DICE', 'DICE', 'TIME']
-#        port = ['', 'COM2', 'COM3', '']
-#        param = ['Time', 'Roll', 'Roll', 'dt']
-#        
-#        for i in range(len(instr)):
 #            
-#            cbb = self.form.widgets['InstrumentWidget'].lines[i].instr_name_cbb
-#
-#            cbb.setCurrentIndex(cbb.findText(instr[i]))
-#            
-#            cbb = self.form.widgets['InstrumentWidget'].lines[i].port_cbb            
-#            
-#            cbb.setCurrentIndex(cbb.findText(''))
-#            QTest.keyClicks(cbb, port[i])
-#            
-#            cbb = self.form.widgets['InstrumentWidget'].lines[i].param_cbb            
-#            
-#            cbb.setCurrentIndex(cbb.findText(param[i]))           
-#            print(cbb.currentText())
+        
+    def set_simple_instrument_list(self, instr_name = 'DICE', 
+                                         instr_port = 'COM99', 
+                                         instr_param = 'Roll',
+                                         connect = False):
+        
+        """Populate the InstrumentWidget with 3 instruments
+        
+            The one in the middle is userdefined, the other are time and dt
+            if connect is set to True, the button connect will be clicked
+        
+        """
+        
+        instr_widget = self.form.widgets['InstrumentWidget']
+        
+        instr = ['TIME', instr_name, 'TIME']
+        port = ['', instr_port, '']
+        param = ['Time', instr_param, 'dt']
+        
+        QTest.mouseClick(instr_widget.bt_add_line, Qt.LeftButton)
+
+        #Fill the lines with Time and dt encercling the instrument
+        for i in range(len(instr)):
+            
+            #instrument name
+            cbb = instr_widget.lines[i].instr_name_cbb
+            cbb.setCurrentIndex(cbb.findText(instr[i]))
+            
+            #instrument port
+            cbb = instr_widget.lines[i].port_cbb            
+            cbb.setCurrentIndex(cbb.findText(''))
+            QTest.keyClicks(cbb, port[i])
+            
+            #instrument parameter
+            cbb = instr_widget.lines[i].param_cbb            
+            cbb.setCurrentIndex(cbb.findText(param[i]))           
+        
+        if connect:
+            #Click on connect
+            QTest.mouseClick(instr_widget.bt_connecthub, Qt.LeftButton)
+    
+    def test_number_of_instrument_connected_at_start(self):
+        """the number of instrument connected at start should be 0"""
+        
+        num_instr = self.form.instr_hub.get_instrument_nb()
+        
+        self.assertEqual(num_instr,0)
+        
+        
+    def test_instr_widget_click_add_line_button(self):
+        """click on the button 'Add line' should create a line"""
+        
+        #intrument widget instance
+        instr_widget = self.form.widgets['InstrumentWidget']
+        
+        num_lines_before = len(instr_widget.lines)  
+        
+        QTest.mouseClick(instr_widget.bt_add_line, Qt.LeftButton)
+        
+        num_lines_after = len(instr_widget.lines)
+        
+        #test that the number of lines increased by one 
+        self.assertEqual(num_lines_before + 1, num_lines_after)        
+        
+        
+    def test_instr_widget_click_connect_button(self):
+        """
+            check how many instuments are connected to the instrument hub
+            after the user added an instrument line in the InstrumentWidget
+            and clicked the InstrumentWidget 'Connect' button
+        """
+        
+        self.set_simple_instrument_list(connect = True)
+        
+        num_instr_after = self.form.instr_hub.get_instrument_nb()
+        
+        self.assertEqual(num_instr_after,3)    
+    
 #        
 #    def test_dice_connect_and_play(self):
 #        '''test the modification of the instrument list
@@ -282,34 +355,34 @@ class LabGuiTest(unittest.TestCase):
 ##Change debug mode
 ## Test for successful output to console
 #    
-    # check if bad scripts are handled correctly    
-    def test_bad_script(self):
-        print("\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
-        print("\ntest_bad_script\n")
-        script = self.form.widgets['SciptWidget'].scriptFileLineEdit
-        
-        f = open("syntaxError.py", "w+")
-        f.write('''
-                prnt("this script doesn't compile")
-                ''')
-        f.close()
-        
-        badScripts = ["\'%s/notarealscript.py\'"%(os.getcwd()),
-                      "\'%s/notapythonscript.c\'"%(os.getcwd()),
-                      "\'%s/directory/\'"%(os.getcwd()),
-                      "\'   \'",
-                      "\'%s/script_example.py\'"%(os.getcwd())]
-        
-        for badScriptName in badScripts:
-            print("Testing %s\n"%badScriptName)
-            script.setText(badScriptName)
-            self.form.datataker.run()
-            print()
-        
-        os.remove("syntaxError.py")
+#    # check if bad scripts are handled correctly    
+#    def test_bad_script(self):
+#        print("\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
+#        print("\ntest_bad_script\n")
+#        script = self.form.widgets['SciptWidget'].scriptFileLineEdit
+#        
+#        f = open("syntaxError.py", "w+")
+#        f.write('''
+#                prnt("this script doesn't compile")
+#                ''')
+#        f.close()
+#        
+#        badScripts = ["\'%s/notarealscript.py\'"%(os.getcwd()),
+#                      "\'%s/notapythonscript.c\'"%(os.getcwd()),
+#                      "\'%s/directory/\'"%(os.getcwd()),
+#                      "\'   \'",
+#                      "\'%s/script_example.py\'"%(os.getcwd())]
+#        
+#        for badScriptName in badScripts:
+#            print("Testing %s\n"%badScriptName)
+#            script.setText(badScriptName)
+#            self.form.datataker.run()
+#            print()
+#        
+#        os.remove("syntaxError.py")
   
 if __name__ == "__main__":
-    
+
     unittest.main()    
     
 #    test_start_normal()

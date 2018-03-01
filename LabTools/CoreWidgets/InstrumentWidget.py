@@ -24,7 +24,7 @@ import LabDrivers.Tool as Tool
 import LabDrivers.utils
 from LabTools.Display.PlotPreferences import color_blind_friendly_colors
 
-
+DEFAULT_INSTR_NUMBER = 2
 
 
 width_instr = 100
@@ -324,6 +324,7 @@ QComboBox::down-arrow {image: url(noimg); border-width: 0px;}")
 
 class InstrumentWindow(QtGui.QWidget):
     """This class operates the graphism of the instrument connectic"""
+    
     # All the ports that can be used
     AVAILABLE_PORTS = []
     # Number of instrument that can be connected
@@ -350,20 +351,27 @@ class InstrumentWindow(QtGui.QWidget):
 
 #        print "available ports inside InstrumentWindows",available_ports        
         
+        #get the debug parameter for the parent class
         self.DEBUG = debug
 
+        #initialize the list of available ports
         self.AVAILABLE_PORTS = available_ports
+        
         # Load the lists of instruments, with their parameters and their units
         [self.INSTRUMENT_TYPES, self.AVAILABLE_PARAMS,
             self.UNITS] = LabDrivers.utils.list_drivers()
         #print (IOTool.get_drivers_path())
+            
         # This is a grid strictured layout
         self.line_layout = QtGui.QVBoxLayout()
-        # initilize the lists
+        # initialize the lists
         # all the widgets of time SingleLineWidget will go in this list.
         self.lines = []
+        
+        #the argument -1 will trigger the "first initialization sequence
+        #of this method
         self.set_lists(-1)
-        #self.resize(480, 600)
+        
         self.setSizePolicy(QtGui.QSizePolicy(QtGui.QSizePolicy.Minimum, 
                                              QtGui.QSizePolicy.Expanding))
         
@@ -373,6 +381,7 @@ class InstrumentWindow(QtGui.QWidget):
     def set_lists(self, num_channels):
         """"This method is used to initialise a user defined number of lines of comboboxes, each line will hold information about one instrument"""
 
+        #this prevent to set less than 2 channels 
         if num_channels < 2 and num_channels > -1:
             
             num_channels = 2
@@ -380,7 +389,7 @@ class InstrumentWindow(QtGui.QWidget):
         if num_channels == -1:
             
             first_init = True
-            num_channels = 5
+            num_channels = DEFAULT_INSTR_NUMBER
 
         else:
             
@@ -425,10 +434,12 @@ class InstrumentWindow(QtGui.QWidget):
 #                    "clicked()"), self.bt_refreshports_clicked)
 #                self.line_layout.addWidget(self.bt_connecthub, 0,3,1,1)
 
+                #A button to add an instrument in the list
                 self.bt_add_line = QtGui.QPushButton("Add item", self)
                 self.bt_add_line.setEnabled(True)
                 self.bt_add_line.clicked.connect(self.bt_add_line_clicked)
-                    
+                
+                #A button to remove the last instrument in the list
                 self.bt_remove_last = QtGui.QPushButton("Remove last item", self)
                 self.bt_remove_last.setEnabled(True)
                 self.bt_remove_last.clicked.connect(self.bt_remove_last_clicked)
@@ -436,8 +447,8 @@ class InstrumentWindow(QtGui.QWidget):
                 self.add_remove_layout = QtGui.QHBoxLayout()
                 self.add_remove_layout.addWidget(self.bt_add_line)
                 self.add_remove_layout.addWidget(self.bt_remove_last)
+                
                 # set the layout and add a spacer bar
-
                 self.vertical_layout = QtGui.QVBoxLayout(self)
                 self.vertical_layout.setObjectName("vertical_layout")
                 self.vertical_layout.addWidget(self.bt_connecthub)
@@ -506,22 +517,34 @@ class InstrumentWindow(QtGui.QWidget):
 
 
     def remove_lastline(self):
-        # decrease the number of channels by one
+        """removes the last line"""
+        
+        #Find the last SingleLineWidget instance
         widget = self.lines[-1]
         self.lines.remove(widget)
         self.line_layout.removeWidget(widget)
+        
         try:
+            
             widget.setParent(None)
+            
         except:
+            
             pass
+        
         widget.close()
+        
+        #update the colorblind friendly color set
         self.color_set = color_blind_friendly_colors(len(self.lines))
+        
         for line,color in zip(self.lines,self.color_set):
+            
             line.set_color(color)
-        logging.debug('line removed')
-        # move the button 'Connect' one line up
-#        self.line_layout.removeWidget(self.bt_connecthub)
-#        self.line_layout.addWidget(self.bt_connecthub, self.num_channels+1,3,1,1)
+
+        self.update_colors()        
+        
+        logging.debug('last line removed')
+
 
     def remove_all_lines(self):
         self.num_channels = 0
@@ -535,6 +558,7 @@ class InstrumentWindow(QtGui.QWidget):
             wid.close()
 
     def resetLayout(self):
+        
         # delete the grid and the spacer
         for i in reversed(list(range(self.vertical_layout.count()))):
             item = self.vertical_layout.itemAt(i)
@@ -596,10 +620,16 @@ class InstrumentWindow(QtGui.QWidget):
 
 
     def bt_add_line_clicked(self):
-        """when this method is called (upon button 'Connect' interaction) it send a signal, which will be treated in the main window"""
+        """
+            when this method is called (upon button 'Connect' interaction) 
+            it send a signal, which will be treated in the main window
+        """
+        
         if self.bt_remove_last.isEnabled:
+            
             self.create_line()
             
+            #sends a signal to the main window
             if USE_PYQT5:
                 
                 self.addedInstrument.emit(True)
@@ -607,6 +637,7 @@ class InstrumentWindow(QtGui.QWidget):
             else:
             
                 self.emit(SIGNAL("AddedInstrument(bool)"), True)
+                
             # the lines have changed - call the relevant function!            
             self.lines_changed()           
             
@@ -643,7 +674,9 @@ class InstrumentWindow(QtGui.QWidget):
 
 
     def get_descriptor_list(self):
+        
         output = []
+        
         for line in self.lines:
             output.append(line.get_descriptor())
 
@@ -986,7 +1019,7 @@ def test_load_settings():
     app = QtGui.QApplication(sys.argv)
     ex = InstrumentWindow(debug = True)
 
-    ex.load_settings("C:\\Users\\pfduc\\Documents\\labgui_github\\settings\\default_settings.txt")
+    ex.load_settings("C:\\Users\\pfduc\\Documents\\labgui_github\\settings\\test_settings.set")
     print(ex.collect_device_info())
     ex.show()
 
