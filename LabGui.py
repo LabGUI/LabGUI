@@ -398,8 +398,6 @@ have the right format, '%s' will be used instead"%(self.config_file,
         self.instToolbar.addAction(self.pause_DTT_action)
         self.instToolbar.addAction(self.stop_DTT_action)
         
-        
-        
         #this will contain the different widgets in the window
         self.widgets = {}
         
@@ -830,6 +828,7 @@ the script path and the data output path into the config file")
                 logging.warning("There was an error with the limits")
 
     def single_measure_DTT(self):
+        
         self.datataker.initialize()
         self.datataker.read_data()
         self.datataker.stop()
@@ -838,14 +837,13 @@ the script path and the data output path into the config file")
         
         if self.datataker.isStopped():
             
+            #Enable/disable the start, pause, stop buttons on the MainWindow
             self.start_DTT_action.setEnabled(False)
             self.pause_DTT_action.setEnabled(True)
             self.stop_DTT_action.setEnabled(True)
             
+            #forbid the user to connect instruments to the hub while measuring
             self.widgets['InstrumentWidget'].bt_connecthub.setEnabled(False)
-
-            #self.startWidget.startStopButton.setText("Stop!")
-            #self.start_DTT_.setText("Stop DTT")
 
             # just update the color boxes in case
             self.update_colors()
@@ -875,7 +873,8 @@ the script path and the data output path into the config file")
                 self.output_file = open(of_name, 'a')
                 
             self.datataker.initialize(is_new_file)
-            self.datataker.set_script(self.widgets['SciptWidget'].get_script_fname())
+            self.datataker.set_script(self.widgets['ScriptWidget'].get_script_fname())
+            print(self.widgets['ScriptWidget'].get_script_fname())
             
             # this command is specific to Qthread, it will execute whatever is defined in
             # the method run() from DataManagement.py module
@@ -1363,7 +1362,7 @@ def test_user_variable_widget():
 
 if __name__ == "__main__":
 #    print("Launching LabGUI")
-#    launch_LabGui()
+    launch_LabGui()
 #    test_save_fig()
 #    a = import_module('ConsoleWidget')
 #    print(a)
@@ -1380,7 +1379,7 @@ if __name__ == "__main__":
 
 #    test_save_settings(0)
 #    test_load_settings(1)
-    test_load_settings(0)
+#    test_load_settings(0)
 #    test_user_variable_widget()
 
 
