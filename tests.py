@@ -494,7 +494,7 @@ class LabGuiTest(unittest.TestCase):
         #print the test function name
         print("### %s ###"%(sys._getframe().f_code.co_name))
         
-        script = self.form.widgets['SciptWidget'].scriptFileLineEdit
+        script = self.form.widgets['ScriptWidget'].scriptFileLineEdit
         
         f = open("syntaxError.py", "w+")
         f.write('''

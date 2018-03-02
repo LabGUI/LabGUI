@@ -71,7 +71,9 @@ class ScriptWidget(QWidget):
             fname = str(QFileDialog.getOpenFileName(
                     self, 'Load script from', './scripts/',
                     'Script files (*.py)'))
+                    
         if fname:
+            
             self.scriptFileLineEdit.setText(fname)
 
     def get_script_fname(self):
@@ -85,9 +87,13 @@ def add_widget_into_main(parent):
     create a QDock widget and store a reference to the widget
     """    
 
-    parent.widgets['SciptWidget'] = ScriptWidget(parent)
+    parent.widgets['ScriptWidget'] = ScriptWidget(parent)
     
-    parent.instToolbar.addWidget(parent.widgets['SciptWidget'])
+    fname = IOTool.get_script_name(config_file_path = parent.config_file)    
+    
+    parent.widgets['ScriptWidget'].scriptFileLineEdit.setText(fname)
+    
+    parent.instToolbar.addWidget(parent.widgets['ScriptWidget'])
 
 
 

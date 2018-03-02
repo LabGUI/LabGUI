@@ -1102,7 +1102,7 @@ the script path and the data output path into the config file")
         """
         this function get the actual values of parameters and save them into the config file
         """
-        script_fname=str(self.widgets['SciptWidget'].scriptFileLineEdit.text())
+        script_fname=str(self.widgets['ScriptWidget'].scriptFileLineEdit.text())
         IOTool.set_config_setting(IOTool.SCRIPT_ID,script_fname,self.config_file)
         
         output_path = os.path.dirname(self.widgets['OutputFileWidget'].get_output_fname())+os.path.sep
