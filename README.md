@@ -128,6 +128,36 @@ for python 3.4 linux, download https://www.riverbankcomputing.com/software/pyqt/
 
 Depending on how you connect your computer to your instruments you might have to download drivers for the communication hub, pyvisa has some requirements which you can find by googling pyvisa. This topic is covered latter in the readme.
 
+#Useful commands#
+
+To run the coverage tests
+
+https://coverage.readthedocs.io/en/coverage-4.5.1/
+
+```
+#!bash
+
+coverage run
+
+```
+
+To see the report do
+
+```
+#!bash
+
+coverage report
+
+```
+or
+
+```
+#!bash
+
+coverage html
+
+```
+
 # Structure #
 
 You need to add LabGui folder to your PYHTON PATH (look for ways to do so) before starting.
