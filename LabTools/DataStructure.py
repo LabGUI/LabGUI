@@ -163,6 +163,44 @@ class LabeledData(object):
         return np.squeeze(np.array([c for c in np.transpose(self.data)]))
         
     
+    def is_empty(self):    
+        """this method will return the columns in an array"""
+        if self.nlabels and self.nlines * self.ncols: 
+            return False
+        else:
+            return True
+        
+    def merge(self, other_ldat, sort = False, sortkey = None):
+        """this method will take another instance of LabeledData
+            and merge it if the labels match
+            we could add the possibility to automatically sort the merged
+            ndarray according to a column and an order (most likely time)
+        """
+        if other_ldat.labels == self.labels:
+            
+            self.data = np.vstack([self.data, other_ldat.data])
+            print np.shape(self.data)
+            #update line and column number
+            self.nlines = np.size(self.data, 0)
+            self.ncols = np.size(self.data, 1)
+            
+            #sort the array
+            if sort:
+                self.argsort(sortkey)
+        
+    def argsort(self, sort_key):
+        """sort the data lines according to one column asending order"""
+        
+        #the key belong to the labels
+        if sort_key in self.labels:
+            
+            self.data = self.data[self[sort_key].argsort()]
+        
+        elif isinstance(sort_key,int):
+            
+            self.data = self.data[self[:,sort_key].argsort()]
+            
+        
     def __getitem__(self,inargs):
         """"override the [] operator in order to be able to call self[usual indexation,column label]"""
         logging.debug(inargs)
@@ -238,7 +276,7 @@ def test_labels_class_LabeledData(labels=["a","b","c"]):
 
     mydat.display()
 
-    num_test=7
+    num_test=12
     test_passed=0    
     
     if (mydat[0:2]==np.array([[1,2,3],[4,5,6]])).all():
@@ -271,6 +309,30 @@ def test_labels_class_LabeledData(labels=["a","b","c"]):
     else:
         logging.warning("the negative indexing by index in first argument alone fails")
         
+	nlines = mydat.nlines
+    ncolumns = mydat.ncols
+    mydat.merge(mydat)
+
+    if mydat.nlines == 2* nlines:
+        logging.info("the merge function returns an object with the correct number of lines")
+        test_passed+=1 
+	else:
+		logging.warning("the merge function returns an object with the incorrect number of lines")
+    
+    
+    if mydat.ncols == ncolumns:
+        logging.info("the merge function returns an object with the correct number of columns")
+        test_passed+=1
+	else:
+		logging.warning("the merge function returns an object with the incorrect number of columns")
+        
+        
+    if mydat.labels == labels:
+        logging.info("the merge function returns an object with the correct labels")
+        test_passed+=1 
+	else:
+		logging.warning("the merge function returns an object with the incorrect labels")
+		
     test_header = "I want to make sure this works\nOn more than one line"
     mydat.save_to_file("test_fonction.txt", test_header)
     

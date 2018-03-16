@@ -50,14 +50,6 @@ class ScriptWidget(QWidget):
 
         self.scriptFileButton.clicked.connect(self.on_scriptFileButton_clicked)
 
-    def on_outputFileButton_clicked(self):
-        
-        fname = str(QFileDialog.getSaveFileName(self, 'Save output file as',
-                                                self.outputFileLineEdit.text()))
-                                                
-        if fname:
-            
-            self.outputFileLineEdit.setText(fname)
 
     def on_scriptFileButton_clicked(self):
         

@@ -69,9 +69,12 @@ class OutputFileWidget(QtGui.QWidget):
         self.setSizePolicy(QtGui.QSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Maximum))
         
     def on_outputFileButton_clicked(self):
+        
         fname = str(QtGui.QFileDialog.getSaveFileName(self, 'Save output file as',
                                                 self.outputFileLineEdit.text()))
+                                                
         if fname:
+            
             self.outputFileLineEdit.setText(fname)
 
     def increment_filename(self):
@@ -79,8 +82,9 @@ class OutputFileWidget(QtGui.QWidget):
         # file name
         p = re.compile(r"_[0-9]{3}[.]dat$")
         fname = self.get_output_fname()
+
         found = p.findall(fname)
-        print(("found:" + str(found)))
+#        print(("found:" + str(found)))
         if not found == []:
             ending = found[0]
             num = int(ending[1:4]) + 1
@@ -88,11 +92,17 @@ class OutputFileWidget(QtGui.QWidget):
             self.outputFileLineEdit.setText(fname)
 
     def get_header_text(self):
+        
         text = str(self.headerTextEdit.toPlainText())
+        
         if text:
+            
             text = "# " + text.replace("\n", "\n#") + "\n"
+            
             return text
+            
         else:
+            
             return ""
 
     def get_output_fname(self):
