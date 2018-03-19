@@ -525,7 +525,8 @@ class LabGuiTest(unittest.TestCase):
                                 not self.form.pause_DTT_action.isEnabled() and 
                                 not self.form.stop_DTT_action.isEnabled())
             self.assertRaises(ScriptFile_Error)
-        
+        os.remove("syntaxError.py")
+        os.remove("notapythonscript.c")
   
 if __name__ == "__main__":
 
