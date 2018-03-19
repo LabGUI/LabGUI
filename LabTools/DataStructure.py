@@ -179,7 +179,7 @@ class LabeledData(object):
         if other_ldat.labels == self.labels:
             
             self.data = np.vstack([self.data, other_ldat.data])
-            print np.shape(self.data)
+            print(np.shape(self.data))
             #update line and column number
             self.nlines = np.size(self.data, 0)
             self.ncols = np.size(self.data, 1)
@@ -309,29 +309,29 @@ def test_labels_class_LabeledData(labels=["a","b","c"]):
     else:
         logging.warning("the negative indexing by index in first argument alone fails")
         
-	nlines = mydat.nlines
+    nlines = mydat.nlines
     ncolumns = mydat.ncols
     mydat.merge(mydat)
 
     if mydat.nlines == 2* nlines:
         logging.info("the merge function returns an object with the correct number of lines")
         test_passed+=1 
-	else:
-		logging.warning("the merge function returns an object with the incorrect number of lines")
+    else:
+        logging.warning("the merge function returns an object with the incorrect number of lines")
     
     
     if mydat.ncols == ncolumns:
         logging.info("the merge function returns an object with the correct number of columns")
         test_passed+=1
-	else:
-		logging.warning("the merge function returns an object with the incorrect number of columns")
+    else:
+        logging.warning("the merge function returns an object with the incorrect number of columns")
         
         
     if mydat.labels == labels:
         logging.info("the merge function returns an object with the correct labels")
         test_passed+=1 
-	else:
-		logging.warning("the merge function returns an object with the incorrect labels")
+    else:
+        logging.warning("the merge function returns an object with the incorrect labels")
 		
     test_header = "I want to make sure this works\nOn more than one line"
     mydat.save_to_file("test_fonction.txt", test_header)
