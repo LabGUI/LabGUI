@@ -90,7 +90,7 @@ else:
 
 import LabGui
 
-from LabGuiExceptions import DTT_Error
+from LabGuiExceptions import DTT_Error, ScriptFile_Error
 
 app = QtGui.QApplication(sys.argv)
 
@@ -491,35 +491,42 @@ class LabGuiTest(unittest.TestCase):
     @function_hdr
     def test_bad_script(self):
         
+        #print the test function name
+        print("### %s ###"%(sys._getframe().f_code.co_name))
+        
         script = self.form.widgets['ScriptWidget'].scriptFileLineEdit
         
+        # create invalid scripts 
         f = open("syntaxError.py", "w+")
-        f.write('''
-                prnt("this script doesn't compile")
-                ''')
+        f.write("prnt(\"this script doesn't compile\")")
         f.close()
+        f = open("notapythonscript.c", "w+")
+        f.write("printf(\"%s\",\"this is the wrong filetype\");")
+        f.close() 
         
-        badScripts = ["\'%s/notarealscript.py\'"%(os.getcwd()),
-                      "\'%s/notapythonscript.c\'"%(os.getcwd()),
-                      "\'%s/directory/\'"%(os.getcwd()),
-                      "\'   \'",
-                      "\'%s/script_example.py\'"%(os.getcwd())]
+        badScripts = ["%s/notarealscript.py"%(os.getcwd()), 
+                      "%s/notapythonscript.c"%(os.getcwd()),
+                      "%s/syntaxError.py"%(os.getcwd()),
+                      "%s/script_example.py"%(os.getcwd())]
         
         for badScriptName in badScripts:
-            print("Testing %s\n"%badScriptName)
-            
-            #Change the script name
+            # Change the script name
+            for i in range(len(script.text())): 
+                QTest.keyClick(script, Qt.Key_Backspace)
             QTest.keyClicks(script, badScriptName)
-
-
+            print("\nTesting %s\n"%script.text())
             QTest.mouseClick(self.widget_start, Qt.LeftButton)
-
-            print()
-        
+            # this test gets buggy when there is no delay
+            time.sleep(1)
+            # need to ensure that the errors lead to the re-enabling 
+            # of the stop button, and the disabling of the 
+            # stop/pause buttons 
+            self.assertTrue(self.form.start_DTT_action.isEnabled() and
+                                not self.form.pause_DTT_action.isEnabled() and 
+                                not self.form.stop_DTT_action.isEnabled())
+            self.assertRaises(ScriptFile_Error)
         os.remove("syntaxError.py")
-        
-        #Where is the "assert" which will pass or fail the test?
-  
+        os.remove("notapythonscript.c")
 if __name__ == "__main__":
 
     create_test_config_file() 
