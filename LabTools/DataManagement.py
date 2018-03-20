@@ -5,13 +5,15 @@ Created on Thu Jul 18 23:27:44 2013
 Copyright (C) 10th april 2015 Pierre-Francois Duc
 License: see LICENSE.txt file
 """
-
+import logging 
 import py_compile
+from LabGuiExceptions import ScriptFile_Error
+import sys 
 
 from LabTools.IO import IOTool
 import time
 ####
-import sys 
+#import sys 
 ####
 from LocalVars import USE_PYQT5
 
@@ -151,56 +153,50 @@ user variable")
                 return self.assign_user_variable(key, value_type) 
                 
     def run(self):
-        print("DTT begin run")
+        print("DTT begin run\n")
         self.stopped = False
         # open another file which contains the script to follow for this
         # particular measurement
-#        try:
-        userScriptName = self.script_file_name
+        userScriptName = self.script_file_name 
         try:
+            logging.info("Opening script %s"%userScriptName)
+            ext = userScriptName[userScriptName.index('.'):]
+            if(ext != ".py"):
+                raise(ScriptFile_Error("Incorrect filetype: %s"
+                                       %(ext)))
             script = open(userScriptName)
-            print("open script " + userScriptName)
-        # Sometimes (e.g., on a Mac) the script name will show up as
-        # "(/Users/..../script.py)", "All files" or something similar
-        # So if the name isn't loaded properly we try to strip the 
-        # string in the text window of everything unnecessary 
-        except:
-            # script not found/script invalid 
-            print (("+"*10)+"ERROR"+("+"*10))
-            print ("Your script file failed to open:\n")
-            print (userScriptName)
-            print ("Try manually entering the absolute path to the script instead of using the file explorer.")
-            print (("+"*10)+"ERROR"+("+"*10))
-            # stop data taker
-            self.completed = True
-            if USE_PYQT5: 
-                self.script_finished.emit(self.completed)
-            else:
-                self.emit(SIGNAL("script_finished(bool)"), self.completed)
-            print
-            
-        # check for syntax errors
-        try:
-            # py_compile.compile(script_file_name)
+            py_compile.compile(script.name, doraise=True)
             code = compile(script.read(), script.name, 'exec')
             exec(code)
-        except py_compile.PyCompileError:
-            print("Syntax error detected")
-
-        script.close()
-
-        self.completed = True
-        
-        if USE_PYQT5:
-            
-            self.script_finished.emit(self.completed)
-        
-        else:
-            
-            self.emit(SIGNAL("script_finished(bool)"), self.completed)
-#        self.stopped = True
-
-        print("DTT run over")
+            script.close()
+            self.completed = True 
+            print("DTT run over\n")
+        except FileNotFoundError as fileNotFoundError:
+            # script not found/script invalid 
+            logging.error("Your script file \"%s\" "%(userScriptName) +
+                              "failed to open with error:\n" + 
+                              str(fileNotFoundError) + 
+                              "\nPlease review the script.\n")
+            raise(ScriptFile_Error(fileNotFoundError))
+        except ScriptFile_Error as filetypeError: 
+            logging.error("Your script file \"%s\" "%(userScriptName) +
+                              "failed to open with error:\n" + 
+                              str(filetypeError) + 
+                              "\nPlease review the script.\n")
+            raise(ScriptFile_Error(filetypeError))
+        except py_compile.PyCompileError as compileError:
+            logging.error("Your script file \"%s\" "%(userScriptName) +
+                              "failed to compile with error:\n" + 
+                              str(compileError) + 
+                              "\nPlease review the script.\n")
+            raise(ScriptFile_Error(compileError))
+        except Exception as e: 
+            logging.error("Your script file \"%s\" "%(userScriptName) +
+                              "failed to run with error:\n" + 
+                              type(e).__name__ + ": " + str(e) + 
+                              "\nPlease review the script.\n")
+        finally: 
+            self.stop() 
 
     def set_script(self, script_fname):
         self.script_file_name = script_fname

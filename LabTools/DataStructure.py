@@ -179,7 +179,7 @@ class LabeledData(object):
         if other_ldat.labels == self.labels:
             
             self.data = np.vstack([self.data, other_ldat.data])
-            print np.shape(self.data)
+            print(np.shape(self.data))
             #update line and column number
             self.nlines = np.size(self.data, 0)
             self.ncols = np.size(self.data, 1)
@@ -309,7 +309,7 @@ def test_labels_class_LabeledData(labels=["a","b","c"]):
     else:
         logging.warning("the negative indexing by index in first argument alone fails")
         
-	nlines = mydat.nlines
+    nlines = mydat.nlines
     ncolumns = mydat.ncols
     mydat.merge(mydat)
 
