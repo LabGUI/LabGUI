@@ -898,6 +898,7 @@ the script path and the data output path into the config file")
             return DDT_CODE_ALREADY_RUNNING
 
     def stop_DTT(self):
+        
         if not self.datataker.isStopped():
             self.datataker.resume()
             self.datataker.stop()
@@ -923,7 +924,9 @@ the script path and the data output path into the config file")
 
             # Enable changes to the instrument connections    
             self.widgets['InstrumentWidget'].bt_connecthub.setEnabled(True)
+            
         else:
+            
             print("Couldn't stop DTT - it wasn't running!")
 
     def pause_DTT(self):
@@ -941,6 +944,7 @@ the script path and the data output path into the config file")
 
 
     def finished_DTT(self, completed):
+        
         if completed:
             
             self.stop_DTT()
@@ -1152,7 +1156,7 @@ the script path and the data output path into the config file")
             
             self.instrument_connexion_setting_fname = fname
 
-    def file_load_settings(self, args, fname = None, **kwargs):
+    def file_load_settings(self, fname = None, **kwargs):
         """load the settings for the instruments and plot window
         
             the settings are instrument names, connection ports, parameters
@@ -1360,9 +1364,51 @@ def test_user_variable_widget():
     ex.show()
     sys.exit(app.exec_())
 
+
+import time
+def build_test():
+
+    app = QtGui.QApplication(sys.argv)
+    form = LabGuiMain()         
+    
+    widget_start = form.instToolbar.widgetForAction(
+                                form.start_DTT_action)
+    
+    widget_stop = form.instToolbar.widgetForAction(
+                                form.stop_DTT_action)
+                                
+    form.file_load_settings("test_settings.set")    
+    
+    form.connect_instrument_hub()    
+    
+
+    print("Intruments in the hub")
+    print(form.instr_hub.get_instrument_nb()) 
+
+    #Start the DTT
+    QTest.mouseClick(widget_start, Qt.LeftButton)
+    
+    #print the name of the data file
+    ofname = form.output_file.name
+    print("DTT output file : %s"%(ofname))
+#    time.sleep(1)
+    
+#    QTest.mouseClick(widget_stop, Qt.LeftButton)
+    """
+    the script launches from cliking on start which triggers Datataker.run
+    when the script is finished it emits script_finished(bool) with the value completed = True
+    this is catched by the finished_DTT function from LabGui which then call stop_DTT from LabGui
+    which then calls datataker.stop and datataker.resume
+    this should probably be done be done within the Datataker class and only the reenabling of the 
+    buttons should be done here...
+    """
+    form.show()
+    sys.exit(app.exec_())
+
 if __name__ == "__main__":
 #    print("Launching LabGUI")
-    launch_LabGui()
+#    launch_LabGui()
+    build_test()
 #    test_save_fig()
 #    a = import_module('ConsoleWidget')
 #    print(a)

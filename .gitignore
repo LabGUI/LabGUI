@@ -14,3 +14,4 @@ LabDrivers/ArduinoUno.py
 scripts/script.py
 config_*
 htmlcov/
+.tox/

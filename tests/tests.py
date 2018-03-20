@@ -45,7 +45,16 @@ def test_config_option_correct():
     print("config_option_correct")
     os.system("python LabGui.py -c config_mass_spec_alone.txt") 
     
+def function_hdr(func):
     
+	def new_function(*args, **kwargs):
+	
+         print("\n### %s ###\n"%(func.__name__))
+         return_value = func(*args, **kwargs)
+         print("\n### --- ###\n")
+         return return_value
+	
+	return new_function
 #class TestConfigInlineOption(unittest.TestCase):   
 #    
 #    def test_config_option_file_not_exists(self):
@@ -244,65 +253,53 @@ class LabGuiTest(unittest.TestCase):
         if connect:
             #Click on connect
             QTest.mouseClick(instr_widget.bt_connecthub, Qt.LeftButton)
-    
-#    def test_number_of_instrument_connected_at_start(self):
-#        """the number of instrument connected at start should be 0"""
-#        
-#        #print the test function name
-#        print("\n### %s ###\n"%(sys._getframe().f_code.co_name))
-#        
-#        num_instr = self.form.instr_hub.get_instrument_nb()
-#        
-#        self.assertEqual(num_instr,0)
-#        
-#        
-#    def test_instr_widget_click_add_line_button(self):
-#        """click on the button 'Add line' should create a line"""
-#        
-#        #print the test function name
-#        print("\n### %s ###\n"%(sys._getframe().f_code.co_name))
-#        
-#        #intrument widget instance
-#        instr_widget = self.form.widgets['InstrumentWidget']
-#        
-#        num_lines_before = len(instr_widget.lines)  
-#        
-#        QTest.mouseClick(instr_widget.bt_add_line, Qt.LeftButton)
-#        
-#        num_lines_after = len(instr_widget.lines)
-#        
-#        #test that the number of lines increased by one 
-#        self.assertEqual(num_lines_before + 1, num_lines_after)        
-#        
-#        
-#    def test_instr_widget_click_connect_button(self):
-#        """
-#            check how many instuments are connected to the instrument hub
-#            after the user added an instrument line in the InstrumentWidget
-#            and clicked the InstrumentWidget 'Connect' button
-#        """
-#
-#        #print the test function name
-#        print("\n### %s ###\n"%(sys._getframe().f_code.co_name))
-#        
-#        print("Intruments in the hub")
-#        print(self.form.instr_hub.get_instrument_nb())      
-#        
-#        self.set_simple_instrument_list(connect = True)
-#        
-#        num_instr_after = self.form.instr_hub.get_instrument_nb()
-#        
-#        self.assertEqual(num_instr_after,3)    
-    
-    def test_start_DTT_produce_a_file(self):
-        
-        #print the test function name
-        print("\n### %s ###\n"%(sys._getframe().f_code.co_name))
 
+    @function_hdr    
+    def test_number_of_instrument_connected_at_start(self):
+        """the number of instrument connected at start should be 0"""
         
+        num_instr = self.form.instr_hub.get_instrument_nb()
+        
+        self.assertEqual(num_instr,0)
+        
+    @function_hdr        
+    def test_instr_widget_click_add_line_button(self):
+        """click on the button 'Add line' should create a line"""
+        
+        #intrument widget instance
+        instr_widget = self.form.widgets['InstrumentWidget']
+        
+        num_lines_before = len(instr_widget.lines)  
+        
+        QTest.mouseClick(instr_widget.bt_add_line, Qt.LeftButton)
+        
+        num_lines_after = len(instr_widget.lines)
+        
+        #test that the number of lines increased by one 
+        self.assertEqual(num_lines_before + 1, num_lines_after)        
+        
+    @function_hdr      
+    def test_instr_widget_click_connect_button(self):
+        """
+            check how many instuments are connected to the instrument hub
+            after the user added an instrument line in the InstrumentWidget
+            and clicked the InstrumentWidget 'Connect' button
+        """
+        
+        print("Intruments in the hub")
+        print(self.form.instr_hub.get_instrument_nb())      
+        
+        self.set_simple_instrument_list(connect = True)
+        
+        num_instr_after = self.form.instr_hub.get_instrument_nb()
+        
+        self.assertEqual(num_instr_after,3)    
+    
+    @function_hdr
+    def test_start_DTT_produce_a_file(self):
+                
         #connect a DICE and two TIME
         self.set_simple_instrument_list(connect = True)
-
 
         print("Intruments in the hub")
         print(self.form.instr_hub.get_instrument_nb()) 
@@ -317,10 +314,8 @@ class LabGuiTest(unittest.TestCase):
         
 #        QTest.mouseClick(self.widget_stop, Qt.LeftButton)
         
+    @function_hdr        
     def test_start_DTT_without_connecting_first(self):
-        
-        #print the test function name
-        print("\n### %s ###\n"%(sys._getframe().f_code.co_name))
 
         nb_instr = self.form.instr_hub.get_instrument_nb() 
 
@@ -330,9 +325,13 @@ class LabGuiTest(unittest.TestCase):
             with self.assertRaises(DTT_Error):
                 
                QTest.mouseClick(self.widget_start, Qt.LeftButton)
+               
         else:
             
             raise(ValueError,"The instrument number should be 0")
+
+
+
 
 #    def test_dice_connect_and_play(self):
 #        '''test the modification of the instrument list
@@ -488,11 +487,9 @@ class LabGuiTest(unittest.TestCase):
 ##Change debug mode
 ## Test for successful output to console
     
-    # check if bad scripts are handled correctly    
+    # check if bad scripts are handled correctly
+    @function_hdr
     def test_bad_script(self):
-        
-        #print the test function name
-        print("### %s ###"%(sys._getframe().f_code.co_name))
         
         script = self.form.widgets['ScriptWidget'].scriptFileLineEdit
         

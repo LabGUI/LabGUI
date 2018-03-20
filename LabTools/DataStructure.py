@@ -316,22 +316,22 @@ def test_labels_class_LabeledData(labels=["a","b","c"]):
     if mydat.nlines == 2* nlines:
         logging.info("the merge function returns an object with the correct number of lines")
         test_passed+=1 
-	else:
-		logging.warning("the merge function returns an object with the incorrect number of lines")
+    else:
+        logging.warning("the merge function returns an object with the incorrect number of lines")
     
     
     if mydat.ncols == ncolumns:
         logging.info("the merge function returns an object with the correct number of columns")
         test_passed+=1
-	else:
-		logging.warning("the merge function returns an object with the incorrect number of columns")
+    else:
+        logging.warning("the merge function returns an object with the incorrect number of columns")
         
         
     if mydat.labels == labels:
         logging.info("the merge function returns an object with the correct labels")
         test_passed+=1 
-	else:
-		logging.warning("the merge function returns an object with the incorrect labels")
+    else:
+        logging.warning("the merge function returns an object with the incorrect labels")
 		
     test_header = "I want to make sure this works\nOn more than one line"
     mydat.save_to_file("test_fonction.txt", test_header)

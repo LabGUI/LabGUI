@@ -27,10 +27,10 @@ try:
     
     __import__('PyQt5')
     USE_PYQT5 = True
-    print("using PyQt5")
+    #print("using PyQt5")
     
 except ImportError:
     
     USE_PYQT5 = False
-    print("using PyQt4")
+    #print("using PyQt4")
 

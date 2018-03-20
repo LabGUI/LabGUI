@@ -55,8 +55,11 @@ class DataTaker(QThread):
             
             
         self.lock = lock
+        
         self.stopped = True
+        
         self.paused = False
+        
         self.mutex = QMutex()
 
         self.completed = False
@@ -204,9 +207,11 @@ user variable")
 
     def stop(self):
         try:
+            
             self.mutex.lock()
             self.stopped = True
             print("DTT stopped")
+            
         finally:
             self.mutex.unlock()
 
@@ -219,15 +224,21 @@ user variable")
         self.paused = False
 
     def isPaused(self):
+        
         return self.paused
 
     def isStopped(self):
+        
         return self.stopped
 
     def check_stopped_or_paused(self):
+        
         while True:
+            
             if (not self.paused) or self.stopped:
+                
                 return self.stopped
+                
             time.sleep(0.1)
 
 
