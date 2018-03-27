@@ -9,6 +9,8 @@ import unittest
 import warnings
 
 import os
+os.chdir("..")
+
 import subprocess
 
 import time
@@ -72,7 +74,6 @@ def function_hdr(func):
 
 import sys
 #import unittest
-
 from LocalVars import USE_PYQT5
 
 if  USE_PYQT5:
@@ -491,9 +492,6 @@ class LabGuiTest(unittest.TestCase):
     @function_hdr
     def test_bad_script(self):
         
-        #print the test function name
-        print("### %s ###"%(sys._getframe().f_code.co_name))
-        
         script = self.form.widgets['ScriptWidget'].scriptFileLineEdit
         
         # create invalid scripts 
@@ -527,8 +525,26 @@ class LabGuiTest(unittest.TestCase):
             self.assertRaises(ScriptFile_Error)
         os.remove("syntaxError.py")
         os.remove("notapythonscript.c")
+        
+    @function_hdr 
+    def test_debug_datataker(self):
+        script = self.form.widgets['ScriptWidget'].scriptFileLineEdit
+        for i in range(len(script.text())):
+            QTest.keyClick(script, Qt.Key_Backspace)
+        QTest.keyClicks(script,"%s/script_example.py"%(os.getcwd()))
+        
+        change_debug = self.form.optionmenu.actions()[1]
+        for i in range(2): 
+            change_debug.toggle()   
+        self.set_simple_instrument_list(connect = True)
+        QTest.mouseClick(self.widget_start, Qt.LeftButton)
+        time.sleep(3)
+        QTest.mouseClick(self.widget_stop, Qt.LeftButton)
+        # how to test if there is any data being generated? 
+        
+        
 if __name__ == "__main__":
-
+    
     create_test_config_file() 
     unittest.main()    
 
