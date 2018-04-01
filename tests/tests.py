@@ -314,6 +314,258 @@ class LabGuiTest(unittest.TestCase):
         
 #        QTest.mouseClick(self.widget_stop, Qt.LeftButton)
         
+        
+    @function_hdr
+    def test_start_DTT_disable_start_button(self):
+                
+        #connect a DICE and two TIME
+        self.set_simple_instrument_list(connect = True)
+
+        print("Intruments in the hub")
+        print(self.form.instr_hub.get_instrument_nb()) 
+
+        #Start the DTT
+        QTest.mouseClick(self.widget_start, Qt.LeftButton)
+        
+        self.assertFalse(self.form.start_DTT_action.isEnabled())
+    
+    
+    @function_hdr
+    def test_start_DTT_enable_stop_button(self):
+                
+        #connect a DICE and two TIME
+        self.set_simple_instrument_list(connect = True)
+
+        print("Intruments in the hub")
+        print(self.form.instr_hub.get_instrument_nb()) 
+
+        #Start the DTT
+        QTest.mouseClick(self.widget_start, Qt.LeftButton)
+        
+        self.assertTrue(self.form.stop_DTT_action.isEnabled())
+
+            
+    @function_hdr
+    def test_start_DTT_enable_pause_button(self):
+                
+        #connect a DICE and two TIME
+        self.set_simple_instrument_list(connect = True)
+
+        print("Intruments in the hub")
+        print(self.form.instr_hub.get_instrument_nb()) 
+
+        #Start the DTT
+        QTest.mouseClick(self.widget_start, Qt.LeftButton)
+        
+        self.assertTrue(self.form.pause_DTT_action.isEnabled())
+
+
+    @function_hdr
+    def test_start_DTT_isrunning_true(self):
+                
+        #connect a DICE and two TIME
+        self.set_simple_instrument_list(connect = True)
+
+        print("Intruments in the hub")
+        print(self.form.instr_hub.get_instrument_nb()) 
+
+        #Start the DTT
+        QTest.mouseClick(self.widget_start, Qt.LeftButton)
+        
+        self.assertTrue(self.form.datataker.isRunning())
+    
+    
+    @function_hdr
+    def test_start_DTT_isstopped_false(self):
+                
+        #connect a DICE and two TIME
+        self.set_simple_instrument_list(connect = True)
+
+        print("Intruments in the hub")
+        print(self.form.instr_hub.get_instrument_nb()) 
+
+        #Start the DTT
+        QTest.mouseClick(self.widget_start, Qt.LeftButton)
+        
+        self.assertFalse(self.form.datataker.isStopped())
+
+            
+    @function_hdr
+    def test_start_DTT_ispaused_false(self):
+                
+        #connect a DICE and two TIME
+        self.set_simple_instrument_list(connect = True)
+
+        print("Intruments in the hub")
+        print(self.form.instr_hub.get_instrument_nb()) 
+
+        #Start the DTT
+        QTest.mouseClick(self.widget_start, Qt.LeftButton)
+        
+        self.assertFalse(self.form.datataker.isPaused())
+
+
+    @function_hdr
+    def test_pause_DTT_ispaused_true(self):
+                
+        #connect a DICE and two TIME
+        self.set_simple_instrument_list(connect = True)
+
+        print("Intruments in the hub")
+        print(self.form.instr_hub.get_instrument_nb()) 
+
+        #Start the DTT
+        QTest.mouseClick(self.widget_start, Qt.LeftButton)
+        
+        #Pause the DTT
+        QTest.mouseClick(self.widget_pause, Qt.LeftButton)
+        
+        self.assertTrue(self.form.datataker.isPaused())
+
+    
+    @function_hdr
+    def test_pause_DTT_isrunning_true(self):
+                
+        #connect a DICE and two TIME
+        self.set_simple_instrument_list(connect = True)
+
+        print("Intruments in the hub")
+        print(self.form.instr_hub.get_instrument_nb()) 
+
+        #Start the DTT
+        QTest.mouseClick(self.widget_start, Qt.LeftButton)
+        
+        #Pause the DTT
+        QTest.mouseClick(self.widget_pause, Qt.LeftButton)        
+        
+        self.assertTrue(self.form.datataker.isRunning())
+        
+        
+    @function_hdr
+    def test_pause_DTT_isstopped_false(self):
+                
+        #connect a DICE and two TIME
+        self.set_simple_instrument_list(connect = True)
+
+        print("Intruments in the hub")
+        print(self.form.instr_hub.get_instrument_nb()) 
+
+        #Start the DTT
+        QTest.mouseClick(self.widget_start, Qt.LeftButton)
+        
+        #Pause the DTT
+        QTest.mouseClick(self.widget_pause, Qt.LeftButton)        
+        
+        self.assertFalse(self.form.datataker.isStopped())
+
+
+    @function_hdr
+    def test_stop_DTT_enable_start_button(self):
+                
+        #connect a DICE and two TIME
+        self.set_simple_instrument_list(connect = True)
+
+        print("Intruments in the hub")
+        print(self.form.instr_hub.get_instrument_nb()) 
+
+        #Start the DTT
+        QTest.mouseClick(self.widget_start, Qt.LeftButton)
+        
+        #Stop the DTT
+        QTest.mouseClick(self.widget_stop, Qt.LeftButton)
+        
+        self.assertTrue(self.form.start_DTT_action.isEnabled())
+    
+    
+    @function_hdr
+    def test_stop_DTT_disable_stop_button(self):
+                
+        #connect a DICE and two TIME
+        self.set_simple_instrument_list(connect = True)
+
+        print("Intruments in the hub")
+        print(self.form.instr_hub.get_instrument_nb()) 
+
+        #Start the DTT
+        QTest.mouseClick(self.widget_start, Qt.LeftButton)
+        
+        #Stop the DTT
+        QTest.mouseClick(self.widget_stop, Qt.LeftButton)
+        
+        self.assertFalse(self.form.stop_DTT_action.isEnabled())
+            
+    @function_hdr
+    def test_stop_DTT_disable_pause_button(self):
+                
+        #connect a DICE and two TIME
+        self.set_simple_instrument_list(connect = True)
+
+        print("Intruments in the hub")
+        print(self.form.instr_hub.get_instrument_nb()) 
+
+        #Start the DTT
+        QTest.mouseClick(self.widget_start, Qt.LeftButton)
+        
+        #Stop the DTT
+        QTest.mouseClick(self.widget_stop, Qt.LeftButton)        
+        
+        self.assertFalse(self.form.pause_DTT_action.isEnabled())
+
+
+    @function_hdr
+    def test_stop_DTT_isrunning_false(self):
+                
+        #connect a DICE and two TIME
+        self.set_simple_instrument_list(connect = True)
+
+        print("Intruments in the hub")
+        print(self.form.instr_hub.get_instrument_nb()) 
+
+        #Start the DTT
+        QTest.mouseClick(self.widget_start, Qt.LeftButton)
+        
+        #Stop the DTT
+        QTest.mouseClick(self.widget_stop, Qt.LeftButton)
+        
+        self.assertFalse(self.form.datataker.isRunning())
+    
+    
+    @function_hdr
+    def test_stop_DTT_ispaused_false(self):
+                
+        #connect a DICE and two TIME
+        self.set_simple_instrument_list(connect = True)
+
+        print("Intruments in the hub")
+        print(self.form.instr_hub.get_instrument_nb()) 
+
+        #Start the DTT
+        QTest.mouseClick(self.widget_start, Qt.LeftButton)
+        
+        #Stop the DTT
+        QTest.mouseClick(self.widget_stop, Qt.LeftButton)
+        
+        self.assertFalse(self.form.datataker.isPaused())
+            
+            
+    @function_hdr
+    def test_stop_DTT_isstopped_true(self):
+                
+        #connect a DICE and two TIME
+        self.set_simple_instrument_list(connect = True)
+
+        print("Intruments in the hub")
+        print(self.form.instr_hub.get_instrument_nb()) 
+
+        #Start the DTT
+        QTest.mouseClick(self.widget_start, Qt.LeftButton)
+        
+        #Stop the DTT
+        QTest.mouseClick(self.widget_stop, Qt.LeftButton)        
+        
+        self.assertTrue(self.form.datataker.isStopped())
+
+
     @function_hdr        
     def test_start_DTT_without_connecting_first(self):
 
