@@ -254,6 +254,23 @@ class LabGuiTest(unittest.TestCase):
             #Click on connect
             QTest.mouseClick(instr_widget.bt_connecthub, Qt.LeftButton)
 
+    def set_script_fname(self, fname):
+        """changed the script fname with one located in \scripts"""
+        
+        script_widget = self.form.widgets['ScriptWidget']
+         
+        cdir = os.path.abspath(os.path.curdir)       
+        
+        fname = os.path.join(cdir, "tests", "scripts", fname)
+        
+        #erase the text in the lineEdit
+        script_widget.scriptFileLineEdit.setText('')
+        
+        #write the script fname in the lineEdit
+        QTest.keyClicks(script_widget.scriptFileLineEdit, fname)
+        
+        return fname
+
     @function_hdr    
     def test_number_of_instrument_connected_at_start(self):
         """the number of instrument connected at start should be 0"""
@@ -295,6 +312,19 @@ class LabGuiTest(unittest.TestCase):
         
         self.assertEqual(num_instr_after,3)    
     
+
+    @function_hdr
+    def test_change_script_name_changes_it_when_start_DTT(self):
+    
+        script_fname = self.set_script_fname("script_test_DTT.py")       
+        
+        #Start the DTT
+        QTest.mouseClick(self.widget_start, Qt.LeftButton)        
+        
+        self.assertEqual(self.form.datataker.script_file_name, script_fname)
+    
+              
+    
     @function_hdr
     def test_start_DTT_produce_a_file(self):
                 
@@ -319,10 +349,13 @@ class LabGuiTest(unittest.TestCase):
     def test_start_DTT_disable_start_button(self):
                 
         #connect a DICE and two TIME
-        self.set_simple_instrument_list(connect = True)
+        self.set_simple_instrument_list(connect = True) 
 
         print("Intruments in the hub")
         print(self.form.instr_hub.get_instrument_nb()) 
+
+        #select a script which is a loop
+        self.set_script_fname("script_test_DTT.py")
 
         #Start the DTT
         QTest.mouseClick(self.widget_start, Qt.LeftButton)
@@ -339,6 +372,9 @@ class LabGuiTest(unittest.TestCase):
         print("Intruments in the hub")
         print(self.form.instr_hub.get_instrument_nb()) 
 
+        #select a script which is a loop
+        self.set_script_fname("script_test_DTT.py")
+        
         #Start the DTT
         QTest.mouseClick(self.widget_start, Qt.LeftButton)
         
@@ -353,7 +389,10 @@ class LabGuiTest(unittest.TestCase):
 
         print("Intruments in the hub")
         print(self.form.instr_hub.get_instrument_nb()) 
-
+        
+        #select a script which is a loop
+        self.set_script_fname("script_test_DTT.py")
+        
         #Start the DTT
         QTest.mouseClick(self.widget_start, Qt.LeftButton)
         
@@ -369,6 +408,9 @@ class LabGuiTest(unittest.TestCase):
         print("Intruments in the hub")
         print(self.form.instr_hub.get_instrument_nb()) 
 
+        #select a script which is a loop
+        self.set_script_fname("script_test_DTT.py")
+        
         #Start the DTT
         QTest.mouseClick(self.widget_start, Qt.LeftButton)
         
@@ -384,6 +426,9 @@ class LabGuiTest(unittest.TestCase):
         print("Intruments in the hub")
         print(self.form.instr_hub.get_instrument_nb()) 
 
+        #select a script which is a loop
+        self.set_script_fname("script_test_DTT.py")
+        
         #Start the DTT
         QTest.mouseClick(self.widget_start, Qt.LeftButton)
         
@@ -399,6 +444,9 @@ class LabGuiTest(unittest.TestCase):
         print("Intruments in the hub")
         print(self.form.instr_hub.get_instrument_nb()) 
 
+        #select a script which is a loop
+        self.set_script_fname("script_test_DTT.py")
+        
         #Start the DTT
         QTest.mouseClick(self.widget_start, Qt.LeftButton)
         
@@ -414,6 +462,9 @@ class LabGuiTest(unittest.TestCase):
         print("Intruments in the hub")
         print(self.form.instr_hub.get_instrument_nb()) 
 
+        #select a script which is a loop
+        self.set_script_fname("script_test_DTT.py")
+        
         #Start the DTT
         QTest.mouseClick(self.widget_start, Qt.LeftButton)
         
@@ -432,6 +483,9 @@ class LabGuiTest(unittest.TestCase):
         print("Intruments in the hub")
         print(self.form.instr_hub.get_instrument_nb()) 
 
+        #select a script which is a loop
+        self.set_script_fname("script_test_DTT.py")
+        
         #Start the DTT
         QTest.mouseClick(self.widget_start, Qt.LeftButton)
         
@@ -450,6 +504,9 @@ class LabGuiTest(unittest.TestCase):
         print("Intruments in the hub")
         print(self.form.instr_hub.get_instrument_nb()) 
 
+        #select a script which is a loop
+        self.set_script_fname("script_test_DTT.py")
+        
         #Start the DTT
         QTest.mouseClick(self.widget_start, Qt.LeftButton)
         
@@ -468,8 +525,13 @@ class LabGuiTest(unittest.TestCase):
         print("Intruments in the hub")
         print(self.form.instr_hub.get_instrument_nb()) 
 
+        #select a script which is a loop
+        self.set_script_fname("script_test_DTT.py")
+        
         #Start the DTT
         QTest.mouseClick(self.widget_start, Qt.LeftButton)
+
+        time.sleep(0.5)  
         
         #Stop the DTT
         QTest.mouseClick(self.widget_stop, Qt.LeftButton)
@@ -486,8 +548,13 @@ class LabGuiTest(unittest.TestCase):
         print("Intruments in the hub")
         print(self.form.instr_hub.get_instrument_nb()) 
 
+        #select a script which is a loop
+        self.set_script_fname("script_test_DTT.py")
+        
         #Start the DTT
         QTest.mouseClick(self.widget_start, Qt.LeftButton)
+
+        time.sleep(0.5)  
         
         #Stop the DTT
         QTest.mouseClick(self.widget_stop, Qt.LeftButton)
@@ -503,8 +570,13 @@ class LabGuiTest(unittest.TestCase):
         print("Intruments in the hub")
         print(self.form.instr_hub.get_instrument_nb()) 
 
+        #select a script which is a loop
+        self.set_script_fname("script_test_DTT.py")
+        
         #Start the DTT
         QTest.mouseClick(self.widget_start, Qt.LeftButton)
+        
+        time.sleep(0.5)          
         
         #Stop the DTT
         QTest.mouseClick(self.widget_stop, Qt.LeftButton)        
@@ -521,8 +593,13 @@ class LabGuiTest(unittest.TestCase):
         print("Intruments in the hub")
         print(self.form.instr_hub.get_instrument_nb()) 
 
+        #select a script which is a loop
+        self.set_script_fname("script_test_DTT.py")
+        
         #Start the DTT
         QTest.mouseClick(self.widget_start, Qt.LeftButton)
+        
+        time.sleep(0.5)        
         
         #Stop the DTT
         QTest.mouseClick(self.widget_stop, Qt.LeftButton)
@@ -539,8 +616,13 @@ class LabGuiTest(unittest.TestCase):
         print("Intruments in the hub")
         print(self.form.instr_hub.get_instrument_nb()) 
 
+        #select a script which is a loop
+        self.set_script_fname("script_test_DTT.py")
+        
         #Start the DTT
         QTest.mouseClick(self.widget_start, Qt.LeftButton)
+        
+        time.sleep(0.5)          
         
         #Stop the DTT
         QTest.mouseClick(self.widget_stop, Qt.LeftButton)
@@ -557,8 +639,13 @@ class LabGuiTest(unittest.TestCase):
         print("Intruments in the hub")
         print(self.form.instr_hub.get_instrument_nb()) 
 
+        #select a script which is a loop
+        self.set_script_fname("script_test_DTT.py")
+        
         #Start the DTT
         QTest.mouseClick(self.widget_start, Qt.LeftButton)
+        
+        time.sleep(0.5)          
         
         #Stop the DTT
         QTest.mouseClick(self.widget_stop, Qt.LeftButton)        
