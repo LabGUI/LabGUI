@@ -669,7 +669,21 @@ class LabGuiTest(unittest.TestCase):
             
             raise(ValueError,"The instrument number should be 0")
 
+    @function_hdr        
+    def test_start_DTT_with_non_existing_script(self):
 
+        #connect a DICE and two TIME
+        self.set_simple_instrument_list(connect = True)
+
+        print("Intruments in the hub")
+        print(self.form.instr_hub.get_instrument_nb()) 
+
+        #select a script which is a loop
+        self.set_script_fname("this_script_does_not_exist.py")
+        
+        with self.assertRaises(IOError):
+            #Start the DTT
+            QTest.mouseClick(self.widget_start, Qt.LeftButton)
 
 
 #    def test_dice_connect_and_play(self):
