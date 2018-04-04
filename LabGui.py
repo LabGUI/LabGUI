@@ -922,7 +922,7 @@ the script path and the data output path into the config file")
     def stop_DTT(self):
         
         if self.datataker.isRunning():
-            «
+            
             self.datataker.ask_to_stop()
 
 
