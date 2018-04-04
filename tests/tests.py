@@ -51,7 +51,7 @@ def function_hdr(func):
 	
          print("\n### %s ###\n"%(func.__name__))
          return_value = func(*args, **kwargs)
-         print("\n### --- ###\n")
+         print("\n### %s ###\n"%('-'*len(func.__name__)))
          return return_value
 	
 	return new_function
@@ -413,6 +413,8 @@ class LabGuiTest(unittest.TestCase):
         
         #Start the DTT
         QTest.mouseClick(self.widget_start, Qt.LeftButton)
+
+        time.sleep(0.1)        
         
         self.assertTrue(self.form.datataker.isRunning())
     
@@ -432,6 +434,8 @@ class LabGuiTest(unittest.TestCase):
         #Start the DTT
         QTest.mouseClick(self.widget_start, Qt.LeftButton)
         
+        time.sleep(0.1)        
+        
         self.assertFalse(self.form.datataker.isStopped())
 
             
@@ -450,6 +454,8 @@ class LabGuiTest(unittest.TestCase):
         #Start the DTT
         QTest.mouseClick(self.widget_start, Qt.LeftButton)
         
+        time.sleep(0.1)        
+        
         self.assertFalse(self.form.datataker.isPaused())
 
 
@@ -467,9 +473,13 @@ class LabGuiTest(unittest.TestCase):
         
         #Start the DTT
         QTest.mouseClick(self.widget_start, Qt.LeftButton)
+                
+        time.sleep(0.1) 
         
         #Pause the DTT
         QTest.mouseClick(self.widget_pause, Qt.LeftButton)
+        
+        time.sleep(0.1) 
         
         self.assertTrue(self.form.datataker.isPaused())
 
@@ -489,8 +499,12 @@ class LabGuiTest(unittest.TestCase):
         #Start the DTT
         QTest.mouseClick(self.widget_start, Qt.LeftButton)
         
+        time.sleep(0.1)         
+        
         #Pause the DTT
         QTest.mouseClick(self.widget_pause, Qt.LeftButton)        
+    
+        time.sleep(0.1)         
         
         self.assertTrue(self.form.datataker.isRunning())
         
@@ -509,11 +523,74 @@ class LabGuiTest(unittest.TestCase):
         
         #Start the DTT
         QTest.mouseClick(self.widget_start, Qt.LeftButton)
+
+        time.sleep(0.1)         
         
         #Pause the DTT
         QTest.mouseClick(self.widget_pause, Qt.LeftButton)        
         
+        time.sleep(0.1) 
+        
         self.assertFalse(self.form.datataker.isStopped())
+
+    @function_hdr
+    def test_pause_DTT_then_resume_isrunning_true_and_ispaused_false(self):
+                
+        #connect a DICE and two TIME
+        self.set_simple_instrument_list(connect = True)
+
+        print("Intruments in the hub")
+        print(self.form.instr_hub.get_instrument_nb()) 
+
+        #select a script which is a loop
+        self.set_script_fname("script_test_DTT.py")
+        
+        #Start the DTT
+        QTest.mouseClick(self.widget_start, Qt.LeftButton)
+
+        time.sleep(0.1)        
+        
+        #Pause the DTT
+        QTest.mouseClick(self.widget_pause, Qt.LeftButton)        
+
+        #Resume the DTT
+        QTest.mouseClick(self.widget_start, Qt.LeftButton)
+            
+        time.sleep(0.1)        
+        
+        self.assertTrue((self.form.datataker.isRunning() == True)
+                        and (self.form.datataker.isPaused() == False))
+
+
+    @function_hdr
+    def test_pause_DTT_then_stop_isrunning_false_and_isstopped_true(self):
+                
+        #connect a DICE and two TIME
+        self.set_simple_instrument_list(connect = True)
+
+        print("Intruments in the hub")
+        print(self.form.instr_hub.get_instrument_nb()) 
+
+        #select a script which is a loop
+        self.set_script_fname("script_test_DTT.py")
+        
+        #Start the DTT
+        QTest.mouseClick(self.widget_start, Qt.LeftButton)
+
+        time.sleep(0.1)        
+        
+        #Pause the DTT
+        QTest.mouseClick(self.widget_pause, Qt.LeftButton)        
+
+        time.sleep(0.1)   
+        
+        #Stop the DTT
+        QTest.mouseClick(self.widget_stop, Qt.LeftButton)
+            
+        time.sleep(0.1)        
+        
+        self.assertTrue((self.form.datataker.isRunning() == False)
+                        and (self.form.datataker.isStopped() == True))
 
 
     @function_hdr

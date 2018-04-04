@@ -38,7 +38,7 @@ class DataTaker(QThread):
         #emitted when the data array changes
         data = pyqtSignal('PyQt_PyObject')
         #emitted upon completion of the script
-        script_finished = pyqtSignal(bool)
+        script_finished = pyqtSignal()
 
     def __init__(self, lock, instr_hub, parent=None):
         print("DTT created")
@@ -58,6 +58,8 @@ class DataTaker(QThread):
             
         self.lock = lock
         
+        self.running = False        
+        
         self.stopped = True
         
         self.paused = False
@@ -65,6 +67,7 @@ class DataTaker(QThread):
         self.mutex = QMutex()
 
         self.completed = False
+        
         self.DEBUG = IOTool.get_debug_setting()
 
 
@@ -155,6 +158,8 @@ user variable")
     def run(self):
         print("DTT begin run\n")
         self.stopped = False
+        self.running = True
+        self.paused = False
         # open another file which contains the script to follow for this
         # particular measurement
         userScriptName = self.script_file_name 
@@ -169,8 +174,12 @@ user variable")
             code = compile(script.read(), script.name, 'exec')
             exec(code)
             script.close()
-            self.completed = True 
+                
+            self.running = False
+            self.paused = False
+            self.completed = True
             print("DTT run over\n")
+            
         except FileNotFoundError as fileNotFoundError:
             # script not found/script invalid 
             logging.error("Your script file \"%s\" "%(userScriptName) +
@@ -196,20 +205,39 @@ user variable")
                               type(e).__name__ + ": " + str(e) + 
                               "\nPlease review the script.\n")
         finally: 
-            self.stop() 
+            pass
+        # send a signal to indicate that the DTT is stopped
+        if USE_PYQT5:
+            
+            self.script_finished.emit(self.completed)
+        
+        else:
+            
+            self.emit(SIGNAL("script_finished(bool)"),self.completed)     
+        self.stop() 
 
     def set_script(self, script_fname):
         self.script_file_name = script_fname
 
     def stop(self):
+        
         try:
             
             self.mutex.lock()
             self.stopped = True
-            print("DTT stopped")
+            
+            self.running = False
+            
+            if self.completed:
+                print("DTT stopped and complete")
+            else:
+                print("DTT stopped but not complete")
             
         finally:
+            
             self.mutex.unlock()
+
+            
 
     def pause(self):
         print("DTT paused")
@@ -219,13 +247,23 @@ user variable")
         print("DTT resumed")
         self.paused = False
 
+        
+    def isRunning(self):
+        
+        return self.running
+        
     def isPaused(self):
         
-        return self.paused
-
+        return self.paused        
+        
     def isStopped(self):
         
         return self.stopped
+
+    def ask_to_stop(self):
+        
+        self.stopped = True
+        self.paused = False
 
     def check_stopped_or_paused(self):
         

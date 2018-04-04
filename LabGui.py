@@ -329,7 +329,7 @@ have the right format, '%s' will be used instead"%(self.config_file,
             
             self.datataker.data.connect(self.update_data_array)
             
-            self.datataker.script_finished.connect(self.finished_DTT)
+            self.datataker.script_finished.connect(self.DTT_script_finished)
             
         else:
             
@@ -337,7 +337,7 @@ have the right format, '%s' will be used instead"%(self.config_file,
                 "data(PyQt_PyObject)"), self.update_data_array)
                 
             self.connect(self.datataker, SIGNAL(
-            "script_finished(bool)"), self.finished_DTT)
+            "script_finished(bool)"), self.DTT_script_finished)
 
         #the array in which the data will be stored
         self.data_array = np.array([])
@@ -835,12 +835,7 @@ the script path and the data output path into the config file")
 
     def start_DTT(self):
         
-        if self.datataker.isStopped():
-            
-            #Enable/disable the start, pause, stop buttons on the MainWindow
-            self.start_DTT_action.setEnabled(False)
-            self.pause_DTT_action.setEnabled(True)
-            self.stop_DTT_action.setEnabled(True)
+        if not self.datataker.isRunning():
             
             #forbid the user to connect instruments to the hub while measuring
             self.widgets['InstrumentWidget'].bt_connecthub.setEnabled(False)
@@ -860,12 +855,18 @@ the script path and the data output path into the config file")
                 self.output_file = open(of_name, 'w')
                 [instr_name_list, dev_list, param_list] = self.collect_instruments()
                 self.output_file.write(
-                    "#C" + str(self.widgets['InstrumentWidget'].get_label_list()).strip('[]') + '\n')
+                    "#C" 
+                    + str(self.widgets['InstrumentWidget'].get_label_list()).strip('[]') 
+                    + '\n')
                 self.output_file.write(
-                    "#I" + str(self.widgets['InstrumentWidget'].get_descriptor_list()).strip('[]') + '\n')
+                    "#I" 
+                    + str(self.widgets['InstrumentWidget'].get_descriptor_list()).strip('[]')
+                    + '\n')
 
                 self.output_file.write(
-                    "#P" + str(param_list).strip('[]') + '\n')
+                    "#P"
+                    + str(param_list).strip('[]')
+                    + '\n')
 
             else:
                 # here I want to perform a check to see whether the number of instrument match
@@ -873,68 +874,82 @@ the script path and the data output path into the config file")
                 self.output_file = open(of_name, 'a')
                 
             self.datataker.initialize(is_new_file)
-            self.datataker.set_script(self.widgets['ScriptWidget'].get_script_fname())
-            print(self.widgets['ScriptWidget'].get_script_fname())
+            self.datataker.set_script(
+                self.widgets['ScriptWidget'].get_script_fname()
+            )
             
             # this command is specific to Qthread, it will execute whatever is defined in
             # the method run() from DataManagement.py module
             self.datataker.start()
             
+            #Enable/disable the start, pause, stop buttons on the MainWindow
+            self.start_DTT_action.setEnabled(False)
+            self.pause_DTT_action.setEnabled(True)
+            self.stop_DTT_action.setEnabled(True)
+                        
+            
             return DDT_CODE_STARTED
 
         elif self.datataker.isPaused():
             # restarting from pause
+
+            self.datataker.resume()
+            
             self.start_DTT_action.setEnabled(False)
             self.pause_DTT_action.setEnabled(True)
             self.stop_DTT_action.setEnabled(True)
-
-            self.datataker.resume()
             
             return DDT_CODE_RESUMED
             
         else:
             
-            print("Couldn't start DTT - already running!")
+            print("Couldn't start datataker - already running!")
+            print("Running: %s"%(self.datataker.isRunning()))
+            print("Paused: %s"%(self.datataker.isPaused()))
+            print("Stopped: %s"%(self.datataker.isStopped()))
             return DDT_CODE_ALREADY_RUNNING
+
+    def pause_DTT(self):
+#        if not self.datataker.isStopped():
+#            
+        self.datataker.pause()
+        
+        self.start_DTT_action.setEnabled(True)
+        self.pause_DTT_action.setEnabled(False)
+        self.stop_DTT_action.setEnabled(True)
+
 
     def stop_DTT(self):
         
-        if not self.datataker.isStopped():
-            self.datataker.resume()
-            self.datataker.stop()
-            
-            #close the output file
-            self.output_file.close()
-            
-            #reopen the output file to read its content
-            self.output_file = open(self.output_file.name, 'r')
-            data = self.output_file.read()
-            self.output_file.close()
-            
-            #insert the comments written by the user in the first line
-            self.output_file = open(self.output_file.name, 'w')
-            self.output_file.write(self.widgets['OutputFileWidget'].get_header_text())
-            self.output_file.write(data)
-            self.output_file.close()
-                       
-            # just make sure the pause setting is left as false after ther run        
-            self.start_DTT_action.setEnabled(True)
-            self.pause_DTT_action.setEnabled(False)
-            self.stop_DTT_action.setEnabled(False)
+        if self.datataker.isRunning():
+            «
+            self.datataker.ask_to_stop()
 
-            # Enable changes to the instrument connections    
-            self.widgets['InstrumentWidget'].bt_connecthub.setEnabled(True)
-            
-        else:
-            
-            print("Couldn't stop DTT - it wasn't running!")
 
-    def pause_DTT(self):
-        if not self.datataker.isStopped():
-            self.start_DTT_action.setEnabled(True)
-            self.pause_DTT_action.setEnabled(False)
-            self.stop_DTT_action.setEnabled(True)
-            self.datataker.pause()
+        # just make sure the pause setting is left as false after ther run        
+        self.start_DTT_action.setEnabled(True)
+        self.pause_DTT_action.setEnabled(False)
+        self.stop_DTT_action.setEnabled(False)
+
+        # Enable changes to the instrument connections    
+        self.widgets['InstrumentWidget'].bt_connecthub.setEnabled(True)
+
+        #close the output file
+        self.output_file.close()
+        
+        #reopen the output file to read its content
+        self.output_file = open(self.output_file.name, 'r')
+        data = self.output_file.read()
+        self.output_file.close()
+        
+        #insert the comments written by the user in the first line
+        self.output_file = open(self.output_file.name, 'w')
+        self.output_file.write(
+            self.widgets['OutputFileWidget'].get_header_text())
+        self.output_file.write(data)
+        self.output_file.close()
+        
+        self.widgets['OutputFileWidget'].increment_filename()
 
     def toggle_DTT(self):
         if self.datataker.isStopped():
@@ -943,23 +958,22 @@ the script path and the data output path into the config file")
             self.stop_DTT()
 
 
-    def finished_DTT(self, completed):
+    def DTT_script_finished(self, completed):
+        
+
+        self.stop_DTT()        
         
         if completed:
+            print("Finished the script completely")
             
-            self.stop_DTT()
+        else:
+            print("The script was interrupted by the user or an error")
             
-            self.start_DTT_action.setEnabled(True)
-            self.pause_DTT_action.setEnabled(False)
-            self.stop_DTT_action.setEnabled(False)
 
-            self.widgets['OutputFileWidget'].increment_filename()
-            
-            # just make sure the pause setting is left as false after ther run
-            self.datataker.resume()
-            self.output_file.close()
 
     def write_data(self, data_set):
+        print("In write_data in LabGui")
+        print(self.output_file)
         if self.output_file:
             if not self.output_file.closed:
                 # a quick way to make a comma separated list of the values
@@ -979,7 +993,8 @@ the script path and the data output path into the config file")
 
         # convert this latest data to an array
         data = np.array(data_set)
-
+        print "Inside update_data_array in LabGui"
+        print data
         for calculation in self.widgets['CalcWidget'].get_calculation_list():
             calculation = calculation.strip()
             if calculation:
@@ -1397,7 +1412,7 @@ def build_test():
     """
     the script launches from cliking on start which triggers Datataker.run
     when the script is finished it emits script_finished(bool) with the value completed = True
-    this is catched by the finished_DTT function from LabGui which then call stop_DTT from LabGui
+    this is catched by the stop_DTT function from LabGui which then call stop_DTT from LabGui
     which then calls datataker.stop and datataker.resume
     this should probably be done be done within the Datataker class and only the reenabling of the 
     buttons should be done here...
@@ -1405,10 +1420,46 @@ def build_test():
     form.show()
     sys.exit(app.exec_())
 
+def test_stop_DTT_isrunning_false():
+            
+    app = QtGui.QApplication(sys.argv)
+    form = LabGuiMain()         
+    
+    widget_start = form.instToolbar.widgetForAction(
+                                form.start_DTT_action)
+    
+    widget_stop = form.instToolbar.widgetForAction(
+                                form.stop_DTT_action)
+                                
+    form.file_load_settings("test_settings.set")    
+    
+    form.connect_instrument_hub()    
+    
+
+    print("Intruments in the hub")
+    print(form.instr_hub.get_instrument_nb())  
+
+    script_widget = form.widgets['ScriptWidget']
+    
+    print("Script fname")
+    print(script_widget.scriptFileLineEdit.text())       
+    
+#    fname = "tests\scripts\script_test_DTT.py"        
+    
+#    script_widget.scriptFileLineEdit.setText('')
+    
+#    QTest.keyClicks(script_widget.scriptFileLineEdit, fname)
+
+#    print form.datataker.script_file_name
+
+    form.show()
+    sys.exit(app.exec_())
+
 if __name__ == "__main__":
 #    print("Launching LabGUI")
 #    launch_LabGui()
-    build_test()
+    test_stop_DTT_isrunning_false()
+#    build_test()
 #    test_save_fig()
 #    a = import_module('ConsoleWidget')
 #    print(a)
