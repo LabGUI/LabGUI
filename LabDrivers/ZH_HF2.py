@@ -6,7 +6,8 @@ from collections import OrderedDict
 try:
     import zhinst.ziPython, zhinst.utils
 except:
-    print("Zurich Instruments drivers unavailable")
+    pass
+#print("Zurich Instruments drivers unavailable")
 #use an ordered dictionary so that the parameters show up in a pretty order :)
 param = OrderedDict([('X','V'), ('Y', 'V'),('X2','V'), ('Y2', 'V'),('X3','V'), ('Y3', 'V')])
      

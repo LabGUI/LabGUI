@@ -216,9 +216,9 @@ def get_config_setting(setting, config_file_path = CONFIG_FILE_PATH):
                 
         if not value:
             
-            print("Configuration file does not contain a'" 
+            logging.debug("Configuration file does not contain a'" 
                   + setting + "=' line.")
-            print("returning the keyword None")
+            logging.debug("returning the keyword None")
             
         config_file.close()
         

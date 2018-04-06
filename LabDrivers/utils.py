@@ -25,7 +25,7 @@ try:
 except ImportError:
     
     serial_available = False
-    print("pyserial package not installed")
+    print("pyserial package not installed, run 'pip install pyserial'")
     
 try:
     
@@ -35,7 +35,7 @@ try:
 except ImportError:
     
     visa_available = False
-    print("pyvisa package not installed")
+    print("pyvisa package not installed, run 'pip install pyvisa'")
 
 from LabTools.IO import IOTool
 
@@ -62,10 +62,10 @@ if sys.version_info[0] == 3:
 try:
     #poke at something that only exists in older versions of visa, as a probe for the version
     visa.term_chars_end_input
-    logging.info("using pyvisa version less than 1.6")
+#    logging.info("using pyvisa version less than 1.6")
 except:
     old_visa = False
-    logging.info("using pyvisa version higher than 1.6")
+#    logging.info("using pyvisa version higher than 1.6")
 
 
 def list_GPIB_ports(): 
@@ -334,60 +334,64 @@ class PrologixController(object):
     
      connection = None
     
-     def __init__(self,com_port = None, baud_rate = 9600, timeout = 3 ):
-
-         if com_port is None:
-             #the user didn't provide a COM port, so we look for one
-             com_port = find_prologix_ports()
+     def __init__(self,com_port=None, debug=False, baud_rate=9600, timeout=3 ):
+         
+         self.debug = debug
+         
+         if not self.debug:
              
-             if com_port != []:
-               
-                 if len(com_port) > 1:
-                     logging.warning("There is more than one Prologix \
-                     controller, we are connecting to %s"%(com_port[0]))                 
-               
-                 com_port = com_port[0]
+             if com_port is None:
+                 #the user didn't provide a COM port, so we look for one
+                 com_port = find_prologix_ports()
                  
-                 self.connection = serial.Serial(com_port, baud_rate, timeout = timeout)
-            
+                 if com_port != []:
+                   
+                     if len(com_port) > 1:
+                         logging.warning("There is more than one Prologix \
+                         controller, we are connecting to %s"%(com_port[0]))                 
+                   
+                     com_port = com_port[0]
+                     
+                     self.connection = serial.Serial(com_port, baud_rate, timeout = timeout)
+                
+                 else:
+                     
+                     self.connection = None
+                     logging.warning("There is no Prologix controller to connect to")
+                     
              else:
                  
-                 self.connection = None
-                 logging.warning("There is no Prologix controller to connect to")
+                 try:
+                     
+                     self.connection = serial.Serial(com_port, baud_rate, timeout = timeout)
+    
+                 except serial.serialutil.SerialException:
+                     
+                     self.connection = None
+                     logging.error("The port %s is not attributed to any device"%(com_port))
+    
+             if self.connection is not None:
                  
-         else:
-             
-             try:
+                 #set the connector in controller mode and let the user
+                 #ask for read without sending another command.
+                 self.write("++mode 1")
+                 self.write("++auto 1")             
                  
-                 self.connection = serial.Serial(com_port, baud_rate, timeout = timeout)
-
-             except serial.serialutil.SerialException:
+                 #check the version
+                 self.write("++ver")
+                 version_number = self.readline()
+    
                  
-                 self.connection = None
-                 logging.error("The port %s is not attributed to any device"%(com_port))
-
-         if not self.connection is None:
-             
-             #set the connector in controller mode and let the user
-             #ask for read without sending another command.
-             self.write("++mode 1")
-             self.write("++auto 1")             
-             
-             #check the version
-             self.write("++ver")
-             version_number = self.readline()
-
-             
-             if not "Prologix GPIB-USB Controller" in version_number:
-                 self.connection = None
-                 logging.error("The port %s isn't related to a Prologix contro\
-ller (try to plug and unplug the cable if it is there nevertheless)"%(com_port))
-        
-             logging.info("%s is connected on the port '%s'"%(version_number[:-2],
-                                                              com_port))
-         else:
-             
-             logging.info("The connection to the Prologix connector failed")
+                 if not "Prologix GPIB-USB Controller" in version_number:
+                     self.connection = None
+                     logging.error("The port %s isn't related to a Prologix contro\
+    ller (try to plug and unplug the cable if it is there nevertheless)"%(com_port))
+            
+                 logging.info("%s is connected on the port '%s'"%(version_number[:-2],
+                                                                  com_port))
+             else:
+                 
+                 logging.error("The connection to the Prologix connector failed")
                                                              
              
      
@@ -405,20 +409,20 @@ ller (try to plug and unplug the cable if it is there nevertheless)"%(com_port))
          """use serial.write"""
          if cmd[-1] != "\n":
              cmd += "\n"
-         if not self.connection is None:
+         if self.connection is not None:
 #             print "Prologix in : ", cmd
              self.connection.write(cmd)
      
      def read(self,num_bit):
          """use serial.read"""
-         if not self.connection is None:
+         if self.connection is not None:
              return self.connection.read(num_bit)
          else:
              return ""
          
      def readline(self):
          """use serial.readline"""
-         if not self.connection is None:
+         if self.connection is not None:
              answer = self.connection.readline()
 #             print "Prologix out : ", answer 
              return answer
@@ -430,7 +434,7 @@ ller (try to plug and unplug the cable if it is there nevertheless)"%(com_port))
          query the timeout setting of the serial port if no argument provided
          change the 
          """
-         if not self.connection is None:
+         if self.connection is not None:
              if new_timeout is None:
                  return self.connection.timeout
              else:
@@ -441,26 +445,29 @@ ller (try to plug and unplug the cable if it is there nevertheless)"%(com_port))
      def get_open_gpib_ports(self, num_ports = 30):
         """Finds out which GPIB ports are available through prologix controller"""
         open_ports = []  
-        #sets the timeout to quite fast
-        old_timeout = self.timeout(0.1)
-        #iterate the ports number
-        for i in range(num_ports + 1):
         
-            #change the GPIB address on the prologix controller
-            #prove if an instrument is connected to the port
-            self.write('++addr %i\n*IDN?\n'%i)
-        
-            #probe the answer
-            s = self.readline();            
-        
-            #if it is longer than zero it is an instrument
-            #we store the GPIB address
-            if len(s) > 0:
-                open_ports.append("GPIB0::%s"%(i))
-         
-        #resets the timeout to its original value
-        self.timeout(old_timeout)
-#        print "Time out is", self.timeout()
+        if not self.debug:
+            
+            #sets the timeout to quite fast
+            old_timeout = self.timeout(0.1)
+            #iterate the ports number
+            for i in range(num_ports + 1):
+            
+                #change the GPIB address on the prologix controller
+                #prove if an instrument is connected to the port
+                self.write('++addr %i\n*IDN?\n'%i)
+            
+                #probe the answer
+                s = self.readline();            
+            
+                #if it is longer than zero it is an instrument
+                #we store the GPIB address
+                if len(s) > 0:
+                    open_ports.append("GPIB0::%s"%(i))
+             
+            #resets the timeout to its original value
+            self.timeout(old_timeout)
+    #        print "Time out is", self.timeout()
 
         return open_ports       
 

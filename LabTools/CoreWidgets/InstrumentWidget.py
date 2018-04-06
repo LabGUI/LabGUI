@@ -700,7 +700,6 @@ class InstrumentWindow(QtGui.QWidget):
         logging.debug("Filename : %s"%(fname))
 
         try:
-            
             settings_file = open(fname,'r')
             settings_file_ok = True
             logging.debug("Filename : %s"%(fname))
@@ -709,7 +708,11 @@ class InstrumentWindow(QtGui.QWidget):
             settings_file_ok = False
             print("No such file exists to load settings : %s"%(fname))
 
-        if settings_file_ok:
+        if not settings_file_ok:
+            
+            return []
+            
+        else:
     
             #the new settings will overwrite existing ones
             self.remove_all_lines()
@@ -813,10 +816,7 @@ please check your connectic or your settings file\n"%(port))
                     
                 self.emit(SIGNAL("colorsChanged()"))  
                 
-            #check if the list isn't empty
-            if window_settings:
-                
-                return window_settings
+            return window_settings
 
     def save_settings(self, fname, window_settings):
         """Generates a settings file that can be read with load_settings."""

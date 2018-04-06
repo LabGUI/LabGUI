@@ -7,11 +7,12 @@ License: see LICENSE.txt file
 """
 import logging 
 import py_compile
-from LabGuiExceptions import ScriptFile_Error
-import sys 
-
-from LabTools.IO import IOTool
 import time
+import os
+
+from LabGuiExceptions import ScriptFile_Error
+from LabTools.IO import IOTool
+
 ####
 #import sys 
 ####
@@ -41,7 +42,7 @@ class DataTaker(QThread):
         script_finished = pyqtSignal()
 
     def __init__(self, lock, instr_hub, parent=None):
-        print("DTT created")
+        logging.debug("DTT created")
         super(DataTaker, self).__init__(parent)
 
         self.instr_hub = instr_hub
@@ -81,9 +82,6 @@ class DataTaker(QThread):
         self.t_start = None
         # scriptize the intruments and their parameters
         self.reset_lists()
-
-    def __del__(self):
-        print("DTT deleted")
 
     def initialize(self, first_time=False):
         self.stopped = False
@@ -156,7 +154,11 @@ user variable")
                 return self.assign_user_variable(key, value_type) 
                 
     def run(self):
-        print("DTT begin run\n")
+        
+        rel_path = os.path.basename(os.path.abspath(os.path.curdir))
+        rel_path = self.script_file_name.split(rel_path)[1]        
+        
+        print("\nDTT begin run: '.%s'\n"%(rel_path))
         self.stopped = False
         self.running = True
         self.paused = False
@@ -164,7 +166,6 @@ user variable")
         # particular measurement
         userScriptName = self.script_file_name 
         try:
-            logging.info("Opening script %s"%userScriptName)
             ext = userScriptName[userScriptName.index('.'):]
             if(ext != ".py"):
                 raise(ScriptFile_Error("Incorrect filetype: %s"
@@ -178,7 +179,7 @@ user variable")
             self.running = False
             self.paused = False
             self.completed = True
-            print("DTT run over\n")
+            print("\nDTT run over\n")
             
         except FileNotFoundError as fileNotFoundError:
             # script not found/script invalid 

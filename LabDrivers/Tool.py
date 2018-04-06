@@ -77,12 +77,12 @@ try:
     # poke at something that only exists in older versions of visa, as a probe
     # for the version
     visa.term_chars_end_input
-    logging.info("using pyvisa version less than 1.6")
+#    logging.info("using pyvisa version less than 1.6")
     
 except:
     
     old_visa = False
-    logging.info("using pyvisa version higher than 1.6")
+#    logging.info("using pyvisa version higher than 1.6")
 
  # Tobe moved into InstrumentHub class as this class should only be GUI
 
@@ -410,7 +410,7 @@ with the instrument %s"%(self.ID_name))
                     #keep track of the port used with the instrument
                     self.resource_name = resource_name
                     
-                logging.info("setting default resource name of instrument %s\
+                logging.debug("setting default resource name of instrument %s\
 to '%s'"%(self.ID_name, self.resource_name))
                 # all others must take care of their own communication
 
@@ -663,7 +663,7 @@ class InstrumentHub(QObject):
             
             self.parent = None
             
-        logging.info("InstrumentHub created")
+        logging.debug("InstrumentHub created")
 
         self.DEBUG = debug
         logging.debug("debug mode of InstrumentHub Object :%s" % (self.DEBUG))
@@ -707,9 +707,14 @@ class InstrumentHub(QObject):
 argument is not the good one")
 
         else:
-        
-            # the connection doesn't exist so we create it
-            self.prologix_com_port = PrologixController()
+            
+            if INTF_GPIB == INTF_PROLOGIX:
+                # the connection doesn't exist so we create it
+                self.prologix_com_port = PrologixController()
+                
+            else:
+                
+                self.prologix_com_port = None
 
     def __del__(self):
         #free the existing connections

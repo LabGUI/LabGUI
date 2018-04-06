@@ -261,35 +261,12 @@ have the right format, '%s' will be used instead"%(self.config_file,
                     
                 #sets default config file name
                 self.config_file = CONFIG_FILE
-            
-        print("Configuration loaded from : %s"%(self.config_file))
-        
-        
-        
-        if self.DEBUG == True:
-            
-            print("*" * 20)
-            print("Debug mode is set to True")
-            print("*" * 20)
-            
-            self.option_display_debug_state()
-            
-        else:
-            
-            self.option_display_normal_state()
-            
-            
-        #create the central part of the application
-        self.zoneCentrale = QtGui.QMdiArea()
-        self.zoneCentrale.subWindowActivated.connect(self.update_current_window)
-        self.setCentralWidget(self.zoneCentrale)
-            
         
         #load the parameter for the GPIB interface setting of the instruments
         interface = IOTool.get_interface_setting(config_file_path = self.config_file)
         
         #test if the parameter is correct
-        if interface not in [Tool.INTF_VISA,Tool.INTF_PROLOGIX]:
+        if interface not in [Tool.INTF_VISA, Tool.INTF_PROLOGIX]:
             
             msg = """The %s variable of the config file '%s' is not correct
             The only two allowed values are : '%s' and '%s' """%(
@@ -304,12 +281,27 @@ have the right format, '%s' will be used instead"%(self.config_file,
                                        
         else:           
             
-            Tool.INTF_GPIB = interface
+            Tool.INTF_GPIB = interface        
+        
+        
+        if self.DEBUG == True:
             
-        print("*" * 20)
-        print("The GPIB setting for connecting instruments is %s"%(
-                    Tool.INTF_GPIB))
-        print("*" * 20)
+#            print("*" * 20)
+#            print("Debug mode is set to True")
+#            print("*" * 20)
+            
+            self.option_display_debug_state()
+            
+        else:
+            
+            self.option_display_normal_state()
+            
+            
+        #create the central part of the application
+        self.zoneCentrale = QtGui.QMdiArea()
+        self.zoneCentrale.subWindowActivated.connect(self.update_current_window)
+        self.setCentralWidget(self.zoneCentrale)
+            
 
         # the lock is something for multithreading... not sure if it's important in our application.
         self.lock = QReadWriteLock()
@@ -580,7 +572,7 @@ the script path and the data output path into the config file")
         
         if os.path.isfile(self.default_settings_fname):  
             
-            logging.info("Using '%s' as setting file"%(
+            logging.debug("Using '%s' as setting file"%(
                 self.default_settings_fname))            
             
             self.widgets['CalcWidget'].load_settings(
@@ -602,12 +594,12 @@ the script path and the data output path into the config file")
         # platform-independent way to restore settings such as toolbar positions,
         # dock widget configuration and window size from previous session.
         # this doesn't seem to be working at all on my computer (win7 system)
-        self.settings = QSettings("Gervais Lab", "RecordSweep")
+        self.settings = QSettings("Gervais Lab", "LabGui")
         try:
             self.restoreState(self.settings.value("windowState").toByteArray())
             self.restoreGeometry(self.settings.value("geometry").toByteArray())
         except:
-            logging.info('Using default window configuration')
+            logging.debug('Using default window configuration')
             #no biggie - probably means settings haven't been saved on this machine yet
             #hide some of the advanced widgets so they don't show for new users
             #the objects are not actually deleted, just hidden
@@ -992,8 +984,7 @@ the script path and the data output path into the config file")
 
         # convert this latest data to an array
         data = np.array(data_set)
-        print "Inside update_data_array in LabGui"
-        print data
+        
         for calculation in self.widgets['CalcWidget'].get_calculation_list():
             calculation = calculation.strip()
             if calculation:
@@ -1193,7 +1184,8 @@ the script path and the data output path into the config file")
             self.plot_window_settings = \
             self.widgets['InstrumentWidget'].load_settings(fname)
             
-            self.instrument_connexion_setting_fname = fname
+            if self.plot_window_settings:
+                self.instrument_connexion_setting_fname = fname
 
     def file_load_data(self):
         default_path = IOTool.get_config_setting("DATAFILE",
@@ -1227,13 +1219,22 @@ the script path and the data output path into the config file")
         """Visualy let the user know the programm is in DEBUG mode"""
 
         self.setWindowIcon(QIcon('images/icon_debug_py%s.png'%(PYTHON_VERSION)))
-        self.setWindowTitle("-" * 3 + "DEBUG MODE" + "-" * 3 + " (python%s)"%(PYTHON_VERSION))
+        self.setWindowTitle(
+            "-" * 3 
+            + "DEBUG MODE" + "-" * 3 
+            + " (python%s)"%(PYTHON_VERSION)
+            + " (GPIB_INTF: %s)"%(Tool.INTF_GPIB)
+            + " (Configuration file :%s)"%(self.config_file)
+            )
         self.setWindowOpacity(0.92)
         
     def option_display_normal_state(self):
         """Visualy let the user know the programm is in DEBUG mode"""
         self.setWindowIcon(QIcon('images/icon_normal_py%s.png'%(PYTHON_VERSION)))
-        self.setWindowTitle("LabGui (python%s)"%(PYTHON_VERSION))
+        self.setWindowTitle("LabGui (python%s)"%(PYTHON_VERSION)
+                            + " (GPIB_INTF: %s)"%(Tool.INTF_GPIB)
+                            + " (Configuration file :%s)"%(self.config_file)
+                            )
         self.setWindowOpacity(1)
 
     def option_change_debug_state(self):
@@ -1327,23 +1328,7 @@ def test_save_settings(idx = 0):
     ex.show()
     sys.exit(app.exec_())
     
-def test_load_settings(idx = 0):
-    """load the settings and connect the Hub"""
-    app = QtGui.QApplication(sys.argv)
-    ex = LabGuiMain()
-    
-    ex.file_load_settings("test_settings.set")    
-    
-    if idx == 0:
-        ex.connect_instrument_hub()
-    
-    elif idx == 1:
-        #tries to load an unexisting file
-        ex.file_load_settings("doesnt_exist_settings.set")
-    
-    ex.show()
 
-    sys.exit(app.exec_())
 
 def test_load_previous_data(data_path = os.path.join(ABS_PATH,'scratch','example_output.dat')):
     """
@@ -1419,11 +1404,7 @@ def test_stop_DTT_isrunning_false():
             
     app = QtGui.QApplication(sys.argv)
     form = LabGuiMain()         
-    
-    print form.widgets['ConsoleWidget']
-    form.widgets['ConsoleWidget'].console_text("I WANT TO SEE SOMETHING HERE")
-    print form.widgets['ConsoleWidget'].console_text()
-    form.update_console('hihih')
+
     
 #    widget_start = form.instToolbar.widgetForAction(
 #                                form.start_DTT_action)
@@ -1475,8 +1456,6 @@ if __name__ == "__main__":
 #    test_load_previous_data(fname)
 
 #    test_save_settings(0)
-#    test_load_settings(1)
-#    test_load_settings(0)
 #    test_user_variable_widget()
 
 
