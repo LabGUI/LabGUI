@@ -831,7 +831,7 @@ the script path and the data output path into the config file")
         
         self.datataker.initialize()
         self.datataker.read_data()
-        self.datataker.stop()
+        self.datataker.ask_to_stop()
 
     def start_DTT(self):
         
@@ -924,8 +924,7 @@ the script path and the data output path into the config file")
         if self.datataker.isRunning():
             
             self.datataker.ask_to_stop()
-
-
+            
         # just make sure the pause setting is left as false after ther run        
         self.start_DTT_action.setEnabled(True)
         self.pause_DTT_action.setEnabled(False)
@@ -951,29 +950,29 @@ the script path and the data output path into the config file")
         
         self.widgets['OutputFileWidget'].increment_filename()
 
+    def DTT_script_finished(self, completed):
+        """signal triggered by the completion of the script
+            
+            if the script is not an infinite loop, when it ends it sends
+            a signal which triggers this method
+        
+        """
+
+        self.stop_DTT()        
+        
+    def DTT_isRunning(self):
+        """indicates whether the datataker is running or not"""
+        return self.datataker.isRunning()
+   
     def toggle_DTT(self):
         if self.datataker.isStopped():
             self.start_DTT()
         else:
-            self.stop_DTT()
-
-
-    def DTT_script_finished(self, completed):
-        
-
-        self.stop_DTT()        
-        
-        if completed:
-            print("Finished the script completely")
-            
-        else:
-            print("The script was interrupted by the user or an error")
-            
+            self.stop_DTT()         
 
 
     def write_data(self, data_set):
-        print("In write_data in LabGui")
-        print(self.output_file)
+
         if self.output_file:
             if not self.output_file.closed:
                 # a quick way to make a comma separated list of the values
@@ -1091,10 +1090,6 @@ the script path and the data output path into the config file")
             # 20130722 it runs this part of the code everytime I click
             # somewhere else that inside the main window
             pass
-
-    def isrunning(self):
-        """indicates whether the datataker is running or not"""
-        return not self.datataker.stopped
 
     def clear_plot(self):
         self.data_array = np.array([])
@@ -1282,7 +1277,7 @@ the script path and the data output path into the config file")
 
 def launch_LabGui():
     app = QtGui.QApplication(sys.argv)
-    ex = LabGuiMain(sys.argv[1:])
+    ex = LabGuiMain()
     ex.show()
     sys.exit(app.exec_())
 
@@ -1425,24 +1420,29 @@ def test_stop_DTT_isrunning_false():
     app = QtGui.QApplication(sys.argv)
     form = LabGuiMain()         
     
-    widget_start = form.instToolbar.widgetForAction(
-                                form.start_DTT_action)
+    print form.widgets['ConsoleWidget']
+    form.widgets['ConsoleWidget'].console_text("I WANT TO SEE SOMETHING HERE")
+    print form.widgets['ConsoleWidget'].console_text()
+    form.update_console('hihih')
     
-    widget_stop = form.instToolbar.widgetForAction(
-                                form.stop_DTT_action)
-                                
-    form.file_load_settings("test_settings.set")    
-    
-    form.connect_instrument_hub()    
-    
-
-    print("Intruments in the hub")
-    print(form.instr_hub.get_instrument_nb())  
-
-    script_widget = form.widgets['ScriptWidget']
-    
-    print("Script fname")
-    print(script_widget.scriptFileLineEdit.text())       
+#    widget_start = form.instToolbar.widgetForAction(
+#                                form.start_DTT_action)
+#    
+#    widget_stop = form.instToolbar.widgetForAction(
+#                                form.stop_DTT_action)
+#                                
+#    form.file_load_settings("test_settings.set")    
+#    
+#    form.connect_instrument_hub()    
+#    
+#
+#    print("Intruments in the hub")
+#    print(form.instr_hub.get_instrument_nb())  
+#
+#    script_widget = form.widgets['ScriptWidget']
+#    
+#    print("Script fname")
+#    print(script_widget.scriptFileLineEdit.text())       
     
 #    fname = "tests\scripts\script_test_DTT.py"        
     
@@ -1457,8 +1457,8 @@ def test_stop_DTT_isrunning_false():
 
 if __name__ == "__main__":
 #    print("Launching LabGUI")
-#    launch_LabGui()
-    test_stop_DTT_isrunning_false()
+    launch_LabGui()
+#    test_stop_DTT_isrunning_false()
 #    build_test()
 #    test_save_fig()
 #    a = import_module('ConsoleWidget')

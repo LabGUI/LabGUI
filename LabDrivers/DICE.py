@@ -28,7 +28,7 @@ class Instrument(Tool.MeasInstr):
     def __init__(self, resource_name, debug=False, **kwargs):
         super(Instrument, self).__init__('Dice', name = 'DICE', debug=debug, interface = INTERFACE, **kwargs)
 
-    def measure(self, channel):
+    def measure(self, channel='Roll'):
         logging.debug("DICE measure %s"%(channel))
         if channel in param:
             if channel == 'Roll':

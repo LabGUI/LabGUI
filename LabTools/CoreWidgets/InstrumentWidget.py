@@ -893,7 +893,7 @@ def connect_instrument_hub(parent, signal = True):
         # of the instrument list and connect it
         connect = False
         
-        if parent.isrunning():
+        if parent.DTT_isRunning():
             
             if actual_instrument_number == cmdwin_instrument_number or \
                actual_instrument_number == 0:

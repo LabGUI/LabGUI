@@ -1,7 +1,5 @@
 the inline configuration file argument parsing doesn't seem to work well
 
-the output console doesn't seem to work with python2
-
 the instruments seem to not work in debug mode for python3, the dice output only 0's
 
 There is a problem with the script name passing from the config file to the scriptwidget and to the DTT, it should be a silly mistake

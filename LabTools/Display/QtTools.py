@@ -34,9 +34,11 @@ PAN_MODE = 1
 SELECT_MODE =2
 
 
-# A silly little class to replace stdout that both prints and emits the text as a signal
 class printerceptor(QtCore.QObject):
-
+    """A silly little class to replace stdout
+        it both prints the stdout to __stdout__ and emits the text as a signal
+        for other purposes
+    """
     if USE_PYQT5:
         
         print_to_console = pyqtSignal('PyQt_PyObject')
@@ -45,20 +47,30 @@ class printerceptor(QtCore.QObject):
         
         super(printerceptor, self).__init__()        
         
-        self.old_stdout = sys.stdout
+        self.old_stdout = sys.__stdout__
         self.parent = parent
 
+    def __del__(self):
+        """Restore sys.stdout"""
+        sys.stdout = sys.__stdout__
+
     def write(self, stri):
+        """emit the stdout output through a signal
+            then redirect is to the old stdout
+        """
+        
         self.old_stdout.write(stri)
+        
         if USE_PYQT5:
             
             self.print_to_console.emit(stri)
             
         else:
-            
-            self.parent.emit(SIGNAL("print_to_console(PyQt_PyObject)"), stri)
+
+            self.emit(SIGNAL("print_to_console(PyQt_PyObject)"), stri)
 
     def flush(self):
+        
         self.old_stdout.flush()
         
         
