@@ -657,6 +657,8 @@ class LabGuiTest(unittest.TestCase):
         
         #Stop the DTT
         QTest.mouseClick(self.widget_stop, Qt.LeftButton)        
+
+        time.sleep(0.5)          
         
         self.assertFalse(self.form.pause_DTT_action.isEnabled())
 
@@ -681,6 +683,8 @@ class LabGuiTest(unittest.TestCase):
         #Stop the DTT
         QTest.mouseClick(self.widget_stop, Qt.LeftButton)
         
+        time.sleep(0.1)  
+        
         self.assertFalse(self.form.datataker.isRunning())
     
     
@@ -704,6 +708,8 @@ class LabGuiTest(unittest.TestCase):
         #Stop the DTT
         QTest.mouseClick(self.widget_stop, Qt.LeftButton)
         
+        time.sleep(0.5)          
+        
         self.assertFalse(self.form.datataker.isPaused())
             
             
@@ -726,6 +732,8 @@ class LabGuiTest(unittest.TestCase):
         
         #Stop the DTT
         QTest.mouseClick(self.widget_stop, Qt.LeftButton)        
+
+        time.sleep(0.5)          
         
         self.assertTrue(self.form.datataker.isStopped())
 

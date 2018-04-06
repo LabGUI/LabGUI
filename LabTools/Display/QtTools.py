@@ -47,7 +47,7 @@ class printerceptor(QtCore.QObject):
         
         super(printerceptor, self).__init__()        
         
-        self.old_stdout = sys.__stdout__
+        self.old_stdout = sys.stdout
         self.parent = parent
 
     def __del__(self):
