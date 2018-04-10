@@ -247,7 +247,7 @@ class MeasInstr(object):
 
             elif self.interface == INTF_SERIAL or self.interface == INTF_PROLOGIX:
                 
-                if not num_bytes is None:
+                if num_bytes is not None:
                     
                     answer = self.connection.read(num_bytes)
                     
