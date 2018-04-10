@@ -48,7 +48,7 @@ INTF_NONE = 'None'
 
 PROLOGIX_COM_PORT = "COM5"
 
-LABDRIVER_PACKAGE_NAME="LabDrivers"
+LABDRIVER_PACKAGE_NAME = "LabDrivers"
 
 old_visa = True
 

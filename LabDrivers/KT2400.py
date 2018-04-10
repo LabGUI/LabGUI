@@ -24,7 +24,7 @@ INTERFACE = Tool.INTF_GPIB
 class Instrument(Tool.MeasInstr):
 
     def __init__(self, resource_name, debug=False,**kwargs):
-        print(kwargs)
+
         if "interface" in kwargs:
             itfc = kwargs.pop("interface")
         else:
@@ -33,9 +33,12 @@ class Instrument(Tool.MeasInstr):
         name='KT2400'
         if "name" in kwargs:
             name = kwargs.pop("name")
-            print(name)
-        super(Instrument, self).__init__(resource_name, name=name, debug=debug, interface = itfc, **kwargs)
-        # self.standard_setup()
+
+        super(Instrument, self).__init__(resource_name, 
+                                         name=name,
+                                         debug=debug,
+                                         interface = itfc,
+                                         **kwargs)
 
     def measure(self, channel):
         if channel in self.last_measure:

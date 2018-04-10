@@ -25,10 +25,7 @@ class Instrument(Tool.MeasInstr):
 
     def __init__(self, resource_name, debug=False, V_step_limit=None):
         super(Instrument, self).__init__(resource_name, 'E4400B', debug=debug, interface = INTERFACE)
-
-    def __del__(self):
-        super(Instrument, self).__del__()
-
+        
     def measure(self, channel='V'):
         if channel in self.last_measure:
             if not self.debug:
@@ -39,7 +36,7 @@ class Instrument(Tool.MeasInstr):
                 if channel == 'freq':
                     answer = self.get_frequency()
             else:
-                answer = random.random()
+                answer = np.random.random()
             self.last_measure[channel] = answer
         else:
             print("you are trying to measure a non existent channel : " + channel)
