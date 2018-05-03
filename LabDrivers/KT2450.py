@@ -3,6 +3,8 @@ try:
 except:
     import Tool
     
+import numpy as np
+
 
 try:
     from . import KT2400 as KT2400
@@ -20,7 +22,11 @@ class Instrument(KT2400.Instrument):
     
    
     def __init__(self, resource_name, debug=False, **kwargs):
-        super(Instrument, self).__init__(resource_name, name = 'KT2450', debug=debug, interface = INTERFACE, **kwargs)
+        super(Instrument, self).__init__(resource_name, 
+                                         name='KT2450',
+                                         debug=debug,
+                                         interface=INTERFACE, 
+                                         **kwargs)
  
 
     def measure(self, channel):
@@ -36,7 +42,7 @@ class Instrument(KT2400.Instrument):
                     #answer = self.ask(':READ?')
                     answer = self.ask(':MEAS:VOLT?')
                 else:
-                    answer = random.random()
+                    answer = np.random.random()
                 self.last_measure[channel] = answer
 
             elif channel == 'I':
@@ -47,13 +53,14 @@ class Instrument(KT2400.Instrument):
                     answer = self.ask(':MEAS:CURR?')
 
                 else:
-                    answer = random.random()
+                    answer = np.random.random()
                 self.last_measure[channel] = answer
 
         else:
             print("you are trying to measure a non existent channel : " + channel)
             print("existing channels :", self.channels)
             answer = None
+            
         answer = float(answer)
         return answer
         

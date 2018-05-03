@@ -26,11 +26,6 @@ class Instrument(Tool.MeasInstr):
         self.standard_setup()
         self.V_step_limit = V_step_limit
 
-    def __del__(self):
-        super(Instrument, self).__del__()
-        # self.disable_output()
-        # self.close()
-
     def standard_setup(self):
         if not self.DEBUG:
             self.write(':OUTP 1')

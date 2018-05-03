@@ -6,6 +6,7 @@ Created on Wed Aug 28, 2013
 
 """
 import socket
+import numpy as np
 
 from . import Tool
 #from fridgemonitor import data_server
@@ -25,21 +26,24 @@ class Instrument(Tool.MeasInstr):
         super(Instrument, self).__init__(resource_name, 'FridgeClient', debug=debug, interface = INTERFACE)
         print("made a fridge client")
 
-    def __del__(self):
-        super(Instrument, self).__del__()
-
     # overload the connect() method so that no real connection is made
     # a client socket is generated and destroyed for each request in measure()
     def connect(self, resource_name=None):
         pass
 
     def measure(self, channel='LS1'):
-        if channel in self.last_measure:
-            answer = self.get_fridge_data(str(channel))
-        else:
-            print("you are trying to measure a non existent channel : " + channel)
-            print("existing channels :", self.channels)
-            answer = None
+        
+        if not self.DEBUG:
+            if channel in self.last_measure:
+                answer = self.get_fridge_data(str(channel))
+            else:
+                print("you are trying to measure a non existent channel : " + channel)
+                print("existing channels :", self.channels)
+                answer = None
+            
+        else :
+            answer = np.random.random()
+            
         self.last_measure[channel] = answer
         return answer
         

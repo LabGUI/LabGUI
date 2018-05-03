@@ -1,12 +1,14 @@
 #!/usr/bin/env python  
 #import visa
 from . import Tool
+import numpy as np
 import time
 from collections import OrderedDict
 try:
     import zhinst.ziPython, zhinst.utils
 except:
-    print("Zurich Instruments drivers unavailable")
+    pass
+#print("Zurich Instruments drivers unavailable")
 #use an ordered dictionary so that the parameters show up in a pretty order :)
 param = OrderedDict([('X','V'), ('Y', 'V'),('X2','V'), ('Y2', 'V'),('X3','V'), ('Y3', 'V')])
      
@@ -31,11 +33,9 @@ class Instrument(Tool.MeasInstr):
                 self.units[chan]=u
                 self.last_measure[chan]=0
                 self.channels_names[chan]=chan
-                            
-            self.daq = zhinst.ziPython.ziDAQServer('localhost', 8005)
-        
-    def __del__(self):
-        super(Instrument, self).__del__()
+            
+            if not self.DEBUG:
+                self.daq = zhinst.ziPython.ziDAQServer('localhost', 8005)
 
     def measure(self,channel):
 
@@ -67,12 +67,15 @@ class Instrument(Tool.MeasInstr):
         return answer         
 
     def get_sample(self, stri):
-        try:
-            return self.daq.getSample(stri) 
-        except:
-            time.sleep(0.1)
-            print ("Zurich has died for a moment!")
-            return self.daq.getSample(stri) 
+        if not self.DEBUG:
+            try:
+                return self.daq.getSample(stri) 
+            except:
+                time.sleep(0.1)
+                print ("Zurich has died for a moment!")
+                return self.daq.getSample(stri) 
+        else:
+            return np.random.random()
 
 # Plan to move to using Instrument as the name within, but for back-compatibility
 # include this (so you can still use SRS830.SRS830 instead of SRS830.Instrument)

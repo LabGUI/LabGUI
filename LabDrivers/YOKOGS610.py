@@ -26,20 +26,16 @@ class Instrument(Tool.MeasInstr):
         self.standard_setup()
         self.V_step_limit = V_step_limit
 
-    def __del__(self):
-        super(Instrument, self).__del__()
-        # self.disable_output()
-        # self.close()
 
     def standard_setup(self):
-        if not self.debug:
+        if not self.DEBUG:
             self.write(':OUTP 1')
             # self.enable_output()
 
     def measure(self, channel='V'):  # Do I nead to write the channel argument here?
         """ This method does not measure, it asks what value is
             displayed on the screen (asks the source level) """
-        if not self.debug:
+        if not self.DEBUG:
             answer = float(self.ask(':SOUR:VOLT:LEV?'))
 #            answer = float(answer.split(',', 1)[0])
         else:
@@ -74,7 +70,7 @@ class Instrument(Tool.MeasInstr):
             self.set_voltage(val)
 
     def set_voltage(self, voltage, port=0):
-        if not self.debug:
+        if not self.DEBUG:
             prev_voltage = self.measure()
 
             # first check if there is a step limit, then do the math (no error if
@@ -94,17 +90,17 @@ class Instrument(Tool.MeasInstr):
             print("voltage set to " + str(voltage) + " on " + self.ID_name)
 
     def enable_output(self):
-        if not self.debug:
+        if not self.DEBUG:
             self.write(':OUTP 1')
 
     def disable_output(self):
-        if not self.debug:
+        if not self.DEBUG:
             self.write(':OUTP 0')
 
 
 #    def measure(self,channel='V'):
 #        if self.last_measure.has_key(channel):
-#            if not self.debug:
+#            if not self.DEBUG:
 #                answer=self.ask(':READ?') #  0 #this is to be defined for record sweep
 #                answer = float(answer.split(',',1)[0])
 #
@@ -121,20 +117,20 @@ class Instrument(Tool.MeasInstr):
             # yyyyy/zzzzz /a/d
 
     def reset(self):
-        if not self.debug:
+        if not self.DEBUG:
             self.write('*RST')
             time.sleep(1)
         # Resets the instrument
 
     def configure_measurement(self, sensor):
-        if not self.debug:
+        if not self.DEBUG:
             # VOLT,CURR RES
             s = ':%s:RANG:AUTO ON' % sensor
             print(s)
             self.write(s)
 
     def configure_output(self, source_mode='VOLT', output_level=0, compliance_level=0.001):
-        if not self.debug:
+        if not self.DEBUG:
             # source_mode: VOLT, CURR
             # output_level: in Volts or Amps
             # compliance level: in Amps or Vol
@@ -189,22 +185,22 @@ class Instrument(Tool.MeasInstr):
 """ BUNCH OF COMMENTED FUNCTIONS FROM THE ORIGINAL KT2400 DRIVER"""
 
 #    def operation_complete(self):
-#        if not self.debug:
+#        if not self.DEBUG:
 #            self.write('*OPC')
 #        # Returns a 1 after all the commands are complete
 #
 #
 #    def configure_voltage_source(self):
-#        if not self.debug:
+#        if not self.DEBUG:
 #            self.write(':SOUR:FUNC:MODE VOLT')
 #
 #    def set_current_compliance(self,compliance):
-#        if not self.debug:
+#        if not self.DEBUG:
 #            self.write(':SENS:CURR:PROT:LEV '+ str(compliance))
 #
 #
 #    def close(self):
-#        if not self.debug:
+#        if not self.DEBUG:
 #            self.disable_output()
 #            self.write('*RST')
 #            self.write('*CLS')
@@ -212,12 +208,12 @@ class Instrument(Tool.MeasInstr):
 #            super(Instrument,self).close()
 #
 #    def configure_multipoint(self,sample_count=1,trigger_count=1,output_mode='FIX'):
-#        if not self.debug:
+#        if not self.DEBUG:
 #            s = ':ARM:COUN %d;:TRIG:COUN %d;:SOUR:VOLT:MODE %s;:SOUR:CURR:MODE %s;' % (sample_count,trigger_count,output_mode,output_mode)
 #            self.write(s)
 #
 #    def configure_trigger(self,arming_source='IMM',timer_setting=0.01,trigger_source='IMM',trigger_delay=0.0):
-#        if not self.debug:
+#        if not self.DEBUG:
 #            # arming source: IMM,BUS,TIM,MAN,TLIN,NST,PST,BST
 #                # Immediate Arming
 #                # Software Trigger Signal
@@ -233,7 +229,7 @@ class Instrument(Tool.MeasInstr):
 #                self.write(s)
 #
 #    def initiate(self):
-#        if not self.debug:
+#        if not self.DEBUG:
 #            # Clears the trigger, then initiates
 #            s = ':TRIG:CLE;:INIT;'
 #            self.write(s)
@@ -241,11 +237,11 @@ class Instrument(Tool.MeasInstr):
 #            # delay to replace OPC
 #
 #    def wait_for_OPC(self):
-#        if not self.debug:
+#        if not self.DEBUG:
 #            self.write('*OPC;')
 #
 #    def fetch_measurements(self):
-#        if not self.debug:
+#        if not self.DEBUG:
 #            print self.ask(':FETC')
 
 if __name__ == "__main__":

@@ -29,8 +29,6 @@ else:
     import PyQt4.QtGui as QtGui
     import PyQt4.QtCore as QtCore
 
-
-
 from LabTools.Display import QtTools
 
 class ConsoleWidget(QtGui.QWidget):
@@ -40,6 +38,7 @@ class ConsoleWidget(QtGui.QWidget):
         super(ConsoleWidget, self).__init__(parent)
 
         self.consoleTextEdit = QtGui.QTextEdit()
+        
         self.consoleTextEdit.setReadOnly(True)
 
         self.verticalLayout = QtGui.QVBoxLayout()
@@ -49,11 +48,10 @@ class ConsoleWidget(QtGui.QWidget):
         self.setLayout(self.verticalLayout)
 
 
-
     def console_text(self, new_text = None):
         """get/set method for the text in the console"""
         
-        if new_text == None:
+        if new_text is None:
             
             return str((self.consoleTextEdit.toPlainText())).rstrip()
             
@@ -95,7 +93,6 @@ def add_widget_into_main(parent):
     #Enable the toggle view action
     parent.windowMenu.addAction(consoleDockWidget.toggleViewAction())
 
-
     # redirect print statements to show a copy on "console"
     sys.stdout = QtTools.printerceptor(parent)
     
@@ -131,6 +128,7 @@ def update_console(parent, stri):
     N_lines = min(MAX_LINES, len(line_list))
 
     new_text = '\n'.join(line_list[-N_lines:])
+    
     parent.widgets['ConsoleWidget'].console_text(new_text)
     
     parent.widgets['ConsoleWidget'].automatic_scroll()
