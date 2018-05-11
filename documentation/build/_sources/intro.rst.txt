@@ -1,0 +1,5 @@
+===========
+   Introduction
+===========
+
+LabGUI has been written by grad students in experimental physics. It is intended to overcome the frustration that most instruments come (came? times change) with their own dummy software with very poor or no integrability into a larger "meta" software coordinating the instruments.
