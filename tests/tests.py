@@ -7,16 +7,14 @@ Created on Wed Jun 28 15:23:23 2017
 
 import unittest
 import warnings
-
 import os
 os.chdir("..")
 
 import subprocess
 
-import time
+import sys
 
-from LabDrivers import utils 
-
+from time import sleep 
 
 
 def test_start_normal():
@@ -980,6 +978,104 @@ class LabGuiTest(unittest.TestCase):
         QTest.mouseClick(self.widget_stop, Qt.LeftButton)
         # how to test if there is any data being generated? 
         
+  
+#    
+#    @function_hdr 
+#    def test_data_generated_datataker(self): 
+#        script = self.form.widgets['ScriptWidget'].scriptFileLineEdit
+#        for i in range(len(script.text())):
+#            QTest.keyClick(script, Qt.Key_Backspace)
+#        QTest.keyClicks(script,"%s/script_example.py"%(os.getcwd()))
+#        
+#        self.set_simple_instrument_list(connect = True) 
+#        
+#        
+#        QTest.mouseClick(self.widget_start, Qt.LeftButton)
+#
+#        # (still need to figure out how to intercept the datataker signals)
+#        QTest.mouseClick(self.widget_stop, Qt.LeftButton)
+            
+
+    @function_hdr
+    def test_config_option_file_not_exists(self):
+        
+        oldcfg = [] 
+          
+        # get the old config settings
+        with open (TEST_CONFIG_FNAME, "r") as old:
+            for line in old: 
+                oldcfg.append(line)
+                
+        # remove the file, then try to load settings
+        os.remove(TEST_CONFIG_FNAME) 
+        self.form.fileMenu.actions()[0].trigger()
+
+        # still need to work on simulating this with the mouse, 
+        # but this works for now and has the same effect. 
+        
+        # not sure what kind of exception this should raise other 
+        # than a FileNotFoundError 
+        self.assertRaises(FileNotFoundError) 
+       
+        # replace the original file 
+        with open(TEST_CONFIG_FNAME, "w+") as rewrite: 
+            for line in oldcfg: 
+                rewrite.write(line)
+                
+    @function_hdr 
+    def test_config_option_missing(self):
+        
+        oldcfg = [] 
+        
+        # get the old config settings
+        with open (TEST_CONFIG_FNAME, "r") as old: 
+            for line in old: 
+                oldcfg.append(line)
+        os.remove(TEST_CONFIG_FNAME)
+
+        # replace the original file, but with one line removed
+        with open(TEST_CONFIG_FNAME, "w+") as rewrite: 
+            for line in oldcfg: 
+                if(oldcfg.index(line) == 0): 
+                    continue 
+                rewrite.write(line)
+                
+        # again, try to load settings 
+        self.form.fileMenu.actions()[0].trigger()
+        
+        self.assertRaises(Exception)
+        
+        # replace the original file 
+        with open(TEST_CONFIG_FNAME, "w+") as rewrite: 
+            for line in oldcfg: 
+                rewrite.write(line)        
+       
+    @function_hdr
+    def test_all_graphics_options(self): 
+        script = self.form.widgets['ScriptWidget'].scriptFileLineEdit
+        for i in range(len(script.text())):
+            QTest.keyClick(script, Qt.Key_Backspace)
+        QTest.keyClicks(script,"%s/script_example.py"%(os.getcwd()))
+        
+        self.set_simple_instrument_list(connect = True) 
+        
+        QTest.mouseClick(self.widget_start, Qt.LeftButton)
+        
+        graphicsOptions = self.form.plotToolbar
+        
+        # turn every option on and off 
+        for opt in graphicsOptions.actions(): 
+            opt.trigger() 
+            if('Drag' not in opt.text()):
+                sleep(1)
+            else: 
+                # need to figure out how to implement 
+                sleep(1) # CHANGE THIS 
+            opt.trigger() 
+
+        QTest.mouseClick(self.widget_stop, Qt.LeftButton)
+        
+    
         
 if __name__ == "__main__":
     
