@@ -356,6 +356,7 @@ have the right format, '%s' will be used instead"%(self.config_file,
         self.optionMenu = self.menuBar().addMenu("&Options")
         
         self.loggingSubMenu = self.optionMenu.addMenu("&Logger output level")        
+        self.intfSubMenu = self.optionMenu.addMenu("&GPIB interface")
         
         #Contains the zooming options buttons
         self.plotToolbar = self.addToolBar("Plot")
@@ -554,9 +555,14 @@ the script path and the data output path into the config file")
             log_level, slot = self.option_change_log_level, 
             shortcut = None, icon = None,
             tip = "Change the state of the logger to %s" % log_level)
-            
             self.loggingSubMenu.addAction(action)
-        
+
+        for interface in ["prologix", "pyvisa"]: 
+            action = QtTools.create_action(self, 
+              interface, slot = self.option_change_interface, 
+                  shortcut = None, icon = None, 
+                  tip = "Change the GPIB interface to %s"%interface)
+            self.intfSubMenu.addAction(action)
 ###############################
 
         #Load the user settings for the instrument connectic and parameters
@@ -1262,7 +1268,11 @@ the script path and the data output path into the config file")
         else:
             
             self.emit(SIGNAL("DEBUG_mode_changed(bool)"),self.DEBUG)        
-            
+    
+    def option_change_interface(self): 
+        # changes GPIB interface. 
+       intf = str(self.sender().text())
+       IOTool.set_config_setting(IOTool.GPIB_INTF_ID, intf)
    
     def option_change_log_level(self):
         """change the file logging.conf's logging level"""
