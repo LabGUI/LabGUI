@@ -722,6 +722,25 @@ argument is not the good one")
         
         logging.info("InstrumentHub deleted")
 
+    def change_interface(self, intf):
+        """Change the way one connects to GPIB interface"""
+ 
+        
+        if intf == INTF_PROLOGIX:
+            # the connection doesn't exist so we create it
+            self.prologix_com_port = PrologixController()
+                
+        elif intf == INTF_VISA:
+                
+            self.prologix_com_port = None
+        
+        else:
+            
+            logging.error("Problem with change of interface in the the \
+instrument hub. Interface passed as an argument : %s"%intf)
+            
+            
+
     def connect_hub(self, instr_list, dev_list, param_list):
         """ 
             triggers the connection of a list of instruments instr_list,

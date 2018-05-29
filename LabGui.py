@@ -550,6 +550,7 @@ the script path and the data output path into the config file")
 
         self.optionMenu.addAction(self.toggle_debug_state)
         
+        # Option to change the logging level displayed in the console
         for log_level in ["DEBUG", "INFO", "WARNING", "ERROR"]:
             action = QtTools.create_action(self, 
             log_level, slot = self.option_change_log_level, 
@@ -557,7 +558,8 @@ the script path and the data output path into the config file")
             tip = "Change the state of the logger to %s" % log_level)
             self.loggingSubMenu.addAction(action)
 
-        for interface in ["prologix", "pyvisa"]: 
+        # Option to change the interface of connexion for GPIB
+        for interface in [Tool.INTF_VISA, Tool.INTF_PROLOGIX]: 
             action = QtTools.create_action(self, 
               interface, slot = self.option_change_interface, 
                   shortcut = None, icon = None, 
@@ -1270,9 +1272,13 @@ the script path and the data output path into the config file")
             self.emit(SIGNAL("DEBUG_mode_changed(bool)"),self.DEBUG)        
     
     def option_change_interface(self): 
-        # changes GPIB interface. 
-       intf = str(self.sender().text())
-       IOTool.set_config_setting(IOTool.GPIB_INTF_ID, intf)
+        """changes GPIB interface"""
+        intf = str(self.sender().text())
+        # changes the GPIB interface in the instrument hub so the next time
+        # one connects instrument it will be through this interface
+        self.instr_hub.change_interface(intf)
+        #change this setting into the configuration file as well
+        IOTool.set_config_setting(IOTool.GPIB_INTF_ID, intf)
    
     def option_change_log_level(self):
         """change the file logging.conf's logging level"""
