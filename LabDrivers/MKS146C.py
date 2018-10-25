@@ -131,6 +131,8 @@ class Instrument(Tool.MeasInstr):
         if not self.DEBUG:
             
             self.connexion.open()
+            
+    
 
 if __name__ == "__main__":
     
@@ -139,7 +141,7 @@ if __name__ == "__main__":
     
     print("hello")
 
-    print(i.get_pressure(1))
+    print(i.get_pressure(2))
                     
     
 #    i = serial.Serial("COM8", bytesize = serial.SEVENBITS, 

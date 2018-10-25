@@ -105,7 +105,7 @@ class Instrument(Tool.MeasInstr):
             print "voltage set to " + str(voltage) + " on " + self.ID_name
 
     def set_current(self, current):
-        if not self.debug:
+        if not self.DEBUG:
             s = ':SOUR:FUNC CURR;:SOUR:LEV %f' % current
 #                s = ':SOUR:FUNC VOLT;:SOUR:LEV %f;:SOUR:PROT:CURR 1E-3;' % voltage
             self.write(s)
@@ -115,11 +115,11 @@ class Instrument(Tool.MeasInstr):
 
 
     def enable_output(self):
-        if not self.debug:
+        if not self.DEBUG:
             self.write(':OUTP 1')
 
     def disable_output(self):
-        if not self.debug:
+        if not self.DEBUG:
             self.write(':OUTP 0')
 
 
@@ -142,20 +142,20 @@ class Instrument(Tool.MeasInstr):
             # yyyyy/zzzzz /a/d
 
     def reset(self):
-        if not self.debug:
+        if not self.DEBUG:
             self.write('*RST')
             time.sleep(1)
         # Resets the instrument
 
     def configure_measurement(self, sensor):
-        if not self.debug:
+        if not self.DEBUG:
             # VOLT,CURR RES
             s = ':%s:RANG:AUTO ON' % sensor
             print(s)
             self.write(s)
 
     def configure_output(self, source_mode='VOLT', output_level=0, compliance_level=0.001):
-        if not self.debug:
+        if not self.DEBUG:
             # source_mode: VOLT, CURR
             # output_level: in Volts or Amps
             # compliance level: in Amps or Vol

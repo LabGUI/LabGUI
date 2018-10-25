@@ -294,14 +294,15 @@ with the instrument %s"%(self.ID_name))
         if not self.DEBUG:
             
             if self.interface == INTF_VISA:
-                
-                try:
-                    
-                    answer = self.connection.ask(msg)
-                    
-                except:
-                    print("\n\n### command %s bugged###\n\n"%msg)
-                    answer = np.nan
+                answer = self.connection.ask(msg)
+#                try:
+#                    
+#                    answer = self.connection.ask(msg)
+#                    
+#                except:
+#                    print("\n\n### command %s bugged###\n\n"%msg)
+#                    print answer
+#                    answer = np.nan
                 
             elif self.interface == INTF_SERIAL or self.interface == INTF_PROLOGIX:
                 

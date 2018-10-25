@@ -71,4 +71,4 @@ class Instrument(Tool.MeasInstr):
 if (__name__ == '__main__'):
     LCR = Instrument("GPIB0::17")
     print LCR.identify()
-    
+    print LCR.read_data()
