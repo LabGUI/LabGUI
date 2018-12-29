@@ -15,3 +15,4 @@ scripts/script.py
 config_*
 htmlcov/
 .tox/
+.idea/
