@@ -19,13 +19,14 @@ param = {'V': 'V'}
 
 INTERFACE = Tool.INTF_VISA
 
+
 class Instrument(Tool.MeasInstr):
 
     def __init__(self, resource_name, debug=False, V_step_limit=None):
-        super(Instrument, self).__init__(resource_name, 'YOKO', debug = debug, interface = INTERFACE)
+        super(Instrument, self).__init__(resource_name,
+                                         'YOKO', debug=debug, interface=INTERFACE)
         self.standard_setup()
         self.V_step_limit = V_step_limit
-
 
     def standard_setup(self):
         if not self.DEBUG:
@@ -142,10 +143,10 @@ class Instrument(Tool.MeasInstr):
             s = ':SOUR:FUNC %s;:SOUR:%s %f;:%s:PROT %r;' % (
                 source_mode, source_mode, output_level, protection, compliance_level)
             self.write(s)
-            
+
     def move_voltage(self, p_reader, p_target_voltage, step=0.0001, wait=0.001):
-    #    def move_voltage(self, p_reader, p_target_voltage, step=0.001, wait=0.005):
-    #        print 'Moving voltage'        
+        #    def move_voltage(self, p_reader, p_target_voltage, step=0.001, wait=0.005):
+        #        print 'Moving voltage'
         current_voltage = self.measure('V')
         # Parse move direction cases
         if current_voltage < p_target_voltage:  # If keithley needs to move up

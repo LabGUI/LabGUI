@@ -13,7 +13,6 @@ try:
     from . import Tool
 except:
     import Tool
-    
 
 
 param = {'V': 'V', 'I': 'A'}
@@ -23,21 +22,21 @@ INTERFACE = Tool.INTF_GPIB
 
 class Instrument(Tool.MeasInstr):
 
-    def __init__(self, resource_name, debug=False,**kwargs):
+    def __init__(self, resource_name, debug=False, **kwargs):
 
         if "interface" in kwargs:
             itfc = kwargs.pop("interface")
         else:
             itfc = INTERFACE
-            
-        name='KT2400'
+
+        name = 'KT2400'
         if "name" in kwargs:
             name = kwargs.pop("name")
 
-        super(Instrument, self).__init__(resource_name, 
+        super(Instrument, self).__init__(resource_name,
                                          name=name,
                                          debug=debug,
-                                         interface = itfc,
+                                         interface=itfc,
                                          **kwargs)
 
     def measure(self, channel):
@@ -130,14 +129,14 @@ class Instrument(Tool.MeasInstr):
 
     def set_voltage(self, voltage, compliance=1.0E-7):
         if not self.DEBUG:
-        
+
             self.write(':SOUR:VOLT:RANG:AUTO 1')
-            #set autorange on source
-            
+            # set autorange on source
+
             #c = ':SENS:CURR:PROT %r' % compliance
-            #self.write(c)
-            #set compliance
-            
+            # self.write(c)
+            # set compliance
+
             s = ':SOUR:FUNC VOLT;:SOUR:VOLT %f' % voltage
 
             self.write(s)
@@ -220,10 +219,10 @@ class Instrument(Tool.MeasInstr):
 #        # Code = 1 --> Leak check only this gate
 #        elif p_code == 3:
 #            return self.leaking(p_tolerance)
-            
+
     def move_voltage(self, p_reader, p_target_voltage, step=0.0005, wait=0.005):
-#    def move_voltage(self, p_reader, p_target_voltage, step=0.001, wait=0.005):
-#        print 'Moving voltage'        
+        #    def move_voltage(self, p_reader, p_target_voltage, step=0.001, wait=0.005):
+        #        print 'Moving voltage'
         current_voltage = self.measure('V')
         # Parse move direction cases
         if current_voltage < p_target_voltage:  # If keithley needs to move up
@@ -231,10 +230,10 @@ class Instrument(Tool.MeasInstr):
             # target voltage
             while current_voltage < p_target_voltage:
                 # Stop if it needs to
-#                if p_leak_check_code != 0:
-#                    if p_reader.isStopped():
-#                        print("Stopping")
-#                        return 0
+                #                if p_leak_check_code != 0:
+                #                    if p_reader.isStopped():
+                #                        print("Stopping")
+                #                        return 0
                 # Increment the current voltage by a safe amount
                 current_voltage += step
                 self.set_voltage(current_voltage)
@@ -245,10 +244,10 @@ class Instrument(Tool.MeasInstr):
             # target voltage
             while current_voltage > p_target_voltage:
                 # Stop if it needs to
-#                if p_leak_check_code != 0:
-#                    if p_reader.isStopped():
-#                        print("Stopping")
-#                        return 0
+                #                if p_leak_check_code != 0:
+                #                    if p_reader.isStopped():
+                #                        print("Stopping")
+                #                        return 0
                 # Increment the current voltage by a safe amount
                 current_voltage -= step
                 self.set_voltage(current_voltage)
@@ -327,7 +326,7 @@ class Instrument(Tool.MeasInstr):
 
 
 if __name__ == "__main__":
-    i = Instrument("GPIB0::21",debug=False)
+    i = Instrument("GPIB0::21", debug=False)
     print((i.identify("Hello, this is ")))
 
     #i.configure_output('VOLT', 0, 1E-7)

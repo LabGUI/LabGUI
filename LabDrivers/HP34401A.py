@@ -3,7 +3,7 @@ try:
     from . import Tool
 except:
     import Tool
-    
+
 import random
 
 
@@ -12,11 +12,12 @@ param = {'V_DC': 'V', 'V_AC': 'V', 'I_DC': 'A',
 
 INTERFACE = Tool.INTF_GPIB
 
+
 class Instrument(Tool.MeasInstr):
 
-    def __init__(self, resource_name, debug = False, **kwargs):
+    def __init__(self, resource_name, debug=False, **kwargs):
         super(Instrument, self).__init__(resource_name, 'HP34401A', debug=debug,
-                                         interface = INTERFACE, **kwargs)
+                                         interface=INTERFACE, **kwargs)
 
     def identify(self, msg=''):
         if not self.DEBUG:

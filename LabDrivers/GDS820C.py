@@ -16,7 +16,7 @@ try:
     from . import Tool
 except:
     import Tool
-    
+
 from struct import pack, unpack
 
 
@@ -39,18 +39,19 @@ param = {'CH1': 'V', 'CH2': 'V', 'phase': 'deg', 'Z': 'Ohm', 'Z2': 'Ohm'}
 
 INTERFACE = Tool.INTF_SERIAL
 
+
 class Instrument(Tool.MeasInstr):
 
     def __init__(self, resource_name, debug=False, **kwargs):
         super(Instrument, self).__init__(resource_name, 'GDS820C', debug=debug,
                                          interface=INTERFACE, baud_rate=38400,
                                          term_chars="\n", timeout=2, bytesize=8,
-                                         parity='N', stopbits=1, xonxoff=False, 
+                                         parity='N', stopbits=1, xonxoff=False,
                                          dsrdtr=False, **kwargs)
 
         if not self.DEBUG:
             print("init done")
-            print(self.ask("*IDN?"))        
+            print(self.ask("*IDN?"))
             # initialise the volt per div
             self.volt_per_div = {1: [], 2: []}
             self.get_channel_scale(1)
@@ -125,7 +126,8 @@ class Instrument(Tool.MeasInstr):
         """
         print("im in set average")
         if n < 1 or n > 8:
-            print("%s : set_average : input argument needs to be an integer between 1 and 8\n" % (self.ID_name))
+            print("%s : set_average : input argument needs to be an integer between 1 and 8\n" % (
+                self.ID_name))
         else:
             self.write(":ACQ:AVER %i" % (n))
 
@@ -136,7 +138,8 @@ class Instrument(Tool.MeasInstr):
         """
         lengthes = [500, 1250, 2500, 5000, 12500, 25000, 50000, 125000]
         if not L in lengthes:
-            print("%s : set_length : input argument needs to be an integer in the list:\n[500, 1250, 2500, 5000, 12500, 25000, 50000,125000]\n" % (self.ID_name))
+            print("%s : set_length : input argument needs to be an integer in the list:\n[500, 1250, 2500, 5000, 12500, 25000, 50000,125000]\n" % (
+                self.ID_name))
         else:
             print("set 2 :", lengthes.index(L))
             self.write(":ACQ:LENG %i" % (lengthes.index(L)))
@@ -155,7 +158,8 @@ class Instrument(Tool.MeasInstr):
         sample (0), peak detection(1), average(2) and accumulate (this one wasn't present in the manual).
         """
         if not i in [0, 1, 2]:
-            print("%s : set_mode : input argument needs to be an integer between 0 and 2\n" % (self.ID_name))
+            print("%s : set_mode : input argument needs to be an integer between 0 and 2\n" % (
+                self.ID_name))
         else:
             self.write(":ACQ:MOD %i" % (i))
             self.wait()
@@ -180,7 +184,8 @@ class Instrument(Tool.MeasInstr):
         Return the average voltage of a given channel of the scope.
         """
         if not chan_num in [1, 2]:
-            print("%s : get_displayed_data : input argument needs to be an integer between 1 and 2\n" % (self.ID_name))
+            print("%s : get_displayed_data : input argument needs to be an integer between 1 and 2\n" % (
+                self.ID_name))
             return 0
         else:
             self.write(":MEAS:SOUR %i" % (chan_num))
@@ -199,7 +204,8 @@ class Instrument(Tool.MeasInstr):
         Return the average voltage of a given channel of the scope.
         """
         if not chan_num in [1, 2]:
-            print("%s : get_displayed_data : input argument needs to be an integer between 1 and 2\n" % (self.ID_name))
+            print("%s : get_displayed_data : input argument needs to be an integer between 1 and 2\n" % (
+                self.ID_name))
             return 0
         else:
             answer = self.get_pp_voltage(chan_num)
@@ -285,7 +291,8 @@ class Instrument(Tool.MeasInstr):
         """
 #        data_points=None
         if not chan_num in [1, 2]:
-            print("%s : get_displayed_data : input argument needs to be an integer between 1 and 2\n" % (self.ID_name))
+            print("%s : get_displayed_data : input argument needs to be an integer between 1 and 2\n" % (
+                self.ID_name))
         else:
 
             have_data = 0
@@ -317,10 +324,12 @@ class Instrument(Tool.MeasInstr):
         Place scope in AC coupling state(0) Place scope in DC coupling state(1), Place scope in grounding state(2)
         """
         if not chan_num in [1, 2]:
-            print("%s : set_channel_coupling : chan_num needs to be an integer between 1 and 2\n" % (self.ID_name))
+            print("%s : set_channel_coupling : chan_num needs to be an integer between 1 and 2\n" % (
+                self.ID_name))
         else:
             if not i in [0, 1, 2]:
-                print("%s : set_channel_coupling : input argument needs to be an integer between 0 and 2\n" % (self.ID_name))
+                print("%s : set_channel_coupling : input argument needs to be an integer between 0 and 2\n" % (
+                    self.ID_name))
             else:
                 data_string = self.write(":CHAN%i:COUP %i" % (chan_num, i))
             # process data_string
@@ -331,7 +340,8 @@ class Instrument(Tool.MeasInstr):
         Place scope in AC coupling state(0) Place scope in DC coupling state(1), Place scope in grounding state(2)
         """
         if not chan_num in [1, 2]:
-            print("%s : set_channel_coupling : chan_num needs to be an integer between 1 and 2\n" % (self.ID_name))
+            print("%s : set_channel_coupling : chan_num needs to be an integer between 1 and 2\n" % (
+                self.ID_name))
         else:
             return self.ask(":CHAN%i:COUP?" % (chan_num))
 
@@ -411,7 +421,8 @@ class Instrument(Tool.MeasInstr):
         """
         answers = ["AC", "DC", "ground"]
         if not chan_num in [1, 2]:
-            print("%s : set_channel_coupling : chan_num needs to be an integer between 1 and 2\n" % (self.ID_name))
+            print("%s : set_channel_coupling : chan_num needs to be an integer between 1 and 2\n" % (
+                self.ID_name))
         else:
             return answers[int(self.ask(":CHAN%i:COUP?" % (chan_num)))]
 
@@ -420,11 +431,13 @@ class Instrument(Tool.MeasInstr):
         Sets the vertical scale of the specified channel.
         """
         if not chan_num in [1, 2]:
-            print("%s : set_channel_scale : chan_num needs to be an integer between 1 and 2\n" % (self.ID_name))
+            print("%s : set_channel_scale : chan_num needs to be an integer between 1 and 2\n" % (
+                self.ID_name))
         else:
 
             if not scale in self.scales:
-                print("%s : set_channel_scale : input argument needs to be a float in the list  in the list:\n[0.002,0.005,0.01,0.02,0.05,0.1,0.2,0.5,1,2,5]\n" % (self.ID_name))
+                print("%s : set_channel_scale : input argument needs to be a float in the list  in the list:\n[0.002,0.005,0.01,0.02,0.05,0.1,0.2,0.5,1,2,5]\n" % (
+                    self.ID_name))
             else:
                 self.write(":CHAN%i:SCAL %.3f" % (chan_num, scale))
                 # update the value of volt_per_div
@@ -440,7 +453,8 @@ class Instrument(Tool.MeasInstr):
             self.get_channel_scale(1)
             self.get_channel_scale(2)
         elif not chan_num in [1, 2]:
-            print("%s : get_channel_scale : chan_num needs to be an integer between 1 and 2\n" % (self.ID_name))
+            print("%s : get_channel_scale : chan_num needs to be an integer between 1 and 2\n" % (
+                self.ID_name))
         else:
             answer = ""
             while answer == "":
@@ -586,6 +600,7 @@ def read_data(file_name):
 #    print freq
     plt.show()
 
+
 if __name__ == "__main__":
 
     #    read_data("C:/Users/pfduc/Documents/g2gui/g2python/20150409_Freq_sweep_pressure6.00e-04_rawdata.dat")
@@ -675,15 +690,15 @@ if __name__ == "__main__":
 #    Z = (i.get_peak_voltage(1) / i.get_peak_voltage(2))
 #    Z2 = (np.max(data_CH1) / np.max(data_CH2))
 ##        print np.max(ch1)
-##        t=np.arange(len(ch1))*dt
+# t=np.arange(len(ch1))*dt
 ##        f = np.fft.fftfreq(t.shape[-1])
-##        phase.append(np.angle(np.fft.fft(ch1))-np.angle(np.fft.fft(ch2)))
+# phase.append(np.angle(np.fft.fft(ch1))-np.angle(np.fft.fft(ch2)))
 #    phase = (np.arccos(np.dot(data_CH1, data_CH2) /
 #                       np.sqrt(np.dot(data_CH1, data_CH1) * np.dot(data_CH2, data_CH2))))
-##        plt.plot(np.abs(np.fft.fft(ch1)),'r')
+# plt.plot(np.abs(np.fft.fft(ch1)),'r')
 #
 #
-##    datai.get_data(1)
+# datai.get_data(1)
 ##
 #    print Z, Z2, phase
 #    plt.plot(data_CH1)
@@ -696,10 +711,10 @@ if __name__ == "__main__":
 ###
 ###
 ###
-##    plt.plot(i.get_data(1))
-## plt.hold(True)
-## plt.plot(i.get_displayed_data(2),'r')
-##    plt.show()
+# plt.plot(i.get_data(1))
+# plt.hold(True)
+# plt.plot(i.get_displayed_data(2),'r')
+# plt.show()
     i.close()
 
  #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

@@ -19,13 +19,14 @@ INTERFACE = Tool.INTF_GPIB
 
 import logging
 
+
 class Instrument(Tool.MeasInstr):
     """ Class to communicate with Stanford Research Systems SR830 lock-in"""
-    
-    def __init__(self, resource_name, debug = False, **kwargs):
-        
-        #manage the presence of the keyword interface which will determine
-        #which method of communication protocol this instrument will use
+
+    def __init__(self, resource_name, debug=False, **kwargs):
+
+        # manage the presence of the keyword interface which will determine
+        # which method of communication protocol this instrument will use
         if 'interface' in kwargs.keys():
 
             interface = kwargs.pop('interface')
@@ -33,14 +34,14 @@ class Instrument(Tool.MeasInstr):
         else:
 
             interface = INTERFACE
-            
-        super(Instrument, self).__init__(resource_name, 'SR830', debug=debug, 
-                                         interface = interface, **kwargs)
+
+        super(Instrument, self).__init__(resource_name, 'SR830', debug=debug,
+                                         interface=interface, **kwargs)
 
     def measure(self, channel):
         """ Measure the specified 'channel' and return the result. The list
         of available channels is given by the keys in param.
-        
+
         Args:
             channel (string): the channel to measure. 
         """
@@ -83,7 +84,7 @@ class Instrument(Tool.MeasInstr):
     def set_scale(self, scale):
         """ Set the sensitivity of the input channel. Refer to SR830 
         documentation for the full list of settings
-        
+
         Args:
             scale (int): Between 0 and 26, the sensitivity to use
         """
@@ -99,7 +100,7 @@ class Instrument(Tool.MeasInstr):
 
     def set_phase(self, shift):
         """ Set the phase offset.
-        
+
         Args:
             shift (float): Phase shift in degrees
         """
@@ -107,7 +108,7 @@ class Instrument(Tool.MeasInstr):
 
     def set_amplitude(self, amplitude):
         """ set the reference output amplitude in volts
-        
+
         Args:
             amplitude (float): RMS voltage output of the reference channel
         """
@@ -122,7 +123,7 @@ class Instrument(Tool.MeasInstr):
 
     def set_freq(self, freq):
         """ Set the frequency of the reference channel.
-        
+
         Args: 
             freq (float): frequency in Hertz. 
         """
@@ -136,7 +137,7 @@ class Instrument(Tool.MeasInstr):
     def set_harm(self, harm):
         """ Sets the harmonic number to measure. Use set_harm(1) to measure
         at the reference frequency itself.
-        
+
         Args:
             harm (int): harmonic number to measure.
         """
@@ -144,7 +145,7 @@ class Instrument(Tool.MeasInstr):
 
     def read_aux_in(self, chan):
         """ Reads the AuxIn voltage value of the lock-in. 
-        
+
         Args: 
             chan (int): channel to read, one of 1, 2 ,3 or 4. 
         """
@@ -153,10 +154,10 @@ class Instrument(Tool.MeasInstr):
             return float(self.read())
         else:
             return 1.234
-            
+
     def read_aux_out(self, chan):
         """ Reads the AuxOut voltage value of the lock-in. 
-        
+
         Args: 
             chan (int): channel to read, one of 1, 2 ,3 or 4. 
         """
@@ -168,17 +169,16 @@ class Instrument(Tool.MeasInstr):
 
     def set_aux_out(self, chan, volts):
         """ Sets the AuxOut voltage value for the lock-in. 
-        
+
         Args: 
             chan (int): channel to read, one of 1, 2 ,3 or 4. 
         """
         self.write('AUXV ' + str(chan) + ", " + str(volts))
 
-
     def read_input(self, num):
         """
         Reads the specificed input of the lockin. 
-        
+
         Args:
             num (int): 1=x, 2=y, 3=r, 4=phase
         """
@@ -188,13 +188,14 @@ class Instrument(Tool.MeasInstr):
             except ValueError:
                 logging.error("The value returned by the lockin GPIB::%s was \
                 not a number, when this happened it was a problem from the \
-                lockin, try changing GPIB address."%(self.resource_name))
+                lockin, try changing GPIB address." % (self.resource_name))
                 return nan
         else:
             return 1.23e-4
 
+
 if (__name__ == '__main__'):
-    
+
     from utils import command_line_test
-    
+
     command_line_test(Instrument)

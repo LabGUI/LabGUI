@@ -13,14 +13,15 @@ except:
     import Tool
 param = {'FLOW': 'mbarl/s', 'P1': 'mbar'}
 
-INTERFACE= Tool.INTF_SERIAL
+INTERFACE = Tool.INTF_SERIAL
+
 
 class Instrument(Tool.MeasInstr):
 
     def __init__(self, resource_name, debug=False, **kwargs):
-        super(Instrument, self).__init__(resource_name, 'PL300', debug=debug, 
-                                         interface = INTERFACE, 
-                                         baud_rate = 19200, **kwargs)
+        super(Instrument, self).__init__(resource_name, 'PL300', debug=debug,
+                                         interface=INTERFACE,
+                                         baud_rate=19200, **kwargs)
         if not self.DEBUG:
             self.connection.delay = 0.25
 

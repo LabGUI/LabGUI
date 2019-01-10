@@ -13,18 +13,18 @@ try:
     from . import Tool
 except:
     import Tool
-    
 
 
 param = {'V': 'V', 'freq': 'Hz'}
 
 INTERFACE = Tool.INTF_GPIB
 
+
 class Instrument(Tool.MeasInstr):
 
     def __init__(self, resource_name, debug=False, V_step_limit=None, **kwargs):
         super(Instrument, self).__init__(resource_name, 'E4400B', debug=debug,
-                                         interface = INTERFACE, **kwargs)
+                                         interface=INTERFACE, **kwargs)
 
     def measure(self, channel='V'):
         if channel in self.last_measure:
@@ -63,6 +63,7 @@ class Instrument(Tool.MeasInstr):
         for freq in freq_range:
             self.set_frequency(freq)
             time.sleep(dwell)
+
 
 if __name__ == "__main__":
 

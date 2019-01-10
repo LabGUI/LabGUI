@@ -10,17 +10,18 @@ try:
     from . import Tool
 except:
     import Tool
-    
+
 import random
 param = {'Capacitance': 'pF'}
 
 INTERFACE = Tool.INTF_GPIB
 
+
 class Instrument(Tool.MeasInstr):
 
     def __init__(self, resource_name, debug=False, **kwargs):
         super(Instrument, self).__init__(
-            resource_name, 'AH2550A', debug=debug, interface = INTERFACE, **kwargs)
+            resource_name, 'AH2550A', debug=debug, interface=INTERFACE, **kwargs)
 
     def measure(self, channel):
         if self.last_measure.has_key(channel):

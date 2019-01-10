@@ -19,12 +19,13 @@ param = {'Voltage': 'V'}
 
 INTERFACE = Tool.INTF_GPIB
 
+
 class Instrument(Tool.MeasInstr):
 
-    def __init__(self, resource_name, debug = False, **kwargs):
-        
-        #manage the presence of the keyword interface which will determine
-        #which method of communication protocol this instrument will use
+    def __init__(self, resource_name, debug=False, **kwargs):
+
+        # manage the presence of the keyword interface which will determine
+        # which method of communication protocol this instrument will use
         if 'interface' in kwargs.keys():
 
             interface = kwargs.pop('interface')
@@ -32,15 +33,15 @@ class Instrument(Tool.MeasInstr):
         else:
 
             interface = INTERFACE
-        
-        super(Instrument, self).__init__(resource_name, 'A33220A', debug = debug,
-                                         interface = interface, **kwargs)
+
+        super(Instrument, self).__init__(resource_name, 'A33220A', debug=debug,
+                                         interface=interface, **kwargs)
 
     def measure(self, channel):
-        
+
         if channel in self.last_measure:
             if not self.DEBUG:
-                
+
                 if channel == 'Voltage':
                     return float(self.ask('VOLT?'))
                 else:
@@ -58,13 +59,8 @@ class Instrument(Tool.MeasInstr):
 
 if (__name__ == '__main__'):
 
-
-    i = Instrument("GPIB0::5",False, interface = Tool.INTF_PROLOGIX)
+    i = Instrument("GPIB0::5", False, interface=Tool.INTF_PROLOGIX)
 
     print(i.ask("*IDN?"))
     print(i.measure('Voltage'))
     i.close()
-    
-
-
-    
