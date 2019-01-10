@@ -12,7 +12,8 @@ try:
     import scipy as sp
     import scipy.optimize
 except:
-    logging.warning("You can't use the analyse data widget (fits) unless you install scipy module (pip install scipy)")
+    logging.warning(
+        "You can't use the analyse data widget (fits) unless you install scipy module (pip install scipy)")
 
 from collections import OrderedDict
 from LabTools.IO import IOTool as io
@@ -21,10 +22,10 @@ from LabTools.Fitting.Functions import *
 #from file_treatment_general_functions import load_experiment
 
 
-PHYS_PARAMS={"exp_decay":["Flow(mbarl/s)", "P(psi)", "Tr(C)", "T(K)"],
-"exp_decay_down":["Flow(mbarl/s)", "P(psi)", "T(K)"],
-"integrate": ["Flow(mbarl/s)", "PV(mbarl)", "Time(s)"],
-"linear":["Slope"]}
+PHYS_PARAMS = {"exp_decay": ["Flow(mbarl/s)", "P(psi)", "Tr(C)", "T(K)"],
+               "exp_decay_down": ["Flow(mbarl/s)", "P(psi)", "T(K)"],
+               "integrate": ["Flow(mbarl/s)", "PV(mbarl)", "Time(s)"],
+               "linear": ["Slope"]}
 
 
 def concatenate_list(alist):
@@ -33,12 +34,13 @@ def concatenate_list(alist):
     separated by a ;
     """
     answer = ""
-    for i,el in enumerate(alist):
+    for i, el in enumerate(alist):
         if i == len(alist)-1:
-            answer = answer+"%s"%(el)
+            answer = answer+"%s" % (el)
         else:
-            answer = answer+"%s;"%(el)
+            answer = answer+"%s;" % (el)
     return answer
+
 
 def rebuild_list(str1):
     """"takes a string and arrange it into a list"""
@@ -46,15 +48,17 @@ def rebuild_list(str1):
 
     return answer
 
-def rebuild_dict(str1,str2):
+
+def rebuild_dict(str1, str2):
     """"takes two string and arrange them into a dict"""
     keys = str1.split(";")
     values = str2.split(";")
     answer = OrderedDict()
-    for k,v in zip(keys,values):
+    for k, v in zip(keys, values):
         answer[k] = v
     return answer
-    
+
+
 class DataSet(object):
 
     def __init__(self, data, labels, bkg=None):
@@ -121,29 +125,30 @@ class DataSet(object):
 #        else:
 #            return None
 
-def restrict_function_parameters(func,param_values):
-#        func=io.import_module_func("Fitting","linear")
-#    func=exp_decay
-    new_func_name="new_func"
-    var_names=func.func_code.co_varnames
-    old_func_name=func.func_name
+def restrict_function_parameters(func, param_values):
+    #        func=io.import_module_func("Fitting","linear")
+    #    func=exp_decay
+    new_func_name = "new_func"
+    var_names = func.func_code.co_varnames
+    old_func_name = func.func_name
 #    print old_func_name
-    old_func_cmd="%s(%s"%(old_func_name,var_names[0])
-    new_func_cmd="%s=lambda %s"%(new_func_name,var_names[0])
-    for var,val in zip(var_names[1:],param_values):
-#        print val
-#        print var
-        
-        if not val==None:
-            old_func_cmd=old_func_cmd+", %s"%(val)
-        else:
-            old_func_cmd=old_func_cmd+", %s"%(var)
-            new_func_cmd=new_func_cmd+", %s"%(var)
+    old_func_cmd = "%s(%s" % (old_func_name, var_names[0])
+    new_func_cmd = "%s=lambda %s" % (new_func_name, var_names[0])
+    for var, val in zip(var_names[1:], param_values):
+        #        print val
+        #        print var
 
-    new_func_cmd=new_func_cmd+": "+old_func_cmd+")"
+        if not val == None:
+            old_func_cmd = old_func_cmd+", %s" % (val)
+        else:
+            old_func_cmd = old_func_cmd+", %s" % (var)
+            new_func_cmd = new_func_cmd+", %s" % (var)
+
+    new_func_cmd = new_func_cmd+": "+old_func_cmd+")"
 #    print new_func_cmd
-    
-    exec(new_func_cmd)#"%(new_func_name,var_names[0],var_names[1],var_names[0],var_names[1],var_names[2]))
+
+    # "%(new_func_name,var_names[0],var_names[1],var_names[0],var_names[1],var_names[2]))
+    exec(new_func_cmd)
     return new_func
 
 
@@ -179,7 +184,7 @@ def fit_exp_linear(t, y, C=0):
     return A, K
 
 
-def fit_nonlinear(t, y, func_name=exp_decay, guess_param=None,bounds = None):
+def fit_nonlinear(t, y, func_name=exp_decay, guess_param=None, bounds=None):
     #    print "analyse_data.fit_nonlinear: function ",func_name.__name__
     #    opt_parms, parm_cov = sp.optimize.curve_fit(func_name, t, y, maxfev=2000)
     return sp.optimize.curve_fit(func_name, t, y, p0=guess_param, maxfev=2000)
@@ -193,87 +198,81 @@ class FittingData():
         self.fname = "this_fname"
         # the original data is stored in the index 0 of the array
         # self.data_subset and have the value self.active_set set to -1
-        self.data_subsets = [{'guess': OrderedDict([('m', None), ('h', None)]), 'phys_param': ['Slope'], 'Fit_line_idx': 1, 'limits': [], 'X_line_idx': 0, 'fit_func': 'linear', 'cov': np.array([[ 0.00455464, -0.02049587],
-       [-0.02049587,  0.12980716]]), 'fit_func_params': OrderedDict([('m', 1.0848484824657372), ('h', -0.58181816674964493)]), 'mode': 1, 'fix_param': OrderedDict([('m', False), ('h', False)])}, {'guess': OrderedDict([('m', None), ('h', None)]), 'phys_param': ['Slope'], 'Fit_line_idx': 1, 'limits': [], 'X_line_idx': 0, 'fit_func': 'linear', 'cov': np.array([[ 0.00455464, -0.02049587],
-       [-0.02049587,  0.12980716]]), 'fit_func_params': OrderedDict([('m', 1.0848484824657372), ('h', -0.58181816674964493)]), 'mode': 1, 'fix_param': OrderedDict([('m', False), ('h', False)])}, {'guess': OrderedDict([('m', None), ('h', None)]), 'phys_param': ['Slope'], 'Fit_line_idx': 1, 'limits': [], 'X_line_idx': 0, 'fit_func': 'linear', 'cov': np.array([[ 0.00455464, -0.02049587],
-       [-0.02049587,  0.12980716]]), 'fit_func_params': OrderedDict([('m', 1.0848484824657372), ('h', -0.58181816674964493)]), 'mode': 1, 'fix_param': OrderedDict([('m', False), ('h', False)])}]
+        self.data_subsets = [{'guess': OrderedDict([('m', None), ('h', None)]), 'phys_param': ['Slope'], 'Fit_line_idx': 1, 'limits': [], 'X_line_idx': 0, 'fit_func': 'linear', 'cov': np.array([[0.00455464, -0.02049587],
+                                                                                                                                                                                                  [-0.02049587,  0.12980716]]), 'fit_func_params': OrderedDict([('m', 1.0848484824657372), ('h', -0.58181816674964493)]), 'mode': 1, 'fix_param': OrderedDict([('m', False), ('h', False)])}, {'guess': OrderedDict([('m', None), ('h', None)]), 'phys_param': ['Slope'], 'Fit_line_idx': 1, 'limits': [], 'X_line_idx': 0, 'fit_func': 'linear', 'cov': np.array([[0.00455464, -0.02049587],
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   [-0.02049587,  0.12980716]]), 'fit_func_params': OrderedDict([('m', 1.0848484824657372), ('h', -0.58181816674964493)]), 'mode': 1, 'fix_param': OrderedDict([('m', False), ('h', False)])}, {'guess': OrderedDict([('m', None), ('h', None)]), 'phys_param': ['Slope'], 'Fit_line_idx': 1, 'limits': [], 'X_line_idx': 0, 'fit_func': 'linear', 'cov': np.array([[0.00455464, -0.02049587],
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    [-0.02049587,  0.12980716]]), 'fit_func_params': OrderedDict([('m', 1.0848484824657372), ('h', -0.58181816674964493)]), 'mode': 1, 'fix_param': OrderedDict([('m', False), ('h', False)])}]
         self.active_set = -1
 
-    def create_subset(self, fit_params, phys_param = None):
+    def create_subset(self, fit_params, phys_param=None):
 
         if not phys_param == None:
-            fit_params["phys_param"]=phys_param
-        
-              
-        
+            fit_params["phys_param"] = phys_param
+
         self.data_subsets.append(fit_params)
 #        print(self.data_subsets)
         self.active_set = len(self.data_subsets) - 1
-        
-    def display(self,idx = 0):
+
+    def display(self, idx=0):
         pass
 #        print(self.data_subset[idx])
 
+    def save_subsets(self, of):
 
-
-
-    def save_subsets(self,of):
-        
-        if len(self.data_subsets)>0 :        
-            of.write("#Data are from file :%s\n"%(self.fname))
-            of.write("#Xrow,Yrow,fonction,line_idx,param_name,param_value,physical_param\n")
+        if len(self.data_subsets) > 0:
+            of.write("#Data are from file :%s\n" % (self.fname))
+            of.write(
+                "#Xrow,Yrow,fonction,line_idx,param_name,param_value,physical_param\n")
             for ds in self.data_subsets:
-                line = "%s,"*6 +"%s\n"
+                line = "%s,"*6 + "%s\n"
                 line_idx = concatenate_list(ds["limits"][0:2])
 #                print(line_idx)
                 param_name = concatenate_list(ds["fit_func_params"].keys())
                 param_value = concatenate_list(ds["fit_func_params"].values())
                 phys_param = concatenate_list(ds["phys_param"])
-                of.write(line%(ds["X_line_idx"], ds["Fit_line_idx"], ds["fit_func"],
-                      line_idx, param_name, param_value, phys_param))
+                of.write(line % (ds["X_line_idx"], ds["Fit_line_idx"], ds["fit_func"],
+                                 line_idx, param_name, param_value, phys_param))
         else:
-            logging.warning("The file %s is not being created because there is no set of fits"%(of.name))
+            logging.warning(
+                "The file %s is not being created because there is no set of fits" % (of.name))
 
-    def load_subsets(self,inf):
+    def load_subsets(self, inf):
         self.data_subsets = []
         for line in inf:
             if "#Data are from file :" in line:
                 data_fname = line.split("#Data are from file :")[1]
-                #now I need to load the data in self.data_set
+                # now I need to load the data in self.data_set
             elif not line[0] == "#":
                 params = {}
-                #eliminate the "\n" at the end of the line
+                # eliminate the "\n" at the end of the line
                 line = line[:-1]
-                line =line.split(',')
-                
+                line = line.split(',')
+
                 params['X_line_idx'] = line[0]
-                params['Fit_line_idx'] =line[1]
+                params['Fit_line_idx'] = line[1]
                 params['fit_func'] = line[2]
-                params['limits'] = rebuild_list(line[3]) #I should add xmin and xmax
-                params['fit_func_params'] = rebuild_dict(line[4],line[5])
+                params['limits'] = rebuild_list(
+                    line[3])  # I should add xmin and xmax
+                params['fit_func_params'] = rebuild_dict(line[4], line[5])
                 params['phys_params'] = rebuild_list(line[6])
-                
+
                 self.data_subsets.append(params)
 #                print params
-                
-
-        
 
 
-if __name__=="__main__":
+if __name__ == "__main__":
 
     fname = "test.txt"
-    
-    
+
 
 #    print of.name
 #    of.
     a = FittingData()
-    
+
 #    of = open(fname,"w")
 #    a.save_subsets(of)
-#    of.close()    
-    
+#    of.close()
+
     inf = open(fname)
     a.load_subsets(inf)
 
@@ -301,7 +300,6 @@ if __name__=="__main__":
 #
 #    def get_active_lim_params(self):
 #        return self.data_subsets[0].limparam
-
 
 
 class live_experiment():
@@ -351,7 +349,8 @@ class live_experiment():
             else:
                 answer = np.array(self.data_set[:, param])
         else:
-            print("analyse_data.get_subset_data : the column of the data to select is not correct : ", param)
+            print(
+                "analyse_data.get_subset_data : the column of the data to select is not correct : ", param)
 
         return answer
 
@@ -361,9 +360,9 @@ class live_experiment():
     def fit(self, paramX, paramY, fit_func, x_bounds=None):
 
         # Store for display on the widget
-#        print "live_exp.fit: ", paramX,paramY,fit_func.func_name,x_bounds
+        #        print "live_exp.fit: ", paramX,paramY,fit_func.func_name,x_bounds
 
-#        print "live_exp.analyse_data.fit:",fit_func.func_name
+        #        print "live_exp.analyse_data.fit:",fit_func.func_name
         if fit_func.func_name == "exp_decay":
             # print "analyse_data.fit : active set :",self.active_set
             X = self.get_subset_data(paramX, x_bounds)
@@ -484,7 +483,7 @@ class experiment():
 #    def __del__(self):
 #        print "EXPERIMENT DEAD"
 
-    def load_data_set(self, fname): #(only in this one)
+    def load_data_set(self, fname):  # (only in this one)
         if not fname == None:
             extension = fname.rsplit('.')[len(fname.rsplit('.')) - 1]
             if extension == "adat":
@@ -507,7 +506,8 @@ class experiment():
         if extension == "aset":
             [data, labels] = io.load_aset_file(fname)
         else:
-            print("analyse_data.load_data_subsets: wrong extensionfor the file ", fname, ", should be '.aset' but it is '", extension, "'")
+            print("analyse_data.load_data_subsets: wrong extensionfor the file ",
+                  fname, ", should be '.aset' but it is '", extension, "'")
 #        print "load data set "+fname
         new_data_set = data_set(data, labels)
         self.change_data_set(new_data_set)
@@ -541,7 +541,8 @@ class experiment():
     def create_subset(self, start=None, end=None, param=None):
         #        print "analyse_data.create_subset\n"
         if param == None:
-            print("analyse_data.create_subset: you want to create a subset knowing the indexes")
+            print(
+                "analyse_data.create_subset: you want to create a subset knowing the indexes")
             print("if not, you should specifiy a parameter in the list")
             print(self.params)
 #        else:
@@ -593,12 +594,12 @@ class experiment():
 # dealing with this function
     def fit(self, paramX, paramY, fit_func, x_bounds=None):
 
-#        print "fit: ", paramX, paramY, fit_func.func_name, x_bounds
+        #        print "fit: ", paramX, paramY, fit_func.func_name, x_bounds
 
         if self.active_set == -1:
             print("analyse_data.fit: you cannot fit when you are in the raw data")
         else:
-#            print "analyse_data.fit:", fit_func.func_name
+            #            print "analyse_data.fit:", fit_func.func_name
             if fit_func.func_name == "exp_decay":
                 # print "analyse_data.fit : active set :",self.active_set
                 X = self.get_subset_data(paramX)
@@ -727,11 +728,11 @@ class experiment():
                     vc0, nu, cov[0, 0]]
                 self.data_subsets[self.active_set].physparam = [vc0, nu]
             else:
-#                print "*" * 20
-#                print "You need to define a procedure in analyse_data.py for the function %s" % (fit_func.func_name)
-#                print "*" * 20
+                #                print "*" * 20
+                #                print "You need to define a procedure in analyse_data.py for the function %s" % (fit_func.func_name)
+                #                print "*" * 20
                 self.data_subsets[self.active_set].limparam = [
-                self.data_subsets[self.active_set].bounds, X[0], X[-1]]
+                    self.data_subsets[self.active_set].bounds, X[0], X[-1]]
 
     def get_active_physparams(self):
         if self.active_set == -1:
@@ -764,9 +765,9 @@ class experiment():
 #                print self.params
 
     def savefile(self, of, physp):
-#        print "saving"
-#
-#        physp=self.params
+        #        print "saving"
+        #
+        #        physp=self.params
         of.write("#P ")
         for p in physp:
             of.write(p + "\t")
@@ -783,8 +784,8 @@ class experiment():
                 print("analyse_data.experiment.savefile : could not save the file")
 
     def saveset(self, of):
-#        print "saving sets"
-  # here I should define the different parameters and the fit parameters
+        #        print "saving sets"
+      # here I should define the different parameters and the fit parameters
 
         for i, s in enumerate(self.data_subsets):
             try:
@@ -802,65 +803,75 @@ class experiment():
             except:
                 print("analyse_data.experiment.saveset : could not save the set")
 
+
 def test_fit_exponential():
     import random
-    def dummy_exp(Yfinal = 2,tau = 15,t_off = 10):
+
+    def dummy_exp(Yfinal=2, tau=15, t_off=10):
         answer = np.array([])
         dt = np.array([])
         idx = 0
         for t in range(t_off):
-            answer = np.append(answer,0.05 *(random.random() - 0.5))
-            dt = np.append(dt,idx)
+            answer = np.append(answer, 0.05 * (random.random() - 0.5))
+            dt = np.append(dt, idx)
             idx += 1
         for t in range(3*tau):
-            answer = np.append(answer,exp_decay(idx-t_off, Yfinal, tau, 0) * (1 + 0.05 *(random.random() - 0.5)))
-            dt = np.append(dt,idx)
+            answer = np.append(answer, exp_decay(
+                idx-t_off, Yfinal, tau, 0) * (1 + 0.05 * (random.random() - 0.5)))
+            dt = np.append(dt, idx)
             idx += 1
-            
-        return dt,answer
-        
-    t,y = dummy_exp()
 
-    data = np.loadtxt("C:\\Users\\pfduc\\Documents\\g2gui\\g2python\\161011_TEST_sample_name_010.dat")    
-    t = data[:,2]
-    y=data[:,1]
-    
+        return dt, answer
+
+    t, y = dummy_exp()
+
+    data = np.loadtxt(
+        "C:\\Users\\pfduc\\Documents\\g2gui\\g2python\\161011_TEST_sample_name_010.dat")
+    t = data[:, 2]
+    y = data[:, 1]
+
     idx_b = 14
     idx_s = 60
 
-    fitp_val,cov = fit_nonlinear(t[idx_b:idx_s],y[idx_b:idx_s],exp_decay,guess_param = [y[idx_b],t[idx_s]-t[idx_b],t[idx_s]])
+    fitp_val, cov = fit_nonlinear(t[idx_b:idx_s], y[idx_b:idx_s], exp_decay, guess_param=[
+                                  y[idx_b], t[idx_s]-t[idx_b], t[idx_s]])
     print(fitp_val)
-    plt.plot(t,y,'b',t[idx_b:idx_s],y[idx_b:idx_s],'or',exp_decay(t,*fitp_val),'--k')
+    plt.plot(t, y, 'b', t[idx_b:idx_s], y[idx_b:idx_s],
+             'or', exp_decay(t, *fitp_val), '--k')
     plt.show()
-    
+
+
 def test_fit_exponential_down():
     import random
-    def dummy_exp(dY = 2,tau = 15,Y_inf = 1,t_off = 10):
+
+    def dummy_exp(dY=2, tau=15, Y_inf=1, t_off=10):
         answer = np.array([])
         dt = np.array([])
         idx = 0
         for t in range(t_off):
-            answer = np.append(answer,(dY+Y_inf)*(1 + 0.05 *(random.random() - 0.5)))
-            dt = np.append(dt,idx)
+            answer = np.append(answer, (dY+Y_inf) *
+                               (1 + 0.05 * (random.random() - 0.5)))
+            dt = np.append(dt, idx)
             idx += 1
         for t in range(3*tau):
-            answer = np.append(answer,exp_decay_down(idx-t_off,Y_inf,dY, tau, 0)*(1 + 0.05 *(random.random() - 0.5)))
-            dt = np.append(dt,idx)
+            answer = np.append(answer, exp_decay_down(
+                idx-t_off, Y_inf, dY, tau, 0)*(1 + 0.05 * (random.random() - 0.5)))
+            dt = np.append(dt, idx)
             idx += 1
-            
-        return dt,answer
-        
-    t,y = dummy_exp()
+
+        return dt, answer
+
+    t, y = dummy_exp()
     idx_b = 13
 
-    fitp_val,cov = fit_nonlinear(t[idx_b:],y[idx_b:],exp_decay_down)
+    fitp_val, cov = fit_nonlinear(t[idx_b:], y[idx_b:], exp_decay_down)
     print(fitp_val)
-    plt.plot(t,y,'b',t[idx_b:],y[idx_b:],'or',exp_decay_down (t,*fitp_val),'--k')
+    plt.plot(t, y, 'b', t[idx_b:], y[idx_b:], 'or',
+             exp_decay_down(t, *fitp_val), '--k')
     plt.show()
-   
-    
+
+
 if __name__ == "__main__":
     test_fit_exponential()
 #    test_fit_exponential_down()
 #    def fit_nonlinear(t, y, func_name=exp_decay, guess_param=None):
-   

@@ -94,6 +94,7 @@ TEST_SIMPLE_SCRIPT_FNAME = "script_test.py"
 TEST_LOOP_SCRIPT_FNAME = "script_test_DTT.py"
 # relaunches the application
 
+
 def function_hdr(func):
     def new_function(*args, **kwargs):
         print("\n### %s ###\n" % func.__name__)
@@ -176,7 +177,6 @@ def create_test_config_file(fname=TEST_CONFIG_FNAME):
 
     IOTool.set_config_setting(IOTool.SCRIPT_ID, script_path,
                               config_file_path=config_path)
-
 
 
 def delete_test_generated_files():
@@ -937,7 +937,6 @@ class LabGuiTest(unittest.TestCase):
 # Logger output level
 # Change debug mode
 # Test for successful output to console
-
 
     # @function_hdr
     # def test_bad_script(self):

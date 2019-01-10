@@ -26,7 +26,7 @@ rcParams['font.size'] = 9
 
 from LocalVars import USE_PYQT5
 
-if  USE_PYQT5:
+if USE_PYQT5:
 
     import PyQt5.QtWidgets as QtGui
     from PyQt5.QtCore import QSize

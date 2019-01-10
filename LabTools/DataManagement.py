@@ -5,7 +5,7 @@ Created on Thu Jul 18 23:27:44 2013
 Copyright (C) 10th april 2015 Pierre-Francois Duc
 License: see LICENSE.txt file
 """
-import logging 
+import logging
 import py_compile
 import time
 import os
@@ -14,17 +14,17 @@ from LabGuiExceptions import ScriptFile_Error
 from LabTools.IO import IOTool
 
 ####
-#import sys 
+#import sys
 ####
 from LocalVars import USE_PYQT5
 
-if  USE_PYQT5:
-    
+if USE_PYQT5:
+
     from PyQt5.QtCore import QObject, Qt, QMutex, QThread, pyqtSignal
-    
+
 else:
-    
-    from PyQt4.QtCore import SIGNAL,QObject, Qt, QMutex, QThread
+
+    from PyQt4.QtCore import SIGNAL, QObject, Qt, QMutex, QThread
 
 
 class DataTaker(QThread):
@@ -34,11 +34,11 @@ class DataTaker(QThread):
         As it is child from QThread one can launch it using its inherited .start() method.
     """
 
-    #creating signals
-    if  USE_PYQT5:
-        #emitted when the data array changes
+    # creating signals
+    if USE_PYQT5:
+        # emitted when the data array changes
         data = pyqtSignal('PyQt_PyObject')
-        #emitted upon completion of the script
+        # emitted upon completion of the script
         script_finished = pyqtSignal(bool)
 
     def __init__(self, lock, instr_hub, parent=None):
@@ -46,39 +46,37 @@ class DataTaker(QThread):
         super(DataTaker, self).__init__(parent)
 
         self.instr_hub = instr_hub
-        
-        if  USE_PYQT5:
-            
+
+        if USE_PYQT5:
+
             self.instr_hub.changed_list.connect(self.reset_lists)
-        
+
         else:
-            
+
             self.connect(self.instr_hub, SIGNAL(
                 "changed_list()"), self.reset_lists)
-            
-            
+
         self.lock = lock
-        
-        self.running = False        
-        
+
+        self.running = False
+
         self.stopped = True
-        
+
         self.paused = False
-        
+
         self.mutex = QMutex()
 
         self.completed = False
-        
+
         self.DEBUG = IOTool.get_debug_setting()
 
-
-        #the script which is run everytime the user call the routine "run"
+        # the script which is run everytime the user call the routine "run"
         self.script_file_name = ''
-        
-        #a dict that can be populated by variable the user would like to change
-        #in real time while the script is ran
-        self.user_variables = {}        
-        
+
+        # a dict that can be populated by variable the user would like to change
+        # in real time while the script is ran
+        self.user_variables = {}
+
         self.t_start = None
         # scriptize the intruments and their parameters
         self.reset_lists()
@@ -91,7 +89,7 @@ class DataTaker(QThread):
                 # there's a none object in the Instruments list, ignore it
                 if inst:
                     inst.initialize()
-                
+
     def reset_lists(self):
         """
             If changes are made to the InstrumentHub, the DataTaker will not acknowledge them
@@ -102,143 +100,140 @@ class DataTaker(QThread):
         self.port_param_pairs = self.instr_hub.get_port_param_pairs()
         #print("\t...instruments updated in datataker")
 
-    
     def update_user_variables(self, adict):
         """
         Replace the user variables by updated ones
         """
 
         if isinstance(adict, dict):
-            
+
             self.user_variables = adict
 
-    def assign_user_variable(self, key, value_type = float, default = None):
+    def assign_user_variable(self, key, value_type=float, default=None):
         """this is used to change variables while data are being taken
         """
-        
-        #the key exists
+
+        # the key exists
         if key in self.user_variables:
-            
+
             if value_type == None:
-                
+
                 return self.user_variables[key]
-                
+
             else:
-                
+
                 if isinstance(value_type, type):
-                    
+
                     try:
-                        
+
                         return value_type(self.user_variables[key])
-                        
+
                     except ValueError:
                         print("Wrong type conversion applied on \
 user variable")
                         return self.user_variables[key]
-                        
+
                 else:
-                    
+
                     print("Wrong type used for user variable")
                     return self.user_variables[key]
-                
+
         else:
-            
+
             if default == None:
-                
+
                 print("The user variable key %s isn't defined" % key)
-                
+
             else:
-                #assign the default value to the key entry
+                # assign the default value to the key entry
                 self.user_variables[key] = default
-                #make a recursive call to the method
-                return self.assign_user_variable(key, value_type) 
-                
+                # make a recursive call to the method
+                return self.assign_user_variable(key, value_type)
+
     def run(self):
-        
+
         rel_path = os.path.basename(os.path.abspath(os.path.curdir))
-        rel_path = self.script_file_name.split(rel_path)[1]        
-        
-        print("\nDTT begin run: '.%s'\n"%(rel_path))
+        rel_path = self.script_file_name.split(rel_path)[1]
+
+        print("\nDTT begin run: '.%s'\n" % (rel_path))
         self.stopped = False
         self.running = True
         self.paused = False
         # open another file which contains the script to follow for this
         # particular measurement
-        userScriptName = self.script_file_name 
+        userScriptName = self.script_file_name
         try:
             ext = userScriptName[userScriptName.index('.'):]
             if(ext != ".py"):
                 raise(ScriptFile_Error("Incorrect filetype: %s"
-                                       %(ext)))
+                                       % (ext)))
             script = open(userScriptName)
             py_compile.compile(script.name, doraise=True)
             code = compile(script.read(), script.name, 'exec')
             exec(code)
             script.close()
-                
+
             self.running = False
             self.paused = False
             self.completed = True
             print("\nDTT run over\n")
-            
+
         except FileNotFoundError as fileNotFoundError:
-            # script not found/script invalid 
-            logging.error("Your script file \"%s\" "%(userScriptName) +
-                              "failed to open with error:\n" + 
-                              str(fileNotFoundError) + 
-                              "\nPlease review the script.\n")
+            # script not found/script invalid
+            logging.error("Your script file \"%s\" " % (userScriptName) +
+                          "failed to open with error:\n" +
+                          str(fileNotFoundError) +
+                          "\nPlease review the script.\n")
             raise(ScriptFile_Error(fileNotFoundError))
-        except ScriptFile_Error as filetypeError: 
-            logging.error("Your script file \"%s\" "%(userScriptName) +
-                              "failed to open with error:\n" + 
-                              str(filetypeError) + 
-                              "\nPlease review the script.\n")
+        except ScriptFile_Error as filetypeError:
+            logging.error("Your script file \"%s\" " % (userScriptName) +
+                          "failed to open with error:\n" +
+                          str(filetypeError) +
+                          "\nPlease review the script.\n")
             raise(ScriptFile_Error(filetypeError))
         except py_compile.PyCompileError as compileError:
-            logging.error("Your script file \"%s\" "%(userScriptName) +
-                              "failed to compile with error:\n" + 
-                              str(compileError) + 
-                              "\nPlease review the script.\n")
+            logging.error("Your script file \"%s\" " % (userScriptName) +
+                          "failed to compile with error:\n" +
+                          str(compileError) +
+                          "\nPlease review the script.\n")
             raise(ScriptFile_Error(compileError))
-        except Exception as e: 
-            logging.error("Your script file \"%s\" "%(userScriptName) +
-                              "failed to run with error:\n" + 
-                              type(e).__name__ + ": " + str(e) + 
-                              "\nPlease review the script.\n")
-        finally: 
+        except Exception as e:
+            logging.error("Your script file \"%s\" " % (userScriptName) +
+                          "failed to run with error:\n" +
+                          type(e).__name__ + ": " + str(e) +
+                          "\nPlease review the script.\n")
+        finally:
             pass
         # send a signal to indicate that the DTT is stopped
         if USE_PYQT5:
-            
+
             self.script_finished.emit(self.completed)
-        
+
         else:
-            
-            self.emit(SIGNAL("script_finished(bool)"),self.completed)     
-        self.stop() 
+
+            self.emit(SIGNAL("script_finished(bool)"), self.completed)
+        self.stop()
 
     def set_script(self, script_fname):
         self.script_file_name = script_fname
 
     def stop(self):
-        
+
         try:
-            
+
             self.mutex.lock()
             self.stopped = True
-            
+
             self.running = False
-            
+
             if self.completed:
                 print("DTT stopped and complete")
             else:
                 print("DTT stopped but not complete")
-            
-        finally:
-            
-            self.mutex.unlock()
 
-            
+        finally:
+
+            self.mutex.unlock()
 
     def pause(self):
         print("DTT paused")
@@ -248,34 +243,32 @@ user variable")
         print("DTT resumed")
         self.paused = False
 
-        
     def isRunning(self):
-        
+
         return self.running
-        
+
     def isPaused(self):
-        
-        return self.paused        
-        
+
+        return self.paused
+
     def isStopped(self):
-        
+
         return self.stopped
 
     def ask_to_stop(self):
-        
+
         self.stopped = True
         self.paused = False
 
     def check_stopped_or_paused(self):
-        
-        while True:
-            
-            if (not self.paused) or self.stopped:
-                
-                return self.stopped
-                
-            time.sleep(0.1)
 
+        while True:
+
+            if (not self.paused) or self.stopped:
+
+                return self.stopped
+
+            time.sleep(0.1)
 
     def read_data(self):
         """
@@ -303,11 +296,11 @@ user variable")
 
         # send data back to the mother ship as an array of floats, but only
         if USE_PYQT5:
-            
+
             self.data.emit(data_set)
-        
+
         else:
-            
+
             self.emit(SIGNAL("data(PyQt_PyObject)"), data_set)
 
 
@@ -318,11 +311,11 @@ class DataDisplayer(QObject):
         self.debug = debug
 #        self.lock = lock
         if USE_PYQT5:
-            
+
             datataker.data.connect(self.displayer, Qt.QueuedConnection)
-            
+
         else:
-            
+
             self.connect(datataker, SIGNAL("data(PyQt_PyObject)"),
                          self.displayer, Qt.QueuedConnection)
 
@@ -347,15 +340,15 @@ class DataWriter(QObject):
     def __init__(self, datataker, debug=False, parent=None):
         super(DataWriter, self).__init__(parent)
         self.debug = debug
-        
+
         if USE_PYQT5:
-            
+
             datataker.data.connect(self.displayer, Qt.QueuedConnection)
-            
+
         else:
-            
+
             self.connect(datataker, SIGNAL("data(PyQt_PyObject)"),
-                         self.writer, Qt.QueuedConnection)        
+                         self.writer, Qt.QueuedConnection)
 
     def writer(self, data):
 

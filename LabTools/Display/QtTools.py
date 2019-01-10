@@ -11,27 +11,26 @@ import sys
 
 from LocalVars import USE_PYQT5
 
-if  USE_PYQT5:
-    
+if USE_PYQT5:
+
     import PyQt5.QtWidgets as QtGui
     import PyQt5.QtCore as QtCore
     from PyQt5.QtCore import Qt, pyqtSignal
     from PyQt5.QtGui import QKeySequence, QIcon, QPainter
-    
+
 else:
 
     import PyQt4.QtGui as QtGui
     import PyQt4.QtCore as QtCore
-    from PyQt4.QtCore import Qt      
+    from PyQt4.QtCore import Qt
     from PyQt4.QtCore import SIGNAL
     from PyQt4.QtGui import QKeySequence, QIcon, QPainter
 
 
-
-#global variables used to know what mode the mouse is in
+# global variables used to know what mode the mouse is in
 ZOOM_MODE = 0
 PAN_MODE = 1
-SELECT_MODE =2
+SELECT_MODE = 2
 
 
 class printerceptor(QtCore.QObject):
@@ -40,13 +39,13 @@ class printerceptor(QtCore.QObject):
         for other purposes
     """
     if USE_PYQT5:
-        
+
         print_to_console = pyqtSignal('PyQt_PyObject')
 
-    def __init__(self, parent = None):
-        
-        super(printerceptor, self).__init__()        
-        
+    def __init__(self, parent=None):
+
+        super(printerceptor, self).__init__()
+
         self.old_stdout = sys.stdout
         self.parent = parent
 
@@ -58,57 +57,57 @@ class printerceptor(QtCore.QObject):
         """emit the stdout output through a signal
             then redirect is to the old stdout
         """
-        
+
         self.old_stdout.write(stri)
-        
+
         if USE_PYQT5:
-            
+
             self.print_to_console.emit(stri)
-            
+
         else:
 
             self.emit(SIGNAL("print_to_console(PyQt_PyObject)"), stri)
 
     def flush(self):
-        
+
         self.old_stdout.flush()
-        
-        
+
+
 def create_action(parent, text, slot=None, shortcut=None, icon=None, tip=None, checkable=False, signal="triggered()"):
     """
         Create a QAction, which can be used to trigger a reation when clicking
         on a menu item
     """
-    
+
     action = QtGui.QAction(text, parent)
-    
+
     if icon is not None:
         action.setIcon(QIcon("./images/%s.png" % icon))
-        
+
     if shortcut is not None:
-        
+
         action.setShortcut(shortcut)
-        
+
     if tip is not None:
-        
+
         action.setToolTip(tip)
         action.setStatusTip(tip)
-        
-    #connect the slot (function or method to be executed) to the trigger signal
+
+    # connect the slot (function or method to be executed) to the trigger signal
     if slot is not None:
-        
+
         if USE_PYQT5:
 
             action.triggered.connect(slot)
-            
+
         else:
-                
-            parent.connect(action, SIGNAL(signal), slot)        
-        
+
+            parent.connect(action, SIGNAL(signal), slot)
+
     if checkable:
-        
+
         action.setCheckable(True)
-        
+
     return action
 
 
@@ -155,7 +154,7 @@ class QAutoHideDockWidgets(QtGui.QToolBar):
         w = QtGui.QWidget(None)
         w.resize(10, 100)
         self.setSizePolicy(QtGui.QSizePolicy(QtGui.QSizePolicy.Fixed,
-                                       QtGui.QSizePolicy.MinimumExpanding))
+                                             QtGui.QSizePolicy.MinimumExpanding))
         self.addWidget(w)
 
         self.setAllowedAreas(self.DOCK_AREA_TO_TB[self._area])
@@ -178,10 +177,12 @@ class QAutoHideDockWidgets(QtGui.QToolBar):
         p.setBrush(Qt.black)
         if self._area == Qt.LeftDockWidgetArea:
             p.translate(QtCore.QPointF(0, self.height() / 2 - 5))
-            p.drawPolygon(QtCore.QPointF(2, 0), QtCore.QPointF(8, 5), QtCore.QPointF(2, 10))
+            p.drawPolygon(QtCore.QPointF(2, 0), QtCore.QPointF(
+                8, 5), QtCore.QPointF(2, 10))
         elif self._area == Qt.RightDockWidgetArea:
             p.translate(QtCore.QPointF(0, self.height() / 2 - 5))
-            p.drawPolygon(QtCore.QPointF(8, 0), QtCore.QPointF(2, 5), QtCore.QPointF(8, 10))
+            p.drawPolygon(QtCore.QPointF(8, 0), QtCore.QPointF(
+                2, 5), QtCore.QPointF(8, 10))
 
     def _multiSetVisible(self, widgets, state):
         if state:
@@ -199,7 +200,7 @@ class QAutoHideDockWidgets(QtGui.QToolBar):
 
     def enterEvent(self, event):
         self.showDockWidgets()
-        
+
     def eventFilter(self, obj, event):
         if event.type() == QtCore.QEvent.Enter:
             assert obj == self.parent().centralWidget()
@@ -217,7 +218,7 @@ class QAutoHideDockWidgets(QtGui.QToolBar):
 class DialogBox(QtGui.QWidget):
 
     if USE_PYQT5:
-        
+
         dialogboxanswer = pyqtSignal('QString')
 
     def __init__(self, label="", windowname="", parent=None):
@@ -246,15 +247,16 @@ class DialogBox(QtGui.QWidget):
 
     def button_click(self):
         if USE_PYQT5:
-            
+
             self.dialogboxanswer.emit(self.txt.text())
-            
+
         else:
-            
+
             self.emit(SIGNAL("dialogboxanswer(QString)"), self.txt.text())
-            
+
         self.txt.setText("")
         self.hide()
+
 
 def dockWidgetCloseEvent(event):
     event.ignore()

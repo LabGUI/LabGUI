@@ -10,15 +10,15 @@ import sys
 
 from LocalVars import USE_PYQT5
 
-if  USE_PYQT5:
-    
-    from PyQt5.QtWidgets import (QWidget, QLabel, QLineEdit, QPushButton, 
+if USE_PYQT5:
+
+    from PyQt5.QtWidgets import (QWidget, QLabel, QLineEdit, QPushButton,
                                  QFileDialog, QHBoxLayout, QApplication)
-    
+
 else:
-    
-    from PyQt4.QtGui import (QWidget, QLabel, QLineEdit, QPushButton, 
-                                 QFileDialog, QHBoxLayout, QApplication)
+
+    from PyQt4.QtGui import (QWidget, QLabel, QLineEdit, QPushButton,
+                             QFileDialog, QHBoxLayout, QApplication)
 
 
 from LabTools.IO import IOTool
@@ -27,19 +27,19 @@ from LabTools.IO import IOTool
 class ScriptWidget(QWidget):
     """widget with a lineEdit and a browse button"""
 
-    def __init__(self, parent = None):
+    def __init__(self, parent=None):
         super(ScriptWidget, self).__init__(parent)
 
         self.scriptLayout = QHBoxLayout()
 
         self.scriptFileLabel = QLabel(self)
         self.scriptFileLabel.setText("Script to run:")
-        
+
         self.scriptFileLineEdit = QLineEdit(self)
-        
+
         self.scriptFileButton = QPushButton(self)
         self.scriptFileButton.setText("Browse")
-        
+
         self.scriptLayout.addWidget(self.scriptFileLabel)
         self.scriptLayout.addWidget(self.scriptFileLineEdit)
         self.scriptLayout.addWidget(self.scriptFileButton)
@@ -50,43 +50,41 @@ class ScriptWidget(QWidget):
 
         self.scriptFileButton.clicked.connect(self.on_scriptFileButton_clicked)
 
-
     def on_scriptFileButton_clicked(self):
-        
+
         if USE_PYQT5:
-            
+
             fname, fmt = QFileDialog.getOpenFileName(
-                    self, 'Load script from', './scripts/',
-                    'Script files (*.py)')
-        else: 
-            
+                self, 'Load script from', './scripts/',
+                'Script files (*.py)')
+        else:
+
             fname = str(QFileDialog.getOpenFileName(
-                    self, 'Load script from', './scripts/',
-                    'Script files (*.py)'))
-                    
+                self, 'Load script from', './scripts/',
+                'Script files (*.py)'))
+
         if fname:
-            
+
             self.scriptFileLineEdit.setText(fname)
 
     def get_script_fname(self):
-        
+
         return str(self.scriptFileLineEdit.text())
 
 
 def add_widget_into_main(parent):
     """add a widget into the main window of LabGuiMain
-    
+
     create a QDock widget and store a reference to the widget
-    """    
+    """
 
     parent.widgets['ScriptWidget'] = ScriptWidget(parent)
-    
-    fname = IOTool.get_script_name(config_file_path = parent.config_file)    
-    
-    parent.widgets['ScriptWidget'].scriptFileLineEdit.setText(fname)
-    
-    parent.instToolbar.addWidget(parent.widgets['ScriptWidget'])
 
+    fname = IOTool.get_script_name(config_file_path=parent.config_file)
+
+    parent.widgets['ScriptWidget'].scriptFileLineEdit.setText(fname)
+
+    parent.instToolbar.addWidget(parent.widgets['ScriptWidget'])
 
 
 if __name__ == "__main__":

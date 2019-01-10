@@ -14,12 +14,14 @@ with open('HISTORY.rst') as history_file:
 
 requirements = ['Click>=6.0', ]
 
-setup_requirements = [ ]
+setup_requirements = []
 
-test_requirements = [ ]
+test_requirements = []
+
 
 def test_suite():
-	return TestLoader().discover('.')
+    return TestLoader().discover('.')
+
 
 setup(
     author="Bachibouzouk",
@@ -50,7 +52,7 @@ setup(
     name='labgui',
     packages=find_packages(include=['labgui']),
     setup_requires=setup_requirements,
-    test_suite = 'test_suite', 
+    test_suite='test_suite',
     tests_require=test_requirements,
     url='https://github.com/Bachibouzouk/labgui',
     version='0.1.0',

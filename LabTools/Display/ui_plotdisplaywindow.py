@@ -9,17 +9,17 @@
 
 from LocalVars import USE_PYQT5
 
-if  USE_PYQT5:
-                                 
+if USE_PYQT5:
+
     import PyQt5.QtWidgets as QtGui
     import PyQt5.QtCore as QtCore
     from PyQt5.QtGui import QPalette, QBrush, QColor
 
-    
+
 else:
 
-    import PyQt4.QtGui as QtGui     
-    import PyQt4.QtCore as QtCore 
+    import PyQt4.QtGui as QtGui
+    import PyQt4.QtCore as QtCore
     from PyQt4.QtGui import QPalette, QBrush, QColor
 
 
@@ -28,7 +28,7 @@ from QtTools import clear_layout
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
 except AttributeError:
-    _fromUtf8 = lambda s: s
+    def _fromUtf8(s): return s
 
 
 class Ui_PlotDisplayWindow(QtCore.QObject):
@@ -264,7 +264,6 @@ class Ui_PlotDisplayWindow(QtCore.QObject):
         """iterate through the layout and destroys the widgets properly"""
         clear_layout(self.horizontalLayout)
         clear_layout(self.horizontalLayout_2)
-        
 
     def retranslateUi(self, PlotDisplayWindow):
         pass

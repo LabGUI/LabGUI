@@ -13,25 +13,22 @@ import logging
 
 from LocalVars import USE_PYQT5
 
-if  USE_PYQT5:
-    
+if USE_PYQT5:
+
     import PyQt5.QtWidgets as QtGui
     from PyQt5.QtCore import pyqtSignal, Qt
-    
+
 else:
-    
+
     import PyQt4.QtGui as QtGui
     from PyQt4.QtCore import SIGNAL, Qt
 
 from LabTools.IO import IOTool
 
 
-
-
-
 class OutputFileWidget(QtGui.QWidget):
 
-    def __init__(self, parent = None, fname = IOTool.get_file_name()):
+    def __init__(self, parent=None, fname=IOTool.get_file_name()):
         super(OutputFileWidget, self).__init__(parent)
 
         # main layout of the form is the verticallayout
@@ -39,7 +36,7 @@ class OutputFileWidget(QtGui.QWidget):
         self.verticalLayout = QtGui.QVBoxLayout()
         self.verticalLayout.setObjectName("verticalLayout")
 
-        #moved the script stuff to a separate widget that lives in the toolbar
+        # moved the script stuff to a separate widget that lives in the toolbar
 
         self.outputLayout = QtGui.QHBoxLayout()
         self.outputLayout.setObjectName("outputLayout")
@@ -57,24 +54,25 @@ class OutputFileWidget(QtGui.QWidget):
         fontsize = self.headerTextEdit.fontMetrics()
         self.headerTextEdit.setFixedHeight(fontsize.lineSpacing() * 8)
         self.verticalLayout.addWidget(self.headerTextEdit)
-        
+
         # moved the start stop button to the toolbar only
 
         self.setLayout(self.verticalLayout)
 
         self.outputFileLineEdit.setText(fname)
-            
+
         self.outputFileButton.clicked.connect(self.on_outputFileButton_clicked)
 
-        self.setSizePolicy(QtGui.QSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Maximum))
-        
+        self.setSizePolicy(QtGui.QSizePolicy(
+            QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Maximum))
+
     def on_outputFileButton_clicked(self):
-        
+
         fname = str(QtGui.QFileDialog.getSaveFileName(self, 'Save output file as',
-                                                self.outputFileLineEdit.text()))
-                                                
+                                                      self.outputFileLineEdit.text()))
+
         if fname:
-            
+
             self.outputFileLineEdit.setText(fname)
 
     def increment_filename(self):
@@ -92,47 +90,48 @@ class OutputFileWidget(QtGui.QWidget):
             self.outputFileLineEdit.setText(fname)
 
     def get_header_text(self):
-        
+
         text = str(self.headerTextEdit.toPlainText())
-        
+
         if text:
-            
+
             text = "# " + text.replace("\n", "\n#") + "\n"
-            
+
             return text
-            
+
         else:
-            
+
             return ""
 
     def get_output_fname(self):
-        
+
         return str(self.outputFileLineEdit.text())
 
 
 def add_widget_into_main(parent):
     """add a widget into the main window of LabGuiMain
-    
+
     create a QDock widget and store a reference to the widget
     """
-    
-    ofname = IOTool.get_file_name(config_file_path = parent.config_file)
-    
-    mywidget = OutputFileWidget(parent = parent, fname = ofname)
-    
+
+    ofname = IOTool.get_file_name(config_file_path=parent.config_file)
+
+    mywidget = OutputFileWidget(parent=parent, fname=ofname)
+
     outDockWidget = QtGui.QDockWidget("Output file and header text", parent)
     outDockWidget.setObjectName("OutputFileDockWidget")
     outDockWidget.setAllowedAreas(
         Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea)
-        
-    #fill the dictionnary with the widgets added into LabGuiMain
-    parent.widgets['OutputFileWidget'] = mywidget
-    
-    outDockWidget.setWidget(mywidget)
-    parent.addDockWidget(Qt.RightDockWidgetArea, outDockWidget)    
 
-    #Enable the toggle view action
+    # fill the dictionnary with the widgets added into LabGuiMain
+    parent.widgets['OutputFileWidget'] = mywidget
+
+    outDockWidget.setWidget(mywidget)
+    parent.addDockWidget(Qt.RightDockWidgetArea, outDockWidget)
+
+    # Enable the toggle view action
     parent.windowMenu.addAction(outDockWidget.toggleViewAction())
+
 
 if __name__ == "__main__":
 
