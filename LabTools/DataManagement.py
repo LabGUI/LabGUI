@@ -39,7 +39,7 @@ class DataTaker(QThread):
         #emitted when the data array changes
         data = pyqtSignal('PyQt_PyObject')
         #emitted upon completion of the script
-        script_finished = pyqtSignal()
+        script_finished = pyqtSignal(bool)
 
     def __init__(self, lock, instr_hub, parent=None):
         logging.debug("DTT created")

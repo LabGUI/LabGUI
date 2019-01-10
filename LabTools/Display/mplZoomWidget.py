@@ -49,9 +49,9 @@ class MatplotlibZoomWidget(MatplotlibWidget):
 
     def __init__(self, parent=None, title='', xlabel='', ylabel='',
                  xlim=None, ylim=None, xscale='linear', yscale='linear',
-                 width=4, height=3, dpi=100, hold=True, usingR=True):
+                 width=4, height=3, dpi=100, usingR=True):
         super(MatplotlibZoomWidget, self).__init__(parent, title, xlabel, ylabel,
-                                                   xlim, ylim, xscale, yscale, width, height, dpi, hold)
+                                                   xlim, ylim, xscale, yscale, width, height, dpi)
 
         self.usingR = usingR
 
