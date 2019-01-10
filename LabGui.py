@@ -271,7 +271,7 @@ have the right format, '%s' will be used instead"%(self.config_file,
             msg = """The %s variable of the config file '%s' is not correct
             The only two allowed values are : '%s' and '%s' """%(
                                                         IOTool.GPIB_INTF_ID,
-                                                        IOTool.CONFIG_FILE,
+                                                        self.config_file,
                                                         Tool.INTF_VISA,
                                                         Tool.INTF_PROLOGIX
                                                         )

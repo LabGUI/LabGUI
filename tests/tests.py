@@ -6,7 +6,6 @@ Created on Wed Jun 28 15:23:23 2017
 """
 # import unittest
 # import warnings
-# import os
 # os.chdir("..")
 #
 # import subprocess
@@ -53,13 +52,7 @@ Created on Wed Jun 28 15:23:23 2017
 #     os.system("python LabGui.py -c config_mass_spec_alone.txt")
 #
 #
-# def function_hdr(func):
-#     def new_function(*args, **kwargs):
-#         print("\n### %s ###\n" % func.__name__)
-#         return_value = func(*args, **kwargs)
-#         print("\n### %s ###\n" % ('-'*len(func.__name__)))
-#         return return_value
-#     return new_function
+
 # class TestConfigInlineOption(unittest.TestCase):
 #
 #    def test_config_option_file_not_exists(self):
@@ -75,6 +68,8 @@ Created on Wed Jun 28 15:23:23 2017
 #            assert issubclass(w[-1].category, UserWarning)
 import sys
 import unittest
+import os
+import time
 from LocalVars import USE_PYQT5
 if USE_PYQT5:
     import PyQt5.QtWidgets as QtGui
@@ -94,7 +89,18 @@ from LabTools.IO import IOTool
 
 TEST_CONFIG_FNAME = "config_test.txt"
 
+TEST_SIMPLE_SCRIPT_FNAME = "script_test.py"
+
+TEST_LOOP_SCRIPT_FNAME = "script_test_DTT.py"
 # relaunches the application
+
+def function_hdr(func):
+    def new_function(*args, **kwargs):
+        print("\n### %s ###\n" % func.__name__)
+        return_value = func(*args, **kwargs)
+        print("\n### %s ###\n" % ('-'*len(func.__name__)))
+        return return_value
+    return new_function
 
 
 def relaunch():
@@ -121,6 +127,32 @@ def create_test_setting_file(fname="test_settings.set"):
     settings_file.close()
 
 
+def create_test_script_file(fname, lines):
+    """create script file for testing purposes"""
+
+    script_file = open(os.path.join("scripts", fname), 'w')
+
+    script_file.writelines(lines)
+
+    script_file.close()
+
+
+def create_test_scripts():
+    lines = [
+        "self.read_data()\n",
+        "time.sleep(1)"
+    ]
+    create_test_script_file(TEST_SIMPLE_SCRIPT_FNAME, lines)
+
+    lines = [
+        "while self.isStopped() == False:\n",
+        "\tself.read_data()\n",
+        "\ttime.sleep(1)\n",
+        "\tself.check_stopped_or_paused()"
+    ]
+    create_test_script_file(TEST_LOOP_SCRIPT_FNAME, lines)
+
+
 def create_test_config_file(fname=TEST_CONFIG_FNAME):
     """create a file with settings so the test can be run anywhere"""
 
@@ -140,11 +172,17 @@ def create_test_config_file(fname=TEST_CONFIG_FNAME):
 
     script_path = os.path.dirname(script_path)
 
-    script_path = os.path.join(script_path, "script_test.py")
+    script_path = os.path.join(script_path, TEST_SIMPLE_SCRIPT_FNAME)
 
     IOTool.set_config_setting(IOTool.SCRIPT_ID, script_path,
                               config_file_path=config_path)
 
+
+
+def delete_test_generated_files():
+
+    cwd = os.getcwd()
+    os.remove(os.path.join('scripts', TEST_SIMPLE_SCRIPT_FNAME))
 
 #                           script_test.py
 #    IOTool.SCRIPT_ID
@@ -737,21 +775,21 @@ class LabGuiTest(unittest.TestCase):
 
             raise(ValueError, "The instrument number should be 0")
 
-    @function_hdr
-    def test_start_DTT_with_non_existing_script(self):
-
-        # connect a DICE and two TIME
-        self.set_simple_instrument_list(connect=True)
-
-        print("Intruments in the hub")
-        print(self.form.instr_hub.get_instrument_nb())
-
-        # select a script which is a loop
-        self.set_script_fname("this_script_does_not_exist.py")
-
-        with self.assertRaises(IOError):
-            # Start the DTT
-            QTest.mouseClick(self.widget_start, Qt.LeftButton)
+    # @function_hdr
+    # def test_start_DTT_with_non_existing_script(self):
+    #
+    #     # connect a DICE and two TIME
+    #     self.set_simple_instrument_list(connect=True)
+    #
+    #     print("Intruments in the hub")
+    #     print(self.form.instr_hub.get_instrument_nb())
+    #
+    #     # select a script which is a loop
+    #     self.set_script_fname("this_script_does_not_exist.py")
+    #
+    #     with self.assertRaises(IOError):
+    #         # Start the DTT
+    #         QTest.mouseClick(self.widget_start, Qt.LeftButton)
 
     def test_dice_connect_and_play(self):
         """test the modification of the instrument list
@@ -884,60 +922,64 @@ class LabGuiTest(unittest.TestCase):
     # (raising errors if the functions are copy/pasted into this file;
     #   right now, I just call the test functions in utils.py from here)
 
-    print("\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
-    print("\ntest_prologix_controller_creation_with_com\n")
-    utils.test_prologix_controller_creation_with_com(com_port=None)
-
-    print("\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
-    print("\ntest_prologix_controller_creation_with_wrong_com\n")
-    utils.test_prologix_controller_creation_with_no_arg_conflict()
-
-    print("\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
-    print("\ntest_prologix_controller_creation_with_no_arg_conflict()\n")
-    utils.test_prologix_controller_creation_with_wrong_com()
+    # print("\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
+    # print("\ntest_prologix_controller_creation_with_com\n")
+    # utils.test_prologix_controller_creation_with_com(com_port=None)
+    #
+    # print("\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
+    # print("\ntest_prologix_controller_creation_with_wrong_com\n")
+    # utils.test_prologix_controller_creation_with_no_arg_conflict()
+    #
+    # print("\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
+    # print("\ntest_prologix_controller_creation_with_no_arg_conflict()\n")
+    # utils.test_prologix_controller_creation_with_wrong_com()
 
 # Logger output level
 # Change debug mode
 # Test for successful output to console
 
 
-    @function_hdr
-    def test_bad_script(self):
-        """check if bad scripts are handled correctly"""
-
-        script = self.form.widgets['ScriptWidget'].scriptFileLineEdit
-
-        # create invalid scripts
-        f = open("syntaxError.py", "w+")
-        f.write("prnt(\"this script doesn't compile\")")
-        f.close()
-        f = open("notapythonscript.c", "w+")
-        f.write("printf(\"%s\",\"this is the wrong filetype\");")
-        f.close()
-
-        badScripts = ["%s/notarealscript.py" % (os.getcwd()),
-                      "%s/notapythonscript.c" % (os.getcwd()),
-                      "%s/syntaxError.py" % (os.getcwd()),
-                      "%s/script_example.py" % (os.getcwd())]
-
-        for badScriptName in badScripts:
-            # Change the script name
-            for i in range(len(script.text())):
-                QTest.keyClick(script, Qt.Key_Backspace)
-            QTest.keyClicks(script, badScriptName)
-            print("\nTesting %s\n" % script.text())
-            QTest.mouseClick(self.widget_start, Qt.LeftButton)
-            # this test gets buggy when there is no delay
-            time.sleep(1)
-            # need to ensure that the errors lead to the re-enabling
-            # of the stop button, and the disabling of the
-            # stop/pause buttons
-            self.assertTrue(self.form.start_DTT_action.isEnabled() and
-                            not self.form.pause_DTT_action.isEnabled() and
-                            not self.form.stop_DTT_action.isEnabled())
-            self.assertRaises(ScriptFile_Error)
-        os.remove("syntaxError.py")
-        os.remove("notapythonscript.c")
+    # @function_hdr
+    # def test_bad_script(self):
+    #     """check if bad scripts are handled correctly"""
+    #
+    #     script = self.form.widgets['ScriptWidget'].scriptFileLineEdit
+    #
+    #     # create invalid scripts
+    #     f = open("%s/tests/syntaxError.py" % os.getcwd(), "w+")
+    #     f.write("prnt(\"this script doesn't compile\")")
+    #     f.close()
+    #     f = open("%s/tests/notapythonscript.c" % os.getcwd(), "w+")
+    #     f.write("printf(\"%s\",\"this is the wrong filetype\");")
+    #     f.close()
+    #
+    #     badScripts = [
+    #        # "%s/tests/notarealscript.py" % os.getcwd(),
+    #         "%s/tests/notapythonscript.c" % os.getcwd(),
+    #         "%s/tests/syntaxError.py" % os.getcwd(),
+    #         "%s/script_example.py" % os.getcwd()
+    #     ]
+    #
+    #     print(badScripts)
+    #     for badScriptName in badScripts:
+    #         # Change the script name
+    #         for i in range(len(script.text())):
+    #             QTest.keyClick(script, Qt.Key_Backspace)
+    #         QTest.keyClicks(script, badScriptName)
+    #         print("\nTesting %s\n" % script.text())
+    #         with self.assertRaises(ScriptFile_Error) as context:
+    #             QTest.mouseClick(self.widget_start, Qt.LeftButton)
+    #             # this test gets buggy when there is no delay
+    #             time.sleep(1)
+    #             # need to ensure that the errors lead to the re-enabling
+    #             # of the stop button, and the disabling of the
+    #             # stop/pause buttons
+    #             self.assertTrue(self.form.start_DTT_action.isEnabled() and
+    #                             not self.form.pause_DTT_action.isEnabled() and
+    #                             not self.form.stop_DTT_action.isEnabled())
+    #
+    #     os.remove("syntaxError.py")
+    #     os.remove("notapythonscript.c")
 
     @function_hdr
     def test_debug_datataker(self):
@@ -1022,28 +1064,28 @@ class LabGuiTest(unittest.TestCase):
             for line in oldcfg:
                 rewrite.write(line)
 
-    @function_hdr
-    def test_all_graphics_options(self):
-
-        self.use_example_script()
-
-        self.set_simple_instrument_list(connect=True)
-
-        QTest.mouseClick(self.widget_start, Qt.LeftButton)
-
-        graphicsOptions = self.form.plotToolbar
-
-        # turn every option on and off
-        for opt in graphicsOptions.actions():
-            opt.trigger()
-            if 'Drag' not in opt.text():
-                sleep(1)
-            else:
-                # need to figure out how to implement
-                sleep(1)  # CHANGE THIS
-            opt.trigger()
-
-        QTest.mouseClick(self.widget_stop, Qt.LeftButton)
+    # @function_hdr
+    # def test_all_graphics_options(self):
+    #
+    #     self.use_example_script()
+    #
+    #     self.set_simple_instrument_list(connect=True)
+    #
+    #     QTest.mouseClick(self.widget_start, Qt.LeftButton)
+    #
+    #     graphicsOptions = self.form.plotToolbar
+    #
+    #     # turn every option on and off
+    #     for opt in graphicsOptions.actions():
+    #         opt.trigger()
+    #         if 'Drag' not in opt.text():
+    #             sleep(1)
+    #         else:
+    #             # need to figure out how to implement
+    #             sleep(1)  # CHANGE THIS
+    #         opt.trigger()
+    #
+    #     QTest.mouseClick(self.widget_stop, Qt.LeftButton)
 
     @function_hdr
     def test_all_window_options(self):
@@ -1062,6 +1104,7 @@ class LabGuiTest(unittest.TestCase):
 if __name__ == "__main__":
 
     create_test_config_file()
+    create_test_scripts()
     unittest.main()
 
 #    os.remove(TEST_CONFIG_FNAME)
