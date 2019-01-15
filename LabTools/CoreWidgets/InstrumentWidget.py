@@ -26,7 +26,6 @@ from LabTools.Display.PlotPreferences import color_blind_friendly_colors
 
 DEFAULT_INSTR_NUMBER = 2
 
-
 width_instr = 100
 width_port = 130
 width_param = 80
@@ -44,7 +43,8 @@ class SingleLineWidget(QtGui.QWidget):
 
         colorChanged = pyqtSignal()
 
-    # I'm thinking of modifying the design of the CommandWindow so that it just has a set of this object instead of the many different arrays of cbb to take care of.
+    # I'm thinking of modifying the design of the CommandWindow so that it just has a set of this object
+    # instead of the many different arrays of cbb to take care of.
     def __init__(self, available_ports=["GPIB0::" + str(i) for i in range(30)], color=None, parent=None):
         super(SingleLineWidget, self).__init__(parent)
 
@@ -95,12 +95,9 @@ class SingleLineWidget(QtGui.QWidget):
 
     def create_color_btn(self, color):
 
-        #        if color == None:
-        #            color = self.color_set[mod(index, 10)]
-
         btn = QtGui.QPushButton(self)
         btn.setObjectName("param_name_le")
-        if not color == None:
+        if color is not None:
             btn.setStyleSheet('QPushButton {background-color: %s}' % color)
         btn.setFixedSize(20, 20)
 
@@ -299,7 +296,7 @@ QComboBox::down-arrow {image: url(noimg); border-width: 0px;}")
 
     def refresh_port_cbb(self, port_list=None):
         """run a function from Tool module which list the available ports into the combobox"""
-        if port_list == None:
+        if port_list is None:
             self.AVAILABLE_PORTS = Tool.refresh_device_port_list()
         else:
             self.AVAILABLE_PORTS = port_list
@@ -311,7 +308,7 @@ QComboBox::down-arrow {image: url(noimg); border-width: 0px;}")
             self.port_cbb.addItems(self.AVAILABLE_PORTS)
 
     def set_color(self, color=None):
-        if not color == None:
+        if color is not None:
             self.color_btn.setStyleSheet(
                 'QPushButton {background-color: %s}' % color)
 
@@ -336,7 +333,7 @@ class InstrumentWindow(QtGui.QWidget):
 
         colorsChanged = pyqtSignal()
 
-        connectInstrumentHub = pyqtSignal('bool')
+        connectInstrumentHub = pyqtSignal()
 
         addedInstrument = pyqtSignal('bool')
 
@@ -378,7 +375,8 @@ class InstrumentWindow(QtGui.QWidget):
         logging.debug("exited Instrument  window")
 
     def set_lists(self, num_channels):
-        """"This method is used to initialise a user defined number of lines of comboboxes, each line will hold information about one instrument"""
+        """"This method is used to initialise a user defined number of lines of comboboxes,
+        each line will hold information about one instrument"""
 
         # this prevent to set less than 2 channels
         if num_channels < 2 and num_channels > -1:
@@ -395,7 +393,6 @@ class InstrumentWindow(QtGui.QWidget):
             first_init = False
             self.remove_all_lines()
 
-        #self.num_channels = num_channels
         # sets the headers for the buttons
         if num_channels > 0:
             self.headers = ["Color", "Name", "Instr", "Port", "Param"]
@@ -570,13 +567,6 @@ class InstrumentWindow(QtGui.QWidget):
         self.vertical_layout.addLayout(self.line_layout)
         self.vertical_layout.addLayout(self.add_remove_layout)
 
-        # spacer_item = QSpacerItem(
-       #     20, 183, QSizePolicy.Minimum, QSizePolicy.Expanding)
-       # self.vertical_layout.addItem(spacer_item)
-
-
-#        pass
-
     def lines_changed(self):
         """
             if any line is changed the color of the connect button is changed 
@@ -598,7 +588,8 @@ class InstrumentWindow(QtGui.QWidget):
             self.emit(SIGNAL("colorsChanged()"))
 
     def bt_connecthub_clicked(self):
-        """when this method is called (upon button 'Connect' interaction) it send a signal, which will be treated in the main window"""
+        """when this method is called (upon button 'Connect' interaction) it send a signal, which will be treated
+        in the main window"""
         if self.bt_connecthub.isEnabled:
 
             self.bt_connecthub.setStyleSheet("background-color : '#b3e0ff'")
@@ -634,7 +625,8 @@ class InstrumentWindow(QtGui.QWidget):
             self.lines_changed()
 
     def bt_remove_last_clicked(self):
-        """when this method is called (upon button 'Connect' interaction) it send a signal, which will be treated in the main window"""
+        """when this method is called (upon button 'Connect' interaction) it send a signal, which will be treated
+        in the main window"""
         if self.bt_remove_last.isEnabled:
             self.remove_lastline()
 
@@ -687,16 +679,16 @@ class InstrumentWindow(QtGui.QWidget):
     def load_settings(self, fname):
         """ Load in instrument and initial plot settings from a file"""
 
-        logging.debug("Filename : %s" % (fname))
+        logging.debug("Filename : %s" % fname)
 
         try:
             settings_file = open(fname, 'r')
             settings_file_ok = True
-            logging.debug("Filename : %s" % (fname))
+            logging.debug("Filename : %s" % fname)
         except IOError:
 
             settings_file_ok = False
-            print("No such file exists to load settings : %s" % (fname))
+            print("No such file exists to load settings : %s" % fname)
 
         if not settings_file_ok:
 
@@ -735,12 +727,12 @@ class InstrumentWindow(QtGui.QWidget):
                     if 'TIME' in instr_type:
 
                         pass
-                        #instr_type = 'Internal'
+                        # instr_type = 'Internal'
 
                     if not instr_type in self.INSTRUMENT_TYPES:
 
                         logging.warning(
-                            "No module for %s available" % (instr_type))
+                            "No module for %s available" % instr_type)
 
                     else:
 
@@ -771,7 +763,7 @@ class InstrumentWindow(QtGui.QWidget):
                                 if not self.DEBUG:
                                     logging.warning(self.AVAILABLE_PORTS)
                                     logging.warning("the port '%s' is not available,\
-please check your connectic or your settings file\n" % (port))
+please check your connectic or your settings file\n" % port)
 
                                     # should check if it is an IP port
                                     new_line.port_cbb.addItem(port)
@@ -843,7 +835,7 @@ please check your connectic or your settings file\n" % (port))
 
                 logging.info(
                     "Couldn't save the plot window information to the file %s"
-                    % (fname))
+                    % fname)
 
             settings_file.write('\n')
 
@@ -856,80 +848,78 @@ def refresh_ports_list(parent):
     parent.widgets['InstrumentWidget'].refresh_cbb_port()
 
 
-def connect_instrument_hub(parent, signal=True):
+def connect_instrument_hub(parent):
     """
         When the button "Connect" is clicked this method actualise the InstrumentHub
         according to what the user choosed in the command window. 
         It cannot change while the DataTaker is running though
     """
-    #@ISSUE
+    # @ISSUE
     # I should add something here to avoid that we reconnect the instrument hub if the # of instrument is different
     # and also not allow to take data if the current file header doesn't
     # correspond to the intrument hub
 
-    if signal:
+    [instr_name_list, dev_list, param_list] = \
+        parent.widgets['InstrumentWidget'].collect_device_info()
 
-        [instr_name_list, dev_list, param_list] = \
-            parent.widgets['InstrumentWidget'].collect_device_info()
+    logging.debug("Information sent to the connect_hub method")
+    logging.debug([instr_name_list, dev_list, param_list])
 
-        logging.debug("Information sent to the connect_hub method")
-        logging.debug([instr_name_list, dev_list, param_list])
+    actual_instrument_number = len(
+        parent.instr_hub.get_instrument_list())
+    cmdwin_instrument_number = len(instr_name_list)
 
-        actual_instrument_number = len(
-            parent.instr_hub.get_instrument_list())
-        cmdwin_instrument_number = len(instr_name_list)
+    # if the datataker is running the user should not modify the length
+    # of the instrument list and connect it
+    connect = False
 
-        # if the datataker is running the user should not modify the length
-        # of the instrument list and connect it
-        connect = False
+    if parent.DTT_isRunning():
 
-        if parent.DTT_isRunning():
-
-            if actual_instrument_number == cmdwin_instrument_number or \
-               actual_instrument_number == 0:
-
-                connect = True
-
-        else:
+        if actual_instrument_number == cmdwin_instrument_number or \
+                actual_instrument_number == 0:
 
             connect = True
 
-        if connect:
+    else:
 
-            print("Connect instrument hub...")
-            parent.instr_hub.connect_hub(
-                instr_name_list, dev_list, param_list)
-            print("...instrument hub connected")
+        connect = True
 
-            if USE_PYQT5:
+    if connect:
 
-                parent.instrument_hub_connected.emit(param_list)
+        print("Connect instrument hub...")
+        parent.instr_hub.connect_hub(
+            instr_name_list, dev_list, param_list)
+        print("...instrument hub connected")
 
-            else:
+        if USE_PYQT5:
 
-                parent.emit(
-                    SIGNAL("instrument_hub_connected(PyQt_PyObject)"),
-                    param_list)
+            parent.instrument_hub_connected.emit(param_list)
 
         else:
 
-            print()
-            logging.warning("You cannot connect a number of instrument \
+            parent.emit(
+                SIGNAL("instrument_hub_connected(PyQt_PyObject)"),
+                param_list)
+
+    else:
+
+        print()
+        logging.warning("You cannot connect a number of instrument \
 different than " + str(actual_instrument_number)
-                + " when the datataker is running")
-            print()
+                        + " when the datataker is running")
+        print()
 
-        logging.debug("The instrument list : "
-                      + str(parent.instr_hub.get_instrument_list()))
+    logging.debug("The instrument list : "
+                  + str(parent.instr_hub.get_instrument_list()))
 
-        try:
-            # show a plot by default if used for LabGui
-            parent.create_pdw(settings=parent.plot_window_settings)
+    try:
+        # show a plot by default if used for LabGui
+        parent.create_pdw(settings=parent.plot_window_settings)
 
-            parent.actual_pdw = parent.get_last_window()
+        parent.actual_pdw = parent.get_last_window()
 
-        except:
-            pass
+    except:
+        pass
 
 
 def add_widget_into_main(parent):
@@ -971,7 +961,7 @@ def add_widget_into_main(parent):
     # add a series of signals tiggers
 
     # assigning a method to the parent class
-    # depending on the python version this fonction take different arguments
+    # depending on the python version this function take different arguments
     if sys.version_info[0] > 2:
 
         parent.connect_instrument_hub = MethodType(connect_instrument_hub,
@@ -993,7 +983,7 @@ def add_widget_into_main(parent):
     else:
 
         parent.connect(parent.widgets['InstrumentWidget'], SIGNAL(
-            "ConnectInstrumentHub(bool)"), parent.connect_instrument_hub)
+            "ConnectInstrumentHub()"), parent.connect_instrument_hub)
 
         parent.connect(parent.widgets['InstrumentWidget'], SIGNAL(
             "colorsChanged()"), parent.update_colors)
@@ -1013,12 +1003,8 @@ def test_load_settings():
 
 def test_main():
     app = QtGui.QApplication(sys.argv)
-    listi = Tool.refresh_device_port_list()
     ex = InstrumentWindow(debug=True)
-    ex.refresh_cbb_port(listi)
-#    ex.load_settings('C:\Users\pfduc\Documents\g2gui\g2python\settings\demo_dice.txt')
-    #ex = SingleLineWidget()
-#    ex.save_settings("test_save.txt")
+    ex.refresh_cbb_port()
     ex.show()
 
 #    ex.remove_all_lines()
@@ -1028,7 +1014,4 @@ def test_main():
 if __name__ == "__main__":
     import logging.config
     import os
-#    ABS_PATH = "C:\\Users\\admin\\Documents\\Labgui_github"
-#    logging.config.fileConfig(os.path.join(ABS_PATH,"logging.conf"))
-
     test_load_settings()
