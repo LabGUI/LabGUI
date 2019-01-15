@@ -462,7 +462,7 @@ have the right format, '%s' will be used instead" % (self.config_file,
 
 # ##### FILE MENU SETUP ######
 
-        self.fileSaveSettingsAction = QtTools.create_action(
+        self.file_save_settings_action = QtTools.create_action(
             self,
             "Save Instrument Settings",
             slot=self.file_save_settings,
@@ -471,7 +471,7 @@ have the right format, '%s' will be used instead" % (self.config_file,
             tip="Save the current instrument settings"
         )
 
-        self.fileLoadSettingsAction = QtTools.create_action(
+        self.file_load_settings_action = QtTools.create_action(
             self,
             "Load Instrument Settings",
             slot=self.file_load_settings,
@@ -480,7 +480,7 @@ have the right format, '%s' will be used instead" % (self.config_file,
             tip="Load instrument settings from file"
         )
 
-        self.fileLoadDataAction = QtTools.create_action(
+        self.file_load_data_action = QtTools.create_action(
             self,
             "Load Previous Data",
             slot=self.file_load_data,
@@ -489,7 +489,7 @@ have the right format, '%s' will be used instead" % (self.config_file,
             tip="Load previous data from file"
         )
 
-        self.fileSaveCongfigAction = QtTools.create_action(
+        self.file_save_congfig_action = QtTools.create_action(
             self,
             "Save current configuration",
             slot=self.file_save_config,
@@ -498,11 +498,11 @@ have the right format, '%s' will be used instead" % (self.config_file,
             tip="Save the setting file path, the script path and the data output path into the config file"
         )
 
-        self.fileMenu.addAction(self.fileLoadSettingsAction)
-        self.fileMenu.addAction(self.fileSaveSettingsAction)
-        self.fileMenu.addAction(self.fileLoadDataAction)
+        self.fileMenu.addAction(self.file_save_settings_action)
+        self.fileMenu.addAction(self.file_load_settings_action)
+        self.fileMenu.addAction(self.file_load_data_action)
         self.fileMenu.addAction(self.action_manager.saveFigAction)
-        self.fileMenu.addAction(self.fileSaveCongfigAction)
+        self.fileMenu.addAction(self.file_save_congfig_action)
 
 # ##### PLOT MENU + TOOLBAR SETUP ######
 
