@@ -1154,14 +1154,12 @@ have the right format, '%s' will be used instead" % (self.config_file,
             for the instrument and which axis to select for plotting, colors,
             markers, linestyles and user defined parameters for the window
         """
-
-        if fname is None:
+        if (fname is None) or (not fname):
 
             if USE_PYQT5:
 
                 fname, fmt = QtGui.QFileDialog.getSaveFileName(
                     self, 'Save settings file as', './')
-
                 fname = str(fname)
 
             else:
@@ -1195,7 +1193,7 @@ have the right format, '%s' will be used instead" % (self.config_file,
             markers, linestyles and user defined parameters for the window
         """
 
-        if fname is None:
+        if (fname is None) or (not fname):
 
             if USE_PYQT5:
 
