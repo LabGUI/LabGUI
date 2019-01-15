@@ -9,11 +9,11 @@ instruments come (came? times change) with their own dummy software with very po
 
 # Installation #
 
-For the time being this package is only supported in python 2.7 (but we are working to make it work in python 3)
+This package has been upgraded to be supported on python 3.6.7, backcompatibility with python 2.7 should hold nevertheless but is not necessarily thouroughly checked for.
 
 ## Using pip ##
 
-Find the requirements.txt file and run 
+Open a terminal and run 
 
 ```
 #!python
@@ -23,112 +23,49 @@ pip install -r requirements.txt
 
 The requirement file contains the following lines :
 ```
-PyVISA==1.8
-matplotlib==1.5.1
-numpy==1.11.0
-pyserial==3.0.1
+PyVISA
+matplotlib
+numpy
+pyserial
 
 ```
 
-Then the output of the command
-```
-#!python
+## Using Anaconda ##
 
-pip freeze
-```
-should be 
-```
-PyVISA==1.8
-cycler==0.10.0
-enum34==1.1.3
-matplotlib==1.5.1
-numpy==1.11.0
-pyparsing==2.1.1
-pyserial==3.0.1
-python-dateutil==2.5.3
-pytz==2016.4
-six==1.10.0
-```
-For python 2.7
-and should be 
-```
-cycler==0.10.0
-matplotlib==1.5.1
-numpy==1.11.0
-pyparsing==2.1.4
-pyserial==3.0.1
-python-dateutil==2.5.3
-pytz==2016.4
-PyVISA==1.8
-six==1.10.0
-```
-for python 3.4
+For Windows/Mac/Linux you can install [anaconda](https://www.anaconda.com/download/)
 
-Unfortunately we use PyQt4 which cannot be easily installed by pip, you should look how to install PyQt4 on google or install Anaconda or PythonXY
+and then from the anaconda console you can type 
+```
+conda install --yes --file requirements.txt
+```
 
-If you don't know if you have PyQt4 open a python prompt and type
+## Install PyQt4/5 ##
+We use PyQt4/5 for the GUI and handling signals. If one of the version (i.e. 4 or 5 is not already installed you have to do it).
+
+If you operate under python 3 you should be able to install PyQt5 simply by typing
 
 ```
 #!python
-
-import PyQt4
-```
-It shouldn't generate error messages
-
-### Anaconda ###
-
-For Windows/Mac/Linux you can install [anaconda](https://www.continuum.io/downloads)
-
-
-### Python XY ###
-
-On windows only you can install [Python XY](https://python-xy.github.io/downloads.htm)
-
-
-## Without pip ##
-
-The minimal requirements is the following list of packages
-
-```
-PyVISA==1.8
-matplotlib==1.5.1
-numpy==1.11.0
-pyserial==3.0.1
+pip install pyqt5
 
 ```
 
-You should be able to get numpy and matplotlib if you installed Anaconda or Python XY. An easy way to check if you have the two others is to type 
+If you have PyQt4 installed it should work as well (not 100% garanteed). We would not recommand installing PyQt4 and rather using PyQt5. However, if you really want to install PyQt4, here are some instructions on how to do so : http://pyqt.sourceforge.net/Docs/PyQt4/installation.html. Can also refer to the possibily outdated instructions.
 
+### Installing SIP (prerequisite to PyQt4) ###
+* for python 3.5 (windows 10) simply  "c:\python35\python -m pip install sip"
+* for python 3.4 (linux), download https://www.riverbankcomputing.com/software/sip/download follow their instructions
+* for python 3.4 (windows 10), download https://www.riverbankcomputing.com/software/sip/download follow their instructions
 
-```
-import visa
-``` 
-
-and
-
-```
-import serial
-```
-if you get no error messages you should be good to go.
-
-## Install PyQt4 manually ##
-###Installing SIP (prerequisite to PyQt4)###
-for python 3.5 (windows 10) simply  "c:\python35\python -m pip install sip"
-for python 3.4 (linux), download https://www.riverbankcomputing.com/software/sip/download follow their instructions
-for python 3.4 (windows 10), download https://www.riverbankcomputing.com/software/sip/download follow their instructions
-
-
-###Installing PyQt4###
-for python 3.4 (windows 10), download https://www.riverbankcomputing.com/software/pyqt/download
-for python 3.4 linux, download https://www.riverbankcomputing.com/software/pyqt/download and follow their instructions
-
-
+### Installing PyQt4 ###
+* for python 3.4 (windows 10), download https://www.riverbankcomputing.com/software/pyqt/download
+* for python 3.4 linux, download https://www.riverbankcomputing.com/software/pyqt/download and follow their instructions
 
 ## Additional drivers ##
 
-Depending on how you connect your computer to your instruments you might have to download drivers for the communication hub, pyvisa has some requirements which you can find by googling pyvisa. This topic is covered latter in the readme.
+Depending on how you connect your instruments to your computer, you might have to download drivers for the communication hub, pyvisa has some requirements which you can find by googling pyvisa. This topic is covered later in the readme.
 
-#Useful commands#
+# Useful commands #
 
 To run the coverage tests
 
@@ -162,7 +99,7 @@ coverage html
 
 You need to add LabGui folder to your PYHTON PATH (look for ways to do so) before starting.
 
-#Getting started#
+# Getting started #
 
 What you can do is call the program from a python console by typing 
 ```
@@ -185,29 +122,29 @@ It should prompt a window similar to this one :
 ![Example_LabGui.png](https://bitbucket.org/repo/8gbrjn/images/400678764-Example_LabGui.png)
 
 
-##File menu##
+## File menu ##
 
-* Load Instrument Settings
-* Save Instrument Settings
-* Load Previous Data
-* Save Figure
-* Save current configuration
+* Load Instrument Settings: prompt a dialogue to select a file which contains details about instruments connections and parameters to measure.
+* Save Instrument Settings: prompt a dialogue to save the current instruments connections and parameters to measure to a file.
+* Load Previous Data: prompt a dialogue to select an output file and display its data on a plot window for data analysis.
+* Save Figure: save the current plot window into an image file.
+* Save current configuration: save the configuration details as their are into the "config.txt" file.
 
 
-##Plot menu##
+## Plot menu ##
 Most of the choices here are a duplicate of the options of the taskbar. They are quite intuitive so we won't describe their use here.
 
-* Clear Plot
-* Remove fit
+* Clear All Plot: remove all lines on on all plot windows.
+* Remove fit: remove the line corresponding to a fit from all plot windows.
 
-##Meas/Connect menu##
+## Meas/Connect menu ##
 
-* Start DDT
-* Read
-* Connect instruments
-* Refresh port list
+* Start DDT: start the Data Taker Thread, i.e execute the code defined in the script file provided by the user. This code can be a loop only stopped by user interaction or passing across threshold values for a given instrument's parameter. It could also be a sweep of a given instrument's parameter.
+* Read: call the `measure` method of all instruments connected to the instrument hub (in the `Instrument Setup` widget) with the corresponding parameter.
+* Connect instruments: initiate the connection between the computer and the instruments in the instrument hub.
+* Refresh port list: refresh the available ports to connect instruments in the comboboxes under the `Port` label in the `Instrument Setup` widget.
 
-##Window menu##
+## Window menu ##
 This menu shows you what are the widget currently displayed (they have a tick on the left of their name. If you click on one it will hide/display it on a toggle mode.
 
 * Add a Plot
@@ -220,11 +157,11 @@ This menu shows you what are the widget currently displayed (they have a tick on
 * Output Console
 * Simple instrument console
 
-##Options menu##
+## Options menu ##
 * Change debug mode
 
 
-##Output/input files## 
+## Output/input files ## 
 
 * config file
 This file should be in the same directory as the LabGui.py, we named it config.txt (this can be changed).
@@ -247,7 +184,7 @@ It was designed in a way so there is no need to restart the whole GUI when chang
 This file contains the data in the format the user defined (depends on each experiments), the format by default is each line correspond to a different measurement, each row is a different parameter of an instrument.
 The first 3 lines are headers with the information about the instruments and their connections.
 
-##Debug Mode##
+## Debug Mode ##
 
 The debug mode is accessible through the menu option file. This is used to test functionalities of the GUI when not in the lab or not having an actual connection 
 to the instruments. It is a property that all or drivers have in their class Instrument, and most of the widgets also.
@@ -262,15 +199,15 @@ The module LabGui contains the main function, which is an instance of QMainWindo
 The talk between the different services and the server is done using QtCore.SIGNAL, this way we can set up various listeners to the same signal which will all take different actions.
 
 
-#Scope and limitations#
+# Scope and limitations #
 
 The present software was not designed and is certainly not suited for high speed data acquisition (like CCD camera or oscilloscope). For an example of CCD python wrapper see (projet Hélène).
 We designed it to acquire data from multiple instruments over timescales of the order of seconds (we run long experiments). The fastest one can go using our software depends mainly on the interface used
 to connect to the instrument. If you want to monitor the temperature, the pressure, have a PID loop over one of these values, set a magnetic field and sweep over different voltage ranges for each different values of magnetic field, or anything similar,
 then this software is suited for you as it is very unlikely that many different instruments will have a common interface from which you can control them.
 
-#How to include your instrument#
-##Instrument Driver##
+# How to include your instrument #
+## Instrument Driver ##
 
 The class called "MeasInstr" in the module "Tool" is a basic instance from which all instrument driver inherits, it manages the actual connection (visa,serial,etc...)
 and overloads the functions read, write and ask.
@@ -293,7 +230,7 @@ There are different steps between this stage and the stage when you collect data
  -write what you want to ask your instrument in a script using the python functions
  
 
-##Physical connections to your instrument##
+## Physical connections to your instrument ##
 
 Ways to connect physically to the instrument through a port:
 
@@ -303,6 +240,7 @@ Agilent GPIB to USB
 
 RS232 (RS232 to USB adapters are available from various vendors and should all work with LabGUI)
 
-#Programming philosophy#
-##Connect instruments## The InstrumentWidget module contains the method it assigns to LabGuiMain to create instrument connections in the IntrumentHub class instance. All the code is present in the InstrumentWidget module
+# Programming philosophy #
+## Connect instruments ## 
+The InstrumentWidget module contains the method it assigns to LabGuiMain to create instrument connections in the IntrumentHub class instance. All the code is present in the InstrumentWidget module
 
