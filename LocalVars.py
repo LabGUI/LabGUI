@@ -33,3 +33,5 @@ except ImportError:
 
     USE_PYQT5 = False
     #print("using PyQt4")
+
+MAIN_DIR = os.path.abspath(os.path.dirname(__file__))
