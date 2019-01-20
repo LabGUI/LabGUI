@@ -7,17 +7,14 @@ License: see LICENSE.txt file
 """
 
 import numpy as np
-#from LabDrivers.Tool import LABDRIVER_PACKAGE_NAME
 from importlib import import_module
 import logging
 import time
 import os
 
-# the configuration file will always be in the parent of the parent of the directory
-# where this module is located. i.e. in the LabGUI main folder
-#print("__file__ in IOTool.py is at " + __file__)
+# the configuration file will always be in the parent of the parent of the
+# directory where this module is located. i.e. in the LabGUI main folder
 abs_file = os.path.abspath(os.path.dirname(__file__))
-#print("abs_file in IOTool.py is at " + abs_file)
 MAIN_DIR = os.sep.join(abs_file.split(os.sep)[:-2]) + os.sep
 CONFIG_FILE = "config.txt"
 CONFIG_FILE_PATH = MAIN_DIR + CONFIG_FILE
@@ -44,15 +41,14 @@ def create_config_file(config_path=CONFIG_FILE_PATH):
     else:
         of = open(config_path, "w")
         of.write("%s=%sscratch%s\n" % (SAVE_DATA_PATH_ID, MAIN_DIR, os.sep))
-        of.write("%s=False\n" % (DEBUG_ID))
+        of.write("%s=False\n" % DEBUG_ID)
         of.write("%s=%sscripts%sscript.py\n" % (SCRIPT_ID, MAIN_DIR, os.sep))
         of.write("%s=%ssettings%sdemo_dice.txt\n" % (SETTINGS_ID,
                                                      MAIN_DIR, os.sep))
         of.write("%s=%sscratch%s\n" % (LOAD_DATA_FILE_ID, MAIN_DIR, os.sep))
-        of.write("%s=\n" % (GPIB_INTF_ID))
+        of.write("#%s=prologix or pyvisa\n" % GPIB_INTF_ID)
+        of.write("#%s=user_widget1;user_widget2\n" % WIDGETS_ID)
         of.close()
-        # COOLDOWN=TEST
-        # SAMPLE=sample_name
 
 
 def save_config_file(data_path=None):
@@ -65,9 +61,9 @@ def save_config_file(data_path=None):
             "the file config.txt already exists, it will not be overwritten")
     else:
         of = open(CONFIG_FILE_PATH, "w")
-        if not data_path == None:
+        if data_path is not None:
             of.write("%s=%s\\\n" % (SAVE_DATA_PATH_ID, data_path))
-        of.write("%s=True\n" % (DEBUG_ID))
+        of.write("%s=True\n" % DEBUG_ID)
         of.write("%s=%sscripts\script.py\n" % (SCRIPT_ID, MAIN_DIR))
         of.write("%s=%ssettings\demo_voltage_AC.set\n" %
                  (SETTINGS_ID, MAIN_DIR))
@@ -106,7 +102,8 @@ def open_therm_file(config_file_name='config.txt'):
             elif left == "FILE_FORMAT":
                 file_format = eval(right)
 
-        # if a separate thermometry path is specified, it will overrule data_path
+        # if a separate thermometry path is specified, it will overrule
+        # data_path
         if therm_path:
             data_path = therm_path
         try:
@@ -138,6 +135,7 @@ def get_file_name(config_file_path=CONFIG_FILE_PATH):
     therm_path = ""
     sample_name = ""
     file_format = ".dat"
+    data_path = ""
     try:
 
         config_file = open(config_file_path, 'r')
@@ -151,10 +149,8 @@ def get_file_name(config_file_path=CONFIG_FILE_PATH):
             if left == "COOLDOWN":
                 cooldown = right
                 cooldown = cooldown + "_"
-    #            print "cooldown " + cooldown
             elif left == "SAMPLE":
                 sample_name = right
-    #            print "sample " + sample_name
             elif left == "THERM_PATH":
                 therm_path = right
             elif left == SAVE_DATA_PATH_ID:
@@ -210,9 +206,9 @@ def get_config_setting(setting, config_file_path=CONFIG_FILE_PATH):
                 left = left.strip()  # name
                 right = right.strip()  # value
 
-                # if the name corresponds to the setting we want, we read the value
+                # if the name corresponds to the setting we want,
+                # we read the value
                 if left == setting:
-
                     value = right
 
         if not value:
@@ -237,15 +233,19 @@ def get_config_setting(setting, config_file_path=CONFIG_FILE_PATH):
 
             err = IOError("The configuration file doesn't have the \
 right format")
-            raise(err)
+            raise err
         else:
 
-            raise(e)
+            raise e
 
     return value
 
 
-def set_config_setting(setting, setting_value, config_file_path=CONFIG_FILE_PATH):
+def set_config_setting(
+        setting,
+        setting_value,
+        config_file_path=CONFIG_FILE_PATH
+):
     """
         sets a setting to a given value inside the configuration file
     """
@@ -260,13 +260,13 @@ def set_config_setting(setting, setting_value, config_file_path=CONFIG_FILE_PATH
         for i, line in enumerate(lines):
             # the setting should have a = sign in the line
             try:
-                [left, right] = line.split("=")
+                [left, _] = line.split("=")
 
                 # separate the setting name from its value
                 left = left.strip()  # name
-                right = right.strip()  # value
 
-                # if the name corresponds to the setting we want, we write the value
+                # if the name corresponds to the setting we want,
+                # we write the value
                 if left == setting:
 
                     lines[i] = "%s=%s\n" % (setting, setting_value)
@@ -304,12 +304,9 @@ def get_settings_name(**kwargs):
 def get_user_widgets(**kwargs):
     """ collect the widget names the user would like to run"""
     widgets = get_config_setting(WIDGETS_ID, **kwargs)
-    if widgets == None:
-
+    if widgets is None:
         return []
-
     else:
-
         return widgets.split(';')
 
 
@@ -320,13 +317,15 @@ def get_script_name(**kwargs):
 def get_debug_setting(**kwargs):
     setting = get_config_setting(DEBUG_ID, **kwargs)
     if setting:
-        # case insensitive check of the debug setting. get_config_setting already performed strip() of whitespace characters
+        # case insensitive check of the debug setting. get_config_setting
+        # already performed strip() of whitespace characters
         if setting.upper() == 'TRUE':
             debug = True
         else:
             debug = False
     else:
-        # None was returned: possibly no config file, default to regular (non-debug) mode
+        # None was returned: possibly no config file,
+        # default to regular (non-debug) mode
         debug = False
     return debug
 
@@ -335,7 +334,7 @@ def get_interface_setting(**kwargs):
     return get_config_setting(GPIB_INTF_ID, **kwargs)
 
 
-def get_drivers(drivers_path):
+def get_drivers(_):
     print('DEPRECATED: USE LabDrivers.utils.list_drivers instead.')
     return None
 
@@ -362,7 +361,7 @@ def load_file_linux(fname, splitchar='\t'):
     return data
 
 
-def load_file_windows(fname, splitchar=', ', headers=True, hdr_only=False):
+def load_file_windows(fname, splitchar=', ', headers=True):
     """
     This one is for Window
     """
@@ -370,7 +369,7 @@ def load_file_windows(fname, splitchar=', ', headers=True, hdr_only=False):
     ifs = open(fname, 'r')
     label = {'hdr': ""}
 
-    LABELS_ID = ['P', 'I', 'C']
+    labels_id = ['P', 'I', 'C']
 
     lines = ifs.readlines()
 
@@ -389,7 +388,7 @@ def load_file_windows(fname, splitchar=', ', headers=True, hdr_only=False):
             label_id = line[1:2]
 
             # identify if we have an occurence of a label_id from LABELS_ID
-            if label_id in LABELS_ID:
+            if label_id in labels_id:
                 # get rid of the ' signs and the return lines
                 line = line[2:].replace("'", "")
                 line = line.strip("\n")
@@ -457,7 +456,7 @@ missing, all lines starting with # are available in the second output dict")
         return data
 
 
-def load_pset_file(fname, labels=None, splitchar=' '):
+def load_pset_file(fname, labels=None):
     """
         gets the channels ticks for a plot
     """
@@ -467,7 +466,6 @@ def load_pset_file(fname, labels=None, splitchar=' '):
 
     all_ticks = []
     for setting in ['X', 'YL', 'YR']:
-        #        print "set",setting
         ticks = []
         try:
             pset_file = open(fname)
@@ -475,9 +473,7 @@ def load_pset_file(fname, labels=None, splitchar=' '):
                 [left, right] = line.split("=")
                 left = left.strip()
                 right = right.strip()
-#                print left
                 if left == setting:
-                    #                    print right
                     ticks = (right.split(','))
 
             pset_file.close()
@@ -513,15 +509,10 @@ def load_aset_file(fname, splitchar=':'):
     fitparam = []
     physparam_val = []
     fitparam_val = []
-#    label={}
     for dat in instr:
-        #        print dat
         if dat[0] != "#":
-            #            print dat
-
             lines = dat.strip('\n')
             lines = lines.split(splitchar)
-#            print lines
             bounds.append(lines[0].split(','))
             physparam_val.append(lines[1].strip('\t').split('\t'))
             fitparam_val.append(lines[2].strip('\t').split('\t'))
@@ -530,27 +521,17 @@ def load_aset_file(fname, splitchar=':'):
             lines = lines.split(splitchar)
             physparam.append(lines[0].strip('\t').split('\t'))
             fitparam.append(lines[1].strip('\t').split('\t'))
-#            for i,el in enumerate(lines):
-#                if not el=='':
-#                    lines[i]=float(el)
-#            lines=lines[0:len(lines)-1]
-#            print lines
-#            nrow=0
-#    print bounds,physparam_val,fitparam
     return bounds, physparam_val, fitparam_val, physparam, fitparam
 
 
-def load_adat_file(fname, splitchar=' '):
+def load_adat_file(fname):
     """
     This one is for Window
     """
     instr = open(fname, 'r')
     data = []
-#    label={}
     for dat in instr:
-        #        print dat
         if dat[0] != "#":
-            #            print dat
 
             lines = dat.strip('\n')
             lines = lines.split('\t')
@@ -566,27 +547,25 @@ def load_adat_file(fname, splitchar=' '):
             dat = dat[1:len(dat)].replace("'", "")
             dat = dat.strip("\n")
             line = dat.split(' ')
-#            print line
             param_id = line[0]
 
             if param_id == 'BKG_P':
-                B_P = line[1].split('\t')
+                bkg_p = line[1].split('\t')
             elif param_id == 'BKG_V':
-                B_V = line[1].split('\t')
+                bkg_v = line[1].split('\t')
             elif param_id == 'P':
-                P = line[1].split('\t')
+                pressure = line[1].split('\t')
 
     parameters = {}
-    for bp, bv, p in zip(B_P, B_V, P):
+    for bp, bv, p in zip(bkg_p, bkg_v, pressure):
         if not bp == '':
             parameters[bp] = bv
     print(parameters)
     data = np.array(data)
-    data[:, 0] = data[:, 0] - float(B_V[0])
-    data[:, 1] = data[:, 1] - float(B_V[1])
+    data[:, 0] = data[:, 0] - float(bkg_v[0])
+    data[:, 1] = data[:, 1] - float(bkg_v[1])
     print("the background values are substracted")
     return data
-#    data.reshape(nrow,ncolumn)#,nrow)
 
 
 def import_module_func(module_name, func_name, package=None):
@@ -602,7 +581,6 @@ def get_func_variables(my_func):
     """
     given a function handle, this function returns the latter variable names
     """
-#    print my_func.func_code.co_varnames
     return my_func.__code__.co_varnames
 
 
@@ -619,21 +597,21 @@ def list_module_func(module_name, package=None):
 
         if package is None:
 
-            print("You didn't specify a package maybe the error stems from that")
+            print(
+                "You didn't specify a package maybe the error stems from that"
+            )
 
         else:
 
             print("The module %s in not in the package %s" % (module_name,
                                                               package))
 
-        raise(e)
+        raise e
 
     all_funcs = dir(my_module)
     my_funcs = []
 
     for func in all_funcs:
-        #        print func
-        #        print func[0:2]
         # discriminate the function that have __ in front of them
         if not func[0:2] == "__":
 
@@ -642,8 +620,8 @@ def list_module_func(module_name, package=None):
     return my_funcs
 
 
-def save_matrix(M):
-    np.savetxt('matrix.dat', M)
+def save_matrix(matrix_m):
+    np.savetxt('matrix.dat', matrix_m)
 #    scipy.io.savemat('matrix.mat',mdict={'out': M},oned_as='row')
 
 
@@ -654,10 +632,10 @@ def match_value2index(array1D, val):
     """
 
     my_array = array1D
-    Nmax = len(my_array) - 1
+    n_max = len(my_array) - 1
 
-    if val > my_array[Nmax]:
-        index = Nmax
+    if val > my_array[n_max]:
+        index = n_max
     elif val < my_array[0]:
         index = 0
     else:
@@ -671,9 +649,4 @@ def match_value2index(array1D, val):
 
 
 if __name__ == "__main__":
-    import time
-    ts = time.time()
-    fname = "C:\\Users\\pfduc\\OneDrive - McGill University\\G2 Lab\\PF\\1D Helium\\Analyse\\20170908-0911_B24_K8_55nm_diam\\temperature_dependance\\20170911_BF_B24_K8_Vsuperfluid_SF_part.a5dat"
-    d, l = load_file_windows(fname)
-    print(l)
-    print(time.time()-ts)
+    pass
