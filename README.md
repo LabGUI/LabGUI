@@ -2,10 +2,37 @@ LabGui
 ======
 
 # Introduction #
-Python programs used by Gervaislab
+Modular python data acquisition software and GUI.
 
-LabGui has been written by grad students in experimental physics. It is intended to overcome the frustration that most
-instruments come (came? times change) with their own dummy software with very poor or no integrability into a larger "meta" software coordinating the instruments.
+LabGUI has been written by grad students in experimental condensed matter physics. It is intended to overcome the frustration that most of the time measuring-instruments come with their own dummy software with very poor or no integrability into a larger "meta" software coordinating the instruments. It was developped with the philosophy to share the maximum of the code to interface with the instruments while still allowing to run different types of experiments. Being two main developpers on the projects with our own specific experimental needs, helped us to make this software modular.
+
+## Laboratories using LabGUI ##
+
+* http://gervaislab.mcgill.ca/home.php @ McGill University
+* http://carbon.ece.mcgill.ca @ McGill University
+* https://www.hybridquantumlab.com/ @ Michighan state University
+
+## Publications which used LabGUI to acquire their data ##
+
+* Anomalous Attenuation of Piezoacoustic Surface Waves by Liquid Helium Thin Films, H. Byeon, K. Nasyedkin, J.R. Lane, L. Zhang, N.R. Beysengulov, R. Loloee and J. Pollanen, Journal of Low Temperature Physics (2018) https://doi.org/10.1007/s10909-018-02115-0 (online first).
+
+* Flip-chip Gate-tunable Acoustoelectric Effect in Graphene, J.R. Lane, L. Zhang, M.A. Khasawneh, B.N. Zhou, E.A. Henriksen, and J. Pollanen, Journal of Applied Physics  124, 194302 (2018).
+
+* Unconventional Field Effect Transistor Composed of Electrons Floating on Liquid Helium, K. Nasyedkin, H. Byeon, L. Zhang, N.R. Beysengulov, J. Milem, S. Hemmerle, R. Loloee and J. Pollanen, Journal of Physics: Condensed Matter  30, 465501 (2018).
+
+*  Specific heat and entropy of fractional quantum Hall states in the second Landau level, B.A. Schmidt, K. Bennaceur, S. Gaucher, G. Gervais, L.N. Pfeiffer, K.W. West, Phys. Rev. B 95, 201306(R) (2017).
+
+*  Dual-Gate Velocity-Modulated Transistor Based on Black Phosphorus, V. Tayari, N. Hemsworth, O. Cyr-Choinière, W. Dickerson, G. Gervais and T. Szkopek, Phys. Rev. Applied 5, 064004 (2016).  
+
+* Second Landau Level Fractional Quantum Hall Effects in the Corbino Geometry, B. A. Schmidt, K. Bennaceur, S. Bilodeau, G. Gervais, K. W. West, L. N. Pfeiffer, Solid State Communications 217, 1 (2015).
+
+* Critical flow and dissipation in a quasi–one-dimensional superfluid, P-F Duc, M.Savard, M. Petrescu, B. Rosenow, A. Del Maestro, and G. Gervais, Science Advances 1, el1400222 (2015).
+
+
+## Scope and limitations ##
+
+The present software was not designed and is certainly not suited for high speed data acquisition (like CCD camera or oscilloscope). For an example of CCD python wrapper see https://bitbucket.org/abracadabri/princetoninstrument/src/master/.
+We designed it to acquire data from multiple instruments over timescales of the order of seconds (we run long experiments). The fastest one can go using our software depends mainly on the interface used to connect to the instrument. If you want to monitor the temperature, the pressure, have a PID loop over one of these values, set a magnetic field and sweep over different voltage ranges for each different values of magnetic field, or anything similar, then this software is suited for you as it is very unlikely that many different instruments will have a common interface from which you can control them.
 
 # Installation #
 
@@ -13,7 +40,7 @@ This package has been upgraded to be supported on python 3.6.7, backcompatibilit
 
 ## Using pip ##
 
-Open a terminal and run 
+Open a terminal and run
 
 ```
 #!python
@@ -34,7 +61,7 @@ pyserial
 
 For Windows/Mac/Linux you can install [anaconda](https://www.anaconda.com/download/)
 
-and then from the anaconda console you can type 
+and then from the anaconda console you can type
 ```
 conda install --yes --file requirements.txt
 ```
@@ -60,6 +87,10 @@ If you have PyQt4 installed it should work as well (not 100% garanteed). We woul
 ### Installing PyQt4 ###
 * for python 3.4 (windows 10), download https://www.riverbankcomputing.com/software/pyqt/download
 * for python 3.4 linux, download https://www.riverbankcomputing.com/software/pyqt/download and follow their instructions
+
+### About our use of PyQt4/5 ###
+
+An interesting feature of PyQt4/5 is the signals and slot, they allow different widgets to communicate with each other. Learn more about those ![here](https://www.tutorialspoint.com/pyqt/pyqt_signals_and_slots.htm) for PyQt4 and ![here](https://pythonspot.com/pyqt5-signals-and-slots/) for PyQt5.
 
 ## Additional drivers ##
 
@@ -95,13 +126,9 @@ coverage html
 
 ```
 
-# Structure #
-
-You need to add LabGui folder to your PYHTON PATH (look for ways to do so) before starting.
-
 # Getting started #
 
-What you can do is call the program from a python console by typing 
+What you can do is call the program from a python console by typing
 ```
 #!python
 
@@ -161,13 +188,13 @@ This menu shows you what are the widget currently displayed (they have a tick on
 * Change debug mode
 
 
-## Output/input files ## 
+## Output/input files ##
 
 * config file
-This file should be in the same directory as the LabGui.py, we named it config.txt (this can be changed).
-If you don't have one, it will be generated for you with basic settings. 
+This file should be in the same directory as the `LabGui.py` file, we named it `config.txt` (this can be changed).
+If you don't have one, it will be generated for you with basic settings.
 This file contains the path of the script file, data folder, setting file, and the debug mode.
-It is possible to add more variable you might want to save there, you can use the functions get_config_setting() and set_config_setting() of the IOTool.py module to read and write them from/into the file.
+It is possible to add more variable you might want to save there, you can use the functions get_config_setting() and set_config_setting() of the `IOTool.py` module to read and write them from/into the file.
 
 * the setting file
 contains the details of the instrument hub (each line corresponds to an instrument with its name, the port it is using and the parameter it is measuring).
@@ -181,35 +208,30 @@ It has the namespace of the DataTaker class in the DataManagement module and is 
 It was designed in a way so there is no need to restart the whole GUI when changing something in the script file to have those changes being effective.
 
 * data file
-This file contains the data in the format the user defined (depends on each experiments), the format by default is each line correspond to a different measurement, each row is a different parameter of an instrument.
+This file contains the data in the format the user defined (depends on each experiments), the default format is that each line correspond to a different measurement, each row is a different parameter of an instrument.
 The first 3 lines are headers with the information about the instruments and their connections.
 
 ## Debug Mode ##
 
-The debug mode is accessible through the menu option file. This is used to test functionalities of the GUI when not in the lab or not having an actual connection 
-to the instruments. It is a property that all or drivers have in their class Instrument, and most of the widgets also.
+The debug mode is accessible through the menu option file. This is used to test functionalities of the GUI when not in the lab or not having an actual connection to the instruments. It is a property that all or drivers have in their class Instrument, and also most of the widgets.
 
-The module LabGui contains the main function, which is an instance of QMainWindow. It acts as a server and connect different services together:
+The module LabGui contains the main function, which is an instance of QMainWindow. It acts as mediator pattern and connect different services together:
 
 - instrument connection settings
+- running an experiment
 - collection of the data
 - management of the collected data
-- plotting
+	- plotting
+	- writing to a file
+	- fitting
+The communication between the different services and the server is done using QtCore.SIGNAL, this way we can set up various listeners to the same signal which will all take different actions.
 
-The talk between the different services and the server is done using QtCore.SIGNAL, this way we can set up various listeners to the same signal which will all take different actions.
 
 
-# Scope and limitations #
-
-The present software was not designed and is certainly not suited for high speed data acquisition (like CCD camera or oscilloscope). For an example of CCD python wrapper see (projet Hélène).
-We designed it to acquire data from multiple instruments over timescales of the order of seconds (we run long experiments). The fastest one can go using our software depends mainly on the interface used
-to connect to the instrument. If you want to monitor the temperature, the pressure, have a PID loop over one of these values, set a magnetic field and sweep over different voltage ranges for each different values of magnetic field, or anything similar,
-then this software is suited for you as it is very unlikely that many different instruments will have a common interface from which you can control them.
-
-# How to include your instrument #
+# How to include your own instrument into LabGUI #
 ## Instrument Driver ##
 
-The class called "MeasInstr" in the module "Tool" is a basic instance from which all instrument driver inherits, it manages the actual connection (visa,serial,etc...)
+The class called "MeasInstr" in the module "Tool" is a basic instance from which all instrument driver inherits, it manages the actual connection (visa, serial, etc...)
 and overloads the functions read, write and ask.
 
 An instrument driver is a module named after the instrument, it needs to have the following properties:
@@ -217,30 +239,49 @@ An instrument driver is a module named after the instrument, it needs to have th
 -a variable called "param" which is a dictionary
 -a variable called INTERFACE which specifies which interface, amongst the ones available, will be used to connect to the instrument
 -a class called "Instrument" inheriting from "Tool.MeasInstr"
--it needs to be within the folder/package LabDrivers to be accessible from LabGui
+-it needs to be within the folder/package `LabDrivers` to be accessible from LabGui
 
-When acquiring a new instrument, the first thing to find out is a file called "communication protocol". 
+When acquiring a new instrument, the first thing to find out is a file called "communication protocol".
 This will help you identify which port to connect to and what interface your instrument uses (visa, serial, raw, TCP/IP, etc...)
 
 There are different steps between this stage and the stage when you collect data and interact with your instrument using LabGui:
  -establish a physical connection between your computer and your instrument.
  -communicate with your instrument with its own vocabulary and grammar.
- -figure out which commands you need
- -write a driver file with python methods that send the command in the instrument vocabulary
- -write what you want to ask your instrument in a script using the python functions
- 
+ -figure out which commands you need.
+ -write a driver file with python methods that send the command using the instrument vocabulary
+ -write what you want to ask your instrument in a script using these python methods
+
 
 ## Physical connections to your instrument ##
 
 Ways to connect physically to the instrument through a port:
 
-PROLOGIX GPIB to USB
-National Instruments GPIB to USB
-Agilent GPIB to USB
+- PROLOGIX GPIB to USB
+- National Instruments GPIB to USB
+- Agilent GPIB to USB
 
 RS232 (RS232 to USB adapters are available from various vendors and should all work with LabGUI)
 
-# Programming philosophy #
-## Connect instruments ## 
-The InstrumentWidget module contains the method it assigns to LabGuiMain to create instrument connections in the IntrumentHub class instance. All the code is present in the InstrumentWidget module
 
+# Organisation scheme #
+
+The class `LabGuiMain` inherits of `QtGui.QMainWindow` (referred to as main window), it will contain instances of :
+- an instrument hub (`Tool.InstrumentHub`) which manages the connection to the physical and virtual measure instruments
+- a datataker (DataManagement.DataTaker) responsible to run, pause and stop the script describing the experiment as well as to share the acquired data with the main window (which itself dispatches them according to the mediator pattern)
+- a list of `QtGui.QWidgets` used for user interaction with instruments, data acquisition, vizualisation or fitting and parameters input.
+
+The widgets are separated into the "Core" widgets, the minimal set of widgets needed to operate LabGUI, and the "User" widgets, a collection of user defined extra widgets which can be included or not into LabGUI. The user widgets have usually specific uses and are not automatically included in the available widgets to ease the user experience.
+
+An analogy of PyQt signal would be to picture "talkers" and "listeners", the talkers send signals which are catched by listeners. This connection has to be defined somewhere and the listeners only listen to the talkers they have been assigned. One talker can have many listeners or none.
+
+The widgets communicate with each other through the main window, i.e. two distinct widgets should not be able communicate directly (because that would require to set a talker-listener connection between them and thus require that both widgets are presents in the main window, which might not necessarily be the case). Instead the design should be that each widget is connected to the main window and communicate data/information with it. The main window can then send signals depending on the data/information which can be listened by many widgets, while maintaining the widgets independent of each others (see next section for more details).
+
+## Creating custom widgets for LabGUI ##
+
+It is possible to add custom widgets to LabGUI (for example if you need a specific interface for one of your instrument). To do this you have to create a file in the `LabTools/UserWidgets` package. In this file you need to define your widget (it needs to inherit from PyQt's `QWidget`) and a function called `add_widget_into_main(parent)` which defines the signals this widget should exchange with the `QMainWindow` and potential methods to handle those signals. (The idea is that all the code which concerns your widget should be embedded into this file, LabGUI should be able to run with or without the addition of your widget. In the initialisation of LabGUI, the widget files listed in the `config.txt` file under `USER_WIDGETS` and separated by a semicolumn will be added to the interface.
+Example of line in the `config.txt file`:
+```
+USER_WIDGETS=ConnectTerminalWidget;ServerWidget
+```
+
+Use the file `TemplateUserWidget.py` for more practical information and to start your own widgets!
