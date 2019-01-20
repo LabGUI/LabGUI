@@ -90,7 +90,7 @@ If you have PyQt4 installed it should work as well (not 100% garanteed). We woul
 
 ### About our use of PyQt4/5 ###
 
-An interesting feature of PyQt4/5 is the signals and slot, they allow different threads to communicate with each other. Learn more about those ![here](https://www.tutorialspoint.com/pyqt/pyqt_signals_and_slots.htm) for PyQt4 and ![here](https://pythonspot.com/pyqt5-signals-and-slots/) for PyQt5.
+An interesting feature of PyQt4/5 is the signals and slot, they allow different widgets to communicate with each other. Learn more about those ![here](https://www.tutorialspoint.com/pyqt/pyqt_signals_and_slots.htm) for PyQt4 and ![here](https://pythonspot.com/pyqt5-signals-and-slots/) for PyQt5.
 
 ## Additional drivers ##
 
@@ -125,10 +125,6 @@ or
 coverage html
 
 ```
-
-# Structure #
-
-You need to add LabGui folder to your PYHTON PATH (look for ways to do so) before starting.
 
 # Getting started #
 
