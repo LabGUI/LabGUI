@@ -596,7 +596,7 @@ class InstrumentWindow(QtGui.QWidget):
 
             if USE_PYQT5:
 
-                self.connectInstrumentHub.emit(True)
+                self.connectInstrumentHub.emit()
 
             else:
 

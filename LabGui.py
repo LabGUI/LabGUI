@@ -489,7 +489,7 @@ have the right format, '%s' will be used instead" % (self.config_file,
             tip="Load previous data from file"
         )
 
-        self.file_save_congfig_action = QtTools.create_action(
+        self.file_save_config_action = QtTools.create_action(
             self,
             "Save current configuration",
             slot=self.file_save_config,
@@ -502,7 +502,7 @@ have the right format, '%s' will be used instead" % (self.config_file,
         self.fileMenu.addAction(self.file_load_settings_action)
         self.fileMenu.addAction(self.file_load_data_action)
         self.fileMenu.addAction(self.action_manager.saveFigAction)
-        self.fileMenu.addAction(self.file_save_congfig_action)
+        self.fileMenu.addAction(self.file_save_config_action)
 
 # ##### PLOT MENU + TOOLBAR SETUP ######
 
