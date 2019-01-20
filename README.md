@@ -13,8 +13,7 @@ instruments come (came? times change) with their own dummy software with very po
 * http://carbon.ece.mcgill.ca @ McGill University
 * https://www.hybridquantumlab.com/ @ Michighan state University
 
-## Peer-reviewed articles linked to the use of LabGUI ##
-
+## Publications which used LabGUI to acquire their data ##
 
 * Anomalous Attenuation of Piezoacoustic Surface Waves by Liquid Helium Thin Films, H. Byeon, K. Nasyedkin, J.R. Lane, L. Zhang, N.R. Beysengulov, R. Loloee and J. Pollanen, Journal of Low Temperature Physics (2018) https://doi.org/10.1007/s10909-018-02115-0 (online first).
 
@@ -31,7 +30,6 @@ instruments come (came? times change) with their own dummy software with very po
 * Critical flow and dissipation in a quasi–one-dimensional superfluid, P-F Duc, M.Savard, M. Petrescu, B. Rosenow, A. Del Maestro, and G. Gervais, Science Advances 1, el1400222 (2015). 
 
 # Installation #
-
 
 For the time being this package is only supported in python 2.7 (but we are working to make it work in python 3)
 
