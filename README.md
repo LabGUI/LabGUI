@@ -2,12 +2,36 @@ LabGui
 ======
 
 # Introduction #
-Python programs used by Gervaislab
+Modular python data acquisition software and GUI.
 
 LabGui has been written by grad students in experimental physics. It is intended to overcome the frustration that most
 instruments come (came? times change) with their own dummy software with very poor or no integrability into a larger "meta" software coordinating the instruments.
 
+## Laboratories using LabGUI ##
+
+* http://gervaislab.mcgill.ca/home.php @ McGill University
+* http://carbon.ece.mcgill.ca @ McGill University
+* https://www.hybridquantumlab.com/ @ Michighan state University
+
+## Peer-reviewed articles linked to the use of LabGUI ##
+
+
+* Anomalous Attenuation of Piezoacoustic Surface Waves by Liquid Helium Thin Films, H. Byeon, K. Nasyedkin, J.R. Lane, L. Zhang, N.R. Beysengulov, R. Loloee and J. Pollanen, Journal of Low Temperature Physics (2018) https://doi.org/10.1007/s10909-018-02115-0 (online first).
+
+* Flip-chip Gate-tunable Acoustoelectric Effect in Graphene, J.R. Lane, L. Zhang, M.A. Khasawneh, B.N. Zhou, E.A. Henriksen, and J. Pollanen, Journal of Applied Physics  124, 194302 (2018).
+
+* Unconventional Field Effect Transistor Composed of Electrons Floating on Liquid Helium, K. Nasyedkin, H. Byeon, L. Zhang, N.R. Beysengulov, J. Milem, S. Hemmerle, R. Loloee and J. Pollanen, Journal of Physics: Condensed Matter  30, 465501 (2018).
+
+*  Specific heat and entropy of fractional quantum Hall states in the second Landau level, B.A. Schmidt, K. Bennaceur, S. Gaucher, G. Gervais, L.N. Pfeiffer, K.W. West, Phys. Rev. B 95, 201306(R) (2017). 
+
+*  Dual-Gate Velocity-Modulated Transistor Based on Black Phosphorus, V. Tayari, N. Hemsworth, O. Cyr-Choinière, W. Dickerson, G. Gervais and T. Szkopek, Phys. Rev. Applied 5, 064004 (2016).  
+
+* Second Landau Level Fractional Quantum Hall Effects in the Corbino Geometry, B. A. Schmidt, K. Bennaceur, S. Bilodeau, G. Gervais, K. W. West, L. N. Pfeiffer, Solid State Communications 217, 1 (2015).
+
+* Critical flow and dissipation in a quasi–one-dimensional superfluid, P-F Duc, M.Savard, M. Petrescu, B. Rosenow, A. Del Maestro, and G. Gervais, Science Advances 1, el1400222 (2015). 
+
 # Installation #
+
 
 For the time being this package is only supported in python 2.7 (but we are working to make it work in python 3)
 
