@@ -258,7 +258,7 @@ There are different steps between this stage and the stage when you collect data
 
 Ways to connect physically to the instrument through a port:
 
-- PROLOGIX GPIB to USB
+- PROLOGIX GPIB to USB ([driver here](http://prologix.biz/))
 - National Instruments GPIB to USB
 - Agilent GPIB to USB
 
