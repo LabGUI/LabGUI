@@ -94,8 +94,9 @@ class Instrument(Tool.MeasInstr):
             return 123.4
 
     # if run as own program
-    # if (__name__ == '__main__'):
-
+if (__name__ == '__main__'):
+    i = Instrument("GPIB0::19", debug=False)
+    print(i.read_any())
      #   lockin = device('dev9')
      #   lockin.set_ref_internal  # no averaging
      #   lockin.close()
