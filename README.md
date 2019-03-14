@@ -20,13 +20,13 @@ LabGUI has been written by grad students in experimental condensed matter physic
 
 * Unconventional Field Effect Transistor Composed of Electrons Floating on Liquid Helium, K. Nasyedkin, H. Byeon, L. Zhang, N.R. Beysengulov, J. Milem, S. Hemmerle, R. Loloee and J. Pollanen, Journal of Physics: Condensed Matter  30, 465501 (2018).
 
-*  Specific heat and entropy of fractional quantum Hall states in the second Landau level, B.A. Schmidt, K. Bennaceur, S. Gaucher, G. Gervais, L.N. Pfeiffer, K.W. West, Phys. Rev. B 95, 201306(R) (2017).
+*  Specific heat and entropy of fractional quantum Hall states in the second Landau level, B.A. Schmidt, K. Bennaceur, S. Gaucher, G. Gervais, L.N. Pfeiffer, K.W. West, Phys. Rev. B 95, 201306(R) (2017). 
 
 *  Dual-Gate Velocity-Modulated Transistor Based on Black Phosphorus, V. Tayari, N. Hemsworth, O. Cyr-Choinière, W. Dickerson, G. Gervais and T. Szkopek, Phys. Rev. Applied 5, 064004 (2016).  
 
 * Second Landau Level Fractional Quantum Hall Effects in the Corbino Geometry, B. A. Schmidt, K. Bennaceur, S. Bilodeau, G. Gervais, K. W. West, L. N. Pfeiffer, Solid State Communications 217, 1 (2015).
 
-* Critical flow and dissipation in a quasi–one-dimensional superfluid, P-F Duc, M.Savard, M. Petrescu, B. Rosenow, A. Del Maestro, and G. Gervais, Science Advances 1, el1400222 (2015).
+* Critical flow and dissipation in a quasi–one-dimensional superfluid, P-F Duc, M.Savard, M. Petrescu, B. Rosenow, A. Del Maestro, and G. Gervais, Science Advances 1, el1400222 (2015). 
 
 
 ## Scope and limitations ##
@@ -36,32 +36,34 @@ We designed it to acquire data from multiple instruments over timescales of the 
 
 # Installation #
 
-This package has been upgraded to be supported on python 3.6.7, backcompatibility with python 2.7 should hold nevertheless but is not necessarily thouroughly checked for.
+For the time being this package is only supported in python 2.7 (but we are working to make it work in python 3)
 
 ## Using pip ##
 
-Open a terminal and run
+Setup a [virtual environement](https://virtualenv.pypa.io/en/latest/)
+
+For powershell in windows 10:
+```
+pip install virtualenv
+```
+```
+virtualenv my_venv
+```
+```
+<path to my_venv>\my_venv\Scripts\activate
+```
+
+Then run 
 
 ```
-#!python
-
 pip install -r requirements.txt
-```
-
-The requirement file contains the following lines :
-```
-PyVISA
-matplotlib
-numpy
-pyserial
-
 ```
 
 ## Using Anaconda ##
 
 For Windows/Mac/Linux you can install [anaconda](https://www.anaconda.com/download/)
 
-and then from the anaconda console you can type
+and then from the anaconda console you can type 
 ```
 conda install --yes --file requirements.txt
 ```
@@ -128,7 +130,7 @@ coverage html
 
 # Getting started #
 
-What you can do is call the program from a python console by typing
+What you can do is call the program from a python console by typing 
 ```
 #!python
 
@@ -188,11 +190,11 @@ This menu shows you what are the widget currently displayed (they have a tick on
 * Change debug mode
 
 
-## Output/input files ##
+## Output/input files ## 
 
 * config file
 This file should be in the same directory as the `LabGui.py` file, we named it `config.txt` (this can be changed).
-If you don't have one, it will be generated for you with basic settings.
+If you don't have one, it will be generated for you with basic settings. 
 This file contains the path of the script file, data folder, setting file, and the debug mode.
 It is possible to add more variable you might want to save there, you can use the functions get_config_setting() and set_config_setting() of the `IOTool.py` module to read and write them from/into the file.
 
@@ -241,7 +243,7 @@ An instrument driver is a module named after the instrument, it needs to have th
 -a class called "Instrument" inheriting from "Tool.MeasInstr"
 -it needs to be within the folder/package `LabDrivers` to be accessible from LabGui
 
-When acquiring a new instrument, the first thing to find out is a file called "communication protocol".
+When acquiring a new instrument, the first thing to find out is a file called "communication protocol". 
 This will help you identify which port to connect to and what interface your instrument uses (visa, serial, raw, TCP/IP, etc...)
 
 There are different steps between this stage and the stage when you collect data and interact with your instrument using LabGui:
@@ -250,7 +252,7 @@ There are different steps between this stage and the stage when you collect data
  -figure out which commands you need.
  -write a driver file with python methods that send the command using the instrument vocabulary
  -write what you want to ask your instrument in a script using these python methods
-
+ 
 
 ## Physical connections to your instrument ##
 
@@ -266,7 +268,7 @@ RS232 (RS232 to USB adapters are available from various vendors and should all w
 # Organisation scheme #
 
 The class `LabGuiMain` inherits of `QtGui.QMainWindow` (referred to as main window), it will contain instances of :
-- an instrument hub (`Tool.InstrumentHub`) which manages the connection to the physical and virtual measure instruments
+- an instrument hub (`Tool.InstrumentHub`) which manages the connection to the physical and virtual measure instruments 
 - a datataker (DataManagement.DataTaker) responsible to run, pause and stop the script describing the experiment as well as to share the acquired data with the main window (which itself dispatches them according to the mediator pattern)
 - a list of `QtGui.QWidgets` used for user interaction with instruments, data acquisition, vizualisation or fitting and parameters input.
 
@@ -278,10 +280,12 @@ The widgets communicate with each other through the main window, i.e. two distin
 
 ## Creating custom widgets for LabGUI ##
 
-It is possible to add custom widgets to LabGUI (for example if you need a specific interface for one of your instrument). To do this you have to create a file in the `LabTools/UserWidgets` package. In this file you need to define your widget (it needs to inherit from PyQt's `QWidget`) and a function called `add_widget_into_main(parent)` which defines the signals this widget should exchange with the `QMainWindow` and potential methods to handle those signals. (The idea is that all the code which concerns your widget should be embedded into this file, LabGUI should be able to run with or without the addition of your widget. In the initialisation of LabGUI, the widget files listed in the `config.txt` file under `USER_WIDGETS` and separated by a semicolumn will be added to the interface.
+It is possible to add custom widgets to LabGUI (for example if you need a specific interface for one of your instrument). To do this you have to create a file in the `LabTools/UserWidgets` package. In this file you need to define your widget (it needs to inherit from PyQt's `QWidget`) and a function called `add_widget_into_main(parent)` which defines the signals this widget should exchange with the `QMainWindow` and potential methods to handle those signals. (The idea is that all the code which concerns your widget should be embedded into this file, LabGUI should be able to run with or without the addition of your widget. In the initialisation of LabGUI, the widget files listed in the `config.txt` file under `USER_WIDGETS` and separated by a semicolumn will be added to the interface. 
 Example of line in the `config.txt file`:
 ```
 USER_WIDGETS=ConnectTerminalWidget;ServerWidget
 ```
 
 Use the file `TemplateUserWidget.py` for more practical information and to start your own widgets!
+
+
