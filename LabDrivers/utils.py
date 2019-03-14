@@ -47,6 +47,8 @@ INTF_SERIAL = 'serial'
 INTF_NONE = 'None'
 
 PROLOGIX_COM_PORT = "COM5"
+# cf section 8.2 of the manual : http://prologix.biz/downloads/PrologixGpibUsbManual-6.0.pdf
+PROLOGIX_AUTO = 'prologix_auto_opt'
 
 LABDRIVER_PACKAGE_NAME = "LabDrivers"
 
