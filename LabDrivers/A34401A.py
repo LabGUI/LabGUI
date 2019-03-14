@@ -58,6 +58,7 @@ class Instrument(Tool.MeasInstr):
         mantissa, exponent = v.split("E")
         answer = float(mantissa) * power(10, float(exponent))
         return answer
+
 #    MEASure[:VOLTage][:DC]? [{<
 # range
 #>|AUTO|MIN|MAX|DEF} [,{<
@@ -69,7 +70,7 @@ class Instrument(Tool.MeasInstr):
 if (__name__ == '__main__'):
 
     i = Instrument('GPIB0::23')
-    print(i.identify())
-    print (i.measure('V'))
+    # print(i.identify())
+    print(i.read_voltage_DC())
 #    print i.measure('P')
     i.close()
