@@ -444,7 +444,7 @@ class PrologixController(object):
         if not cmd.endswith('\n'):
             cmd += '\n'
         if self.connection is not None:
-            logging.debug("Prologix in : ", cmd)
+            logging.debug("Prologix in : %s" % cmd)
             self.connection.write(cmd.encode())
 
     def read(self, num_bit):
@@ -453,7 +453,7 @@ class PrologixController(object):
             if not self.auto:
                 self.write('++read eoi')
             answer = self.connection.read(num_bit)
-            logging.debug("Prologix out (read) : ", answer)
+            logging.debug("Prologix out (read) : %s" % answer)
             return answer.decode()
         else:
             return ''
@@ -464,7 +464,7 @@ class PrologixController(object):
             if not self.auto:
                 self.write('++read eoi')
             answer = self.connection.readline()
-            logging.debug("Prologix out (readline): ", answer)
+            logging.debug("Prologix out (readline): %s " % answer)
             return answer.decode()
         else:
             return ''
