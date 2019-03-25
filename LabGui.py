@@ -1331,9 +1331,9 @@ def test_user_variable_widget():
     sys.exit(app.exec_())
 
 if __name__ == "__main__":
-#    print("Launching LabGUI")
-#    launch_LabGui()
-    test_save_fig()
+     print("Launching LabGUI")
+     launch_LabGui()
+#    test_save_fig()
 #    a = import_module('ConsoleWidget')
 #    print(a)
 #    
