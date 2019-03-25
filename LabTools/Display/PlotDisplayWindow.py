@@ -17,28 +17,37 @@ TODO:
 
 from __future__ import division
 import time
+import datetime
 
-#from PyQt4.QtSvg import *
-import PyQt4.QtGui as QtGui
-from PyQt4.QtCore import  SIGNAL, Qt, QRect,QSize
+import numpy as np
+
+from matplotlib import dates
+from matplotlib import ticker
+
+from collections import OrderedDict
+
+from LocalVars import USE_PYQT5
+
+if  USE_PYQT5:
+                                 
+    import PyQt5.QtWidgets as QtGui
+    from PyQt5.QtCore import Qt, pyqtSignal, QRect, QRectF
+    
+else:
+
+    import PyQt4.QtGui as QtGui     
+    from PyQt4.QtCore import Qt, QRect, QRectF 
+    from PyQt4.QtCore import SIGNAL
 
 
 import QtTools
 
-import numpy as np, matplotlib.pyplot as plt
-
-
-from matplotlib.ticker import MultipleLocator, FormatStrFormatter
-
 
 from mplZoomWidget import MatplotlibZoomWidget
 import ui_plotdisplaywindow
-from matplotlib import dates
-from matplotlib import ticker
-from PlotPreferences import marker_set,line_set,color_blind_friendly_colors
-import datetime
 
-from collections import OrderedDict
+from PlotPreferences import marker_set,line_set,color_blind_friendly_colors
+
 
 #this label is used to know when the axis should be a formated time
 #year, month, day, hours, mintues etc... 
@@ -185,7 +194,10 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
         # custom matplotlib zoom widget inside it. This way it expands to fill
         # the space, and we don't need to customize the ui_recordsweep.py file
         self.gridLayout_2 = QtGui.QGridLayout(self.plot_holder)
-        self.gridLayout_2.setMargin(0)
+        
+        if not USE_PYQT5:
+            self.gridLayout_2.setMargin(0)
+            
         self.gridLayout_2.setObjectName("gridLayout_2")
         
         self.mplwidget = MatplotlibZoomWidget(self.plot_holder)
@@ -209,73 +221,168 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
         line1, = self.ax.plot([], [])     
         line2, = self.axR.plot([], [])
         
-      
-        
         for name,item in self.channel_controls.items():
             #this value is set to true if there is one new QtGui object per line
             multiple_item = True  
-            if item[1]=="radioButton":                
-                self.channel_objects[name].append(QtGui.QRadioButton(self.groupBoxes[name]))
-                self.channel_objects[name][i].setText("")
-                if name == "groupBox_X":
-                    self.connect(self.channel_objects[name][i], SIGNAL("toggled(bool)"),self.XRadioButtonHandler)  
             
-            elif item[1]=="checkBox":
-                self.channel_objects[name].append(QtGui.QCheckBox(self.groupBoxes[name]))
+            if item[1] == "radioButton":     
+                
+                self.channel_objects[name].append(QtGui.QRadioButton(
+                    self.groupBoxes[name]))
                 self.channel_objects[name][i].setText("")
-                self.connect(self.channel_objects[name][i], SIGNAL("stateChanged(int)"), self.YCheckBoxHandler)
+                
+                if name == "groupBox_X":
+                    
+                    if USE_PYQT5:
+                        
+                        self.channel_objects[name][i].toggled.connect(
+                            self.XRadioButtonHandler)                          
+                        
+                    else:
+                        
+                        self.connect(self.channel_objects[name][i], 
+                                     SIGNAL("toggled(bool)"),
+                                     self.XRadioButtonHandler)  
+            
+            elif item[1] == "checkBox":
+                
+                self.channel_objects[name].append(
+                    QtGui.QCheckBox(self.groupBoxes[name]))
+                self.channel_objects[name][i].setText("")
+                
+                if USE_PYQT5:
+                            
+                    self.channel_objects[name][i].stateChanged.connect(
+                        self.YCheckBoxHandler)
+                    
+                else:                
+                    
+                    self.connect(self.channel_objects[name][i], 
+                                 SIGNAL("stateChanged(int)"),
+                                 self.YCheckBoxHandler)
 
-            elif item[1]=="comboBox":
-                self.channel_objects[name].append(QtGui.QComboBox(self.groupBoxes[name]))
-                if get_groupBox_purpouse(name)=="marker":
-                    cbb_list=marker_set
-                elif get_groupBox_purpouse(name)=="line":
-                    cbb_list=line_set
+            elif item[1] == "comboBox":
+                
+                self.channel_objects[name].append(
+                    QtGui.QComboBox(self.groupBoxes[name]))
+                    
+                if get_groupBox_purpouse(name) == "marker":
+                    
+                    cbb_list = marker_set
+                    
+                elif get_groupBox_purpouse(name) == "line":
+                    
+                    cbb_list = line_set
+                    
                 self.channel_objects[name][i].addItems(cbb_list)
 #                self.channel_objects[name][i].setStyleSheet ("QComboBox::drop-down {border-width: 0px;} QComboBox::down-arrow {image: url(noimg); border-width: 0px;}")
                 self.channel_objects[name][i].setMaxVisibleItems(len(cbb_list))
-                self.connect(self.channel_objects[name][i], SIGNAL("currentIndexChanged(int)"), self.ComboBoxHandler)
+                
+                if USE_PYQT5:
+                    
+                    self.channel_objects[name][i].currentIndexChanged.connect(
+                        self.ComboBoxHandler)
+                    
+                else:                
+                    
+                    self.connect(self.channel_objects[name][i],
+                                 SIGNAL("currentIndexChanged(int)"), 
+                                 self.ComboBoxHandler)
+                
           
-            elif item[1]=="lineEdit":
-                self.channel_objects[name].append(QtGui.QLineEdit(self.groupBoxes[name]))
-                self.channel_objects[name][i].setText(QtGui.QApplication.translate("RecordSweepWindow", "", None, QtGui.QApplication.UnicodeUTF8))
-                self.connect(self.channel_objects[name][i], SIGNAL("textEdited(QString)"), self.lineEditHandler)
+            elif item[1] == "lineEdit":
+                
+                self.channel_objects[name].append(
+                    QtGui.QLineEdit(self.groupBoxes[name]))
+                self.channel_objects[name][i].setText(
+                    QtGui.QApplication.translate("RecordSweepWindow", 
+                                                 "",
+                                                 None))
+                if USE_PYQT5:
+                    
+                    self.channel_objects[name][i].textEdited.connect(
+                        self.lineEditHandler)
             
-            elif item[1]=="colorButton":
-                self.channel_objects[name].append(QtGui.QPushButton(self.groupBoxes[name]))               
-                color=self.color_set[np.mod(i,len(self.color_set))]
+                else:                
+                    
+                    self.connect(self.channel_objects[name][i], 
+                                 SIGNAL("textEdited(QString)"), 
+                                 self.lineEditHandler)
+            
+            elif item[1] == "colorButton":
+                
+                self.channel_objects[name].append(
+                    QtGui.QPushButton(self.groupBoxes[name]))
+                    
+                color = self.color_set[np.mod(i, len(self.color_set))]
+                
                 line1.set_color(color)
                 line2.set_color(color)
-                self.channel_objects[name][i].setStyleSheet('QPushButton {background-color: %s}'%color)
+                
+                self.channel_objects[name][i].setStyleSheet(
+                    'QPushButton {background-color: %s}'%color)
                 self.channel_objects[name][i].setFixedSize(15,15)
-                self.connect(self.channel_objects[name][i], SIGNAL("clicked()"),self.colorButtonHandler) 
-            
-            elif item[1]=="single_comboBox":
-                if self.channel_objects[name]==[]:
-                    self.channel_objects[name]=QtGui.QComboBox(self.groupBoxes[name])
+                
+                if USE_PYQT5:
                     
-                    self.connect(self.channel_objects[name], SIGNAL("currentIndexChanged(int)"), self.singleComboBoxHandler)                
+                    self.channel_objects[name][i].clicked.connect(
+                        self.colorButtonHandler)
+            
+                else:                
+                    
+                    self.connect(self.channel_objects[name][i],
+                                 SIGNAL("clicked()"),
+                                 self.colorButtonHandler) 
+            
+            elif item[1] == "single_comboBox":
+                
+                if self.channel_objects[name]==[]:
+                    self.channel_objects[name] = QtGui.QComboBox(
+                                                    self.groupBoxes[name])
+                    
+                    if USE_PYQT5:
+                        
+                        self.channel_objects[name].currentIndexChanged.connect(
+                            self.singleComboBoxHandler) 
+                    else:
+                         
+                        self.connect(self.channel_objects[name], 
+                                     SIGNAL("currentIndexChanged(int)"),
+                                     self.singleComboBoxHandler)                
+                    
                     self.channel_objects[name].setObjectName(name + item[1])
                 
                 multiple_item = False
             
             if multiple_item :
-                self.channel_objects[name][i].setObjectName(name + "#" + str(i))
-                self.channel_objects[name][i].setGeometry(QRect(7, 20*(i+1), 16, 16)) 
+                
+                self.channel_objects[name][i].setObjectName("%s#%i"%(name, i))
+                self.channel_objects[name][i].setGeometry(QRect(7, 20*(i+1),
+                                                                16, 16)) 
+                
             else:
 
-                self.channel_objects[name].setGeometry(QRect(7, 10*(i+1), 70, 16))
+                self.channel_objects[name].setGeometry(QRect(7, 10*(i+1), 
+                                                             70, 16))
             
             #resize the comboBoxes and the lineEdit
-            if item[1]=="lineEdit":
-                self.channel_objects[name][i].setGeometry(QRect(10, pos_LE(i), 81, 16))
-            elif item[1]=="comboBox" :
-                self.channel_objects[name][i].setGeometry(QRect(7, 20*(i+1), 32, 16))            
+            if item[1] == "lineEdit":
+                
+                self.channel_objects[name][i].setGeometry(QRect(10, pos_LE(i),
+                                                                81, 16))
+                
+            elif item[1] == "comboBox" :
+                
+                self.channel_objects[name][i].setGeometry(QRect(7, 20*(i+1),
+                                                                32, 16))            
             
 
             if multiple_item :
+                
                 self.channel_objects[name][i].show()
+                
             else :
+                
                 self.channel_objects[name].show()
 #        self.radio
         #create line objects and append them to self.ax[R].lines autoatically
@@ -415,6 +522,7 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
                         if i==1:
                             n = tick.label.get_text()
                             label_i = n.split(" ")[0]
+                            
                         tick.label.set_rotation(45)
                         
                 else:
@@ -508,9 +616,13 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
 
 
     def set_axis_ticks(self,ticks):
+        
         if not len(ticks)==3:
-            print "some ticks are missing, you should have ticks for X, YL and YR axes"
+            
+            print("some ticks are missing, you should have ticks for X, YL and YR axes")
+            
         else:
+            
             for t in ticks[1]:
                 self.channel_objects["groupBox_Y"][t].setCheckState(True)
 #                print "Y",str(self.lineEdit_Name[t].text())
@@ -633,7 +745,7 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
         
         answer = False
         
-        if self.channel_objects.has_key(group_box_name):
+        if group_box_name in self.channel_objects:
         
             for box in self.channel_objects[group_box_name]:
                 
@@ -644,8 +756,18 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
         return answer
 
     def convert_timestamp(self, timestamp):
-        dts = map(datetime.datetime.fromtimestamp, timestamp)
-        return dates.date2num(dts) # converted        
+        
+        try:
+            
+            dts = [datetime.datetime.fromtimestamp(ts) for ts in timestamp]
+            
+            dts = np.array(dts)
+    
+            return dates.date2num(dts) # converted    
+            
+        except:
+            
+            return timestamp
 
     def set_axis_time(self,want_format = False):
         """
@@ -660,14 +782,14 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
             
                 time_interval=self.data_array[-1,self.chan_X]-self.data_array[0,self.chan_X]
                 
-                if time_interval<500:
+                if time_interval < 500:
                     hfmt = dates.DateFormatter('%m/%d %H:%M:%S')
                
                 
             return hfmt
             
         else:
-            
+   
             time_data = self.convert_timestamp(self.data_array[:,self.chan_X])
             
             return time_data
@@ -821,10 +943,10 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
             
         except ValueError as e:
             
-            if "left cannot be >= right" in e:
+            if "left cannot be >= right" in str(e):
                 pass
                 #it seems to be a platform dependent error
-            elif "ordinal must be >= 1" in e:
+            elif "ordinal must be >= 1" in str(e):
                 try:
                     
                     initial_array = [time.time()]
@@ -902,14 +1024,14 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
     def print_figure(self, file_name = "unknown"):
         """Sends the current plot to a printer"""
         
-        printer = QPrinter()
+        printer = QtGui.QPrinter()
         
         # Get the printer information from a QPrinter dialog box
-        dlg = QPrintDialog(printer)        
-        if(dlg.exec_()!= QDialog.Accepted):
+        dlg = QtGui.QPrintDialog(printer)        
+        if(dlg.exec_()!= QtGui.QDialog.Accepted):
              return
              
-        p = QPainter(printer)
+        p = QtGui.QPainter(printer)
         
         # dpi*3 because otherwise it looks pixelated (not sure why, bug?)
         dpi = printer.resolution()
@@ -970,24 +1092,15 @@ class PlotDisplayWindow(QtGui.QMainWindow,ui_plotdisplaywindow.Ui_PlotDisplayWin
         # plot limits. Below is what would be used for temp.svg
         #svg = QtSvg.QSvgRenderer("temp.svg")
         #svg.render(p, QRectF(margin_top,margin_left, 8*dpi, 5*dpi))
-
+        
         p.drawImage(QRectF(margin_top,margin_left, width*dpi, height*dpi), 
-                    QImage("temp.png", format='png'))
+                    QtGui.QImage("temp.png", format='png'))
         p.drawText(margin_left, 600, "Data recorded to: " + file_name)    
         p.end() 
         
     def is_plot_display_window(self):
         """used to differentiate PlotDisplayWindow from LoadPlotWindow"""
         return True
-        
-def convert_timestamp(timestamp):
-    print timestamp
-    dts = map(datetime.datetime.fromtimestamp, timestamp)
-    return dates.date2num(dts) # converted    
-        
-        
-        
-        
         
         
 """
@@ -1118,7 +1231,7 @@ class MultiplePlotDisplayWindow(PlotDisplayWindow):
                 
             #if there is more instruments than channel numbers we expand the channels on the window
             while self.num_channels < num_channels:
-                print "MultiplePlotDisplayWindow.update_plot : adding more channel"
+                print("MultiplePlotDisplayWindow.update_plot : adding more channel")
                 self.add_channel_controls()
 
             

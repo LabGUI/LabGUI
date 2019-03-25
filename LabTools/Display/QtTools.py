@@ -8,9 +8,25 @@ License: see LICENSE.txt file
 
 import sys
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
-from PyQt4 import QtGui
+
+from LocalVars import USE_PYQT5
+
+if  USE_PYQT5:
+    
+    import PyQt5.QtWidgets as QtGui
+    import PyQt5.QtCore as QtCore
+    from PyQt5.QtCore import Qt, pyqtSignal
+    from PyQt5.QtGui import QKeySequence, QIcon, QPainter
+    
+else:
+
+    import PyQt4.QtGui as QtGui
+    import PyQt4.QtCore as QtCore
+    from PyQt4.QtCore import Qt      
+    from PyQt4.QtCore import SIGNAL
+    from PyQt4.QtGui import QKeySequence, QIcon, QPainter
+
+
 
 #global variables used to know what mode the mouse is in
 ZOOM_MODE = 0
@@ -19,30 +35,60 @@ SELECT_MODE =2
 
 
 # A silly little class to replace stdout that both prints and emits the text as a signal
-class printerceptor():
+class printerceptor(QtCore.QObject):
 
-    def __init__(self, parent=None):
+    if USE_PYQT5:
+        
+        print_to_console = pyqtSignal('PyQt_PyObject')
+
+    def __init__(self, parent = None):
+        
+        super(printerceptor, self).__init__()        
+        
         self.old_stdout = sys.stdout
         self.parent = parent
 
     def write(self, stri):
         self.old_stdout.write(stri)
-        self.parent.emit(SIGNAL("print_to_console(PyQt_PyObject)"), stri)
+        if USE_PYQT5:
+            
+            self.print_to_console.emit(stri)
+            
+        else:
+            
+            self.parent.emit(SIGNAL("print_to_console(PyQt_PyObject)"), stri)
 
     def flush(self):
-        self.old_stoud.flush()
+        self.old_stdout.flush()
         
 def create_action(parent, text, slot=None, shortcut=None, icon=None, tip=None, checkable=False, signal="triggered()"):
-    action = QAction(text, parent)
+    action = QtGui.QAction(text, parent)
+    
     if icon is not None:
         action.setIcon(QIcon("./images/%s.png" % icon))
+        
     if shortcut is not None:
+        
         action.setShortcut(shortcut)
+        
     if tip is not None:
+        
         action.setToolTip(tip)
         action.setStatusTip(tip)
+        
     if slot is not None:
-        parent.connect(action, SIGNAL(signal), slot)
+        
+        if USE_PYQT5:
+#                print(signal)
+#                keyw = {signal : signal}
+#                action.pyqtConfigure(**keyw)
+            action.pyqtConfigure(triggered = slot)
+            
+        else:
+                
+            parent.connect(action, SIGNAL(signal), slot)        
+        
+
     if checkable:
         action.setCheckable(True)
     return action
@@ -66,7 +112,7 @@ def clear_layout(layout):
 
 # Code from Giovanni Bajo via
 # http://www.riverbankcomputing.com/pipermail/pyqt/2008-July/020042.html
-class QAutoHideDockWidgets(QToolBar):
+class QAutoHideDockWidgets(QtGui.QToolBar):
     """
     QMainWindow "mixin" which provides auto-hiding support for dock widgets
     (not toolbars).
@@ -79,8 +125,8 @@ class QAutoHideDockWidgets(QToolBar):
     }
 
     def __init__(self, area, parent, name="AUTO_HIDE"):
-        QToolBar.__init__(self, parent)
-        assert isinstance(parent, QMainWindow)
+        QtGui.QToolBar.__init__(self, parent)
+        assert isinstance(parent, QtGui.QMainWindow)
         assert area in self.DOCK_AREA_TO_TB
         self._area = area
         self.setObjectName(name)
@@ -88,10 +134,10 @@ class QAutoHideDockWidgets(QToolBar):
 
         self.setFloatable(False)
         self.setMovable(False)
-        w = QWidget(None)
+        w = QtGui.QWidget(None)
         w.resize(10, 100)
-        self.setSizePolicy(QSizePolicy(QSizePolicy.Fixed,
-                                       QSizePolicy.MinimumExpanding))
+        self.setSizePolicy(QtGui.QSizePolicy(QtGui.QSizePolicy.Fixed,
+                                       QtGui.QSizePolicy.MinimumExpanding))
         self.addWidget(w)
 
         self.setAllowedAreas(self.DOCK_AREA_TO_TB[self._area])
@@ -103,20 +149,21 @@ class QAutoHideDockWidgets(QToolBar):
 
     def _dockWidgets(self):
         mw = self.parent()
-        for w in mw.findChildren(QDockWidget):
+        for w in mw.findChildren(QtGui.QDockWidget):
             if mw.dockWidgetArea(w) == self._area and not w.isFloating():
                 yield w
 
     def paintEvent(self, event):
+
         p = QPainter(self)
         p.setPen(Qt.black)
         p.setBrush(Qt.black)
         if self._area == Qt.LeftDockWidgetArea:
-            p.translate(QPointF(0, self.height() / 2 - 5))
-            p.drawPolygon(QPointF(2, 0), QPointF(8, 5), QPointF(2, 10))
+            p.translate(QtCore.QPointF(0, self.height() / 2 - 5))
+            p.drawPolygon(QtCore.QPointF(2, 0), QtCore.QPointF(8, 5), QtCore.QPointF(2, 10))
         elif self._area == Qt.RightDockWidgetArea:
-            p.translate(QPointF(0, self.height() / 2 - 5))
-            p.drawPolygon(QPointF(8, 0), QPointF(2, 5), QPointF(8, 10))
+            p.translate(QtCore.QPointF(0, self.height() / 2 - 5))
+            p.drawPolygon(QtCore.QPointF(8, 0), QtCore.QPointF(2, 5), QtCore.QPointF(8, 10))
 
     def _multiSetVisible(self, widgets, state):
         if state:
@@ -134,9 +181,9 @@ class QAutoHideDockWidgets(QToolBar):
 
     def enterEvent(self, event):
         self.showDockWidgets()
-
+        
     def eventFilter(self, obj, event):
-        if event.type() == QEvent.Enter:
+        if event.type() == QtCore.QEvent.Enter:
             assert obj == self.parent().centralWidget()
             self.hideDockWidgets()
         return False
@@ -150,6 +197,10 @@ class QAutoHideDockWidgets(QToolBar):
 
 
 class DialogBox(QtGui.QWidget):
+
+    if USE_PYQT5:
+        
+        dialogboxanswer = pyqtSignal('QString')
 
     def __init__(self, label="", windowname="", parent=None):
         super(DialogBox, self).__init__(parent)
@@ -173,10 +224,17 @@ class DialogBox(QtGui.QWidget):
         self.setWindowTitle(windowname)
         self.resize(200, 120)
 
-        self.connect(self.bt_ok, SIGNAL("clicked()"), self.button_click)
+        self.bt_ok.clicked.connect(self.button_click)
 
     def button_click(self):
-        self.emit(SIGNAL("dialogboxanswer(QString)"), self.txt.text())
+        if USE_PYQT5:
+            
+            self.dialogboxanswer.emit(self.txt.text())
+            
+        else:
+            
+            self.emit(SIGNAL("dialogboxanswer(QString)"), self.txt.text())
+            
         self.txt.setText("")
         self.hide()
 

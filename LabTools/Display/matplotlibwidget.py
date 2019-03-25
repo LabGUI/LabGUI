@@ -18,14 +18,27 @@ Copyright © 2005 Florent Rougon, 2006 Darren Dale
 
 __version__ = "1.0.0"
 
-from PyQt4.QtGui import QSizePolicy
-from PyQt4.QtCore import QSize
 
-from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as Canvas
 from matplotlib.figure import Figure
 
 from matplotlib import rcParams
 rcParams['font.size'] = 9
+
+from LocalVars import USE_PYQT5
+
+if  USE_PYQT5:
+    
+    import PyQt5.QtWidgets as QtGui
+    from PyQt5.QtCore import QSize
+    
+    from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as Canvas
+    
+else:
+
+    import PyQt4.QtGui as QtGui
+    from PyQt4.QtCore import QSize
+    
+    from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as Canvas
 
 
 class MatplotlibWidget(Canvas):
@@ -65,6 +78,7 @@ class MatplotlibWidget(Canvas):
     def __init__(self, parent=None, title='', xlabel='', ylabel='',
                  xlim=None, ylim=None, xscale='linear', yscale='linear',
                  width=4, height=3, dpi=100, hold=False):
+                     
         self.figure = Figure(figsize=(width, height), dpi=dpi)
         self.axes = self.figure.add_subplot(111)
         self.axes.set_title(title)
@@ -80,11 +94,12 @@ class MatplotlibWidget(Canvas):
             self.axes.set_ylim(*ylim)
         self.axes.hold(hold)
 
-        Canvas.__init__(self, self.figure)
+        super(MatplotlibWidget, self).__init__(self.figure)
+        
         self.setParent(parent)
 
-        Canvas.setSizePolicy(self, QSizePolicy.Expanding,
-                             QSizePolicy.Expanding)
+        Canvas.setSizePolicy(self, QtGui.QSizePolicy.Expanding,
+                             QtGui.QSizePolicy.Expanding)
         Canvas.updateGeometry(self)
 
     def sizeHint(self):

@@ -5,19 +5,26 @@ Created on Fri Jul 19 17:19:44 2013
 Copyright (C) 10th april 2015 Benjamin Schmidt & Pierre-Francois Duc
 License: see LICENSE.txt file
 """
-from PyQt4.QtGui import QSizePolicy
-from PyQt4.QtCore import SIGNAL, Qt
 import sys
-import PyQt4.QtGui as QtGui
+import logging
 from types import MethodType
 
+from LocalVars import USE_PYQT5
+
+if  USE_PYQT5:
+    
+    from PyQt5.QtCore import Qt, pyqtSignal
+    import PyQt5.QtWidgets as QtGui
+    
+else:
+    import PyQt4.QtGui as QtGui
+    from PyQt4.QtCore import SIGNAL, Qt
+
 import LabDrivers.Tool as Tool
-
-
 import LabDrivers.utils
 from LabTools.Display.PlotPreferences import color_blind_friendly_colors
 
-import logging
+
 
 
 width_instr = 100
@@ -30,8 +37,15 @@ class SingleLineWidget(QtGui.QWidget):
     num_channels = 0
     color_set = color_blind_friendly_colors(10)
        
+       
+    if USE_PYQT5:
+        
+        lineChanged = pyqtSignal()
+        
+        colorChanged = pyqtSignal()
+      
     # I'm thinking of modifying the design of the CommandWindow so that it just has a set of this object instead of the many different arrays of cbb to take care of.
-    def __init__(self, available_ports=["GPIB0::" + str(i) for i in range(30)], color = None, parent=None):    
+    def __init__(self, available_ports=["GPIB0::" + str(i) for i in range(30)], color = None, parent = None):    
         super(SingleLineWidget, self).__init__(parent)
         
         self.AVAILABLE_PORTS = available_ports
@@ -41,16 +55,21 @@ class SingleLineWidget(QtGui.QWidget):
             
         # TickBoxes
         self.color_btn = self.create_color_btn(color)
+        
         # Empty text boxes called Line Edit where the user can write which ever
         # title for plotting purposes
-        self.param_name_le= self.create_lineedit(label_text="dt(s)")
+        self.param_name_le= self.create_lineedit(label_text = "dt(s)")
+        
         # Contains the names of the instruments' driver's modules
-        self.instr_name_cbb = self.create_combobox("Instr name", label_text="Type")
+        self.instr_name_cbb = self.create_combobox("Instr name", 
+                                                   label_text = "Type")
         # Contains the ports (GPIB/COM address) of the instruments
-        self.port_cbb = self.create_combobox("Port", label_text="GPIB/COM Port")
+        self.port_cbb = self.create_combobox("Port", 
+                                             label_text = "GPIB/COM Port")
         
         # Contains the lists of parameters of the instruments
-        self.param_cbb = self.create_combobox("Param", label_text="Measurement")
+        self.param_cbb = self.create_combobox("Param", 
+                                              label_text = "Measurement")
         
         self.horizontal_layout = QtGui.QHBoxLayout(self)
 #        self.horizontal_layout.addWidget(self.color_btn)
@@ -60,7 +79,8 @@ class SingleLineWidget(QtGui.QWidget):
         self.horizontal_layout.addWidget(self.param_cbb)
         
         self.setLayout(self.horizontal_layout)
-        self.setSizePolicy(QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum))
+        self.setSizePolicy(QtGui.QSizePolicy(QtGui.QSizePolicy.Minimum, 
+                                             QtGui.QSizePolicy.Minimum))
         self.horizontal_layout.setContentsMargins(0,0,0,0)
         
         
@@ -68,7 +88,7 @@ class SingleLineWidget(QtGui.QWidget):
         le = QtGui.QLineEdit(self)
 
         le.setObjectName("param_name_le")
-        self.connect(le, SIGNAL("textEdited(QString)"), self.lineEdit_handler)
+        le.textEdited.connect(self.lineEdit_handler)
         # add the newly created widget to the list and tothe layout
         le.insert(label_text)
 
@@ -85,7 +105,7 @@ class SingleLineWidget(QtGui.QWidget):
             btn.setStyleSheet('QPushButton {background-color: %s}' % color)
         btn.setFixedSize(20, 20)
 
-        self.connect(btn, SIGNAL("clicked()"), self.color_btn_handler)
+        btn.clicked.connect(self.color_btn_handler)
         # add the newly created widget to the list and tothe layout
         return btn
         
@@ -94,7 +114,7 @@ class SingleLineWidget(QtGui.QWidget):
 #        index = len(cb_list)
         cb = QtGui.QCheckBox("", self)
         cb.setObjectName("checkBox")
-        self.connect(cb, SIGNAL("stateEdited(int)"), self.tickbox_handler)
+        cb.stateEdited.connect(self.tickbox_handler)
         # add the newly created widget to the list and to the layout
         
         return cb
@@ -110,8 +130,7 @@ QComboBox::down-arrow {image: url(noimg); border-width: 0px;}")
             
             cbb.addItems(self.INSTRUMENT_TYPES)
             cbb.setCurrentIndex(cbb.findText("TIME"))
-            self.connect(cbb, SIGNAL("currentIndexChanged(int)"),
-                         self.combobox_handler)
+            cbb.currentIndexChanged.connect(self.combobox_handler)
             cbb.setFixedWidth(width_instr)  
                        
         if name == 'Port':
@@ -129,8 +148,7 @@ QComboBox::down-arrow {image: url(noimg); border-width: 0px;}")
             
             cbb.addItems(self.AVAILABLE_PARAMS['TIME'])
             cbb.setCurrentIndex(cbb.findText("dt"))
-            self.connect(cbb, SIGNAL("currentIndexChanged(int)"),
-                         self.combobox_unit_handler)
+            cbb.currentIndexChanged.connect(self.combobox_unit_handler)
             cbb.setFixedWidth(width_param*1.5) 
             
         return cbb
@@ -159,13 +177,25 @@ QComboBox::down-arrow {image: url(noimg); border-width: 0px;}")
         # clicking on the button 'Connect'
         
         # emit signal to say something was modified
-        self.emit(SIGNAL("lineChanged()"))
+        if USE_PYQT5:
+            
+            self.lineChanged.emit()
+            
+        else:
+                
+            self.emit(SIGNAL("lineChanged()"))
 
     def combobox_dev_port_handler(self):
         """sets the connect button enabled"""
         # After changes the user should be able to update the instrumentHub by
         # clicking on the button 'Connect'
-        self.emit(SIGNAL("lineChanged()"))
+        if USE_PYQT5:
+            
+            self.lineChanged.emit()
+            
+        else:
+                
+            self.emit(SIGNAL("lineChanged()"))
 
     def combobox_unit_handler(self):
         """update the lineEdit with unit corresponding to the instrument parameter upon its selection"""
@@ -177,8 +207,13 @@ QComboBox::down-arrow {image: url(noimg); border-width: 0px;}")
 
         # After changes the user should be able to update the instrumentHub by
         # clicking on the button 'Connect'
-
-        self.emit(SIGNAL("lineChanged()"))
+        if USE_PYQT5:
+            
+            self.lineChanged.emit()
+            
+        else:
+                
+            self.emit(SIGNAL("lineChanged()"))
         
     def lineEdit_handler(self, string):
         #        print string
@@ -206,7 +241,13 @@ QComboBox::down-arrow {image: url(noimg); border-width: 0px;}")
         #            label=current_param
         #        #reassamble 'param_name'('unit_name')
         #        le.setText(label+self.get_unit(box_index))
-        self.emit(SIGNAL("lineChanged()"))
+        if USE_PYQT5:
+            
+            self.lineChanged.emit()
+            
+        else:
+                
+            self.emit(SIGNAL("lineChanged()"))
 
     def color_btn_handler(self):
         logging.debug("triggered")
@@ -217,7 +258,13 @@ QComboBox::down-arrow {image: url(noimg); border-width: 0px;}")
         btn.setStyleSheet('QPushButton {background-color: %s}' % color.name())
 #        print self.get_color_list()
         #emit the signal (Labgui will catch it and transfer it to the various windows which need to update their colors)
-        self.emit(SIGNAL("colorChanged()"))
+        if USE_PYQT5:
+            
+            self.colorChanged.emit()
+            
+        else:
+                
+            self.emit(SIGNAL("colorChanged()"))        
 
     def tickbox_handler(self):
         logging.debug("triggered")
@@ -284,6 +331,17 @@ class InstrumentWindow(QtGui.QWidget):
     #num_channels = 0
     color_set = color_blind_friendly_colors(10)
 
+    if USE_PYQT5:
+                
+        colorsChanged = pyqtSignal()
+        
+        connectInstrumentHub = pyqtSignal('bool')
+        
+        addedInstrument = pyqtSignal('bool')
+        
+        removedInstrument = pyqtSignal('bool')
+
+
     def __init__(self, parent = None, 
                  available_ports = ["GPIB0::" + str(i) for i in range(30)],
                  debug = False):
@@ -306,7 +364,8 @@ class InstrumentWindow(QtGui.QWidget):
         self.lines = []
         self.set_lists(-1)
         #self.resize(480, 600)
-        self.setSizePolicy(QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Expanding))
+        self.setSizePolicy(QtGui.QSizePolicy(QtGui.QSizePolicy.Minimum, 
+                                             QtGui.QSizePolicy.Expanding))
         
     def __del__(self):
         logging.debug("exited Instrument  window")
@@ -315,30 +374,42 @@ class InstrumentWindow(QtGui.QWidget):
         """"This method is used to initialise a user defined number of lines of comboboxes, each line will hold information about one instrument"""
 
         if num_channels < 2 and num_channels > -1:
+            
             num_channels = 2
 
         if num_channels == -1:
+            
             first_init = True
             num_channels = 5
 
         else:
+            
             first_init = False
             self.remove_all_lines()
+            
         #self.num_channels = num_channels
         # sets the headers for the buttons
         if num_channels > 0:
             self.headers = ["Color", "Name", "Instr", "Port", "Param"]
+            
             widths = [None, None,width_instr, width_port, width_param]
+            
             self.header_layout = QtGui.QHBoxLayout()
+            
             for i, hdr_text in enumerate(self.headers):
+                
                 header = QtGui.QLabel(hdr_text)
+                
                 if widths[i]:
+                    
                     header.setFixedWidth(widths[i])
+                    
                 self.header_layout.addWidget(header)
             self.line_layout.addLayout(self.header_layout)
             
             
             for i in range(num_channels):
+                
                 self.create_line()
 
             if first_init:
@@ -346,8 +417,7 @@ class InstrumentWindow(QtGui.QWidget):
                 # instrument list
                 self.bt_connecthub = QtGui.QPushButton("Connect", self)
                 self.bt_connecthub.setEnabled(True)
-                self.connect(self.bt_connecthub, SIGNAL(
-                    "clicked()"), self.bt_connecthub_clicked)
+                self.bt_connecthub.clicked.connect(self.bt_connecthub_clicked)
                 
 #                self.bt_refreshports = QtGui.QPushButton("RefreshPorts", self)
 #                self.bt_refreshports.setEnabled(True)
@@ -357,13 +427,11 @@ class InstrumentWindow(QtGui.QWidget):
 
                 self.bt_add_line = QtGui.QPushButton("Add item", self)
                 self.bt_add_line.setEnabled(True)
-                self.connect(self.bt_add_line, SIGNAL(
-                    "clicked()"), self.bt_add_line_clicked)
+                self.bt_add_line.clicked.connect(self.bt_add_line_clicked)
                     
                 self.bt_remove_last = QtGui.QPushButton("Remove last item", self)
                 self.bt_remove_last.setEnabled(True)
-                self.connect(self.bt_remove_last, SIGNAL(
-                    "clicked()"), self.bt_remove_last_clicked)
+                self.bt_remove_last.clicked.connect(self.bt_remove_last_clicked)
                 
                 self.add_remove_layout = QtGui.QHBoxLayout()
                 self.add_remove_layout.addWidget(self.bt_add_line)
@@ -375,43 +443,67 @@ class InstrumentWindow(QtGui.QWidget):
                 self.vertical_layout.addWidget(self.bt_connecthub)
                 self.vertical_layout.addLayout(self.line_layout)
                 self.vertical_layout.addLayout(self.add_remove_layout)
-                spacer_item = QtGui.QSpacerItem(
-                    20, 183, QSizePolicy.Minimum, QSizePolicy.Expanding)
+                spacer_item = QtGui.QSpacerItem(20, 183, 
+                                                QtGui.QSizePolicy.Minimum, 
+                                                QtGui.QSizePolicy.Expanding)
                 self.vertical_layout.addItem(spacer_item)
 
                 self.setLayout(self.vertical_layout)
+                
             else:
+                
                 pass
                 # add the button 'Connect' at the end of the instrument list
 #                self.line_layout.addWidget(self.bt_connecthub, self.num_channels+1,3,1,1)
                 # this is an inside class defined function that clear all the
                 # widgets on the windows as well as emptying the lists
         else:
+            
             if first_init:
+                
                 pass
+            
             else:
+                
                 self.resetLayout()
+
 
     def create_line(self, msg="", color=None):
         
                 
         self.color_set = color_blind_friendly_colors(len(self.lines)+1)
+        
 #        if color==None:
+        
 #            self.color_set = color_blind_friendly_colors(len(self.lines)+1)
 #            color = self.color_set[-1]
         
 #        print 'line created'
         new_line = SingleLineWidget(self.AVAILABLE_PORTS)
+        
         self.lines.append(new_line)
+        
         self.line_layout.addWidget(new_line)
+        
         for line,color in zip(self.lines,self.color_set):
+            
             line.set_color(color)
-        self.connect(new_line, SIGNAL(
-                    "lineChanged()"), self.lines_changed)
-        self.connect(new_line, SIGNAL("colorChanged()"), self.update_colors)
+
+        if USE_PYQT5:
+
+             new_line.lineChanged.connect(self.lines_changed)
+             new_line.colorChanged.connect(self.update_colors)       
+            
+        else:
+            
+            self.connect(new_line, SIGNAL(
+                        "lineChanged()"), self.lines_changed)
+            self.connect(new_line, SIGNAL("colorChanged()"), self.update_colors)
 
         self.update_colors()
+        
         return new_line
+
 
     def remove_lastline(self):
         # decrease the number of channels by one
@@ -467,13 +559,25 @@ class InstrumentWindow(QtGui.QWidget):
     
 
     def lines_changed(self):
-        """if any line is changed the color of the connect button is changed so that one can notice """
+        """
+            if any line is changed the color of the connect button is changed 
+            so that one can notice
+        """
         self.bt_connecthub.setStyleSheet("background-color : Window")
 
 
     def update_colors(self):
-        """this simply send the triggered signal from a Single line instance to the LabGui instance (and any other listeners)"""
-        self.emit(SIGNAL("colorsChanged()"))
+        """
+            this simply send the triggered signal from a Single line instance 
+            to the LabGui instance (and any other listeners)
+        """
+        if USE_PYQT5:
+            
+            self.colorsChanged.emit()
+            
+        else:
+                
+            self.emit(SIGNAL("colorsChanged()"))        
         
         
     def bt_connecthub_clicked(self):
@@ -482,14 +586,27 @@ class InstrumentWindow(QtGui.QWidget):
 
             self.bt_connecthub.setStyleSheet("background-color : '#b3e0ff'")
 
-            self.emit(SIGNAL("ConnectInstrumentHub(bool)"), True)
+            if USE_PYQT5:
+                
+                self.connectInstrumentHub.emit(True)
+            
+            else:
+            
+                self.emit(SIGNAL("ConnectInstrumentHub(bool)"), True)
 
 
     def bt_add_line_clicked(self):
         """when this method is called (upon button 'Connect' interaction) it send a signal, which will be treated in the main window"""
         if self.bt_remove_last.isEnabled:
             self.create_line()
-            self.emit(SIGNAL("AddedInstrument(bool)"), True)
+            
+            if USE_PYQT5:
+                
+                self.addedInstrument.emit(True)
+            
+            else:
+            
+                self.emit(SIGNAL("AddedInstrument(bool)"), True)
             # the lines have changed - call the relevant function!            
             self.lines_changed()           
             
@@ -498,7 +615,15 @@ class InstrumentWindow(QtGui.QWidget):
         """when this method is called (upon button 'Connect' interaction) it send a signal, which will be treated in the main window"""
         if self.bt_remove_last.isEnabled:
             self.remove_lastline()
-            self.emit(SIGNAL("RemovedInstrument(bool)"), True)
+            
+            if USE_PYQT5:
+                
+                self.removedInstrument.emit(True)
+            
+            else:
+            
+                self.emit(SIGNAL("RemovedInstrument(bool)"), True)
+ 
             # the lines have changed - call the relevant function!            
             self.lines_changed()    
             
@@ -647,8 +772,14 @@ please check your connectic or your settings file\n"%(port))
                 
             settings_file.close()
     
-            self.emit(SIGNAL("colorsChanged()"))
-            
+            if USE_PYQT5:
+                
+                self.colorsChanged.emit()
+                
+            else:
+                    
+                self.emit(SIGNAL("colorsChanged()"))  
+                
             #check if the list isn't empty
             if window_settings:
                 
@@ -746,8 +877,16 @@ def connect_instrument_hub(parent, signal = True):
             parent.instr_hub.connect_hub(
                 instr_name_list, dev_list, param_list)
             print("...instrument hub connected")
-            parent.emit(
-                SIGNAL("instrument_hub_connected(PyQt_PyObject)"), param_list)
+            
+            if USE_PYQT5:
+                
+                parent.instrument_hub_connected.emit(param_list)                
+                
+            else:
+                
+                parent.emit(
+                    SIGNAL("instrument_hub_connected(PyQt_PyObject)"), 
+                    param_list)
         
         else:
             
@@ -772,47 +911,6 @@ different than " + str(actual_instrument_number)
 
 
 
-def connect_instrument(parent, connection_param):
-    """
-        When the button "Connect" is clicked this method actualise the InstrumentHub
-        according to what the user choosed in the command window. 
-        It cannot change while the DataTaker is running though
-    """
-    [instr_name, dev_port, param] = connection_param
-
-#        cmdwin_instrument_number=len(instr_name_list)
-    # if the datataker is running the user should not modify the length of
-    # the instrument list and connect it
-    connect = False
-    if parent.isrunning():
-        print("As data are being recorded now, you are not allowed to connect "\
-              + instr_name + " to " + dev_port)
-#            if actual_instrument_number == cmdwin_instrument_number or actual_instrument_number==0:
-#                connect=True
-    else:
-        connect = True
-
-    actual_instrument_number = len(parent.instr_hub.get_instrument_list())
-    print("number of instruments connected (b)", actual_instrument_number)
-    
-    if connect:
-        
-        print("Connect single instrument...")
-        parent.instr_hub.connect_instrument(instr_name, dev_port, param)
-        print("...single instrument connected")
-#«            self.emit(SIGNAL("instrument_hub_connected(PyQt_PyObject)"),None)
-    else:
-        
-        print()
-        
-        print("You cannot connect a number of instrument different than " + \
-        str(actual_instrument_number) + " when the datataker is running")
-        
-        print()
-        
-    actual_instrument_number = len(parent.instr_hub.get_instrument_list())
-    print("number of instruments connected (a)", actual_instrument_number)
-
 
 def add_widget_into_main(parent):
     """add a widget into the main window of LabGuiMain
@@ -820,7 +918,7 @@ def add_widget_into_main(parent):
     create a QDock widget and store a reference to the widget
     """    
 
-    mywidget = InstrumentWindow(parent = parent)  
+    mywidget = InstrumentWindow(parent = parent, debug = parent.DEBUG)  
     
     parent.instrument_connexion_setting_fname=""  
     
@@ -853,28 +951,34 @@ def add_widget_into_main(parent):
 
     #add a series of signals tiggers
 
-
-    parent.connect_instrument_hub = MethodType(connect_instrument_hub,
-                                               parent, parent.__class__)    
+    #assigning a method to the parent class
+    #depending on the python version this fonction take different arguments
+    if sys.version_info[0] > 2: 
         
+        
+        parent.connect_instrument_hub = MethodType(connect_instrument_hub,
+                                               parent)    
+        
+    else:
+
+        parent.connect_instrument_hub = MethodType(connect_instrument_hub,
+                                               parent, parent.__class__)       
     
-    parent.connect(parent.widgets['InstrumentWidget'], SIGNAL(
-            "ConnectInstrumentHub(bool)"), parent.connect_instrument_hub) 
+    if USE_PYQT5:
 
-
-    parent.connect_instrument = MethodType(connect_instrument,
-                                               parent, parent.__class__)
-
-
-    parent.connect(parent.widgets['InstrumentWidget'], SIGNAL(
-        "ConnectInstrument(PyQt_PyObject)"), parent.connect_instrument)
+        parent.widgets['InstrumentWidget'].connectInstrumentHub.connect(
+            parent.connect_instrument_hub) 
+            
+        parent.widgets['InstrumentWidget'].colorsChanged.connect(
+            parent.update_colors)
         
+    else:
     
-    parent.connect(parent.widgets['InstrumentWidget'], SIGNAL(
-        "colorsChanged()"), parent.update_colors)
+        parent.connect(parent.widgets['InstrumentWidget'], SIGNAL(
+                "ConnectInstrumentHub(bool)"), parent.connect_instrument_hub)                 
         
-    parent.connect(parent.widgets['InstrumentWidget'], SIGNAL(
-        "labelsChanged()"), parent.update_labels)
+        parent.connect(parent.widgets['InstrumentWidget'], SIGNAL(
+            "colorsChanged()"), parent.update_colors)
         
             
      
@@ -883,7 +987,7 @@ def test_load_settings():
     ex = InstrumentWindow(debug = True)
 
     ex.load_settings("C:\\Users\\pfduc\\Documents\\labgui_github\\settings\\default_settings.txt")
-    print ex.collect_device_info(units = True)
+    print(ex.collect_device_info())
     ex.show()
 
     sys.exit(app.exec_())

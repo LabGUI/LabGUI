@@ -9,7 +9,10 @@ Created on Mon Aug 12 16:16:02 2013
 #!/usr/bin/env python
 import time
 import random
-from . import Tool
+try:
+    from . import Tool
+except:
+    import Tool
 
 
 param = {'V': 'V'}
@@ -243,7 +246,7 @@ class Instrument(Tool.MeasInstr):
 if __name__ == "__main__":
 
     BPO = Instrument("GPIB0::19")
-    print BPO.identify()
+    print(BPO.identify())
     BPO.set_voltage(-1)
-    print BPO.measure('V')
+    print(BPO.measure('V'))
 

@@ -16,8 +16,26 @@ import logging
 
 import glob
 import sys
-import serial
-import visa
+
+try:
+    
+    import serial
+    serial_available = True
+    
+except ImportError:
+    
+    serial_available = False
+    print("pyserial package not installed")
+    
+try:
+    
+    import visa
+    visa_available = True
+    
+except ImportError:
+    
+    visa_available = False
+    print("pyvisa package not installed")
 
 from LabTools.IO import IOTool
 
@@ -276,7 +294,7 @@ def list_drivers(interface = [INTF_VISA,INTF_PROLOGIX,INTF_SERIAL,INTF_NONE]):
     
     
 def test_prologix_controller_creation_with_com(com_port = None):   
-    if com_port == None:
+    if com_port is None:
         com_port = "COM3"
         
     pc=PrologixController(com_port)
@@ -300,7 +318,7 @@ class PrologixController(object):
     
      def __init__(self,com_port = None, baud_rate = 9600, timeout = 3 ):
 
-         if com_port == None:
+         if com_port is None:
              #the user didn't provide a COM port, so we look for one
              com_port = find_prologix_ports()
              
@@ -330,7 +348,7 @@ class PrologixController(object):
                  self.connection = None
                  logging.error("The port %s is not attributed to any device"%(com_port))
 
-         if not self.connection == None:
+         if not self.connection is None:
              
              #set the connector in controller mode and let the user
              #ask for read without sending another command.
@@ -356,7 +374,7 @@ ller (try to plug and unplug the cable if it is there nevertheless)"%(com_port))
              
      
      def __str__(self):
-         if not self.connection == None:
+         if not self.connection is None:
              self.write("++ver")
              return self.readline()
          else:
@@ -369,20 +387,20 @@ ller (try to plug and unplug the cable if it is there nevertheless)"%(com_port))
          """use serial.write"""
          if cmd[-1] != "\n":
              cmd += "\n"
-         if not self.connection == None:
+         if not self.connection is None:
 #             print "Prologix in : ", cmd
              self.connection.write(cmd)
      
      def read(self,num_bit):
          """use serial.read"""
-         if not self.connection == None:
+         if not self.connection is None:
              return self.connection.read(num_bit)
          else:
              return ""
          
      def readline(self):
          """use serial.readline"""
-         if not self.connection == None:
+         if not self.connection is None:
              answer = self.connection.readline()
 #             print "Prologix out : ", answer 
              return answer
@@ -394,8 +412,8 @@ ller (try to plug and unplug the cable if it is there nevertheless)"%(com_port))
          query the timeout setting of the serial port if no argument provided
          change the 
          """
-         if not self.connection == None:
-             if new_timeout == None:
+         if not self.connection is None:
+             if new_timeout is None:
                  return self.connection.timeout
              else:
                  old_timeout = self.connection.timeout
@@ -451,7 +469,7 @@ def command_line_test(instrument_class):
         if stri.lower() == 'x':
             break
         try:
-            print eval('inst.' + stri)
+            print(eval('inst.' + stri))
         except AttributeError:
             print("Command not recognized.")
 

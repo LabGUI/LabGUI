@@ -11,20 +11,16 @@ http://victorlin.me/posts/2012/08/26/good-logging-practice-in-python
 
 """
 import sys
-import PyQt4.QtGui as QtGui
-
-# just grab the parts we need from QtCore
-from PyQt4.QtCore import Qt, SIGNAL, QReadWriteLock, QSettings
-#from file_treatment_general_functions import load_experiment
-import py_compile
-#import plot_menu_and_toolbar
 
 import getopt
 
 import os
 from os.path import exists
+import warnings
 
 import numpy as np
+
+
 from collections import OrderedDict
 
 import logging
@@ -35,6 +31,30 @@ logging.config.fileConfig(os.path.join(ABS_PATH,"logging.conf"))
 
 from importlib import import_module
 
+from LocalVars import USE_PYQT5
+
+if  USE_PYQT5:
+    
+    from PyQt5.QtWidgets import (QWidget, QLabel, QLineEdit, QPushButton, 
+                                 QFileDialog, QHBoxLayout, QApplication)
+                                 
+    import PyQt5.QtWidgets as QtGui
+    
+    from PyQt5.QtGui import QIcon, QKeySequence
+    # just grab the parts we need from QtCore
+    from PyQt5.QtCore import Qt, QReadWriteLock, QSettings, pyqtSignal
+    
+    
+else:
+    
+    from PyQt4.QtGui import (QWidget, QLabel, QLineEdit, QPushButton, QIcon,
+                                 QFileDialog, QHBoxLayout, QApplication)
+                     
+    import PyQt4.QtGui as QtGui     
+
+    from PyQt4.QtGui import QIcon, QKeySequence          
+                     
+    from PyQt4.QtCore import Qt, SIGNAL, QReadWriteLock, QSettings
 
 from LabTools.IO import IOTool
 from LabTools.Display import QtTools, PlotDisplayWindow, mplZoomWidget
@@ -46,9 +66,9 @@ from LabTools.DataStructure import LabeledData
 
 PYTHON_VERSION = int(sys.version[0])
 
-COREWIDGETS_PACKAGE_NAME = "LabTools.CoreWidgets"
+COREWIDGETS_PACKAGE_NAME = "LabTools"
 
-USERWIDGETS_PACKAGE_NAME = "LabTools.UserWidgets"
+USERWIDGETS_PACKAGE_NAME = "LabTools"
 
 CONFIG_FILE = IOTool.CONFIG_FILE_PATH
 
@@ -101,6 +121,31 @@ class LabGuiMain(QtGui.QMainWindow):
         A wiki should be created to help understand and contribute to this project
     """
 #    cmdwin = None
+    if USE_PYQT5:
+        #creating a signal
+        debug_mode_changed = pyqtSignal(bool)
+        
+        triggered = pyqtSignal()
+        
+        colorsChanged = pyqtSignal('PyQt_PyObject')
+        
+        labelsChanged = pyqtSignal('PyQt_PyObject')
+#        print(triggered.__dict__)
+        
+        markersChanged = pyqtSignal('PyQt_PyObject')
+        
+        selections_limits = pyqtSignal('PyQt_PyObject',int,int,int,int)
+        
+        data_array_updated = pyqtSignal('PyQt_PyObject')
+        
+        signal_remove_fit = pyqtSignal()
+        
+        DEBUG_mode_changed = pyqtSignal(bool)
+        
+        #should be loaded directly form InstrumentWidget
+        
+        instrument_hub_connected =  pyqtSignal('PyQt_PyObject')
+
 
     def __init__(self, argv = []):
         
@@ -144,6 +189,9 @@ class LabGuiMain(QtGui.QMainWindow):
                 
                 logging.error("The config file you provided ('%s') doesn't \
 exist, '%s' will be used instead"%(self.config_file, CONFIG_FILE))
+                
+                warnings.warn("The config file you provided ('%s') doesn't \
+exist, '%s' will be used instead"%(self.config_file, CONFIG_FILE))              
                 
                 self.config_file = CONFIG_FILE
             
@@ -189,7 +237,8 @@ have the right format, '%s' will be used instead"%(self.config_file,
                 
                 #check whether the default config file exists or not
                 if exists(CONFIG_FILE) == False:
-                    
+                    warnings.warn("A '%s' file has been generated for you."%(
+                        CONFIG_FILE))
                     logging.warning("A '%s' file has been generated for you."%(
                         CONFIG_FILE))           
                     logging.warning("Please modify it to change the default \
@@ -264,12 +313,22 @@ have the right format, '%s' will be used instead"%(self.config_file,
 
         # handle data emitted by datataker (basically stuff it into a shared,
         # central array)
-        self.connect(self.datataker, SIGNAL(
-            "data(PyQt_PyObject)"), self.update_data_array)
+        if USE_PYQT5:
+            
+            self.datataker.data.connect(self.update_data_array)
+            
+            self.datataker.script_finished.connect(self.finished_DTT)
+            
+        else:
+            
+            self.connect(self.datataker, SIGNAL(
+                "data(PyQt_PyObject)"), self.update_data_array)
+                
+            self.connect(self.datataker, SIGNAL(
+            "script_finished(bool)"), self.finished_DTT)
 
         #a signal to signify the data taking script is over
-        self.connect(self.datataker, SIGNAL(
-            "script_finished(bool)"), self.finished_DTT)
+        
             
         #the array in which the data will be stored
         self.data_array = np.array([])
@@ -304,17 +363,17 @@ have the right format, '%s' will be used instead"%(self.config_file,
         # start/stop/pause buttons 
         self.start_DTT_action = QtTools.create_action(
             self, "Start DTT", slot = self.start_DTT, 
-            shortcut = QtGui.QKeySequence("F5"), icon = "start",
+            shortcut = QKeySequence("F5"), icon = "start",
             tip = "Start script")
             
         self.stop_DTT_action = QtTools.create_action(
             self, "Stop DTT", slot = self.stop_DTT,
-            shortcut = QtGui.QKeySequence("F6"), icon = "stop",
+            shortcut = QKeySequence("F6"), icon = "stop",
             tip = "stop script")
             
         self.pause_DTT_action = QtTools.create_action(
             self, "Pause DTT", slot = self.pause_DTT, 
-            shortcut = QtGui.QKeySequence("F7"), icon = "pause", 
+            shortcut = QKeySequence("F7"), icon = "pause", 
             tip = "pause script")
             
         self.pause_DTT_action.setEnabled(False)
@@ -371,28 +430,34 @@ have the right format, '%s' will be used instead"%(self.config_file,
         for widget in widgets_list:
             
             widget_name = widget
+
             try:
-                widget_module = import_module("." + widget_name, 
+                widget_module = import_module(widget_name, 
                                           package = COREWIDGETS_PACKAGE_NAME)
             except ImportError:
                 
-                widget_module = import_module("." + widget_name, 
+                widget_module = import_module(widget_name, 
                                           package = USERWIDGETS_PACKAGE_NAME)
                 
-            
-            self.add_widget(widget_module.add_widget_into_main)        
-        
+            try:
+                
+                self.add_widget(widget_module.add_widget_into_main)
+                
+            except AttributeError as e:
+
+                logging.error(widget_module)
+                raise(e)
         
 ###### FILE MENU SETUP ######
 
         self.fileSaveSettingsAction = QtTools.create_action(self,
         "Save Instrument Settings", slot = self.file_save_settings, 
-        shortcut = QtGui.QKeySequence.SaveAs,
+        shortcut = QKeySequence.SaveAs,
         icon = None, tip = "Save the current instrument settings")
 
         self.fileLoadSettingsAction = QtTools.create_action(self, 
         "Load Instrument Settings", slot = self.file_load_settings,
-        shortcut = QtGui.QKeySequence.Open,
+        shortcut = QKeySequence.Open,
         icon = None, tip = "Load instrument settings from file")
 
         self.fileLoadDataAction = QtTools.create_action(self, 
@@ -400,7 +465,7 @@ have the right format, '%s' will be used instead"%(self.config_file,
         icon = None, tip = "Load previous data from file")
                                                                     
         """this is not working I will leave it commented right now"""
-#        self.filePrintAction = QtTools.create_action(self, "&Print Report", slot=self.file_print, shortcut=QtGui.QKeySequence.Print,
+#        self.filePrintAction = QtTools.create_action(self, "&Print Report", slot=self.file_print, shortcut=QKeySequence.Print,
 #                                                     icon=None, tip="Print the figure along with relevant information")
                 
         self.fileSaveCongfigAction = QtTools.create_action(self,
@@ -445,7 +510,7 @@ the script path and the data output path into the config file")
         
         self.connect_hub = QtTools.create_action(self, "Connect Instruments", 
         slot = self.connect_instrument_hub, 
-        shortcut = QtGui.QKeySequence("Ctrl+I"), icon=None,
+        shortcut = QKeySequence("Ctrl+I"), icon=None,
         tip="Refresh the list of selected instruments")
 
         self.refresh_ports_list_action = QtTools.create_action(self, 
@@ -464,23 +529,9 @@ the script path and the data output path into the config file")
         self.add_pdw = QtTools.create_action(self, "Add a Plot",
         slot = self.create_pdw, shortcut = None, icon = None,
         tip = "Add a recordsweep window")
-        
-        
-        self.add_pqtw = QtTools.create_action(self, "Add a PyQtplot",
-        slot = self.create_pqtw, shortcut = None, icon = None,
-        tip = "Add a pyqt window")
 
 
         self.windowMenu.addAction(self.add_pdw)
-        
-        try:
-            
-            import PyQTWindow
-            self.windowMenu.addAction(self.add_pqtw)
-            
-        except:
-            logging.info("pyqtgraph is unable to load, \
-the pyqt window option is disabled")
         
 ###### OPTION MENU SETUP ######
         self.toggle_debug_state = QtTools.create_action(self, 
@@ -587,26 +638,51 @@ the pyqt window option is disabled")
                                         name="Live Data Window",
                                         default_channels = num_channels)  
         
-        self.connect(self, SIGNAL("data_array_updated(PyQt_PyObject)"),
-                     pdw.update_plot)
-                     
-        self.connect(pdw.mplwidget, SIGNAL(
-            "limits_changed(int,PyQt_PyObject)"), self.emit_axis_lim)
+        if USE_PYQT5:
 
-        # this is here temporary, I would like to change the plw when the live
-        # fit is ticked
-        self.connect(self.widgets['AnalyseDataWidget'], SIGNAL(
-            "data_set_updated(PyQt_PyObject)"), pdw.update_plot)
-        self.connect(self.widgets['AnalyseDataWidget'], SIGNAL(
-            "update_fit(PyQt_PyObject)"), pdw.update_fit)
-        self.connect(self, SIGNAL("remove_fit()"), pdw.remove_fit)
-
-        self.connect(self, SIGNAL("colorsChanged(PyQt_PyObject)"),
-                     pdw.update_colors)
-        self.connect(self, SIGNAL("labelsChanged(PyQt_PyObject)"),
-                     pdw.update_labels)
-        self.connect(self, SIGNAL(
-            "markersChanged(PyQt_PyObject)"), pdw.update_markers)
+            self.data_array_updated.connect(pdw.update_plot)
+                         
+            pdw.mplwidget.limits_changed.connect(self.emit_axis_lim)
+    
+            # this is here temporary, I would like to change the plw when the live
+            # fit is ticked
+                
+            self.widgets['AnalyseDataWidget'].update_fit.connect(
+                pdw.update_fit)
+                
+            self.signal_remove_fit.connect(pdw.remove_fit)
+    
+            self.colorsChanged.connect(pdw.update_colors)
+                         
+            self.labelsChanged.connect(pdw.update_labels)
+                         
+            self.markersChanged.connect(pdw.update_markers)
+                    
+            
+        else:
+        
+            self.connect(self, SIGNAL("data_array_updated(PyQt_PyObject)"),
+                         pdw.update_plot)
+                         
+            self.connect(pdw.mplwidget, SIGNAL(
+                "limits_changed(int,PyQt_PyObject)"), self.emit_axis_lim)
+    
+            # this is here temporary, I would like to change the plw when the live
+            # fit is ticked
+                
+            self.connect(self.widgets['AnalyseDataWidget'], SIGNAL(
+                "update_fit(PyQt_PyObject)"), pdw.update_fit)
+                
+            self.connect(self, SIGNAL("remove_fit()"), pdw.remove_fit)
+    
+            self.connect(self, SIGNAL("colorsChanged(PyQt_PyObject)"),
+                         pdw.update_colors)
+                         
+            self.connect(self, SIGNAL("labelsChanged(PyQt_PyObject)"),
+                         pdw.update_labels)
+                         
+            self.connect(self, SIGNAL(
+                "markersChanged(PyQt_PyObject)"), pdw.update_markers)
         
         if settings == None:
             
@@ -622,32 +698,6 @@ the pyqt window option is disabled")
 
         pdw.show()
 
-    def create_pqtw(self):
-        """
-            add a new pqt plot display window in the MDI area its channels are labeled according to the channel names on the cmd window.
-            It is connected to the signal of data update.
-        """
-        pqtw = PyQtWindow.PyQtGraphWidget(n_curves=self.instr_hub.get_instrument_nb(
-        ) + self.widgets['CalcWidget'].get_calculation_nb(), parent=self)  # self.datataker)
-        self.connect(self, SIGNAL("spectrum_data_updated(PyQt_PyObject,int)"),
-                     pqtw.update_plot)
-#        self.connect(pdw.mplwidget,SIGNAL("limits_changed(int,PyQt_PyObject)"),self.emit_axis_lim)
-
-        # this is here temporary, I would like to change the plw when the live fit is ticked
-#        self.connect(self.dataAnalyseWidget, SIGNAL("data_set_updated(PyQt_PyObject)"),pdw.update_plot)
-#        self.connect(self.dataAnalyseWidget, SIGNAL("update_fit(PyQt_PyObject)"), pdw.update_fit)
-#        self.connect(self,SIGNAL("remove_fit()"), pdw.remove_fit)
-
-#        self.connect(self, SIGNAL("colorsChanged(PyQt_PyObject)"), pdw.update_colors)
-#        self.connect(self, SIGNAL("labelsChanged(PyQt_PyObject)"), pdw.update_labels)
-#        self.connect(self, SIGNAL("markersChanged(PyQt_PyObject)"), pdw.update_markers)
-#        self.update_labels()
-#        self.update_colors()
-
-        self.zoneCentrale.addSubWindow(pqtw)
-
-        pqtw.show()
-
 
     def get_last_window(self, window_ID = "Live"):
         """
@@ -659,24 +709,38 @@ the pyqt window option is disabled")
             
             pdw = self.zoneCentrale.subWindowList()[-1].widget()
         
+            return pdw
+            
         except IndexError:
             
             logging.error("No pdw available")
         
-        return pdw
+        
             
 
     def update_colors(self):
         color_list = self.widgets['InstrumentWidget'].get_color_list() \
                      + self.widgets['CalcWidget'].get_color_list()
 
-        self.emit(SIGNAL("colorsChanged(PyQt_PyObject)"), color_list)
+        if USE_PYQT5:
+            
+            self.colorsChanged.emit(color_list)
+            
+        else:
+
+            self.emit(SIGNAL("colorsChanged(PyQt_PyObject)"), color_list)
 
     def update_labels(self):
         label_list = self.widgets['InstrumentWidget'].get_label_list() \
                      + self.widgets['CalcWidget'].get_label_list()
-                     
-        self.emit(SIGNAL("labelsChanged(PyQt_PyObject)"), label_list)
+                   
+        if USE_PYQT5:
+            
+            self.labelsChanged.emit(label_list)
+            
+        else:
+
+            self.emit(SIGNAL("labelsChanged(PyQt_PyObject)"), label_list)
 
 
 
@@ -725,8 +789,20 @@ the pyqt window option is disabled")
                 xmax = limits[0][1]
                 imin = IOTool.match_value2index(x, xmin)
                 imax = IOTool.match_value2index(x, xmax)
-                self.emit(SIGNAL("selections_limits(PyQt_PyObject,int,int,int,int)"), np.array(
-                    [imin, imax, xmin, xmax]), paramX, paramY, paramYfit, mode)
+                
+                if USE_PYQT5:
+                    
+                    self.selections_limits.emit(
+                        np.array([imin, imax, xmin, xmax]),
+                        paramX, paramY, paramYfit, mode)
+                        
+                else:
+                
+                    self.emit(SIGNAL(
+                        "selections_limits(PyQt_PyObject,int,int,int,int)"), 
+                        np.array([imin, imax, xmin, xmax]),
+                        paramX, paramY, paramYfit, mode)
+                        
             except IndexError:
                 logging.debug("There is apparently no data generated yet")
             except:
@@ -865,11 +941,6 @@ the pyqt window option is disabled")
                 self.output_file.write(stri + '\n')
                 print('>>' + stri)
 
-    def update_spectrum_data(self, spectrum_data):
-        chan_num = 0
-        self.emit(SIGNAL("spectrum_data_updated(PyQt_PyObject)"),
-                  spectrum_data, chan_num)
-
     def update_data_array(self, data_set):
         """ slot for when the thread emits data """
 
@@ -901,7 +972,13 @@ the pyqt window option is disabled")
             except:
                 self.data_array = data
 
-        self.emit(SIGNAL("data_array_updated(PyQt_PyObject)"), self.data_array)
+        if USE_PYQT5:
+            
+            self.data_array_updated.emit(self.data_array)
+            
+        else:
+            
+            self.emit(SIGNAL("data_array_updated(PyQt_PyObject)"), self.data_array)
 
 #   
 
@@ -973,10 +1050,24 @@ the pyqt window option is disabled")
 
     def clear_plot(self):
         self.data_array = np.array([])
-        self.emit(SIGNAL("data_array_updated(PyQt_PyObject)"), self.data_array)
+        
+        if USE_PYQT5:
+            
+            self.data_array_updated.emit(self.data_array)
+            
+        else:
+            
+            self.emit(SIGNAL("data_array_updated(PyQt_PyObject)"), self.data_array)        
 
     def remove_fit(self):
-        self.emit(SIGNAL("remove_fit()"))
+        
+        if USE_PYQT5:
+            
+            self.signal_remove_fit.emit()
+            
+        else:
+            
+            self.emit(SIGNAL("remove_fit()"))
 
     def file_save_config(self):
         """
@@ -999,10 +1090,20 @@ the pyqt window option is disabled")
             markers, linestyles and user defined parameters for the window
         """
         
-        if fname == None:
+        if fname is None:
             
-            fname = str(QtGui.QFileDialog.getSaveFileName(
-                self, 'Save settings file as', './'))
+            if USE_PYQT5:
+                
+                fname, fmt = QtGui.QFileDialog.getSaveFileName(
+                self, 'Save settings file as', './')
+                
+                fname = str(fname)
+                
+            else:
+                
+                fname = str(QtGui.QFileDialog.getSaveFileName(
+                self, 'Save settings file as', './'))                 
+            
                 
         if fname:
             
@@ -1029,10 +1130,19 @@ the pyqt window option is disabled")
             for the instrument and which axis to select for plotting, colors,
             markers, linestyles and user defined parameters for the window
         """
-        if fname == None:
+        if fname is None:
             
-            fname = str(QtGui.QFileDialog.getOpenFileName(
-            self, 'Open settings file', './'))
+            if USE_PYQT5:
+                
+                fname, fmt = QtGui.QFileDialog.getOpenFileName(
+                self, 'Open settings file', './')
+                
+                fname = str(fname)
+                
+            else:
+                
+                fname = str(QtGui.QFileDialog.getOpenFileName(
+                self, 'Open settings file', './'))          
             
         if fname:
             
@@ -1049,7 +1159,17 @@ the pyqt window option is disabled")
             
             default_path = './'
             
-        fname = str(QtGui.QFileDialog.getOpenFileName(
+            
+        if USE_PYQT5:
+            
+            fname, fmt = QtGui.QFileDialog.getOpenFileName(
+            self, 'Open settings file', default_path)
+            
+            fname = str(fname)
+            
+        else:
+            
+            fname = str(QtGui.QFileDialog.getOpenFileName(
             self, 'Open settings file', default_path))
             
         if fname:
@@ -1057,18 +1177,18 @@ the pyqt window option is disabled")
             self.create_plw(fname)
             
     def file_print(self):
-        self.current_pdw.print_figure(file_name=self.output_file.name)
+        self.current_pdw.print_figure(file_name = self.output_file.name)
 
     def option_display_debug_state(self):
         """Visualy let the user know the programm is in DEBUG mode"""
 
-        self.setWindowIcon(QtGui.QIcon('images/icon_debug_py%s.png'%(PYTHON_VERSION)))
+        self.setWindowIcon(QIcon('images/icon_debug_py%s.png'%(PYTHON_VERSION)))
         self.setWindowTitle("-" * 3 + "DEBUG MODE" + "-" * 3 + " (python%s)"%(PYTHON_VERSION))
         self.setWindowOpacity(0.92)
         
     def option_display_normal_state(self):
         """Visualy let the user know the programm is in DEBUG mode"""
-        self.setWindowIcon(QtGui.QIcon('images/icon_normal_py%s.png'%(PYTHON_VERSION)))
+        self.setWindowIcon(QIcon('images/icon_normal_py%s.png'%(PYTHON_VERSION)))
         self.setWindowTitle("LabGui (python%s)"%(PYTHON_VERSION))
         self.setWindowOpacity(1)
 
@@ -1090,7 +1210,14 @@ the pyqt window option is disabled")
                                   self.DEBUG, 
                                   config_file_path = self.config_file)
         
-        self.emit(SIGNAL("DEBUG_mode_changed(bool)"),self.DEBUG)
+        if USE_PYQT5:
+            
+            self.debug_mode_changed.emit(self.DEBUG)
+            
+        else:
+            
+            self.emit(SIGNAL("DEBUG_mode_changed(bool)"),self.DEBUG)        
+            
    
     def option_change_log_level(self):
         """change the file logging.conf's logging level"""
@@ -1129,6 +1256,19 @@ def test_automatic_fitting():
     
     ex.show()
     sys.exit(app.exec_())
+
+def test_save_fig():
+    """connect the Hub and save the figure"""
+    app = QtGui.QApplication(sys.argv)
+    ex = LabGuiMain()
+    
+    
+    ex.connect_instrument_hub()
+    
+#    ex.action_manager.saveFigAction.triggered()
+    ex.show()
+    sys.exit(app.exec_())
+
 
 def test_save_settings(idx = 0):
     """connect the Hub and save the settings"""
@@ -1191,8 +1331,17 @@ def test_user_variable_widget():
     sys.exit(app.exec_())
 
 if __name__ == "__main__":
-#    print("Launching LabGUI")
-    launch_LabGui()
+     print("Launching LabGUI")
+     launch_LabGui()
+#    test_save_fig()
+#    a = import_module('ConsoleWidget')
+#    print(a)
+#    
+#    a = import_module('ConsoleWidget', package = "LabTools")
+#    print(a)    
+#    
+#    a = import_module('ConsoleWidget', package = "LabTools.CoreWidgets")
+#    print(a)
 #    test_automatic_fitting()
     
 

@@ -14,10 +14,22 @@ License: see LICENSE.txt file
 """
 
 import sys
-import PyQt4.QtGui as QtGui
-import PyQt4.QtCore as QtCore
+
 from types import MethodType
 import logging
+
+from LocalVars import USE_PYQT5
+
+if  USE_PYQT5:
+    
+    import PyQt5.QtCore as QtCore
+    import PyQt5.QtWidgets as QtGui
+    
+else:
+    import PyQt4.QtGui as QtGui
+    import PyQt4.QtCore as QtCore
+
+
 
 from LabTools.Display import QtTools
 
@@ -87,10 +99,25 @@ def add_widget_into_main(parent):
     # redirect print statements to show a copy on "console"
     sys.stdout = QtTools.printerceptor(parent)
     
-    parent.update_console = MethodType(update_console, parent, parent.__class__)    
+    #assigning a method to the parent class
+    #depending on the python version this fonction take different arguments
+    if sys.version_info[0] > 2:   
     
-    parent.connect(parent, QtCore.SIGNAL(
-            "print_to_console(PyQt_PyObject)"), parent.update_console) 
+        parent.update_console = MethodType(update_console, parent)    
+    
+    else:
+        
+        parent.update_console = MethodType(update_console, parent, parent.__class__)
+    
+    if USE_PYQT5:
+        
+        sys.stdout.print_to_console.connect(parent.update_console) 
+        
+    else:
+        
+        parent.connect(sys.stdout, QtCore.SIGNAL(
+            "print_to_console(PyQt_PyObject)"), parent.update_console)
+
 
 
 def update_console(parent, stri):

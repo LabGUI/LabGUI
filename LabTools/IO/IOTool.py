@@ -585,12 +585,12 @@ def load_adat_file(fname, splitchar=' '):
 #    data.reshape(nrow,ncolumn)#,nrow)
 
 
-def import_module_func(module_name, func_name, package=None):
+def import_module_func(module_name, func_name, package = None):
     """
     given a module and a function name (in strings) 
     it returns a function handle
     """
-    my_module = import_module(module_name, package=package)
+    my_module = import_module(module_name, package = package)
     return getattr(my_module, func_name)
 
 
@@ -607,15 +607,34 @@ def list_module_func(module_name, package = None):
     given a module name which is in the PYTHONPATH this function 
     lists all the function names of the module
     """
-    my_module = import_module(module_name, package=package)
+    try:
+        
+        my_module = import_module(module_name, package = package)
+        
+    except ImportError as e:
+        
+        if package is None:
+            
+            print("You didn't specify a package maybe the error stems from that")
+        
+        else:
+            
+            print("The module %s in not in the package %s"%(module_name,
+                                                            package))
+        
+        raise(e)
+            
     all_funcs = dir(my_module)
     my_funcs = []
+    
     for func in all_funcs:
         #        print func
         #        print func[0:2]
         # discriminate the function that have __ in front of them
         if not func[0:2] == "__":
+            
             my_funcs.append(func)
+            
     return my_funcs
 
 

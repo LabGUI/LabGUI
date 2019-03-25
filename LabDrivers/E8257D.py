@@ -8,7 +8,14 @@ Agilent E4400B 1GHz signal generator
 #!/usr/bin/env python
 import numpy as np
 import time
-import Tool # changed from "from . import Tool" (Simon, 2016-09-11)
+
+try:
+    
+    from . import Tool
+    
+except:
+    
+    import Tool
 
 param = {'V': 'V', 'freq': 'Hz'}
 

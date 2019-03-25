@@ -16,7 +16,7 @@ except:
 
 from collections import OrderedDict
 from LabTools.IO import IOTool as io
-from Functions import *
+from LabTools.Fitting.Functions import *
 #from He4Properties import T_lambda
 #from file_treatment_general_functions import load_experiment
 
@@ -829,7 +829,7 @@ def test_fit_exponential():
     idx_s = 60
 
     fitp_val,cov = fit_nonlinear(t[idx_b:idx_s],y[idx_b:idx_s],exp_decay,guess_param = [y[idx_b],t[idx_s]-t[idx_b],t[idx_s]])
-    print fitp_val
+    print(fitp_val)
     plt.plot(t,y,'b',t[idx_b:idx_s],y[idx_b:idx_s],'or',exp_decay(t,*fitp_val),'--k')
     plt.show()
     
@@ -854,7 +854,7 @@ def test_fit_exponential_down():
     idx_b = 13
 
     fitp_val,cov = fit_nonlinear(t[idx_b:],y[idx_b:],exp_decay_down)
-    print fitp_val
+    print(fitp_val)
     plt.plot(t,y,'b',t[idx_b:],y[idx_b:],'or',exp_decay_down (t,*fitp_val),'--k')
     plt.show()
    

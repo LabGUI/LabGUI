@@ -283,10 +283,10 @@ if (__name__ == '__main__'):
     i = Instrument("GPIB0::12",False)
 #    print i.read()
 #    print(i.setpoint_temperature(6,5e-2))
-    print i.measure("heater")
+    print(i.measure("heater"))
     i.set_heater_off()
-    print i.get_heater_range()
-    print i.get_heater_output()
+    print(i.get_heater_range())
+    print(i.get_heater_output())
     i.close()
     
 
