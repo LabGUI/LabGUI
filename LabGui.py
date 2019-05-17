@@ -7,7 +7,7 @@ License: see LICENSE.txt file
 
 nice logging example
 
-http://victorlin.me/posts/2012/08/26/good-logging-practice-in-python
+http:/pyt/victorlin.me/posts/2012/08/26/good-logging-practice-in-python
 
 """
 from LabTools.IO import IOTool
