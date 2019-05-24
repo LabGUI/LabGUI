@@ -60,7 +60,7 @@ class Instrument(Tool.MeasInstr):
     def read_voltage_DC(self):
         if not self.DEBUG:
             string_data = self.ask(':MEAS:VOLT:DC?')
-            print(string_data)
+            #print(string_data) # prevents output from writing twice
             return float(string_data)
         else:
             return 123.4
@@ -94,8 +94,12 @@ class Instrument(Tool.MeasInstr):
             return 123.4
 
     # if run as own program
-    # if (__name__ == '__main__'):
+    if (__name__ == '__main__'):
+        i = Instrument('GPIB0::19')
+        # print(i.identify())
+        print(i.measure('V'))
+        i.close()
 
-     #   lockin = device('dev9')
+    #   lockin = device('dev9')
      #   lockin.set_ref_internal  # no averaging
      #   lockin.close()

@@ -170,6 +170,7 @@ user variable")
             script = open(userScriptName)
             py_compile.compile(script.name, doraise=True)
             code = compile(script.read(), script.name, 'exec')
+
             exec(code)
             script.close()
 

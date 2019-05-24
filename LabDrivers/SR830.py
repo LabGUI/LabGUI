@@ -199,3 +199,4 @@ if (__name__ == '__main__'):
     from utils import command_line_test
 
     command_line_test(Instrument)
+    print(i.identify())

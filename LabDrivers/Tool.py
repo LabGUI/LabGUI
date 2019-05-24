@@ -307,7 +307,7 @@ with the instrument %s" % self.ID_name)
 
         return answer
 
-    def ask(self, msg, num_bytes=None):
+    def ask(self, msg, num_bytes=None): #also known as query
         """ Writes a command to the instrument and reads its reply """
 
         answer = None
@@ -731,7 +731,7 @@ argument is not the good one")
 
             logging.error("Problem with change of interface in the the \
 instrument hub. Interface passed as an argument : %s" % intf)
-
+    # debug note may23rd2019 - HP34401A throws error in this function
     def connect_hub(self, instr_list, dev_list, param_list):
         """ 
             triggers the connection of a list of instruments instr_list,
