@@ -4,10 +4,10 @@ import visa
 
 try:
     from . import Tool
-except:C
+except:
     import Tool
 
-param = {'T1': 'K', 'T2': 'K', 'T3': 'K'}
+#param = {'T1': 'K', 'T2': 'K', 'T3': 'K'}
 
 param = {
     'T_SET' : 'K',
@@ -57,8 +57,15 @@ class Instrument(Tool.MeasInstr):
 
         #self.term_chars = '\r'
         #self.connection.read_termination = '\r'
-        self.setControl(0, 1)
+        self.setControl(False, True) #still works with 0,1; but improper
+        """ FOR FIRST INSTANCE ONLY
+        try:
+            self.connection.read()
+        except:
+            pass #really bad programming technique ik
+        """
         #self.write('$W1000')
+        #print("working") will not get to this point
 
     def measure_old(self, channel): #consider rewriting
         if channel in self.last_measure:
@@ -175,7 +182,7 @@ class Instrument(Tool.MeasInstr):
             idx = idx + 1
             answer = self.read()
             #print(answer)
-            if answer:
+            if answer and answer is not "?*IDN?":
                 is_empty = False
         return answer
 
@@ -185,7 +192,7 @@ if (__name__ == '__main__'):
     while True: #yuck
         cmd = input("Enter command: ")
         print(i.query(cmd))
-
+    i.close()
 
 
 #   print(i.write('R1'))
@@ -217,7 +224,7 @@ if (__name__ == '__main__'):
 
 
 
-    i.close()
+
 
 #    term_char = '\r' 
 #    rm = visa.ResourceManager()

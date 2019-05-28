@@ -233,6 +233,8 @@ class MeasInstr(object):
             if id_string is not None:
 
                 return msg + id_string
+            elif id_string is "?*IDN?":
+                print("Oxford")
 
             else:
 
@@ -320,6 +322,15 @@ with the instrument %s" % self.ID_name)
 
                     answer = self.connection.query(msg) #ask is depricated
 
+                    """ Alternative Method
+                    
+                    self.connection.write(msg)
+                    
+                    answer = self.connection.read()
+                    
+                    Might be necessary for Oxford devices
+                    
+                    """
                 except:
                     print("\n\n### command %s bugged###\n\n" % msg)
                     answer = np.nan
