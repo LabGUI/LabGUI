@@ -318,7 +318,7 @@ with the instrument %s" % self.ID_name)
 
                 try:
 
-                    answer = self.connection.ask(msg)
+                    answer = self.connection.query(msg) #ask is depricated
 
                 except:
                     print("\n\n### command %s bugged###\n\n" % msg)

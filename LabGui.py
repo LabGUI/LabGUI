@@ -676,7 +676,7 @@ have the right format, '%s' will be used instead" % (self.config_file,
         if reply == QtGui.QMessageBox.Yes:
 
             # save the current settings
-            #            self.file_save_settings(self.default_settings_fname)
+            self.file_save_settings(self.default_settings_fname)
 
             self.settings.setValue("windowState", self.saveState())
             self.settings.setValue("geometry", self.saveGeometry())

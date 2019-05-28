@@ -12,6 +12,8 @@ param = {'V_DC': 'V', 'V_AC': 'V', 'I_DC': 'A',
 
 INTERFACE = Tool.INTF_GPIB
 
+REMOTE_LOCK = False
+
 
 class Instrument(Tool.MeasInstr):
 
@@ -30,6 +32,7 @@ class Instrument(Tool.MeasInstr):
         if channel in self.last_measure:
             if not self.DEBUG:
                 if channel == 'V_DC':
+                    #print(self.ask(":SYST:LOC?"))
                     answer = self.read_voltage_DC()
                 elif channel == 'V_AC':
                     answer = self.read_voltage_AC()
@@ -48,6 +51,10 @@ class Instrument(Tool.MeasInstr):
             print("you are trying to measure a non existent channel : " + channel)
             print("existing channels :", self.channels)
             answer = None
+        # to prevent remote lockout
+        if not REMOTE_LOCK:
+            self.connection.control_ren(0) #deassert remote lock
+            self.connection.control_ren(1) #reassert remote lock
         return answer
 
     def read_any(self):

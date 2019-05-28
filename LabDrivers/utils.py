@@ -113,10 +113,11 @@ def list_serial_ports(max_port_num=20):
         raise EnvironmentError('Unsupported platform')
 
     result = []
+    print(ports)
     for port in ports:
         try:
             s = serial.Serial(port, 9600, timeout=0.1)
-
+            print(port)
             result.append(str(port))
             s.close()
 
@@ -280,7 +281,7 @@ def list_drivers(interface=[INTF_VISA, INTF_PROLOGIX, INTF_SERIAL, INTF_NONE]):
     for file_name in driver_files:
 
         if file_name.endswith('.py') \
-                and (not file_name == 'Tool.py' and not file_name == '__init__.py' and not file_name == 'utils.py'):
+                and (not file_name == 'Tool.py' and not file_name == '__init__.py' and not file_name == 'utils.py'): #yikes
             name = file_name.split('.py')[0]
 
             # import the module of the instrument in the package drivers
@@ -370,11 +371,18 @@ class PrologixController(object):
                         com_port
                     )
 
-                    self.connection = serial.Serial(
-                        com_port,
-                        baud_rate,
-                        timeout=timeout
-                    )
+                    try:
+                        self.connection = serial.Serial(
+                            com_port,
+                            baud_rate,
+                            timeout=timeout
+                        )
+                    except serial.serialutil.SerialException:
+                        self.connection = None
+
+                        logging.error(
+                            'The port %s is not attributed to any device' % com_port
+                        )
                 else:
                     self.connection = None
                     logging.warning(

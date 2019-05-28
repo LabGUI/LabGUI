@@ -1,2 +1,2 @@
 dt(s), TIME, , dt
-Roll(), DICE, COM14, Roll
+T1(K), ITC503S, GPIB0::24::INSTR, T1
