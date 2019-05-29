@@ -66,7 +66,7 @@ class Instrument(Tool.MeasInstr):
         """
         #self.write('$W1000')
         #print("working") will not get to this point
-
+    """
     def measure_old(self, channel): #consider rewriting
         if channel in self.last_measure:
             if channel == 'T1':
@@ -135,7 +135,7 @@ class Instrument(Tool.MeasInstr):
         return answer
         
            # set controls for locked (0 = False, 1 = True) and remote (0 = local, 1 = remote)
-
+    """
     def measure(self, channel):
         if channel in self.last_measure:
             command = "R" + str(list(param.keys()).index(channel))
@@ -148,7 +148,7 @@ class Instrument(Tool.MeasInstr):
 
 
         return float(answer.split("R")[-1]) # last data point incase it reads two
-
+    """
     def setControl_old(self, locked, remote):
         if locked and remote:
             self.write('$C1')
@@ -158,7 +158,7 @@ class Instrument(Tool.MeasInstr):
             self.write('$C3')
         else:
             self.write('$C2')
-
+    """
     def setControl(self, locked, remote):
         # same principles, its a binary number whos first bit is 0:local, 1:remote, and second bit is 0:lock, 1:unlock
         unlocked = not locked
@@ -182,7 +182,7 @@ class Instrument(Tool.MeasInstr):
             idx = idx + 1
             answer = self.read()
             #print(answer)
-            if answer and answer is not "?*IDN?":
+            if answer and answer is not "?*IDN?": #bug fix for when first connected, ?*IDN? is still in read buffer
                 is_empty = False
         return answer
 

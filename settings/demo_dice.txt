@@ -1,2 +1,2 @@
-dt(s), TIME, , dt, 'dt(s)', 0, 0, 0, 0, 0, #4477AA, 'None', '-'
-T2(K), ITC503S, GPIB0::24::INSTR, T2, 'T2(K)', 0, 0, 0, 0, 0, #CC6677, 'None', '-'
+dt(s), TIME, , dt
+T2(K), ITC503S, GPIB0::24::INSTR, T2

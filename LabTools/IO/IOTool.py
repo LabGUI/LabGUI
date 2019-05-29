@@ -575,6 +575,13 @@ def import_module_func(module_name, func_name, package=None):
     """
     my_module = import_module(module_name, package=package)
     return getattr(my_module, func_name)
+def import_module_func(module_name, func_name, package=None):
+    """
+    given a module and a function name (in strings)
+    it returns a function handle
+    """
+    my_module = import_module(module_name, package=package)
+    return getattr(my_module, func_name)
 
 
 def get_func_variables(my_func):

@@ -17,6 +17,9 @@ from LabTools import DataManagement
 from LabTools.DataStructure import LabeledData
 from LocalVars import USE_PYQT5
 
+# for commandwidget
+from LabTools.CoreWidgets import CommandWidget
+
 import sys
 import getopt
 import os
@@ -324,6 +327,9 @@ have the right format, '%s' will be used instead" % (self.config_file,
         # InstrumentHub object
         self.datataker = DataManagement.DataTaker(self.lock, self.instr_hub)
 
+        self.cmdline = CommandWidget.CommandWidget(parent=self)
+        #self.cmdline.instr_hub = self.instr_hub
+
         # handle data emitted by datataker (basically stuff it into a shared,
         # central array)
         if USE_PYQT5:
@@ -411,6 +417,7 @@ have the right format, '%s' will be used instead" % (self.config_file,
 
         # these are widgets which were added by users
         user_widget_path = os.path.join(widget_path, 'UserWidgets')
+
 
         # this is the legitimate list of core widgets
         widgets_list = [o.rstrip('.py') for o in os.listdir(core_widget_path)
@@ -589,6 +596,17 @@ have the right format, '%s' will be used instead" % (self.config_file,
         )
 
         self.optionMenu.addAction(self.toggle_debug_state)
+
+        self.toggle_cmd_state = QtTools.create_action(
+            self,
+            "Open GPIB CommandLine",
+            slot=self.option_command_window_state,
+            shortcut=None,
+            icon=None,
+            tip="Launch or focus GPIB CommandLine"
+        )
+        self.optionMenu.addAction(self.toggle_cmd_state)
+
 
         # Option to change the logging level displayed in the console
         for log_level in ["DEBUG", "INFO", "WARNING", "ERROR"]:
@@ -1291,6 +1309,14 @@ have the right format, '%s' will be used instead" % (self.config_file,
         else:
 
             self.emit(SIGNAL("DEBUG_mode_changed(bool)"), self.DEBUG)
+
+
+    def option_command_window_state(self):
+        """launches or focuses commandline """
+        self.cmdline.show()
+        self.cmdline.update_devices()
+        self.cmdline.raise_()
+
 
     def option_change_interface(self):
         """changes GPIB interface"""

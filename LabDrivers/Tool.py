@@ -223,6 +223,9 @@ class MeasInstr(object):
 
         return self.identify()
 
+    def getID_name(self):
+        return self.ID_name
+
     def identify(self, msg=''):
         """ Try the IEEE standard identification request """
 
@@ -233,7 +236,7 @@ class MeasInstr(object):
             if id_string is not None:
 
                 return msg + id_string
-            elif id_string is "?*IDN?":
+            elif "?*IDN?" in id_string:
                 print("Oxford")
 
             else:
