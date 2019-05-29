@@ -171,6 +171,81 @@ class Instrument(Tool.MeasInstr):
         # the way it works is An, where n is a decimal number, whos first bit (2^0) represents if heater is auto, and second bit represents if gas flow is auto
         self.write("$A"+str(commandcode))
 
+    def setSweep(self, line, PointTemperature, SweepTime, HoldTime):
+        line = int(line)
+        if (line >= 1) and (line <= 16):
+            self.write("$x"+str(line))
+            #if x not in 'x':
+            #    print("Error writing x:" + x)
+
+            values = [PointTemperature, SweepTime, HoldTime]
+            i=1
+            for x in values:
+                # point temperature
+                self.write("y"+str(i))
+                y = self.read()
+                if y not in 'y':
+                    print("Error writing y:" + y)
+                # write value
+                self.write("s" + str(x))
+                s = self.read()
+                if s not in 's':
+                    print("Error writing s:" + s)
+                i += 1
+        else:
+            print("Invalide line")
+
+    def readSweep(self, line):
+        line = int(line)
+        if (line >= 1) and (line <= 16):
+            self.write("x"+str(line))
+            err = self.read()
+            if 'x' != err[:1]:
+                print("Error writing x: "+err)
+
+            values_r = ["Point Temperature", "Sweep Time", "Hold Time"]
+            values_w = [None] * 3
+            for i in range(3):
+                self.write("y"+str(i+1))
+                err = self.read()
+                if 'y' != err[:1]:
+                    print("Error writing y: " + err)
+
+                self.write("r")
+                ret = self.read()
+                if '?' == ret[:1]: #command error'd
+                    print("Error reading value: " + ret)
+                else:
+                    values_w[i] = ret[1:]
+            for values in list(zip(values_r, values_w)):
+                print(values[0]+": "+values[1])
+            return [float(i) for i in values_w]
+            """ try: Possible catch for return variable just in case
+                return [float(i) for i in values_w]
+            except ValueError:
+                # need to do it manually cuz smn is fucked up
+                ret_arr = []
+                j=0
+                for i in values_w:
+                    try:
+                        ret_arr.append(float(i))
+                    except:
+                        ret_arr.append(None)
+                        pass
+                return ret_arr"""
+        else:
+            print("Invalid sweep line")
+            return [None]*3
+
+    def wipeSweep(self):
+        self.write("w")
+        ret = self.read()
+        if '?' == ret[:1]:
+            print("ITC is either in local or currently running a sweep")
+        else:
+            print("Sweep values wiped")
+
+
 
     def query(self, command):
         self.write(command)
@@ -189,6 +264,11 @@ class Instrument(Tool.MeasInstr):
 if (__name__ == '__main__'):
     i = Instrument("GPIB0::24")
     i.setControl(False, True)
+
+    i.setSweep(1,100,10,1)
+    i.readSweep(1)
+    i.wipeSweep()
+    i.readSweep(1)
     while True: #yuck
         cmd = input("Enter command: ")
         print(i.query(cmd))
