@@ -14,6 +14,7 @@ try:
 except:
     import Tool
 
+import math
 
 param = {'V': 'V', 'I': 'A'}
 
@@ -47,7 +48,12 @@ class Instrument(Tool.MeasInstr):
                     # 0 #this is to be defined for record sweep
                     self.write('VOLT:RANG:AUTO ON')
                     answer = self.ask(':READ?')
-                    answer = float(answer.split(',')[0])
+                    #if math.isnan(float(answer)):
+                    if math.isnan(answer): #answer will be nan if error
+                        print("Please set Output on")
+                        answer = float(answer)
+                    else:
+                        answer = float(answer.split(',')[0])
                 else:
                     answer = random.random()
                 self.last_measure[channel] = answer
@@ -57,7 +63,12 @@ class Instrument(Tool.MeasInstr):
                     # 0 #this is to be defined for record sweep
                     self.write('CURR:RANG:AUTO ON')
                     answer = self.ask(':READ?')
-                    answer = float(answer.split(',')[1])
+                    #if math.isnan(float(answer)):
+                    if math.isnan(answer): #answer will be nan if error
+                        print("Please set Output on")
+                        answer = float(answer)
+                    else:
+                        answer = float(answer.split(',')[1])
                 else:
                     answer = random.random()
                 self.last_measure[channel] = answer
@@ -324,12 +335,247 @@ class Instrument(Tool.MeasInstr):
                 self.write(':SENS:CURR:PROT[:LIM]')
                 time.sleep(1)
 
+    # sweep commands, as defined in the Keithley Manual
+    def sweep_voltage_staircase(self, steps, start, stop, direction="BOTH", compliance = 1):
+        """
+        :param steps:
+            number of steps in sweep
+        :param start:
+            starting voltage (for safety reasons, we will disregard and make 0
+        :param stop:
+            stopping voltage
+        :param direction:
+                UP, DOWN, or BOTH
+        :return: Data or False
+
+        This is programmed as specified by Keithley2400 Manual, Chapter 10-22, staircase sweep from:
+        http://research.physics.illinois.edu/bezryadin/labprotocol/Keithley2400Manual.pdf
+        """
+        # check that all values are good
+        try:
+            steps = int(steps)
+            start = 0
+            stop = float(stop)
+            compliance = int(compliance)
+        except ValueError:
+            print("Invalid data, must have steps=integer, start=float, stop=float")
+            return False
+        if direction not in ['UP','DOWN', 'BOTH']:
+            print("Invalid direction, must be UP, DOWN, or BOTH")
+            return False
+
+        if direction == "BOTH":
+            data_up = self.sweep_voltage_staircase(steps, start, stop, "UP", compliance)
+            data_down = self.sweep_voltage_staircase(steps, start, stop, "DOWN", compliance)
+            return data_up + data_down
+
+        self.write("*RST") # reset any conditions previously set
+
+        self.write(":SENS:FUNC:CONC OFF")
+        self.write(":SOUR:FUNC VOLT") #set source function to VOLT
+        self.write(":SENS:FUNC 'CURR:DC'")
+        ######## TODO: CHECK THIS, MIGHT NEED TO BE SOUR:VOLT OR SENS:CURR
+        self.write(":SENSE:VOLT:PROT "+ str(compliance)) # SET VOLT COMPLIANCE, default 1
+        self.write(":SOUR:VOLT:START "+ str(start)) # set start
+        self.write(":SOUR:VOLT:STOP " + str(stop))  # set stop
+        self.write(":SOUR:VOLT:STEP " + str(steps))  # set step
+
+        self.write(":SOUR:SWE:RANG AUTO") # TODO: make this a parameter of function
+        self.write(":SOUR:SWE:SPAC LIN")  # TODO: make this a parameter of function
+
+        points = round( (stop - start)/steps ) + 1 #TODO: check, as per manual
+        self.write(":TRIG:COUN "+ str(points))
+        self.write(":SOUR:DEL 0.1") #100ms source delay, should be changeable parameter
+
+        # get ready to start
+        self.write(":OUTP ON")
+
+        #trigger and get results
+        rawdata = self.ask(":READ?") #takes exactly one reading
+        #rawdata += self.ask(":READ?")
+
+        # do something with raw data
+
+        data = rawdata # maybe convert to float
+
+        # return data
+        return data
+
+    # sweep commands, as defined in the Keithley Manual
+    def sweep_current_staircase(self, steps, start, stop, direction="BOTH", compliance = 1):
+        """
+        :param steps:
+            number of steps in sweep
+        :param start:
+            starting voltage (for safety reasons, we will disregard and make 0
+        :param stop:
+            stopping voltage
+        :param direction:
+                UP, DOWN, or BOTH
+        :return: Data or False
+
+        This is programmed as specified by Keithley2400 Manual, Chapter 10-22, staircase sweep from:
+        http://research.physics.illinois.edu/bezryadin/labprotocol/Keithley2400Manual.pdf
+        """
+        # check that all values are good
+        try:
+            steps = int(steps)
+            start = 0
+            stop = float(stop)
+            compliance = int(compliance)
+        except ValueError:
+            print("Invalid data, must have steps=integer, start=float, stop=float")
+            return False
+        if direction not in ['UP','DOWN', 'BOTH']:
+            print("Invalid direction, must be UP, DOWN, or BOTH")
+            return False
+
+        if direction == "BOTH":
+            data_up = self.sweep_voltage_staircase(steps, start, stop, "UP", compliance)
+            data_down = self.sweep_voltage_staircase(steps, start, stop, "DOWN", compliance)
+            return data_up + data_down
+
+        self.write("*RST") # reset any conditions previously set
+
+        self.write(":SENS:FUNC:CONC OFF")
+        self.write(":SOUR:FUNC CURR") #set source function to VOLT
+        self.write(":SENS:FUNC 'VOLT:DC'")
+        ######## TODO: CHECK THIS, MIGHT NEED TO BE SOUR:VOLT OR SENS:CURR
+        self.write(":SENSE:VOLT:PROT "+ str(compliance)) # SET VOLT COMPLIANCE, default 1
+        self.write(":SOUR:CURR:START "+ str(start)) # set start
+        self.write(":SOUR:CURR:STOP " + str(stop))  # set stop
+        self.write(":SOUR:CURR:STEP " + str(steps))  # set step
+
+        self.write(":SOUR:SWE:RANG AUTO") # TODO: make this a parameter of function
+        self.write(":SOUR:SWE:SPAC LIN")  # TODO: make this a parameter of function
+
+        points = round( (stop - start)/steps + 1 ) #TODO: check, as per manual
+        self.write(":TRIG:COUN "+ str(points))
+        self.write(":SOUR:DEL 0.1") #100ms source delay, should be changeable parameter
+
+        # get ready to start
+        self.write(":OUTP ON")
+
+        #trigger and get results
+        rawdata = self.ask(":READ?")
+
+        # do something with raw data
+
+        data = rawdata # maybe convert to float
+
+        # return data
+        return data
+
+    """  sweep commands, as defined in the Keithley Manual
+    def sweep_staircase(self, voltage_dict, current_dict, sweep_points, sweep_direction="BOTH", source_ranging="BEST", sweep_scale="LINEAR"):
+        ""
+        :param voltage_dict:
+            A dictionary containing the following elements:
+                start: number (WILL ALWAYS BE 0)
+                stop: number
+                step: number
+                center: number
+                span: number
+        :param current_dict:
+                start: number
+                stop: number
+                step: number
+                center: number
+                span: number
+        :param source_ranging:
+                string, either "BEST", "AUTO", "FIX" (fixed)
+        :param sweep_scale:
+                either "LINEAR" or "LOGARITHMIC"
+        :param sweep_points:
+                either
+        :param sweep_direction:
+                UP, DOWN, or BOTH
+        :return: Data or False
+
+        This is programmed as specified by Keithley2400 Manual, Chapter 10-22, staircase sweep from:
+        http://research.physics.illinois.edu/bezryadin/labprotocol/Keithley2400Manual.pdf
+        ""
+        # check that all values
+        required_voltages = ['stop', 'step', 'center', 'span']
+        required_currents = ['start', 'stop', 'step', 'center', 'span']
+        if not all(key in voltage_dict.keys() for key in required_voltages):
+            print("There is missing data in voltage dictionary")
+            return False
+        # set start voltage to 0 for safety reasons
+        voltage_dict['start'] = 0
+
+        if not all(key in current_dict.keys() for key in required_currents):
+            print("There is missing data in current dictionary")
+
+        if source_ranging not in ['BEST', 'AUTO', 'FIX']:
+            if source_ranging == "FIXED":
+                source_ranging = "FIX"
+            else:
+                print("Invalid source ranging; must be either BEST, AUTO, or FIX")
+                return False
+        if sweep_scale not in ['LIN', 'LOG']:
+            if sweep_scale == 'LINEAR':
+                sweep_scale = 'LIN'
+            elif sweep_scale == 'LOGARITHMIC':
+                sweep_scale = 'LOG'
+            else:
+                print("Invalid sweep scale; must be either LIN or LOG")
+                return False
+
+
+        if sweep_direction == "BOTH": #sweep up then down
+            #rup up
+            dataup = self.sweep_staircase(voltage_dict,current_dict,sweep_points,"UP",source_ranging,sweep_scale)
+            #rup down
+            datadown = self.sweep_staircase(voltage_dict,current_dict,sweep_points,"DOWN",source_ranging,sweep_scale)
+            if dataup is False or datadown is False:
+                return False
+            else:
+                return dataup + datadown
+        # make sure numerical values are strings
+        for key, values in voltage_dict.items():
+            voltage_dict[key] = str(values)
+        for key, values in current_dict.items():
+            current_dict[key] = str(values)
+        sweep_points = str(sweep_points)
+
+        # now actually set the information
+
+        # set current stuff
+        self.write(":SOUR:CURR:MODE SWE") #select current sweep mode
+        self.write(":SOUR:CURR:STAR " + current_dict['start']) #set start
+        self.write(":SOUR:CURR:STOP " + current_dict['stop']) #set stop
+        self.write(":SOUR:CURR:STEP " + current_dict['step']) #set step
+        self.write(":SOUR:CURR:CENT " + current_dict['center']) #set center
+        self.write(":SOUR:CURR:SPAN " + current_dict['span']) #set span
+
+        # set voltage stuff
+        self.write(":SOUR:VOLT:MODE SWE") #select voltage sweep mode
+        self.write(":SOUR:VOLT:STAR " + voltage_dict['start']) #same
+        self.write(":SOUR:VOLT:STOP " + voltage_dict['stop'])  #for
+        self.write(":SOUR:VOLT:STEP " + voltage_dict['step'])  #current
+        self.write(":SOUR:VOLT:CENT " + voltage_dict['center'])#set
+        self.write(":SOUR:VOLT:SPAN " + voltage_dict['span'])  #functions
+
+        # the rest of the stuff
+        self.write(":SOUR:SWE:RANG "+source_ranging) # swet source ranging
+        self.write(":SOUR:SWE:SPAC "+sweep_scale) #set sweep scale
+        #self.write(":SOUR:SWE:POIN "+sweep_points) # set number of sweep points
+        self.write(":SOUR:SWE:DIRE "+sweep_direction) #either up or down
+
+        #note, trigger count should equal (stop-start)/step + 1
+
+        sweep_points = ()
+    """
+
 
 if __name__ == "__main__":
-    i = Instrument("GPIB0::21", debug=False)
+    i = Instrument("GPIB0::28", debug=False)
     print((i.identify("Hello, this is ")))
 
     #i.configure_output('VOLT', 0, 1E-7)
 #    i.set_voltage(0,1E-7)
+    #data = i.sweep_voltage_staircase(100, 0, 0.1, "BOTH")
+    #print("data", data)
     print((i.measure('V')))
     print((i.measure('I')))
