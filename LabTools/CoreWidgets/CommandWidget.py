@@ -31,6 +31,9 @@ else:
 
 from LabTools.Display import QtTools
 
+import sys
+import io
+import inspect
 
 class CommandWidget(QtGui.QWidget):
     """This class is a TextEdit with a few extra features"""
@@ -149,7 +152,7 @@ class CommandWidget(QtGui.QWidget):
         if current_device is -1:
             self.update_console("Please connect to a device before executing a command, or refresh device list by typing 'refresh'")
 
-        if action in "query" or action in "ask":
+        if action.lower() == "query" or action.lower() == "ask":
             resp = "None"
             try:
                 resp = self.sanitized_list[current_device][2].ask(command)
@@ -157,7 +160,7 @@ class CommandWidget(QtGui.QWidget):
                 resp = "Something went wrong"
                 pass
             self.update_console(command+": "+resp)
-        elif action in "write":
+        elif action.lower() == "write":
             resp = "None"
             try:
                 self.sanitized_list[current_device][2].write(command)
@@ -165,7 +168,7 @@ class CommandWidget(QtGui.QWidget):
                 resp = "Something went wrong"
                 pass
             self.update_console(command + ": " + resp)
-        elif action in "read":
+        elif action.lower() == "read":
             resp = "None"
             try:
                 resp = self.sanitized_list[current_device][2].read()
@@ -173,6 +176,51 @@ class CommandWidget(QtGui.QWidget):
                 resp = "Something went wrong"
                 pass
             self.update_console("read: " + resp)
+        elif "funct" in action.lower() or action.lower() == "run":
+            #run custom function inside driver
+            # split funct and params
+            print("got till here")
+            try:
+                funct, params = command.split(' ', 1)
+            except (ValueError, IndexError, TypeError): #no params
+                funct = command
+                params = None
+                pass
+            #split params
+            print("first try ok")
+            try:
+                params = params.split(' ')
+            except (ValueError, IndexError, TypeError): #1 param
+                params = [params]
+                pass
+            except:
+                params = []
+                pass
+
+            #now actually call the command
+            try:
+                resp = getattr(self.sanitized_list[current_device][2], funct)(*params)
+                self.update_console("Function returned with: "+self.print_to_string(resp))
+            except:
+                self.update_console(self.print_to_string("Failed to run command: ",sys.exc_info()[0]))
+                pass
+
+        elif "methods" == action.lower():
+            object_methods = [method_name
+                              for method_name in dir(self.sanitized_list[current_device][2])
+                              if callable(getattr(self.sanitized_list[current_device][2], method_name))]
+            print(object_methods)
+            #for i in range(0, len(object_methods)):
+            #    if object_methods[i][:2] == "__":
+            #        object_methods.pop(i)
+
+            self.update_console(self.print_to_string("Callable functions: ", object_methods))
+            #object_sig = [
+            #    inspect.signature(getattr(self.sanitized_list[current_device][2], method_name))
+            #    for method_name in dir(self.sanitized_list[current_device][2])
+            #    if callable(getattr(self.sanitized_list[current_device][2], method_name))]
+            #print(object_sig)
+            # it aint pretty, but it gets the job done
         else:
             self.update_console("Command must start with 'query', 'write', or 'read'")
             return
@@ -229,6 +277,12 @@ class CommandWidget(QtGui.QWidget):
 
 
 
+    def print_to_string(self, *args, **kwargs):
+        output = io.StringIO()
+        print(*args, file=output, **kwargs)
+        contents = output.getvalue()
+        output.close()
+        return contents
 
     def update_console(self, stri):
         # based on update_console code for consolewidget
