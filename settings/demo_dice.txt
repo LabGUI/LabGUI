@@ -1,2 +1,2 @@
-dt(s), TIME, , dt
-T2(K), ITC503S, GPIB0::24::INSTR, T2
+dt(s), TIME, , dt, 'dt(s)', 0, 0, 0, 0, 0, #4477AA, 'None', '-'
+V_DC(V), HP34401A, GPIB0::19::INSTR, V_DC, 'V_DC(V)', 0, 0, 0, 0, 0, #CC6677, 'None', '-'

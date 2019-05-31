@@ -78,7 +78,6 @@ class Instrument(Tool.MeasInstr):
             return float(string_data)
         else:
             return 123.4
-
     def read_current_DC(self):
         if not self.DEBUG:
             string_data = self.ask(':MEAS:CURR:DC?')

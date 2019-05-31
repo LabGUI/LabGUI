@@ -169,7 +169,6 @@ class CommandWidget(QtGui.QWidget):
                 pass
             self.update_console(command + ": " + resp)
         elif action.lower() == "read":
-            resp = "None"
             try:
                 resp = self.sanitized_list[current_device][2].read()
             except:
@@ -179,7 +178,6 @@ class CommandWidget(QtGui.QWidget):
         elif "funct" in action.lower() or action.lower() == "run":
             #run custom function inside driver
             # split funct and params
-            print("got till here")
             try:
                 funct, params = command.split(' ', 1)
             except (ValueError, IndexError, TypeError): #no params
@@ -187,7 +185,6 @@ class CommandWidget(QtGui.QWidget):
                 params = None
                 pass
             #split params
-            print("first try ok")
             try:
                 params = params.split(' ')
             except (ValueError, IndexError, TypeError): #1 param
@@ -201,7 +198,12 @@ class CommandWidget(QtGui.QWidget):
             try:
                 resp = getattr(self.sanitized_list[current_device][2], funct)(*params)
                 self.update_console("Function returned with: "+self.print_to_string(resp))
-            except:
+            except AttributeError: #errors likely caused by run syntax
+                self.update_console(self.print_to_string("Failed to run command: Attribute Error. Likely invalid function name or command syntax"))
+                self.update_console(self.print_to_string("Use 'methods' to obtain list of callable functions"))
+                self.update_console(self.print_to_string("Use 'run function paramater1 parameter2 etc' to execute function"))
+                pass
+            except: #any other errors
                 self.update_console(self.print_to_string("Failed to run command: ",sys.exc_info()[0]))
                 pass
 
@@ -209,12 +211,23 @@ class CommandWidget(QtGui.QWidget):
             object_methods = [method_name
                               for method_name in dir(self.sanitized_list[current_device][2])
                               if callable(getattr(self.sanitized_list[current_device][2], method_name))]
-            print(object_methods)
+            methods_and_sigs = []
+            for method in object_methods:
+                try:
+                    if(callable(getattr(self.sanitized_list[current_device][2], method))):
+                        sig = inspect.signature(getattr(self.sanitized_list[current_device][2], method))
+                        if not method.startswith("__") and not method.endswith("__"):
+                            methods_and_sigs.append((method, str(sig)))
+                except:
+                    #this means that method isnt actually callable or that inspect.signature throws error
+                    pass
             #for i in range(0, len(object_methods)):
             #    if object_methods[i][:2] == "__":
             #        object_methods.pop(i)
 
-            self.update_console(self.print_to_string("Callable functions: ", object_methods))
+            self.update_console(self.print_to_string("Callable functions: ", len(methods_and_sigs)))
+            for tup in methods_and_sigs:
+                self.update_console("\t"+tup[0]+tup[1])
             #object_sig = [
             #    inspect.signature(getattr(self.sanitized_list[current_device][2], method_name))
             #    for method_name in dir(self.sanitized_list[current_device][2])

@@ -159,6 +159,7 @@ class Instrument(Tool.MeasInstr):
         else:
             self.write('$C2')
     """
+
     def setControl(self, locked, remote):
         # same principles, its a binary number whos first bit is 0:local, 1:remote, and second bit is 0:lock, 1:unlock
         unlocked = not locked
@@ -192,8 +193,10 @@ class Instrument(Tool.MeasInstr):
                 if s not in 's':
                     print("Error writing s:" + s)
                 i += 1
+            return True
         else:
             print("Invalide line")
+            return False
 
     def readSweep(self, line):
         line = int(line)
