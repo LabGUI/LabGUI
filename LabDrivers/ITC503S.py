@@ -162,12 +162,18 @@ class Instrument(Tool.MeasInstr):
 
     def setControl(self, locked, remote):
         # same principles, its a binary number whos first bit is 0:local, 1:remote, and second bit is 0:lock, 1:unlock
+        if type(locked) is str:
+            locked = int(locked)
+        if type(remote) is str:
+            remote = int(remote)
+
         unlocked = not locked
         commandcode = int( str(int(unlocked)) + str(int(remote)), 2)
         self.write('$C'+str(commandcode))
 
     def setHeaterAndGas(self, heater_auto, gas_auto):
         # these values MUST be booleans! TODO: implement check
+
         commandcode = int( str(int(gas_auto)) + str(int(heater_auto)), 2)
         # the way it works is An, where n is a decimal number, whos first bit (2^0) represents if heater is auto, and second bit represents if gas flow is auto
         self.write("$A"+str(commandcode))
@@ -175,9 +181,9 @@ class Instrument(Tool.MeasInstr):
     def setSweep(self, line, PointTemperature, SweepTime, HoldTime):
         line = int(line)
         if (line >= 1) and (line <= 16):
-            self.write("$x"+str(line))
-            #if x not in 'x':
-            #    print("Error writing x:" + x)
+            self.write("x"+str(line))
+            if x not in 'x':
+                print("Error writing x:" + x)
 
             values = [PointTemperature, SweepTime, HoldTime]
             i=1

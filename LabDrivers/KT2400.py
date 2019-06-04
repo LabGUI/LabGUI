@@ -49,7 +49,7 @@ class Instrument(Tool.MeasInstr):
                     self.write('VOLT:RANG:AUTO ON')
                     answer = self.ask(':READ?')
                     #if math.isnan(float(answer)):
-                    if math.isnan(answer): #answer will be nan if error
+                    if type(answer) is not str and math.isnan(answer): #answer will be nan if error
                         print("Please set Output on")
                         answer = float(answer)
                     else:
@@ -64,7 +64,7 @@ class Instrument(Tool.MeasInstr):
                     self.write('CURR:RANG:AUTO ON')
                     answer = self.ask(':READ?')
                     #if math.isnan(float(answer)):
-                    if math.isnan(answer): #answer will be nan if error
+                    if type(answer) is not str and math.isnan(answer): #answer will be nan if error
                         print("Please set Output on")
                         answer = float(answer)
                     else:
@@ -336,7 +336,8 @@ class Instrument(Tool.MeasInstr):
                 time.sleep(1)
 
     # sweep commands, as defined in the Keithley Manual
-    def sweep_voltage_staircase(self, steps, start, stop, direction="BOTH", compliance = 1):
+    #def sweep_voltage_bipolar_staircase(self, ):
+    def sweep_voltage_staircase(self, steps, start, stop, direction="BOTH", v_compliance = 1, i_compliance = 1e-7):
         """
         :param steps:
             number of steps in sweep
@@ -375,7 +376,8 @@ class Instrument(Tool.MeasInstr):
         self.write(":SOUR:FUNC VOLT") #set source function to VOLT
         self.write(":SENS:FUNC 'CURR:DC'")
         ######## TODO: CHECK THIS, MIGHT NEED TO BE SOUR:VOLT OR SENS:CURR
-        self.write(":SENSE:VOLT:PROT "+ str(compliance)) # SET VOLT COMPLIANCE, default 1
+        self.write(":SENSE:VOLT:PROT " + str(v_compliance))  # SET VOLT COMPLIANCE, default 1
+        self.write(":SENSE:CURR:PROT " + str(i_compliance))
         self.write(":SOUR:VOLT:START "+ str(start)) # set start
         self.write(":SOUR:VOLT:STOP " + str(stop))  # set stop
         self.write(":SOUR:VOLT:STEP " + str(steps))  # set step
@@ -402,7 +404,7 @@ class Instrument(Tool.MeasInstr):
         return data
 
     # sweep commands, as defined in the Keithley Manual
-    def sweep_current_staircase(self, steps, start, stop, direction="BOTH", compliance = 1):
+    def sweep_current_staircase(self, steps, start, stop, direction="BOTH", v_compliance = 1, i_compliance = 1e-7):
         """
         :param steps:
             number of steps in sweep
@@ -441,7 +443,8 @@ class Instrument(Tool.MeasInstr):
         self.write(":SOUR:FUNC CURR") #set source function to VOLT
         self.write(":SENS:FUNC 'VOLT:DC'")
         ######## TODO: CHECK THIS, MIGHT NEED TO BE SOUR:VOLT OR SENS:CURR
-        self.write(":SENSE:VOLT:PROT "+ str(compliance)) # SET VOLT COMPLIANCE, default 1
+        self.write(":SENSE:VOLT:PROT " + str(v_compliance)) # SET VOLT COMPLIANCE, default 1
+        self.write(":SENSE:CURR:PROT "+ str(i_compliance))
         self.write(":SOUR:CURR:START "+ str(start)) # set start
         self.write(":SOUR:CURR:STOP " + str(stop))  # set stop
         self.write(":SOUR:CURR:STEP " + str(steps))  # set step

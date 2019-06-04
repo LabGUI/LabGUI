@@ -84,7 +84,7 @@ class CommandWidget(QtGui.QWidget):
         self.console_text("Please enter GPIB command")
 
         self.instrument_list = {}
-        self.sanitized_list = list()
+        self.sanitized_list = list() # tuple, (name, port, object)
 
         self.history = list()
 
@@ -151,7 +151,7 @@ class CommandWidget(QtGui.QWidget):
         current_device = self.deviceComboBox.currentIndex()
         if current_device is -1:
             self.update_console("Please connect to a device before executing a command, or refresh device list by typing 'refresh'")
-
+        print(current_device)
         if action.lower() == "query" or action.lower() == "ask":
             resp = "None"
             try:
@@ -224,7 +224,7 @@ class CommandWidget(QtGui.QWidget):
             #for i in range(0, len(object_methods)):
             #    if object_methods[i][:2] == "__":
             #        object_methods.pop(i)
-
+            self.update_console(self.print_to_string("===" + self.sanitized_list[current_device][0] + "==="))
             self.update_console(self.print_to_string("Callable functions: ", len(methods_and_sigs)))
             for tup in methods_and_sigs:
                 self.update_console("\t"+tup[0]+tup[1])
@@ -283,9 +283,16 @@ class CommandWidget(QtGui.QWidget):
     def update_devices(self):
         # going need to get get_instrument_list
         self.update_instrument_list()
+        text = self.deviceComboBox.currentText() # to set back to
         self.deviceComboBox.clear()
         for tuples in self.sanitized_list:
             self.deviceComboBox.addItem(tuples[0]+" on "+tuples[1])
+        # now time to set current choice if it is still in the list
+        index = self.deviceComboBox.findText(text)
+        if index != -1:
+            self.deviceComboBox.setCurrentIndex(index)
+        # now it should work perfectly with multiple devices
+
 
 
 
