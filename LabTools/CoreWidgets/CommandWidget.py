@@ -34,6 +34,8 @@ from LabTools.Display import QtTools
 import sys
 import io
 import inspect
+import matplotlib.pyplot as plt
+import shlex
 
 class CommandWidget(QtGui.QWidget):
     """This class is a TextEdit with a few extra features"""
@@ -42,6 +44,7 @@ class CommandWidget(QtGui.QWidget):
         super(CommandWidget, self).__init__()
 
         self.DEBUG = False
+        self.INFO = True #returns callback and trace for general errors in console
 
         #aesthetic stuff
         self.setWindowTitle("GPIB Command-Line")
@@ -87,6 +90,10 @@ class CommandWidget(QtGui.QWidget):
         self.sanitized_list = list() # tuple, (name, port, object)
 
         self.history = list()
+
+        self.numbers = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten']
+
+        self.vars = ['history', 'INFO', 'numbers']
 
         if parent is not None:
             self.parentClass = parent
@@ -151,7 +158,7 @@ class CommandWidget(QtGui.QWidget):
         current_device = self.deviceComboBox.currentIndex()
         if current_device is -1:
             self.update_console("Please connect to a device before executing a command, or refresh device list by typing 'refresh'")
-        print(current_device)
+        #print(current_device)
         if action.lower() == "query" or action.lower() == "ask":
             resp = "None"
             try:
@@ -161,7 +168,7 @@ class CommandWidget(QtGui.QWidget):
                 pass
             self.update_console(command+": "+resp)
         elif action.lower() == "write":
-            resp = "None"
+            resp = "Written"
             try:
                 self.sanitized_list[current_device][2].write(command)
             except:
@@ -202,11 +209,79 @@ class CommandWidget(QtGui.QWidget):
                 self.update_console(self.print_to_string("Failed to run command: Attribute Error. Likely invalid function name or command syntax"))
                 self.update_console(self.print_to_string("Use 'methods' to obtain list of callable functions"))
                 self.update_console(self.print_to_string("Use 'run function paramater1 parameter2 etc' to execute function"))
+                if self.INFO:
+                    self.update_console(self.print_to_string(sys.exc_info()))
                 pass
             except: #any other errors
                 self.update_console(self.print_to_string("Failed to run command: ",sys.exc_info()[0]))
+                if self.INFO:
+                    self.update_console(self.print_to_string(sys.exc_info()))
+                pass
+        elif action.lower() == "plot":
+            # generally going to be the same as methods, but will initialize matplotlib plot
+            try:
+                funct, params = command.split(' ', 1)
+            except (ValueError, IndexError, TypeError): #no params
+                funct = command
+                params = None
+                pass
+            #split params
+            try:
+                params = params.split(' ')
+            except (ValueError, IndexError, TypeError): #1 param
+                params = [params]
+                pass
+            except:
+                params = []
                 pass
 
+            #now actually call the command
+            try:
+                resp = getattr(self.sanitized_list[current_device][2], funct)(*params)
+            except AttributeError: #errors likely caused by run syntax
+                self.update_console(self.print_to_string("Failed to run command: Attribute Error. Likely invalid function name or command syntax"))
+                self.update_console(self.print_to_string("Use 'methods' to obtain list of callable functions"))
+                self.update_console(self.print_to_string("Use 'run function paramater1 parameter2 etc' to execute function"))
+                if self.INFO:
+                    self.update_console(self.print_to_string(sys.exc_info()))
+                return
+            except: #any other errors
+                self.update_console(self.print_to_string("Failed to run command: ",sys.exc_info()[0]))
+                if self.INFO:
+                    self.update_console(self.print_to_string(sys.exc_info()))
+                return
+            if type(resp) == list:
+                try:
+                    axes = list(zip(*resp))
+                except:
+                    self.update_console("Invalid return data:")
+                    self.update_console(self.print_to_string(resp))
+                    if self.INFO:
+                        self.update_console(self.print_to_string(sys.exc_info()))
+                    return
+
+                n = len(axes) # number of axis
+
+                combos = [ list(range(i+1, n)) for i in range(0, n-1) ]
+
+                # now do it for every combination
+                for i in range(0, n-1):
+                    plt.figure(i+1)
+                    k = 0
+                    for j in combos[i]:
+                        plt.subplot(n-1-i, 1, k+1)
+                        plt.plot(axes[i], axes[j])
+                        if len(self.numbers) >= n:
+                            plt.xlabel(self.numbers[i])
+                            plt.ylabel(self.numbers[j])
+                        k+=1
+
+                plt.show()
+
+                #plt.plot(x,y)
+            else:
+                self.update_console("Invalid return data:")
+                self.update_console(self.print_to_string(resp))
         elif "methods" == action.lower():
             object_methods = [method_name
                               for method_name in dir(self.sanitized_list[current_device][2])
@@ -234,6 +309,127 @@ class CommandWidget(QtGui.QWidget):
             #    if callable(getattr(self.sanitized_list[current_device][2], method_name))]
             #print(object_sig)
             # it aint pretty, but it gets the job done
+        elif action.lower() == "set": # to set command line variables
+            try:
+                var, params = command.split(" ", 1)
+            except: # at most one word in command
+                var = command
+                params = None
+                pass
+
+            if var is None:
+                # print list of variables setable
+                try:
+                    self.update_console(self.print_to_string(self.vars))
+                except:
+                    self.update_console(self.print_to_string("An error occurred: ", sys.exc_info()[0]))
+                    if self.INFO:
+                        self.update_console(self.print_to_string(sys.exc_info()))
+                    pass
+            elif params is None:
+                # read value of var
+                try:
+                    self.update_console(self.print_to_string(self.read_vars(var)))
+                except:
+                    self.update_console(self.print_to_string("An error occurred: ", sys.exc_info()[0]))
+                    if self.INFO:
+                        self.update_console(self.print_to_string(sys.exc_info()))
+                    pass
+            else:
+                try:
+                    self.update_console(self.print_to_string(self.set_vars(var, params)))
+                except:
+                    self.update_console(self.print_to_string("An error occurred: ", sys.exc_info()[0]))
+                    if self.INFO:
+                        self.update_console(self.print_to_string(sys.exc_info()))
+                    pass
+
+        elif action.lower() == "help":
+            # write help stuff here
+            if command is None:
+                self.update_console("Usage: help <command>")
+                self.update_console("=== Commands ===")
+                self.update_console("\tread\n\twrite <cmd>\n\tquery/ask <cmd>\n\tmethods\n\trun <funct> <parameters>\n\tclear\n\tplot <funct> <parameters>\n\tset <variable> <parameters>")
+            elif command.lower() == "read":
+                text = [
+                    "Usage: " + command.lower(),
+                    "read:\treads from device",
+                    "Will only return data if there is something to read off the machines buffer, otherwise it'll return an error"
+                ]
+                for i in text:
+                    self.update_console(i)
+            elif command.lower() == "write":
+                text = [
+                    "Usage: " + command.lower(),
+                    "query/ask <cmd>:\tqueries device",
+                    "<cmd> must be a valid GPIB command readible by the connected machine",
+                    "Do not enclose your entire <cmd> with quotation marks",
+                    "Note: 'Written' will always return on success"
+                ]
+                for i in text:
+                    self.update_console(i)
+            elif command.lower() == "query" or command.lower() == "ask":
+                text = [
+                    "Usage: " + command.lower(),
+                    "query/ask <cmd>:\tqueries device",
+                    "<cmd> must be a valid GPIB command readible by the connected machine",
+                    "Do not enclose your entire <cmd> with quotation marks"
+                ]
+                for i in text:
+                    self.update_console(i)
+            elif command.lower() == "methods":
+                self.update_console("Usage: " + command.lower())
+                self.update_console("methods:\treturns list of callable functions and parameters")
+            elif command.lower() == "run":
+                text = [
+                    "Usage: " + command.lower(),
+                    "run <funct> <parameters>:\truns callable function",
+                    "valid functions for <funct> are given by methods command",
+                    "all <parameters> must be seperated by spaces"
+                ]
+                for i in text:
+                    self.update_console(i)
+            elif command.lower() == "clear":
+                self.update_console("Usage: " + command.lower())
+                self.update_console("clear:\tclears console window")
+            elif command.lower() == "plot":
+                text = [
+                    "Usage: " + command.lower(),
+                    "plot <funct> <parameters>:\tplots return of callable function",
+                    "valid functions for <funct> are given by methods command",
+                    "all <parameters> must be seperated by spaces",
+                    "Please note, only functions that return a list of plotable coordinates of any dimension will plot",
+                    "Axis names can be set via 'set numbers' command, where the first array entry corresponds to the first coordinate, second entry to the second coordinate, etc"
+                ]
+                for i in text:
+                    self.update_console(i)
+            elif command.lower() == "set":
+                text = [
+                    "Usage: " + command.lower(),
+                    "set <variable> <parameters>:\tsets/gets environment variable of this command-line",
+                    "the only invalid variable names are the names of callable functions",
+                    "example usage:",
+                    "\tset",
+                    "returns list of all environment variables",
+                    "\tset varname",
+                    "returns value of environment variable 'varname'",
+                    "\tset varname foo",
+                    "sets value of environment variable 'varname' to the string 'foo'"
+                    "\tset varname foo bar",
+                    "sets value of environment variable 'varname' to list containing entries 'foo' and 'bar' at position 0 and 1 respectively",
+                    "\tset varname 0=bar",
+                    "sets value of environment variable 'varname' at position 0 to the string 'bar', resulting in ['bar', 'bar']",
+                    "\tset varname 'foo bar'",
+                    "sets value of environment variable 'varname' to the string 'foo bar'",
+                    "=== Some important variables ===",
+                    "\tnumbers : contains axes information for 'plot'",
+                    "\tINFO : Boolean variable that prints extra information regarding errors when set to True"
+                ]
+                for i in text:
+                    self.update_console(i)
+            else:
+                self.update_console("Invalid command: "+command)
+
         else:
             self.update_console("Command must start with 'query', 'write', or 'read'")
             return
@@ -293,6 +489,66 @@ class CommandWidget(QtGui.QWidget):
             self.deviceComboBox.setCurrentIndex(index)
         # now it should work perfectly with multiple devices
 
+    def read_vars(self, var):
+        if var not in self.vars:
+            return "Variable does not exist"
+        else:
+            return getattr(self, var)
+
+
+    def set_vars(self, var, data): #assume vars are all strings, except INFO
+        if data is None: # shouldnt happen, but just in case
+            return False
+        dat = [var] + shlex.split(data) #fix for code i wrote
+        if dat[0] not in self.vars:
+            if hasattr(self, dat[0]):
+                return "Cannot set variable, reserved in class"
+                # likely just trying to set var
+            else: # make variable
+                information = dat[1::]
+                if len(information) == 1:
+                    setattr(self, dat[0], information[0]) # dont save single string as list
+                else:
+                    setattr(self, dat[0], information) #save extra data as list
+            # now save in self.vars so it doesnt rewrite every time
+            self.vars.append(dat[0])
+            return (dat[0], getattr(self, dat[0])) # tuple, first is name, second is value
+        elif dat[0] == 'INFO': # specific case for type casting
+            if dat[1] == 'True' or det[1] == '1':
+                self.INFO = True
+                return "INFO set to True"
+            elif dat[1] == 'False' or det[1] == '0':
+                self.INFO = False
+                return "INFO set to False"
+            else:
+                return "Invalid option. INFO can only be True or False"
+        else: # modify current var
+            information = dat[1::]
+            if len(information) > 1: #clearly an array is to be set
+                #maybe implement = thing
+                setattr(self, dat[0], information)
+                return (dat[0], getattr(self, dat[0]))
+            else: # part as string
+                stri = information[0]
+                escaped_list = shlex.shlex(stri)
+                escaped_list.whitespace += '='
+                escaped_list.whitespace_split = True
+                strlist = list(escaped_list)
+                if len(strlist) == 1: #no equal sign
+                    setattr(self, dat[0], strlist[0])
+                elif len(strlist) == 2: #one setting another
+                    if strlist[0].isdigit():
+                        getattr(self, dat[0])[int(strlist[0])] = strlist[1]
+                    else: # will throw error if data is not object!!!
+                        getattr(self, dat[0])[strlist[0]] = strlist[1]
+                elif len(strlist) > 2: # shouldnt reach here, unless if len(information) is changed
+                    if strlist[0].isdigit():
+                        getattr(self, dat[0])[int(strlist[0])] = strlist[1::]
+                    else:  # will throw error if data is not object!!!
+                        getattr(self, dat[0])[strlist[0]] = strlist[1::]
+                else:
+                    return "An error occured if you reached here."
+                return (dat[0], getattr(self, dat[0]))
 
 
 
@@ -320,6 +576,9 @@ class CommandWidget(QtGui.QWidget):
         self.console_text(new_text)
 
         self.automatic_scroll()
+
+    def clear_console(self):
+        self.consoleTextEdit.clear()
 
 
 def add_widget_into_main(parent):
