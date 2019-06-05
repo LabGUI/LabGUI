@@ -1,16 +1,15 @@
 # -*- coding: utf-8 -*-
 """
-Created on Mon Apr 03 20:24:39 2017
+Created on May 28 2019
 
-@author: pfduc
+@author: zackorenberg
+
+A GPIB commandline widget
 """
 
 # -*- coding: utf-8 -*-
 """
-Created on Tue Jun 17 23:40:40 2014
-
-Copyright (C) 10th april 2015 Pierre-Francois Duc
-License: see LICENSE.txt file
+Created for GervaisLabs
 """
 
 import sys

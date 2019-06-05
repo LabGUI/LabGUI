@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-Created on Wed May 16 16:22:26 2012
+Created on Wed May 28 2019
 Keithley 2400
-@author: Bram
+@author: zackorenberg
 """
 
 #!/usr/bin/env python
@@ -15,6 +15,8 @@ except:
     import Tool
 
 import math
+import numpy as np
+import time
 
 param = {'V': 'V', 'I': 'A'}
 
@@ -138,15 +140,22 @@ class Instrument(Tool.MeasInstr):
     def set_value(self, val):  # for interferometer program
         self.set_voltage(val)
 
-    def set_voltage(self, voltage, compliance=1.0E-7):
+    def set_voltage(self, voltage, i_compliance=1.0E-7, v_compliance=1):
         if not self.DEBUG:
-
+            voltage = float(voltage)
+            i_compliance = float(i_compliance)
+            v_compliance = float(v_compliance)
+            if voltage > v_compliance:
+                print("V compliance needs to be checked")
+                voltage = v_compliance
             self.write(':SOUR:VOLT:RANG:AUTO 1')
             # set autorange on source
 
-            #c = ':SENS:CURR:PROT %r' % compliance
-            # self.write(c)
+            c = ':SENS:CURR:PROT %r' % i_compliance
+            self.write(c)
             # set compliance
+            c = ':SENS:VOLT:PROT %r' % v_compliance
+            self.write(c)
 
             s = ':SOUR:FUNC VOLT;:SOUR:VOLT %f' % voltage
 
@@ -335,74 +344,364 @@ class Instrument(Tool.MeasInstr):
                 self.write(':SENS:CURR:PROT[:LIM]')
                 time.sleep(1)
 
-    # sweep commands, as defined in the Keithley Manual
-    #def sweep_voltage_bipolar_staircase(self, ):
-    def sweep_voltage_staircase(self, steps, start, stop, direction="BOTH", v_compliance = 1, i_compliance = 1e-7):
+    def pulse_voltage_simple(self, pulses, start, stop, pulse_width, pulse_delay, frequency = 0.2, direction = "BOTH", v_compliance=1, i_compliance=1.0e-7):
         """
-        :param steps:
-            number of steps in sweep
-        :param start:
-            starting voltage (for safety reasons, we will disregard and make 0
-        :param stop:
-            stopping voltage
-        :param direction:
-                UP, DOWN, or BOTH
-        :return: Data or False
 
-        This is programmed as specified by Keithley2400 Manual, Chapter 10-22, staircase sweep from:
-        http://research.physics.illinois.edu/bezryadin/labprotocol/Keithley2400Manual.pdf
+        :param pulses:
+            number of pulses from start to stop
+        :param start:
+            default 0V
+        :param stop:
+            voltage to end at, in Volts
+        :param pulse_width:
+            length of pulse, in seconds
+        :param pulse_delay:
+            length of delay between pulses, in seconds
+        :param frequency:
+            how often readings should occur, in seconds
+        :param direction:
+            UP, DOWN, or BOTH
+        :param v_compliance:
+            voltage compliance, in Volts
+        :param i_compliance:
+            current compliance, in Amps
+        :return: list of [ (list of time readings), (list of voltage readings), (list of current readings) ]
+
+        Does a voltage sweep in pulses,
+        meaning in increments dictated by (stop-start)/pulses,
+        and will traverse from start to stop and back to stop (depending on direction),
+        pulses for pulse_width seconds,
+        stays at 0 for pulse_delay seconds, (TODO: or start?)
+        returns a list of plottable points in 3 dimensions.
         """
-        # check that all values are good
+        try:
+            pulses = int(pulses)
+            start = 0
+            #start = float(start)
+            stop = float(stop)
+            pulse_width = float(pulse_width)
+            pulse_delay = float(pulse_delay)
+            v_compliance = float(v_compliance)
+            i_compliance = float(i_compliance)
+            frequency = float(frequency)
+        except ValueError:
+            print("Invalid data, must have steps=integer, start=float, stop=float")
+            return False
+        # okay do stuff
+        self.reset()
+        self.enable_output()
+        start_time = time.time()
+        data = []
+        step_size = (stop-start)/pulses
+
+        #make range depending on direction
+        rang = [i+1 for i in range(0, pulses)]
+        if direction == "DOWN":
+            rang.reverse()
+        elif direction == "BOTH":
+            rang += rang[::-1][1::]
+
+        for i in rang:
+            # do pulse delay setup
+            self.set_voltage(0, i_compliance, v_compliance)
+            t = tnow = time.time()
+            # do pulse_delay
+            while (tnow-t) < pulse_delay:
+                r_time, r_data = time.time(), self.ask(":READ?")
+
+                data.append( (r_time, r_data) )
+                tnow = time.time() # to calculate sleep
+                if (frequency - (tnow - r_time)) > 0:
+                    time.sleep( frequency - (tnow - r_time) )
+                tnow = time.time() # to calculate for pulse time
+
+            #do pulse setup, some math involved here
+            self.set_voltage( (step_size * i)+start, i_compliance , v_compliance)
+            t = tnow = time.time()
+            while (tnow-t) < pulse_width:
+                r_time, r_data = time.time(), self.ask(":READ?")
+
+                data.append( (r_time, r_data))
+                tnow = time.time()  # to calculate sleep
+                if (frequency - (tnow - r_time)) > 0:
+                    time.sleep(frequency - (tnow - r_time))
+                tnow = time.time()  # to calculate for pulse time
+
+        # now do final reading for 0
+        self.set_voltage(0, i_compliance, v_compliance)
+        t = tnow = time.time()
+        while (tnow-t) < pulse_delay:
+            r_time, r_data = time.time(), self.ask(":READ?")
+
+            data.append( (r_time, r_data))
+            tnow = time.time()  # to calculate sleep
+            if (frequency - (tnow - r_time)) > 0:
+                time.sleep(frequency - (tnow - r_time))
+            tnow = time.time()  # to calculate for pulse time
+
+        # now process some data before returning
+        ret = []
+        for tup in data:
+            splitted = tup[1].split(",")
+            ret.append( (
+                tup[0]-start_time, #relative time
+                float(splitted[0]), #convert voltage to float
+                float(splitted[1]) #convert current to float
+            ))
+
+        return ret
+
+    # sweep commands, as defined in the Keithley Manual
+    def sweep_voltage_bipolar_staircase(self, steps, start, stop, v_compliance = 1, i_compliance = 1e-7):
+        def sweep_voltage_staircase(self, steps, start, stop, width=1, frequency=0.2, v_compliance=1,
+                                    i_compliance=1e-7):
+            """
+            :param steps: int (number)
+            :param start: float (Volts)
+            :param stop: float (Volts)
+            :param direction: str
+                direction of sweep, UP, DOWN, or BOTH
+            :param width: float (seconds)
+                the length of the step
+            :param frequency: float (seconds)
+                how frequent measurement readings are taken
+            :param v_compliance: float (Volts)
+            :param i_compliance: float (Amps)
+            :return: list of coordinates (time, voltage, current)
+
+
+            Essentially the same as sweep_voltage_staircase, but is bidirection and bipolar
+            It is practically equivalent to calling
+            sweep_voltage_staircase(steps, start, stop, UP)
+            sweep_voltage_staircase(steps, start, stop, DOWN)
+            sweep_voltage_staircase(steps, start, -stop, UP)
+            sweep_voltage_staircase(steps, start, -stop, DOWN)
+            """
+            self.enable_output()
+            try:
+                steps = int(steps)
+                start = 0
+                stop = float(stop)
+                v_compliance = float(v_compliance)
+                i_compliance = float(i_compliance)
+                width = float(width)
+                frequency = float(frequency)
+            except TypeError:
+                print("Invalid parameter types")
+                pass
+
+            sweep1 = np.linspace(start, stop, num=steps)
+            sweep2 = np.linspace(stop, start, num=steps)
+            sweep3 = np.linspace(start, -stop, num=steps)
+            sweep4 = np.linspace(-stop, start, num=steps)
+
+            sweeps = np.concatenate((sweep1, sweep2, sweep3, sweep4))
+            list = []
+            self.reset()
+            self.enable_output()
+            start_time = t = time.time()
+            for v in sweeps:
+                t = tnow = time.time()
+                self.set_voltage(v, i_compliance, v_compliance)
+                while (tnow - t) < width:
+                    r_time, r_data = time.time(), self.ask(":READ?")
+
+                    list.append((r_time, r_data))
+                    tnow = time.time()  # to calculate sleep
+                    if (frequency - (tnow - r_time)) > 0:
+                        time.sleep(frequency - (tnow - r_time))
+                    tnow = time.time()  # to calculate for pulse time
+
+            data = []  # 3d coordinates, (Time, Voltage, Current)
+
+            for datapoint in list:
+                spl = datapoint[1].split(",")
+                data.append((datapoint[0] - t, float(spl[0]), float(spl[1])))
+            return data
+    # NEEDS WORK
+
+    # def sweep_voltage_staircase(self, steps, start, stop, direction="BOTH", v_compliance = 1, i_compliance = 1e-7):
+    #     """
+    #     :param steps:
+    #         number of steps in sweep
+    #     :param start:
+    #         starting voltage (for safety reasons, we will disregard and make 0
+    #     :param stop:
+    #         stopping voltage
+    #     :param direction:
+    #             UP, DOWN, or BOTH
+    #     :v_compliance:
+    #             default 1, voltage compliance
+    #     :i_compliance:
+    #             default 1e-7 A or 100 nanoAmps, current compliance
+    #     :return: Data or False
+    #
+    #     This is programmed as specified by Keithley2400 Manual, Chapter 10-22, staircase sweep from:
+    #     http://research.physics.illinois.edu/bezryadin/labprotocol/Keithley2400Manual.pdf
+    #     """
+    #     # check that all values are good
+    #     try:
+    #         steps = int(steps)
+    #         start = 0
+    #         stop = float(stop)
+    #         v_compliance = float(v_compliance)
+    #         i_compliance = float(i_compliance)
+    #     except ValueError:
+    #         print("Invalid data, must have steps=integer, start=float, stop=float")
+    #         return False
+    #     if direction not in ['UP','DOWN', 'BOTH']:
+    #         print("Invalid direction, must be UP, DOWN, or BOTH")
+    #         return False
+    #
+    #     if direction == "BOTH":
+    #         data_up = self.sweep_voltage_staircase(steps, start, stop, "UP", v_compliance, i_compliance)
+    #         data_down = self.sweep_voltage_staircase(steps, start, stop, "DOWN", v_compliance, i_compliance)
+    #         return data_up + data_down
+    #
+    #     self.reset()
+    #     #self.write("*RST") # reset any conditions previously set
+    #
+    #     self.write(":SENS:FUNC:CONC OFF")
+    #     self.write(":SOUR:FUNC VOLT") #set source function to VOLT
+    #     self.write(":SENS:FUNC 'CURR:DC'")
+    #     ######## TODO: CHECK THIS, MIGHT NEED TO BE SOUR:VOLT OR SENS:CURR
+    #     self.write(":SENSE:VOLT:PROT " + str(v_compliance))  # SET VOLT COMPLIANCE, default 1
+    #     self.write(":SENSE:CURR:PROT " + str(i_compliance))
+    #
+    #     self.write(":SOUR:VOLT:START "+ str(start)) # set start
+    #     self.write(":SOUR:VOLT:STOP " + str(stop))  # set stop
+    #     self.write(":SOUR:VOLT:STEP " + str(steps))  # set step
+    #
+    #     self.write(":SOUR:SWE:RANG AUTO") # TODO: make this a parameter of function
+    #     self.write(":SOUR:SWE:SPAC LIN")  # TODO: make this a parameter of function
+    #     points = self.ask(":SOUR:SWE:POIN?")
+    #     print(points)
+    #     #points = round( (stop - start)/steps ) + 1 #TODO: check, as per manual
+    #     self.write(":TRIG:COUN "+ str(steps))
+    #     self.write(":SOUR:DEL 0.1") #100ms source delay, should be changeable parameter
+    #     # get ready to start
+    #     self.write(":OUTP ON")
+    #     self.write(":INIT")
+    #     #time.sleep(0.1*steps)
+    #     #trigger and get results
+    #     rawdata = [] #self.ask(":TRAC:DATA?") #takes exactly one reading
+    #     for i in range(1, steps):
+    #         rawdata.append(self.ask(":READ?").split(",")[0])
+    #         time.sleep(0.1)
+    #     #rawdata += self.ask(":READ?")
+    #     #rawdata = self.ask(":TRAC:DATA?")
+    #     # do something with raw data
+    #     #time.sleep(5)
+    #     #rawdata = self.ask(":READ?")
+    #     data = rawdata # maybe convert to float
+    #
+    #     # return data
+    #     return data
+
+    def sweep_voltage_simple(self, steps, start, stop, v_compliance=1, i_compliance=1e-7):
+        """
+        :param steps: int
+        :param start: float
+        :param stop: float
+        :param v_compliance:
+        :param i_compliance:
+        :return:
+
+        From Oujin's script file
+        """
+        print("got here")
+        self.enable_output()
         try:
             steps = int(steps)
             start = 0
             stop = float(stop)
-            compliance = int(compliance)
-        except ValueError:
-            print("Invalid data, must have steps=integer, start=float, stop=float")
-            return False
-        if direction not in ['UP','DOWN', 'BOTH']:
-            print("Invalid direction, must be UP, DOWN, or BOTH")
-            return False
+            v_compliance = float(v_compliance)
+            i_compliance = float(i_compliance)
+        except TypeError:
+            print("Invalid parameter types")
+            pass
 
-        if direction == "BOTH":
-            data_up = self.sweep_voltage_staircase(steps, start, stop, "UP", compliance)
-            data_down = self.sweep_voltage_staircase(steps, start, stop, "DOWN", compliance)
-            return data_up + data_down
+        sweep1 = np.linspace(start, stop, num=steps)
+        sweep2 = np.linspace(stop, start, num=steps)
+        sweep3 = np.linspace(start, -stop, num=steps)
+        sweep4 = np.linspace(-stop, start, num=steps)
 
-        self.write("*RST") # reset any conditions previously set
+        sweeps = np.concatenate((sweep1, sweep2, sweep3, sweep4))
+        sleeptime = 1
+        list = []
+        for v in sweeps:
+            self.set_voltage(v, i_compliance, v_compliance)
+            #time.sleep(sleeptime)
+            list.append(self.ask(":READ?").split(","))
 
-        self.write(":SENS:FUNC:CONC OFF")
-        self.write(":SOUR:FUNC VOLT") #set source function to VOLT
-        self.write(":SENS:FUNC 'CURR:DC'")
-        ######## TODO: CHECK THIS, MIGHT NEED TO BE SOUR:VOLT OR SENS:CURR
-        self.write(":SENSE:VOLT:PROT " + str(v_compliance))  # SET VOLT COMPLIANCE, default 1
-        self.write(":SENSE:CURR:PROT " + str(i_compliance))
-        self.write(":SOUR:VOLT:START "+ str(start)) # set start
-        self.write(":SOUR:VOLT:STOP " + str(stop))  # set stop
-        self.write(":SOUR:VOLT:STEP " + str(steps))  # set step
+        data = [] # 2d coordinates, (V, I)
 
-        self.write(":SOUR:SWE:RANG AUTO") # TODO: make this a parameter of function
-        self.write(":SOUR:SWE:SPAC LIN")  # TODO: make this a parameter of function
-
-        points = round( (stop - start)/steps ) + 1 #TODO: check, as per manual
-        self.write(":TRIG:COUN "+ str(points))
-        self.write(":SOUR:DEL 0.1") #100ms source delay, should be changeable parameter
-
-        # get ready to start
-        self.write(":OUTP ON")
-
-        #trigger and get results
-        rawdata = self.ask(":READ?") #takes exactly one reading
-        #rawdata += self.ask(":READ?")
-
-        # do something with raw data
-
-        data = rawdata # maybe convert to float
-
-        # return data
+        for datapoint in list:
+            data.append( (float(datapoint[0]), float(datapoint[1])))
         return data
+    def sweep_voltage_staircase(self, steps, start, stop, direction="BOTH", width=1, frequency=0.2, v_compliance=1, i_compliance=1e-7):
+        """
+        :param steps: int (number)
+        :param start: float (Volts)
+        :param stop: float (Volts)
+        :param direction: str
+            direction of sweep, UP, DOWN, or BOTH
+        :param width: float (seconds)
+            the length of the step
+        :param frequency: float (seconds)
+            how frequent measurement readings are taken
+        :param v_compliance: float (Volts)
+        :param i_compliance: float (Amps)
+        :return: list of coordinates (time, voltage, current)
 
+        """
+        self.enable_output()
+        try:
+            steps = int(steps)
+            start = 0
+            stop = float(stop)
+            v_compliance = float(v_compliance)
+            i_compliance = float(i_compliance)
+            width = float(width)
+            frequency = float(frequency)
+        except TypeError:
+            print("Invalid parameter types")
+            pass
+        # consider rewritting
+        sweep1 = np.linspace(start, stop, num=steps)
+        sweep2 = np.linspace(stop, start, num=steps)
+        #sweep3 = np.linspace(start, -stop, num=steps) FOR BIPOLAR
+        #sweep4 = np.linspace(-stop, start, num=steps)
+        if direction == "UP":
+            sweeps = sweep1
+        elif direction == "DOWN":
+            sweeps = sweep2
+        else:
+            sweeps = np.concatenate((sweep1, sweep2)) #, sweep3, sweep4))
+        list = []
+        self.reset()
+        self.enable_output()
+        start_time = t = time.time()
+        for v in sweeps:
+            t = tnow = time.time()
+            self.set_voltage(v, i_compliance, v_compliance)
+            while (tnow-t) < width:
+                r_time, r_data = time.time(), self.ask(":READ?")
+
+                list.append((r_time, r_data))
+                tnow = time.time()  # to calculate sleep
+                if (frequency - (tnow - r_time)) > 0:
+                    time.sleep(frequency - (tnow - r_time))
+                tnow = time.time()  # to calculate for pulse time
+            #time.sleep(sleeptime)
+            #list.append(self.ask(":READ?").split(","))
+
+        data = [] # 3d coordinates, (Time, Voltage, Current)
+
+        for datapoint in list:
+            spl = datapoint[1].split(",")
+            data.append( (datapoint[0]-start_time, float(spl[0]), float(spl[1])))
+        return data
     # sweep commands, as defined in the Keithley Manual
     def sweep_current_staircase(self, steps, start, stop, direction="BOTH", v_compliance = 1, i_compliance = 1e-7):
         """
@@ -424,7 +723,8 @@ class Instrument(Tool.MeasInstr):
             steps = int(steps)
             start = 0
             stop = float(stop)
-            compliance = int(compliance)
+            v_compliance = float(v_compliance)
+            i_compliance = float(i_compliance)
         except ValueError:
             print("Invalid data, must have steps=integer, start=float, stop=float")
             return False
@@ -433,11 +733,12 @@ class Instrument(Tool.MeasInstr):
             return False
 
         if direction == "BOTH":
-            data_up = self.sweep_voltage_staircase(steps, start, stop, "UP", compliance)
-            data_down = self.sweep_voltage_staircase(steps, start, stop, "DOWN", compliance)
+            data_up = self.sweep_voltage_staircase(steps, start, stop, "UP", v_compliance, i_compliance)
+            data_down = self.sweep_voltage_staircase(steps, start, stop, "DOWN", v_compliance, i_compliance)
             return data_up + data_down
 
-        self.write("*RST") # reset any conditions previously set
+        self.reset()
+        #self.write("*RST") # reset any conditions previously set
 
         self.write(":SENS:FUNC:CONC OFF")
         self.write(":SOUR:FUNC CURR") #set source function to VOLT

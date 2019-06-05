@@ -1,3 +1,3 @@
-dt(s), TIME, , dt
-V(V), KT2450, GPIB0::28::INSTR, V
-V(V), KT2400, GPIB0::28::INSTR, V
+dt(s), TIME, , dt, 'dt(s)', 0, 0, 0, 0, 0, #4477AA, 'None', '-'
+V(V), KT2400, GPIB0::28::INSTR, V, 'V(V)', 0, 0, 0, 0, 0, #DDCC77, 'None', '-'
+I(A), KT2400, GPIB0::28::INSTR, I, 'I(A)', 0, 0, 0, 0, 0, #CC6677, 'None', '-'
