@@ -228,6 +228,81 @@ The module LabGui contains the main function, which is an instance of QMainWindo
 	- fitting
 The communication between the different services and the server is done using QtCore.SIGNAL, this way we can set up various listeners to the same signal which will all take different actions.
 
+# GPIB Command-Line #
+
+The GPIB Command-Line is accessible through the option menu. The module `CommandWidget` contains all functions relating to the command line. It is designed to ease the debugging process of both driver and device. It has features that enable custom write/sweep functions to be run, and sweep data to be plotted. It can be used to access multiple connected devices concurrently
+
+It is designed to be a custom shell for the LabGUI program, with its own built-in functions and syntax. Generally, the first word corresponds to the command, where all subsequent words are parameters fed to the command. It uses Shlex syntax processing. Fully equipped with environment variables, adding a new command is as easy as adding if statement to the `execute_command` function
+
+
+Specifically, it offers the following features:
+
+### read ###
+This command reads data in the specified device's buffer, and prints it into the console.
+
+### write \<GPIB command\> ###
+This command writes any GPIB command to the specified device.
+
+### ask/query \<GPIB command\> ###
+This command queries any GPIB command to the specified device, printing the response to the console.
+
+### methods ###
+This command returns all callable functions available from the device's driver.
+
+### run \<function\> \<parameters\> ###
+This command will execute any callable function (viewable via the `methods` command), with the specified parameters separated by spaces, and print the return data to the console.
+
+### plot \<function\> \<parameters\> ###
+This command plots the return data of any callable function. If the return data is not plottable, it is printed to the console. This function uses MatPlotLib, with axis labelling available via the `numbers` environment variable.
+
+The return value of the function must be a list of plottable points of any dimension `n`. By default, the `plot` command will plot all possible unordered combinations of values, with the smallest index of two values as the x-axis.
+
+This will produce `n-1` separate windows containing subgraphs, with `C(n,2)` graphs in total.
+
+### set \<variable\> \<parameters\> ###
+This command relates to setting/retrieving environment variables. It has the following possible uses
+
+`set`  returns all environment variables and their values.
+
+`set <variable>` returns the value of `<variable>`
+
+`set <variable> <parameters>` sets `<variable>` to have the value `<parameter>`.
+
+Environment variables can be set to both single values and a list of values. To set a list, simply separate all values by a space.
+
+`set <variable> value1 value2 value3` sets `<variable>` to `['value1', 'value2', 'value3']`
+
+To change a specific value in a list, `<parameter>` must be of the form `position=value`
+
+Using the example above, `set <variable> 0=changed_value` sets `<variable>` to `['changed_value', 'value2', 'value3']`
+
+The only limitation of this usage is that it cannot be used to change the size of the list
+
+### clear ###
+As the name suggests, `clear` clears the console window
+
+### history \<number\> ###
+
+This prints command history to the console. It has the following usage:
+
+`history` prints the entire command history of the current session
+
+`history <+integer>` prints the last `<positive integer>` commands to the console
+
+`history <-integer>` prints all commands executed after the specified position to the console
+
+### last/recall \<index\> ###
+
+This command is designed to recall previously executed commands
+
+`last` removes the last command executed from the history, and places it in the command line.
+
+`last <+index>` recalls the last command at index without removing it from the history, and places it in the command line.
+
+`last <-index>` recalls the first command at index from the session without removing it from the history, and places it in the command line.
+
+Example: `last 1` recalls the last command executed, whereas `last -1` recalls the first command executed
+
 
 
 # How to include your own instrument into LabGUI #

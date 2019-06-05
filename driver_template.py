@@ -52,7 +52,6 @@ class Instrument(Tool.MeasInstr):
                                           name=NAME,
                                           debug=debug,
                                           interface=INTERFACE,
-                                          backwardcompatible=False,
                                           **kwargs)
 
     def measure(self, channel):

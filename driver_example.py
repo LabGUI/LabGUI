@@ -62,7 +62,6 @@ class Instrument(Tool.MeasInstr): # Tool.MeasInstr is child class
                                           name='insert device name here, typically the same name as the file',
                                           debug=debug,
                                           interface=INTERFACE,
-                                          backwardcompatible=False,
                                           **kwargs)
         """ you may add any other important calls here """
 

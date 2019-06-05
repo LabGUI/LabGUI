@@ -37,6 +37,7 @@ import socket
 
 from LocalVars import USE_PYQT5
 
+
 if USE_PYQT5:
 
     from PyQt5.QtCore import QObject, pyqtSignal
