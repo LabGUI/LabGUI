@@ -1,3 +1,11 @@
+# -*- coding: utf-8 -*-
+"""
+Modified on Tue Jun 4 2019
+Keithley 2450
+@author: zackorenberg
+
+"""
+
 try:
     from . import Tool
 except:
