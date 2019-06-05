@@ -165,7 +165,7 @@ class CommandWidget(QtGui.QWidget):
             except:
                 resp = "Something went wrong"
                 pass
-            self.update_console(command+": "+resp)
+            self.update_console(self.print_to_string(command,": ",resp))
         elif action.lower() == "write":
             resp = "Written"
             try:
@@ -343,6 +343,45 @@ class CommandWidget(QtGui.QWidget):
                         self.update_console(self.print_to_string(sys.exc_info()))
                     pass
 
+        elif action.lower() == "history":
+            self.history.pop() #get rid of 'history' from history
+            if len(self.history) == 0:
+                self.update_console("There are no commands to recall")
+            elif command is None:
+                self.update_console("=== History - "+str(len(self.history))+" calls ===")
+                self.update_console(self.print_to_string(len(self.history), " command calls:"))
+                for i in self.history:
+                    self.update_console(i)
+            else:
+                try:
+                    command = int(command)
+                    h = self.history[-command:]
+                    self.update_console("=== History - "+str(command)+" ===")
+                    for i in h:
+                        self.update_console(i)
+                except:
+                    self.update_console(self.print_to_string("An error occured: ", sys.exc_info()[0]))
+                    if self.INFO:
+                        self.update_console(self.print_to_string(sys.exc_info()))
+                    pass
+        elif action.lower() == "last" or action.lower() == "recall":
+            # get last command
+            self.history.pop() #get rid of the 'last' from history
+            if len(self.history) == 0:
+                self.update_console("There is no command to recall")
+            elif command is None:
+                self.commandLineEdit.setText(self.history.pop())
+                return # so it does not delete newly added cmd
+            else:
+                try:
+                    command = int(command)
+                    self.commandLineEdit.setText(self.history[-command])
+                except:
+                    self.update_console(self.print_to_string("An error occured: ", sys.exc_info()[0]))
+                    if self.INFO:
+                        self.update_console(self.print_to_string(sys.exc_info()))
+                    pass
+                return #so it doesnt delete newly added cmd
         elif action.lower() == "help":
             # write help stuff here
             if command is None:
@@ -399,6 +438,23 @@ class CommandWidget(QtGui.QWidget):
                     "all <parameters> must be seperated by spaces",
                     "Please note, only functions that return a list of plotable coordinates of any dimension will plot",
                     "Axis names can be set via 'set numbers' command, where the first array entry corresponds to the first coordinate, second entry to the second coordinate, etc"
+                ]
+                for i in text:
+                    self.update_console(i)
+            elif command.lower() == "last" or command.lower() == "recall":
+                text = [
+                    "Usage: " + command.lower(),
+                    command.lower()+":\trecalls last command",
+                    command.lower()+": <index>\trecalls last index'th call",
+                    "NOTE: 'last' pops the last command, erasing it from memory, whereas last <index> does not"
+                ]
+                for i in text:
+                    self.update_console(i)
+            elif command.lower() == "history":
+                text = [
+                    "Usage: " + command.lower(),
+                    "history:\trecalls entire command history",
+                    "history <integer>\trecalls last #<integer> calls",
                 ]
                 for i in text:
                     self.update_console(i)

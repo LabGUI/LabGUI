@@ -3,6 +3,16 @@
 Created on Wed May 28 2019
 Keithley 2400
 @author: zackorenberg
+
+=== TO MAINTAIN BACKWARDS COMPATIBILITY ===
+When writing a function that requires the ':READ?' command, use:
+
+self.ask(self.READ)
+
+instead of
+
+self.ask(':READ?')
+
 """
 
 #!/usr/bin/env python
@@ -25,7 +35,7 @@ INTERFACE = Tool.INTF_GPIB
 
 class Instrument(Tool.MeasInstr):
 
-    def __init__(self, resource_name, debug=False, **kwargs):
+    def __init__(self, resource_name, debug=False, backwardcompatible=True, **kwargs):
 
         if "interface" in kwargs:
             itfc = kwargs.pop("interface")
@@ -36,11 +46,25 @@ class Instrument(Tool.MeasInstr):
         if "name" in kwargs:
             name = kwargs.pop("name")
 
+
+
         super(Instrument, self).__init__(resource_name,
                                          name=name,
                                          debug=debug,
                                          interface=itfc,
                                          **kwargs)
+        self.READ = ":READ?"
+        if backwardcompatible:
+            # make sure that if model 2450, to change language
+            answer = self.ask("*IDN?")
+            if "MODEL 2450" in answer:
+                lang = self.ask("*LANG?")
+                if "SCPI2400" not in lang:
+                    self.write("*LANG SCPI2400")
+                    print("=== Please reboot device ===")
+        else:
+            self.READ = ':READ? "defbuffer1", SOUR, READ'
+        self.enable_output()
 
     def measure(self, channel):
         if channel in self.last_measure:
@@ -49,11 +73,18 @@ class Instrument(Tool.MeasInstr):
                 if not self.DEBUG:
                     # 0 #this is to be defined for record sweep
                     self.write('VOLT:RANG:AUTO ON')
-                    answer = self.ask(':READ?')
+                    answer = self.ask(self.READ)
                     #if math.isnan(float(answer)):
-                    if type(answer) is not str and math.isnan(answer): #answer will be nan if error
-                        print("Please set Output on")
-                        answer = float(answer)
+                    if not answer or answer=='\n': #incase 2450 is connected
+                        self.enable_output()
+                        return self.measure(channel)
+                    elif type(answer) is not str and math.isnan(answer): #answer will be nan if error
+                        # case where 2400 is connected but output is off
+                        print("Output must be enabled")
+                        self.enable_output()
+                        return self.measure(channel)
+                        #print("Please set Output on")
+                        #answer = float(answer)
                     else:
                         answer = float(answer.split(',')[0])
                 else:
@@ -64,11 +95,18 @@ class Instrument(Tool.MeasInstr):
                 if not self.DEBUG:
                     # 0 #this is to be defined for record sweep
                     self.write('CURR:RANG:AUTO ON')
-                    answer = self.ask(':READ?')
+                    answer = self.ask(self.READ)
                     #if math.isnan(float(answer)):
-                    if type(answer) is not str and math.isnan(answer): #answer will be nan if error
-                        print("Please set Output on")
-                        answer = float(answer)
+                    if not answer or answer=='\n': #incase 2450 is connected
+                        self.enable_output()
+                        return self.measure(channel)
+                    elif type(answer) is not str and math.isnan(answer): #answer will be nan if error
+                        # case where 2400 is connected but output is off
+                        print("Output must be enabled")
+                        self.enable_output()
+                        return self.measure(channel)
+                        #print("Please set Output on")
+                        #answer = float(answer)
                     else:
                         answer = float(answer.split(',')[1])
                 else:
@@ -407,7 +445,7 @@ class Instrument(Tool.MeasInstr):
             t = tnow = time.time()
             # do pulse_delay
             while (tnow-t) < pulse_delay:
-                r_time, r_data = time.time(), self.ask(":READ?")
+                r_time, r_data = time.time(), self.ask(self.READ)
 
                 data.append( (r_time, r_data) )
                 tnow = time.time() # to calculate sleep
@@ -419,7 +457,7 @@ class Instrument(Tool.MeasInstr):
             self.set_voltage( (step_size * i)+start, i_compliance , v_compliance)
             t = tnow = time.time()
             while (tnow-t) < pulse_width:
-                r_time, r_data = time.time(), self.ask(":READ?")
+                r_time, r_data = time.time(), self.ask(self.READ)
 
                 data.append( (r_time, r_data))
                 tnow = time.time()  # to calculate sleep
@@ -431,7 +469,7 @@ class Instrument(Tool.MeasInstr):
         self.set_voltage(0, i_compliance, v_compliance)
         t = tnow = time.time()
         while (tnow-t) < pulse_delay:
-            r_time, r_data = time.time(), self.ask(":READ?")
+            r_time, r_data = time.time(), self.ask(self.READ)
 
             data.append( (r_time, r_data))
             tnow = time.time()  # to calculate sleep
@@ -504,7 +542,7 @@ class Instrument(Tool.MeasInstr):
                 t = tnow = time.time()
                 self.set_voltage(v, i_compliance, v_compliance)
                 while (tnow - t) < width:
-                    r_time, r_data = time.time(), self.ask(":READ?")
+                    r_time, r_data = time.time(), self.ask(self.READ)
 
                     list.append((r_time, r_data))
                     tnow = time.time()  # to calculate sleep
@@ -632,7 +670,7 @@ class Instrument(Tool.MeasInstr):
         for v in sweeps:
             self.set_voltage(v, i_compliance, v_compliance)
             #time.sleep(sleeptime)
-            list.append(self.ask(":READ?").split(","))
+            list.append(self.ask(self.READ).split(","))
 
         data = [] # 2d coordinates, (V, I)
 
@@ -686,7 +724,7 @@ class Instrument(Tool.MeasInstr):
             t = tnow = time.time()
             self.set_voltage(v, i_compliance, v_compliance)
             while (tnow-t) < width:
-                r_time, r_data = time.time(), self.ask(":READ?")
+                r_time, r_data = time.time(), self.ask(self.READ)
 
                 list.append((r_time, r_data))
                 tnow = time.time()  # to calculate sleep
@@ -703,72 +741,72 @@ class Instrument(Tool.MeasInstr):
             data.append( (datapoint[0]-start_time, float(spl[0]), float(spl[1])))
         return data
     # sweep commands, as defined in the Keithley Manual
-    def sweep_current_staircase(self, steps, start, stop, direction="BOTH", v_compliance = 1, i_compliance = 1e-7):
-        """
-        :param steps:
-            number of steps in sweep
-        :param start:
-            starting voltage (for safety reasons, we will disregard and make 0
-        :param stop:
-            stopping voltage
-        :param direction:
-                UP, DOWN, or BOTH
-        :return: Data or False
-
-        This is programmed as specified by Keithley2400 Manual, Chapter 10-22, staircase sweep from:
-        http://research.physics.illinois.edu/bezryadin/labprotocol/Keithley2400Manual.pdf
-        """
-        # check that all values are good
-        try:
-            steps = int(steps)
-            start = 0
-            stop = float(stop)
-            v_compliance = float(v_compliance)
-            i_compliance = float(i_compliance)
-        except ValueError:
-            print("Invalid data, must have steps=integer, start=float, stop=float")
-            return False
-        if direction not in ['UP','DOWN', 'BOTH']:
-            print("Invalid direction, must be UP, DOWN, or BOTH")
-            return False
-
-        if direction == "BOTH":
-            data_up = self.sweep_voltage_staircase(steps, start, stop, "UP", v_compliance, i_compliance)
-            data_down = self.sweep_voltage_staircase(steps, start, stop, "DOWN", v_compliance, i_compliance)
-            return data_up + data_down
-
-        self.reset()
-        #self.write("*RST") # reset any conditions previously set
-
-        self.write(":SENS:FUNC:CONC OFF")
-        self.write(":SOUR:FUNC CURR") #set source function to VOLT
-        self.write(":SENS:FUNC 'VOLT:DC'")
-        ######## TODO: CHECK THIS, MIGHT NEED TO BE SOUR:VOLT OR SENS:CURR
-        self.write(":SENSE:VOLT:PROT " + str(v_compliance)) # SET VOLT COMPLIANCE, default 1
-        self.write(":SENSE:CURR:PROT "+ str(i_compliance))
-        self.write(":SOUR:CURR:START "+ str(start)) # set start
-        self.write(":SOUR:CURR:STOP " + str(stop))  # set stop
-        self.write(":SOUR:CURR:STEP " + str(steps))  # set step
-
-        self.write(":SOUR:SWE:RANG AUTO") # TODO: make this a parameter of function
-        self.write(":SOUR:SWE:SPAC LIN")  # TODO: make this a parameter of function
-
-        points = round( (stop - start)/steps + 1 ) #TODO: check, as per manual
-        self.write(":TRIG:COUN "+ str(points))
-        self.write(":SOUR:DEL 0.1") #100ms source delay, should be changeable parameter
-
-        # get ready to start
-        self.write(":OUTP ON")
-
-        #trigger and get results
-        rawdata = self.ask(":READ?")
-
-        # do something with raw data
-
-        data = rawdata # maybe convert to float
-
-        # return data
-        return data
+    # def sweep_current_staircase(self, steps, start, stop, direction="BOTH", v_compliance = 1, i_compliance = 1e-7):
+    #     """ NOT WORKING YET
+    #     :param steps:
+    #         number of steps in sweep
+    #     :param start:
+    #         starting voltage (for safety reasons, we will disregard and make 0
+    #     :param stop:
+    #         stopping voltage
+    #     :param direction:
+    #             UP, DOWN, or BOTH
+    #     :return: Data or False
+    #
+    #     This is programmed as specified by Keithley2400 Manual, Chapter 10-22, staircase sweep from:
+    #     http://research.physics.illinois.edu/bezryadin/labprotocol/Keithley2400Manual.pdf
+    #     """
+    #     # check that all values are good
+    #     try:
+    #         steps = int(steps)
+    #         start = 0
+    #         stop = float(stop)
+    #         v_compliance = float(v_compliance)
+    #         i_compliance = float(i_compliance)
+    #     except ValueError:
+    #         print("Invalid data, must have steps=integer, start=float, stop=float")
+    #         return False
+    #     if direction not in ['UP','DOWN', 'BOTH']:
+    #         print("Invalid direction, must be UP, DOWN, or BOTH")
+    #         return False
+    #
+    #     if direction == "BOTH":
+    #         data_up = self.sweep_voltage_staircase(steps, start, stop, "UP", v_compliance, i_compliance)
+    #         data_down = self.sweep_voltage_staircase(steps, start, stop, "DOWN", v_compliance, i_compliance)
+    #         return data_up + data_down
+    #
+    #     self.reset()
+    #     #self.write("*RST") # reset any conditions previously set
+    #
+    #     self.write(":SENS:FUNC:CONC OFF")
+    #     self.write(":SOUR:FUNC CURR") #set source function to VOLT
+    #     self.write(":SENS:FUNC 'VOLT:DC'")
+    #     ######## TODO: CHECK THIS, MIGHT NEED TO BE SOUR:VOLT OR SENS:CURR
+    #     self.write(":SENSE:VOLT:PROT " + str(v_compliance)) # SET VOLT COMPLIANCE, default 1
+    #     self.write(":SENSE:CURR:PROT "+ str(i_compliance))
+    #     self.write(":SOUR:CURR:START "+ str(start)) # set start
+    #     self.write(":SOUR:CURR:STOP " + str(stop))  # set stop
+    #     self.write(":SOUR:CURR:STEP " + str(steps))  # set step
+    #
+    #     self.write(":SOUR:SWE:RANG AUTO") # TODO: make this a parameter of function
+    #     self.write(":SOUR:SWE:SPAC LIN")  # TODO: make this a parameter of function
+    #
+    #     points = round( (stop - start)/steps + 1 ) #TODO: check, as per manual
+    #     self.write(":TRIG:COUN "+ str(points))
+    #     self.write(":SOUR:DEL 0.1") #100ms source delay, should be changeable parameter
+    #
+    #     # get ready to start
+    #     self.write(":OUTP ON")
+    #
+    #     #trigger and get results
+    #     rawdata = self.ask(self.READ)
+    #
+    #     # do something with raw data
+    #
+    #     data = rawdata # maybe convert to float
+    #
+    #     # return data
+    #     return data
 
     """  sweep commands, as defined in the Keithley Manual
     def sweep_staircase(self, voltage_dict, current_dict, sweep_points, sweep_direction="BOTH", source_ranging="BEST", sweep_scale="LINEAR"):
