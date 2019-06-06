@@ -30,6 +30,8 @@ else:
 
 from LabTools.Display import QtTools
 
+from collections import Iterable
+
 import sys
 import io
 import inspect
@@ -131,6 +133,46 @@ class CommandWidget(QtGui.QWidget):
     def textChanged(self, text):
         #print(text)
         return
+
+    def process_params(self, param_str):
+        """
+
+        :param param_str:
+        :return: array of processed parameters, substituting environment variables
+
+        two ways to call environment variable:
+
+        $varname - returns varname in its entirety, even if it is an array
+        $varname{index} returns varname value at index, works for both strings and arrays. INDEX MUST BE FLOAT
+        """
+        if type(param_str) == str:
+            params = shlex.split(param_str)
+        elif isinstance(param_str, Iterable):
+            params = param_str
+
+        ret = []
+        for param in params:
+            if param[0] == '$':
+                splitted = param[1:].split('{')
+                if len(splitted) == 1:
+                    if hasattr(self, splitted[0]) and not callable(getattr(self, splitted[0])):
+                        ret.append(getattr(self, splitted[0]))
+                    else:
+                        continue
+                elif len(splitted) > 1: #at this time, only one index is supported
+                    try:
+                        index = int(splitted[1].split('}')[0])
+                        value = ret.append(getattr(self, splitted[0])[index])
+                    except:
+                        self.update_console(self.print_to_string("Unable to get value at that index: ", sys.exc_info()[0]))
+                        if self.INFO:
+                            self.update_console(self.print_to_string(sys.exc_info()))
+                        value = param
+                    ret.append(value)
+                else:
+                    ret.append(param) #if does not exist, pass param in full
+            else:
+                ret.append(param) #otherwise add as normal
 
 
 

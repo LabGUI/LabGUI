@@ -73,16 +73,19 @@ class Instrument(Tool.MeasInstr): # Tool.MeasInstr is child class
             print("Debug mode activated")
 
         if channel in self.last_measure: # not required, but is a good idea to implement
-            if channel == 'Name':
-                #this mean that the channel is the first in param dictionary
-                answer = 'value'
-                """
-                You can use any of the self.ask, self.write, self.read to obtain data from the machine
-                """
-            elif channel == 'Channel':
-                # this means that this is the second channel in param dictionary
-                answer = 'other type of value'
-            # add as many elif statements to catch all channels as necessary
+            if not self.DEBUG:
+                if channel == 'Name':
+                    #this mean that the channel is the first in param dictionary
+                    answer = 'value'
+                    """
+                    You can use any of the self.ask, self.write, self.read to obtain data from the machine
+                    """
+                elif channel == 'Channel':
+                    # this means that this is the second channel in param dictionary
+                    answer = 'other type of value'
+                # add as many elif statements to catch all channels as necessary
+            else:
+                answer = 123.4
 
         else:
             # not a valid channel

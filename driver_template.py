@@ -60,8 +60,11 @@ class Instrument(Tool.MeasInstr):
             print("Debug mode activated")
 
         if channel in self.last_measure:
-            if channel == 'Channel':
-                answer = 'value'
+            if not self.DEBUG:
+                if channel == 'Channel':
+                    answer = 'value'
+            else:
+                answer = 123.4
 
         else:
             print("you are trying to measure a non existent channel : " + channel)
