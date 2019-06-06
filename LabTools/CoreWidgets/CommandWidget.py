@@ -152,27 +152,37 @@ class CommandWidget(QtGui.QWidget):
 
         ret = []
         for param in params:
-            if param[0] == '$':
-                splitted = param[1:].split('{')
-                if len(splitted) == 1:
-                    if hasattr(self, splitted[0]) and not callable(getattr(self, splitted[0])):
-                        ret.append(getattr(self, splitted[0]))
+            if '$' in param:
+                dat = shlex.split(param)
+                full_dat=[]
+                for sep in dat:
+                    if sep[0] == '$':
+                        splitted = sep[1:].split('{')
+                        if len(splitted) == 1:
+                            if hasattr(self, splitted[0]) and not callable(getattr(self, splitted[0])):
+                                full_dat.append(getattr(self, splitted[0]))
+                            else:
+                                full_dat.append(sep)
+                                continue
+                        elif len(splitted) > 1: #at this time, only one index is supported
+                            try:
+                                index = int(splitted[1].split('}')[0])
+                                value = getattr(self, splitted[0])[index]
+                            except:
+                                self.update_console(self.print_to_string("Unable to get value at that index: ", sys.exc_info()[0]))
+                                if self.INFO:
+                                    self.update_console(self.print_to_string(sys.exc_info()))
+                                value = sep
+                            full_dat.append(value)
+                        else:
+                            full_dat.append(sep) #if does not exist, pass param in full
                     else:
-                        continue
-                elif len(splitted) > 1: #at this time, only one index is supported
-                    try:
-                        index = int(splitted[1].split('}')[0])
-                        value = ret.append(getattr(self, splitted[0])[index])
-                    except:
-                        self.update_console(self.print_to_string("Unable to get value at that index: ", sys.exc_info()[0]))
-                        if self.INFO:
-                            self.update_console(self.print_to_string(sys.exc_info()))
-                        value = param
-                    ret.append(value)
-                else:
-                    ret.append(param) #if does not exist, pass param in full
+                        full_dat.append(sep) #otherwise add as normal
+                ret.append(self.iterable_to_str(full_dat))
             else:
-                ret.append(param) #otherwise add as normal
+                ret.append(param)
+
+        return ret
 
 
 
@@ -199,9 +209,12 @@ class CommandWidget(QtGui.QWidget):
         current_device = self.deviceComboBox.currentIndex()
         if current_device is -1:
             self.update_console("Please connect to a device before executing a command, or refresh device list by typing 'refresh'")
+
         #print(current_device)
         if action.lower() == "query" or action.lower() == "ask":
             resp = "None"
+            #make sure things have been echo'd
+            command = self.iterable_to_str(self.process_params(command)) #replace important stuff
             try:
                 resp = self.sanitized_list[current_device][2].ask(command)
             except:
@@ -210,6 +223,8 @@ class CommandWidget(QtGui.QWidget):
             self.update_console(self.print_to_string(command,": ",resp))
         elif action.lower() == "write":
             resp = "Written"
+            # make sure things have been echo'd
+            command = self.iterable_to_str(self.process_params(command))  # replace important stuff
             try:
                 self.sanitized_list[current_device][2].write(command)
             except:
@@ -228,13 +243,14 @@ class CommandWidget(QtGui.QWidget):
             # split funct and params
             try:
                 funct, params = command.split(' ', 1)
+                #funct = self.process_params(funct)[0] if you want function to be dynamic
             except (ValueError, IndexError, TypeError): #no params
                 funct = command
                 params = None
                 pass
             #split params
             try:
-                params = params.split(' ')
+                params = self.process_params(params) #replace important stuff
             except (ValueError, IndexError, TypeError): #1 param
                 params = [params]
                 pass
@@ -268,7 +284,7 @@ class CommandWidget(QtGui.QWidget):
                 pass
             #split params
             try:
-                params = params.split(' ')
+                params = self.process_params(params) #replace important stuff
             except (ValueError, IndexError, TypeError): #1 param
                 params = [params]
                 pass
@@ -324,6 +340,8 @@ class CommandWidget(QtGui.QWidget):
                 self.update_console("Invalid return data:")
                 self.update_console(self.print_to_string(resp))
         elif "methods" == action.lower():
+            if current_device == -1:
+                return
             object_methods = [method_name
                               for method_name in dir(self.sanitized_list[current_device][2])
                               if callable(getattr(self.sanitized_list[current_device][2], method_name))]
@@ -351,6 +369,9 @@ class CommandWidget(QtGui.QWidget):
             #print(object_sig)
             # it aint pretty, but it gets the job done
         elif action.lower() == "set": # to set command line variables
+            #if '$' in command:
+            #    self.print_to_console("Please do not use $ in variable declaration, only accessing")
+            #    return
             try:
                 var, params = command.split(" ", 1)
             except: # at most one word in command
@@ -384,7 +405,26 @@ class CommandWidget(QtGui.QWidget):
                     if self.INFO:
                         self.update_console(self.print_to_string(sys.exc_info()))
                     pass
+        elif action.lower() == "unset":
+            if command:
+                try:
+                    ret = self.unset_vars(command)
+                    if ret is True:
+                        self.print_to_console("Variable ", command, " unset successfully")
+                    else:
+                        self.print_to_console("Cannot unset variable: ", ret)
+                except:
+                    self.print_to_console("Something went wrong: ", sys.exc_info()[0])
+                    if self.INFO:
+                        self.print_to_console(sys.exc_info())
+            else:
+                self.print_to_console("Usage: unset <environment variable>")
 
+        elif action.lower() == "echo":
+            o = self.process_params(command)
+            self.print_to_console("echo: ", self.iterable_to_str(o))
+            if self.INFO:
+                self.print_to_console(o)
         elif action.lower() == "history":
             self.history.pop() #get rid of 'history' from history
             if len(self.history) == 0:
@@ -520,10 +560,25 @@ class CommandWidget(QtGui.QWidget):
                     "sets value of environment variable 'varname' to the string 'foo bar'",
                     "=== Some important variables ===",
                     "\tnumbers : contains axes information for 'plot'",
-                    "\tINFO : Boolean variable that prints extra information regarding errors when set to True"
+                    "\tINFO : Boolean variable that prints extra information regarding errors when set to True",
+                    "=== Possible usage for environment variables ===",
+                    "Environment variables are callable in regular syntax via $varname. To specify a specific index, write $varname{index}"
                 ]
                 for i in text:
                     self.update_console(i)
+            elif command.lower() == "unset":
+                text = {
+                    "Usage: " + command.lower(),
+                    "unset <variable>:\tremoves environment variable"
+                }
+                self.print_to_console(*text)
+            elif command.lower() == "echo":
+                text = {
+                    "Usage: " + command.lower(),
+                    "echo <parameters>:\twill process <parameters> in usual way and print results to screen",
+                    "NOTE: if INFO is True, echo will also print data structure of processed parameters"
+                }
+                self.print_to_console(*text)
             else:
                 self.update_console("Invalid command: "+command)
 
@@ -596,7 +651,8 @@ class CommandWidget(QtGui.QWidget):
     def set_vars(self, var, data): #assume vars are all strings, except INFO
         if data is None: # shouldnt happen, but just in case
             return False
-        dat = [var] + shlex.split(data) #fix for code i wrote
+        #dat = [var] + shlex.split(data) #fix for code i wrote
+        dat = [var] + self.process_params(data) #replace important stuff
         if dat[0] not in self.vars:
             if hasattr(self, dat[0]):
                 return "Cannot set variable, reserved in class"
@@ -647,6 +703,13 @@ class CommandWidget(QtGui.QWidget):
                     return "An error occured if you reached here."
                 return (dat[0], getattr(self, dat[0]))
 
+    def unset_vars(self, var):
+        if var not in self.vars:
+            return "Variable does not exist"
+        else:
+            delattr(self, var)
+            self.vars.remove(var)
+            return True
 
 
 
@@ -656,6 +719,18 @@ class CommandWidget(QtGui.QWidget):
         contents = output.getvalue()
         output.close()
         return contents
+
+    def iterable_to_str(self, o):
+        try:
+            return " ".join([str(i) for i in o])
+        except:
+            self.update_console(self.print_to_string("Unable to join object", sys.exc_info()[0]))
+            if self.INFO:
+                self.update_console(self.print_to_string(sys.exc_info()))
+            return o
+
+    def print_to_console(self, *args, **kwargs): #command shortcut
+        self.update_console(self.print_to_string(*args, **kwargs))
 
     def update_console(self, stri):
         # based on update_console code for consolewidget

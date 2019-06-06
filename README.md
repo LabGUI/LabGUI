@@ -276,8 +276,21 @@ To change a specific value in a list, `<parameter>` must be of the form `positio
 
 Using the example above, `set <variable> 0=changed_value` sets `<variable>` to `['changed_value', 'value2', 'value3']`
 
+To access environment variables in other commands, you must use `$varname` in a parameter. If you want to access the value of an environment variable by index, use `$varname{index}`, where index is an integer. To test the output of your command, use `echo <parameter>`
+
+You can use environment variables in a string by enclosing it in quotations. Variables <i>must</i> be separated by other words by a space. Example: `variable is $varname units` will replace `$varname` by its value iff it exists
+
 The only limitation of this usage is that it cannot be used to change the size of the list
 
+### unset ###
+
+Usage: `unset <variable>` will remove environment variable by the name `<variable>`
+
+### echo ###
+
+Usage: `echo <parameter>` will process `<parameter>` like it would with any other function, and print the result to screen to ensure proper output.
+
+If environment variable `INFO` is set to `True`, it will also print the data structure of the processed `<parameter>`
 ### clear ###
 As the name suggests, `clear` clears the console window
 
