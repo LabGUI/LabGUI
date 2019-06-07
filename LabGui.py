@@ -328,6 +328,7 @@ have the right format, '%s' will be used instead" % (self.config_file,
         self.datataker = DataManagement.DataTaker(self.lock, self.instr_hub)
 
         self.cmdline = CommandWidget.CommandWidget(parent=self)
+        self.cmddock = None
         #self.cmdline.instr_hub = self.instr_hub
 
         # handle data emitted by datataker (basically stuff it into a shared,
@@ -1313,9 +1314,14 @@ have the right format, '%s' will be used instead" % (self.config_file,
 
     def option_command_window_state(self):
         """launches or focuses commandline """
-        self.cmdline.show()
-        self.cmdline.update_devices()
-        self.cmdline.raise_()
+        if self.cmddock:
+            self.cmddock.setFloating(True)
+            self.cmddock.toggleViewAction()
+            self.cmddock.show()
+        else:
+            self.cmdline.show()
+            self.cmdline.update_devices()
+            self.cmdline.raise_()
 
 
     def option_change_interface(self):

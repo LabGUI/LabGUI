@@ -752,54 +752,65 @@ class CommandWidget(QtGui.QWidget):
     def clear_console(self):
         self.consoleTextEdit.clear()
 
+# def toggleViewAction(dock_widget, docked=True):
+#     if docked:
+#         dock_widget.toggleViewAction()
+#     else:
+#         dock_widget.widget().show()
 
 def add_widget_into_main(parent):
-    return #we dont want this to happen yet
+    #return #we dont want this to happen yet
     """add a widget into the main window of LabGuiMain
 
     create a QDock widget and store a reference to the widget
     """
 
-    mywidget = ConsoleWidget(parent=parent)
+    mywidget = parent.cmdline
 
     # create a QDockWidget
-    consoleDockWidget = QtGui.QDockWidget("Output Console", parent)
-    consoleDockWidget.setObjectName("consoleDockWidget")
-    consoleDockWidget.setAllowedAreas(
+    cmdDockWidget = QtGui.QDockWidget("GPIB Command-Line", parent)
+    cmdDockWidget.setObjectName("commandlineDockWidget")
+    cmdDockWidget.setAllowedAreas(
         QtCore.Qt.LeftDockWidgetArea | QtCore.Qt.RightDockWidgetArea
         | QtCore.Qt.BottomDockWidgetArea)
 
     # fill the dictionnary with the widgets added into LabGuiMain
-    parent.widgets['ConsoleWidget'] = mywidget
+    parent.widgets['CommandWidget'] = mywidget
 
-    consoleDockWidget.setWidget(mywidget)
-    parent.addDockWidget(QtCore.Qt.BottomDockWidgetArea, consoleDockWidget)
+    cmdDockWidget.setWidget(mywidget)
+    parent.addDockWidget(QtCore.Qt.BottomDockWidgetArea, cmdDockWidget)
 
     # Enable the toggle view action
-    parent.windowMenu.addAction(consoleDockWidget.toggleViewAction())
+    parent.windowMenu.addAction(cmdDockWidget.toggleViewAction())
 
     # redirect print statements to show a copy on "console"
     sys.stdout = QtTools.printerceptor(parent)
 
+    cmdDockWidget.resize(500,250)
+    cmdDockWidget.hide()
+
+    parent.cmddock = cmdDockWidget
+
+
     # assigning a method to the parent class
     # depending on the python version this fonction take different arguments
-    if sys.version_info[0] > 2:
+    # if sys.version_info[0] > 2:
+    #
+    #     parent.update_console = MethodType(update_console, parent)
+    #
+    # else:
+    #
+    #     parent.update_console = MethodType(
+    #         update_console, parent, parent.__class__)
 
-        parent.update_console = MethodType(update_console, parent)
-
-    else:
-
-        parent.update_console = MethodType(
-            update_console, parent, parent.__class__)
-
-    if USE_PYQT5:
-
-        sys.stdout.print_to_console.connect(parent.update_console)
-
-    else:
-
-        parent.connect(sys.stdout, QtCore.SIGNAL(
-            "print_to_console(PyQt_PyObject)"), parent.update_console)
+    # if USE_PYQT5:
+    #
+    #     sys.stdout.print_to_console.connect(parent.update_console)
+    #
+    # else:
+    #
+    #     parent.connect(sys.stdout, QtCore.SIGNAL(
+    #         "print_to_console(PyQt_PyObject)"), parent.update_console)
 
 
 """def update_console(parent, stri):
@@ -818,6 +829,28 @@ def add_widget_into_main(parent):
 
     parent.widgets['ConsoleWidget'].automatic_scroll()
 """
+
+# def add_widget_into_main(parent):
+#     """add a widget into the main window of LabGuiMain
+#
+#     create a QDock widget and store a reference to the widget
+#     """
+#
+#     mywidget = CommandWidget(parent=parent)
+#
+#     outDockWidget = QtGui.QDockWidget("GPIB Command-Line", parent)
+#     outDockWidget.setObjectName("OutputFileDockWidget")
+#     outDockWidget.setAllowedAreas(
+#         Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea)
+#
+#     # fill the dictionnary with the widgets added into LabGuiMain
+#     parent.widgets['CommandWidget'] = mywidget
+#
+#     outDockWidget.setWidget(mywidget)
+#     parent.addDockWidget(Qt.RightDockWidgetArea, outDockWidget)
+#
+#     # Enable the toggle view action
+#     parent.windowMenu.addAction(outDockWidget.toggleViewAction())
 
 if __name__ == "__main__":
 

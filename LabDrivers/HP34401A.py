@@ -21,6 +21,7 @@ class Instrument(Tool.MeasInstr):
         super(Instrument, self).__init__(resource_name, 'HP34401A', debug=debug,
                                          interface=INTERFACE, **kwargs)
 
+
     def identify(self, msg=''):
         if not self.DEBUG:
             # the *IDN? is probably not working

@@ -1,2 +1,6 @@
-dt(s), TIME, , dt, 'dt(s)', 0, 0, 0, 0, 0, #4477AA, 'None', '-'
-Loss(ns), AH2550A, GPIB0::25::INSTR, Loss, 'Loss(ns)', 0, 0, 0, 0, 0, #CC6677, 'None', '-'
+dt(s), TIME, , dt, 'dt(s)', 0, 0, 0, 0, 0, #332288, 'None', '-'
+Amplitude(V), A33220A, GPIB0::10::INSTR, Amplitude, 'Amplitude(V)', 0, 0, 0, 0, 0, #88CCEE, 'None', '-'
+V_DC(V), HP34401A, GPIB0::19::INSTR, V_DC, 'V_DC(V)', 0, 0, 0, 0, 0, #117733, 'None', '-'
+MinVolt(V), A33220A, GPIB0::10::INSTR, MinVolt, 'MinVolt(V)', 0, 0, 0, 0, 0, #DDCC77, 'None', '-'
+Frequency(Hz), A33220A, GPIB0::10::INSTR, Frequency, 'Frequency(Hz)', 0, 0, 0, 0, 0, #CC6677, 'None', '-'
+Offset(V_DC), A33220A, GPIB0::10::INSTR, Offset, 'Offset(V_DC)', 0, 0, 0, 0, 0, #AA4499, 'None', '-'
