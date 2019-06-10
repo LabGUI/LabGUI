@@ -255,6 +255,47 @@ COM" % device_port)
     else:
         return True
 
+def list_properties():
+    """
+        This returns a dictionary of all drivers that have properties dictionary in form:
+        return {
+            'NAME': object
+        }
+    """
+    interface = [INTF_VISA, INTF_PROLOGIX, INTF_SERIAL]
+
+    #    instruments.append('TIME')
+    properties = {}
+    #    params['TIME']=[]
+
+    # list all the .py files in the drivers folder
+    my_path = inspect.getfile(list_drivers).rstrip('utils.py')
+    driver_files = os.listdir(my_path)
+
+    for file_name in driver_files:
+
+        if file_name.endswith('.py') \
+                and (
+                not file_name == 'Tool.py' and not file_name == '__init__.py' and not file_name == 'utils.py'):  # yikes
+            name = file_name.split('.py')[0]
+
+            # import the module of the instrument in the package drivers
+            driver = import_module('.' + name, package=LABDRIVER_PACKAGE_NAME)
+
+            try:
+                driver_interface = driver.INTERFACE
+
+            except AttributeError:
+                logging.error(
+                    "The following module is probably not an instrument driver, "
+                    "please remove it from the package %s" % LABDRIVER_PACKAGE_NAME
+                )
+                driver_interface = ''
+
+            if hasattr(driver, 'properties'):
+                properties[name] = driver.properties
+
+    return properties
 
 def list_drivers(interface=[INTF_VISA, INTF_PROLOGIX, INTF_SERIAL, INTF_NONE]):
     """
@@ -272,6 +313,7 @@ def list_drivers(interface=[INTF_VISA, INTF_PROLOGIX, INTF_SERIAL, INTF_NONE]):
     units = {}
 #    instruments.append('TIME')
     params[''] = []
+    #properties = {} MADE FUNCTION OF ITS OWN
 #    params['TIME']=[]
 
     # list all the .py files in the drivers folder
@@ -303,6 +345,7 @@ def list_drivers(interface=[INTF_VISA, INTF_PROLOGIX, INTF_SERIAL, INTF_NONE]):
 
                 # create an array for the parameters
                 params[name] = []
+                #properties[name] = {}
 
                 # load the parameters and their units from the module
                 try:
@@ -313,6 +356,10 @@ def list_drivers(interface=[INTF_VISA, INTF_PROLOGIX, INTF_SERIAL, INTF_NONE]):
                 except:
                     logging.error(('Invalid driver file: ' +
                                    file_name + ' (no param variable found)'))
+
+                # add properties if it exists
+                #if hasattr(driver, 'properties'):
+                #    properties[name] = driver.properties
 
     return [instruments, params, units]
 

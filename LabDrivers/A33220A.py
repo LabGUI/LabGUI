@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Created on Fri Jun 7 2019
+Added writing capabilities on Mon June 10 2019
 @author: zackorenberg
 
 Agilent 33220A Function Waveform Generator
@@ -17,6 +18,33 @@ param = {
     'MinVolt' : 'V',
     'Frequency' : 'Hz',
     'Offset' : 'V_DC'
+}
+
+properties = {
+    'Function': {
+        'type':'selection',
+        'range':[
+            'sinusoid',
+            'square',
+            'triangle',
+            'ramp',
+            'noise',
+            'dc',
+            'user'
+        ]
+    },
+    'Amplitude': {
+        'type':'float',
+        'range':[-120, 120]
+    },
+    'Frequency': {
+        'type':'float',
+        'range':[-120, 120]
+    },
+    'Offset': {
+        'type':'float',
+        'range':[-120, 120]
+    }
 }
 
 INTERFACE = Tool.INTF_GPIB
@@ -92,7 +120,25 @@ class Instrument(Tool.MeasInstr):
         self.last_measure[channel] = answer
         return answer
 
+    def set(self, obj):
+        if not self.DEBUG:
+            for channel, data in obj.items():
+                if channel == 'Function':
+                    self.set_shape(data)
+                elif channel == 'Amplitude':
+                    self.set_amplitude(float(data))
+                elif channel == 'Frequency':
+                    self.set_frequency(float(data))
+                elif channel == 'Offset':
+                    self.set_offset(float(data))
+        else:
+            print("Debug mode, setting ", obj)
+        return True
 
+    def get(self):
+        ret = self.get_function()
+        ret['Function'] = self.full_name(ret['Function'])
+        return ret
 
 
     def reset(self):
@@ -231,6 +277,41 @@ class Instrument(Tool.MeasInstr):
             'dc',
             'user'
         ]
+    def full_name(self, wave_type:str):
+        valid_full = [
+            'sinusoid',
+            'square',
+            'triangle',
+            'ramp',
+            'noise',
+            'dc',
+            'user'
+        ]
+        valid_short = [
+            'SIN',
+            'SQU',
+            'TRI',
+            'RAMP',
+            'NOIS',
+            'DC',
+            'USER'
+        ]
+        if wave_type.upper() == valid_short:
+            return valid_full[valid_short.index(wave_type.upper())]
+        elif wave_type.lower() == valid_full:
+            return valid_full[valid_full.index(wave_type.lower())]
+        else:  # try to find best fit
+            if len(wave_type) < 2:
+                return False  # otherwise it can match the wrong one, specificall sin/squ combo
+            for x in valid_short:
+                if wave_type.upper() in x:
+                    return valid_full[valid_short.index(x)]
+            # if it reaches here, it didnt match a short one, so check long ones
+            for y in valid_full:
+                if wave_type.lower() in y:
+                    return y
+            # if it reached here, invalid function
+            return False
     def is_valid(self, wave_type:str):
         valid_full = [
             'sinusoid',

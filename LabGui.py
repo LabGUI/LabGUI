@@ -291,7 +291,7 @@ have the right format, '%s' will be used instead" % (self.config_file,
             )
             logging.warning(msg)
             # default setting
-            Tool.INTF_GPIB = Tool.INTF_PROLOGIX
+            Tool.INTF_GPIB = Tool.INTF_VISA # DEFAULT SHOULD BE PYVISA, MUCH MORE COMPATIBLE
 
         else:
 
