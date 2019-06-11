@@ -55,6 +55,74 @@ properties = {
         'range':'Placeholder text'
     }
 }
+
+"""
+The following variable, 'functions', is a dictionary object, where the key is function channel, and value is parameter list.
+It has the following structure:
+functions = {
+    'channel' : parameter_list
+}
+the parameter_list is an ordered list, where each element is an argument object, of the following form:
+parameter_list = [argument1_obj, argument2_obj, ...]
+An argument object has the following required properties:
+argument_object = {
+    'name': 'name of parameter', name. Should be able to convert it to argument position in run
+    'type': 'type of parameter', options are 'text', 'selector', 'float', 'int', 'boolean'
+    'range': dependent on type
+    'units': unit of parameter as a string -or- None; optional
+    'required': boolean, whether it is required to call function
+    'default': Optional argument to set default value
+}
+'range' for different types:
+    text :      string, placeholder text
+    int  :      list, containing range: [min, max]
+    float:      list, containing range: [min, max]
+    selector:   list, containing all options for dropdown menu: ['option 1', 'option 2', etc]   
+    bool :      boolean, placeholder value (overriden by default)
+
+A builtin function Tool.generate_function_obj(name=callable) can generate a function object template
+"""
+functions = {
+    'Function 1': [
+        {
+            'name':'TextEdit',
+            'type':'text',
+            'range':'Placeholder text',
+            'units':None,
+            'required':True
+        }, #param for text
+        {
+            'name':'Integer',
+            'type':'int',
+            'range':[-100, 100],
+            'units':'Z',
+            'required':True
+        }, #param for int
+        {
+            'name': 'Float',
+            'type': 'float',
+            'range': [-100, 100],
+            'units': 'R',
+            'required': True,
+            'default': 0.05
+        },  # param for float
+        {
+            'name': 'DropdownMenu',
+            'type': 'selector',
+            'range':['A','B','C'],
+            'units':None,
+            'required':True
+        }, # param for dropdown
+        {
+            'name': 'Boolean',
+            'type':'bool',
+            'range':True, # shouldnt matter
+            'units':None,
+            'required':True
+        } # param for boolean
+    ]
+}
+
 """
 The following is the default interface to use. This can be overwritten in the constructor of this function
 interface options are:
@@ -184,12 +252,34 @@ class Instrument(Tool.MeasInstr): # Tool.MeasInstr is child class
                 ret[channel] = default_value
 
         return ret
+
+    def run(self, channel, arguments):
+        """
+            :param channel:
+                Will be a string, which is the function channel being called
+            :param arguments:
+                This is a dictionary of form:
+                    'name' : 'value'
+                Where 'name' is parameter name, and value is user inputted. Always a good idea to type cast.
+            :return: A lot of flexibility here, but it should be a list of tuples which contain data points; Necessary condition for plotting capabilities
+        """
+        if channel == 'Function 1':
+            """
+            here you are going to check all of the passed arguments, and either run user-specific code or pass the sanitized arguments to a driver function
+            """
+            return some_obj
+
+
+
     # you may add any other functions here
 
 
 if __name__ == "__main__": # this mean driver is being ran alone
     i = Instrument("PORT", debug=False)
-
+    # if you want a template of a driver function to work with, call the following:
+    function_obj = Tool.generate_function_obj(func1=i.funct1, funct2=i.funct2)
+    # the returned function is generating via inspect.signature
+    print(function_obj)
     # do stuff, like for example
     print(i.measure('Name'))
 

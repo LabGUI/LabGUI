@@ -50,6 +50,7 @@ class FunctionFormWidget(QtGui.QWidget):
         self.function = function
         self.parameters = parameters
         self.required = {}
+        self.defaults = {}
 
         self.ok_style = "background-color: white; color: back"
         self.bad_style = "background-color: red; color: white"
@@ -72,16 +73,25 @@ class FunctionFormWidget(QtGui.QWidget):
             #print(obj)
             text = obj['name']
             if 'unit' in obj.keys():
-                text = text+"("+obj['unit']+")"
+                if obj['unit'] is not None:
+                    text = text+"("+obj['unit']+")"
             elif 'units' in obj.keys():
-                text = text + "(" + obj['units'] + ")"
+                if obj['units'] is not None:
+                    text = text + "(" + obj['units'] + ")"
             label = self.create_label(text)
+            # do required
             if 'required' in obj.keys():
                 self.required[obj['name']] = obj['required']
                 if self.required[obj['name']] == True:
                     label.setFont(self.bold_font)
             else:
                 self.required[obj['name']] = False # default
+            # do default values
+            if 'default' in obj.keys():
+                self.defaults[obj['name']] = obj['default']
+            else:
+                self.defaults[obj['name']] = None
+
             if obj['type'] == 'text':
                 qtobject = self.create_text(obj['name'], obj['range'])
             elif obj['type'] == 'float':
@@ -172,6 +182,11 @@ class FunctionFormWidget(QtGui.QWidget):
         for name, object in self.widgets.items():
             self.clear_data(object)
 
+    def default_input(self):
+        for name, object in self.widgets.items():
+            if self.defaults[name] is not None:
+                self.write_data(self.defaults[name], object)
+
     ### individual input stuff ###
     def write_data(self, data, qtobject):  # individual set type stuff
         typ = type(qtobject)
@@ -248,7 +263,8 @@ class DeviceFunctionWidget(QtGui.QWidget):
                         'type': 'float',
                         'range': [-100, 100],
                         'units': 'R',
-                        'required': True
+                        'required': True,
+                        'default': 0.05
                     },  # param for float
                     {
                         'name': 'DropdownMenu',
@@ -326,21 +342,24 @@ class DeviceFunctionWidget(QtGui.QWidget):
             # set current
             self.stacked.setCurrentWidget(self.scrollareas[self.current_function])
             # create buttons and do events
-            self.run_btn, self.plot_btn, self.clear_btn = self.create_footer()
+            self.run_btn, self.plot_btn, self.clear_btn, self.defaults_btn = self.create_footer()
             self.run_btn.clicked.connect(self.run_event)
             self.plot_btn.clicked.connect(self.plot_event)
             self.clear_btn.clicked.connect(self.clear_event)
+            self.defaults_btn.clicked.connect(self.defaults_event)
             # add stuff to the layout
             self.layout.addWidget(self.list_view, 0, 0, 5, 1)
             self.layout.addWidget(self.stacked, 0, 1, 4, 4)
             self.layout.addWidget(self.run_btn,4,1, 1, 1)
             self.layout.addWidget(self.plot_btn,4,2, 1, 1)
             self.layout.addWidget(self.clear_btn,4,3, 1, 1)
+            self.layout.addWidget(self.defaults_btn,4,4,1,1)
             # make the row/col stretch (aesthetics)
             for i in range(0, 5):
                 self.layout.setRowStretch(i, 1)
-                for j in range(0,4):
+                for j in range(1,5):
                     self.layout.setColumnStretch(j, 1)
+            self.layout.setColumnStretch(0,2)
 
 
         self.setLayout(self.layout)
@@ -393,6 +412,9 @@ class DeviceFunctionWidget(QtGui.QWidget):
         #print(args)
     def plot_event(self, *args):
         print("Not operational yet", args)
+
+    def defaults_event(self, *args):
+        self.widgets[self.current_function].default_input()
 
 
     def get_properties(self): # return properties to be set by another class
@@ -476,7 +498,8 @@ class DeviceFunctionWidget(QtGui.QWidget):
         run = QtGui.QPushButton("Run")
         plot = QtGui.QPushButton("Plot")
         clear = QtGui.QPushButton("Clear")
-        return [run, plot, clear]
+        defaults = QtGui.QPushButton("Defaults")
+        return [run, plot, clear, defaults]
 
     ### FORM ITEMS ###
 

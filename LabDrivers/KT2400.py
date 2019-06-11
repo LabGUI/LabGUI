@@ -30,6 +30,143 @@ import time
 
 param = {'V': 'V', 'I': 'A'}
 
+plot = ['Time(s)', 'Voltage(V)', 'Current(A)']
+functions = {
+    "Voltage Pulse Sweep":[
+        { # parameter 1
+            'name': 'Pulses',
+            'type': 'int',
+            'range':[0, 1000],
+            'required': True,
+            'units':'#'
+        },
+        { # parameter 2
+            'name':'Start',
+            'type':'float',
+            'range':[-120, 120],
+            'required': True,
+            'units': 'V'
+        },
+        { # parameter 3
+            'name':'Stop',
+            'type':'float',
+            'range':[-120, 120],
+            'required': True,
+            'units': 'V'
+        },
+        { # parameter 4
+            'name':'Pulse Width',
+            'type':'float',
+            'range':[0, 120],
+            'required': True,
+            'units': 's'
+        },
+        { # parameter 5
+            'name':'Pulse Delay',
+            'type':'float',
+            'range':[0, 120],
+            'required': True,
+            'units': 's'
+        },
+        {
+            'name':'Frequency of Readings',
+            'type':'float',
+            'range':[0, 120],
+            'required': False,
+            'units': 's',
+            'default':0.2
+        }, # parameter 6
+        {
+            'name':'Direction',
+            'type':'selector',
+            'range':['UP','DOWN','BOTH'],
+            'required': False,
+            'default':'BOTH'
+        }, # parameter 7
+        { # parameter 8
+            'name':'VCompliance',
+            'type':'float',
+            'range':[0, 120],
+            'required': False,
+            'units': 'V',
+            'default':1
+        },
+        { # parameter 9
+            'name':'ICompliance',
+            'type':'float',
+            'range':[0, 1],
+            'required': False,
+            'units': 'A',
+            'default':1e-7
+        },
+    ],
+    "Voltage Staircase Sweep":[
+        { # parameter 1
+            'name': 'Steps',
+            'type': 'int',
+            'range':[0, 1000],
+            'required': True,
+            'units':'#'
+        },
+        { # parameter 2
+            'name':'Start',
+            'type':'float',
+            'range':[-120, 120],
+            'required': True,
+            'units': 'V'
+        },
+        { # parameter 3
+            'name':'Stop',
+            'type':'float',
+            'range':[-120, 120],
+            'required': True,
+            'units': 'V'
+        },
+        { # parameter 4
+            'name':'Pulse Width',
+            'type':'float',
+            'range':[0, 120],
+            'required': True,
+            'units': 's'
+        },
+        { # parameter 5
+            'name':'Pulse Delay',
+            'type':'float',
+            'range':[0, 120],
+            'required': True,
+            'units': 's'
+        },
+        {
+            'name':'Frequency of Readings',
+            'type':'float',
+            'range':[0, 120],
+            'required': False,
+            'units': 's'
+        }, # parameter 6
+        {
+            'name':'Direction',
+            'type':'selector',
+            'range':['UP','DOWN','BOTH'],
+            'required': False
+        }, # parameter 7
+        { # parameter 8
+            'name':'VCompliance',
+            'type':'float',
+            'range':[0, 120],
+            'required': False,
+            'units': 'V'
+        },
+        { # parameter 9
+            'name':'ICompliance',
+            'type':'float',
+            'range':[0, 1],
+            'required': False,
+            'units': 'A'
+        },
+    ]
+}
+
+
 INTERFACE = Tool.INTF_GPIB
 
 
@@ -121,6 +258,45 @@ class Instrument(Tool.MeasInstr):
 
         # Should Read KEITHLEY INSTRUMENTS INC., MODEL nnnn, xxxxxxx,
         # yyyyy/zzzzz /a/d
+
+    def run(self, channel, arguments):
+        print(channel)
+        if channel == 'Voltage Pulse Sweep':
+            items = arguments.items()
+            params = {}
+            names_switch = {
+                'Pulses':'pulses',
+                'Start':'start',
+                'Stop':'stop',
+                'Pulse Width':'pulse_width',
+                'Pulse Delay':'pulse_delay',
+                'Frequency of Readings':'frequency',
+                'Direction':'direction',
+                'VCompliance':'v_compliance',
+                'ICompliance':'i_compliance'
+            }
+            for key, value in items:
+                if value is not None:
+                    params[names_switch[key]] = value
+            return self.pulse_voltage_simple(**params)
+        elif channel == 'Voltage Staircase Sweep':
+            items = arguments.items()
+            params = {}
+            names_switch = {
+                'Steps':'steps',
+                'Start':'start',
+                'Stop':'stop',
+                'Pulse Width':'pulse_width',
+                'Pulse Delay':'pulse_delay',
+                'Frequency of Readings':'frequency',
+                'Direction':'direction',
+                'VCompliance':'v_compliance',
+                'ICompliance':'i_compliance'
+            }
+            for key, value in items:
+                if value is not None:
+                    params[names_switch[key]] = value
+            return self.pulse_voltage_simple(**params)
 
     def reset(self):
         if not self.DEBUG:
@@ -914,7 +1090,8 @@ class Instrument(Tool.MeasInstr):
 if __name__ == "__main__":
     i = Instrument("GPIB0::28", debug=False)
     print((i.identify("Hello, this is ")))
-
+    #function = Tool.generate_function_obj(pulse=i.pulse_voltage_simple, simple=i.sweep_voltage_simple)
+    #print(function)
     #i.configure_output('VOLT', 0, 1E-7)
 #    i.set_voltage(0,1E-7)
     #data = i.sweep_voltage_staircase(100, 0, 0.1, "BOTH")

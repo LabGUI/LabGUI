@@ -9,6 +9,7 @@ import io
 from collections import OrderedDict
 from importlib import import_module
 
+import inspect
 import numpy as np
 
 import logging
@@ -1069,6 +1070,63 @@ def test_hub_connect_virtual_inst():
     print(ls.use_method("identify", 3, 87))
     print(ls.resource_name)
 
+def generate_function_obj(**kwargs):
+    ret = {}
+    for name, o in kwargs.items():
+        if (callable(o)):
+            sig = inspect.signature(o)
+            params = []
+            for key, obj in sig.parameters.items():
+                #print(obj)
+                dic = {}
+                #print(obj)
+                #key = obj['name']
+                dic['name'] = key
+                typ = obj.annotation
+                dic['default'] = obj.default
+                if dic['default'] == inspect._empty:
+                    dic['required'] = True
+                    del dic['default']
+                else:
+                    if typ == inspect._empty:
+                        typ = type(dic['default'])
+                    dic['required'] = False
+
+                dic['units'] = None
+
+                #print(dic['type'], typ)
+                if typ == int:
+                    typ = 'int'
+                    dic['range'] = [-100, 100]
+                    dic['units'] = 'U'
+                elif typ == float:
+                    typ = 'float'
+                    dic['range'] = [-100.1, 100.1]
+                    dic['units'] = 'U'
+                elif typ == str:
+                    typ = 'selector'
+                    dic['range'] = ['option 1', 'option 2', 'option 3']
+                elif typ == bool:
+                    typ = 'bool'
+                    dic['range'] = True
+                else:
+                    typ = 'text'
+                    dic['range'] = 'Placeholder text'
+                dic['type'] = typ
+
+                ordered = {
+                    'name':dic['name'],
+                    'type':dic['type'],
+                    'range': dic['range'],
+                    'units': dic['units'],
+                    'required': dic['required']
+                }
+                if 'default' in dic.keys():
+                    ordered['default'] = dic['default']
+                params.append(ordered)
+            ret[name] = params
+
+    return ret
 
 if __name__ == "__main__":
 

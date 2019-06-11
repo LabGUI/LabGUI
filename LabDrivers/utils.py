@@ -297,6 +297,49 @@ def list_properties():
 
     return properties
 
+def list_functions():
+    """
+        This returns a dictionary of all drivers that have properties dictionary in form:
+        return {
+            'NAME': object
+        }
+    """
+    interface = [INTF_VISA, INTF_PROLOGIX, INTF_SERIAL]
+
+    #    instruments.append('TIME')
+    functions = {}
+    #    params['TIME']=[]
+
+    # list all the .py files in the drivers folder
+    my_path = inspect.getfile(list_drivers).rstrip('utils.py')
+    driver_files = os.listdir(my_path)
+
+    for file_name in driver_files:
+
+        if file_name.endswith('.py') \
+                and (
+                not file_name == 'Tool.py' and not file_name == '__init__.py' and not file_name == 'utils.py'):  # yikes
+            name = file_name.split('.py')[0]
+
+            # import the module of the instrument in the package drivers
+            driver = import_module('.' + name, package=LABDRIVER_PACKAGE_NAME)
+
+            try:
+                driver_interface = driver.INTERFACE
+
+            except AttributeError:
+                logging.error(
+                    "The following module is probably not an instrument driver, "
+                    "please remove it from the package %s" % LABDRIVER_PACKAGE_NAME
+                )
+                driver_interface = ''
+
+            if hasattr(driver, 'functions'):
+                functions[name] = driver.functions
+
+    return functions
+
+
 def list_drivers(interface=[INTF_VISA, INTF_PROLOGIX, INTF_SERIAL, INTF_NONE]):
     """
         Returns the drivers names, their parameters and the corresponding 

@@ -102,9 +102,13 @@ class DevicePropertyWidget(QtGui.QWidget):
         else:
             for item, iobj in self.properties.items():
                 # print(item, iobj)
-                label = item
+                #label = item
                 if 'unit' in iobj.keys():
                     label = item+"("+iobj['unit']+")"
+                elif 'units' in iobj.keys():
+                    label = item+"("+iobj['units']+")"
+                else:
+                    label = item
                 text = self.create_label(label)
                 if iobj['type'] == 'selection':
                     qtobject = self.create_selector(item, iobj['range'])
