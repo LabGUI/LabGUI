@@ -35,15 +35,18 @@ properties = {
     },
     'Amplitude': {
         'type':'float',
-        'range':[-120, 120]
+        'range':[-120, 120],
+        'unit':'V'
     },
     'Frequency': {
         'type':'float',
-        'range':[-120, 120]
+        'range':[-120, 120],
+        'unit':'Hz'
     },
     'Offset': {
         'type':'float',
-        'range':[-120, 120]
+        'range':[-120, 120],
+        'unit':'V'
     }
 }
 
