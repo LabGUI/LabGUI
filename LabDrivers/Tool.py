@@ -300,9 +300,12 @@ class MeasInstr(object):
                 self.connection.write("++addr %s" % self.resource_name)
 
             if not self.connection is None:
-
+                #if self.interface == INTF_SERIAL:
+                #    bytes = msg + self.term_chars
+                #    answer = self.connection.write(bytes.encode())
+                #else:
+                #    answer = self.connection.write(msg + self.term_chars)
                 answer = self.connection.write(msg + self.term_chars)
-
             else:
 
                 logging.debug("There is no physical connection established \
@@ -343,7 +346,8 @@ with the instrument %s" % self.ID_name)
             elif self.interface == INTF_SERIAL or self.interface == INTF_PROLOGIX:
 
                 try:
-
+                    #msg = msg + self.term_chars
+                    #self.write(msg.encode())
                     self.write(msg)
                     answer = self.read(num_bytes)
 

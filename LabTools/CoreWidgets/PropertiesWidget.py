@@ -44,15 +44,80 @@ import time
 
 DEBUG = False
 
+class MultiPropertyWidget(QtGui.QWidget):
+    """ widget for 'multi' type """
+
+    def __init__(self, name, options_list, property_obj, parent=None, debug=False):
+        super(MultiPropertyWidget, self).__init__(parent=parent)
+
+        self.DEBUG = debug
+
+        self.name = name
+        self.options = options_list
+        self.properties = property_obj
+        self.widgets = {}
+        for option in self.options:
+            self.widgets[option] = DevicePropertyWidget(option, self.properties, parent=parent, debug=False)
+            # self.stacked.addWidget(self.widgets[option])
+
+        self.stacked = QtGui.QStackedWidget(self)
+        for option in self.options:
+            self.stacked.addWidget(self.widgets[option])
+        self.dropdown = self.create_selector(name, options_list)
+        self.layout = QtGui.QVBoxLayout(self)
+        self.layout.addWidget(self.dropdown)
+        self.layout.addWidget(self.stacked)
+        self.setLayout(self.layout)
+
+        self.current_option = self.dropdown.currentText()
+        self.stacked.setCurrentWidget(self.widgets[self.current_option])
+
+
+
+    def change_setting(self, name):
+        self.current_option = self.dropdown.currentText()
+        self.stacked.setCurrentWidget(self.widgets[self.current_option])
+
+    def isMulti(self):
+        return True
+
+    def get_properties(self):
+        ret = {}
+        for option in self.options:
+            ret[option] = self.widgets[option].get_properties()
+        return ret
+
+    def set_properties(self, obj):
+        for option in self.options:
+            #print(obj[option], type(self.widgets[option]))
+            self.widgets[option].set_properties(obj[option])
+
+    def get_property(self, option):
+        return self.widgets[option].get_properties()
+
+    def set_property(self, option, data):
+        self.widgets[option].set_properties(data)
+
+    def create_selector(self, name, items):
+        ret = QtGui.QComboBox()
+        ret.addItems(items)
+        ret.setObjectName(name)
+        ret.activated[str].connect(self.change_setting)
+        return ret
+
+
+
 class DevicePropertyWidget(QtGui.QWidget):
 
     def __init__(self, device, property_obj, parent=None, debug=False):
         super(DevicePropertyWidget, self).__init__(parent=parent)
 
+
         self.DEBUG = debug
 
         self.device = device
         if self.DEBUG:
+            self.device = "Device"
             self.properties = {
                 'Selection box': {
                     'type':'selection',
@@ -78,6 +143,73 @@ class DevicePropertyWidget(QtGui.QWidget):
                 'Text type':{
                     'type':'text',
                     'range':'Placeholder'
+                },
+                'Readonly type':{
+                    'type':'text',
+                    'range':'Value',
+                    'readonly':True
+                },
+                'Multi type':{
+                    'type':'multi',
+                    'range':['option 1', 'option 2'],
+                    'properties':{
+                        'Selection box': {
+                            'type':'selection',
+                            'range':[
+                                'option',
+                                'another option',
+                                'a third option',
+                                'unsurprisingly, a fourth option'
+                            ]
+                        },
+                        'Float only': {
+                            'type':'float',
+                            'range':[-100, 100]
+                        },
+                        'Int only': {
+                            'type':'int',
+                            'range':[-100, 100]
+                        },
+                        'Boolean type':{
+                            'type':'bool',
+                            'range':True
+                        },
+                        'Text type':{
+                            'type':'text',
+                            'range':'Placeholder'
+                        },
+                        'Nested Multi Type':{
+                            'type':'multi',
+                            'range':['option 1', 'option 2'],
+                            'properties':{
+                                'Selection box': {
+                                    'type':'selection',
+                                    'range':[
+                                        'option',
+                                        'another option',
+                                        'a third option',
+                                        'unsurprisingly, a fourth option'
+                                    ]
+                                },
+                                'Float only': {
+                                    'type':'float',
+                                    'range':[-100, 100]
+                                },
+                                'Int only': {
+                                    'type':'int',
+                                    'range':[-100, 100]
+                                },
+                                'Boolean type':{
+                                    'type':'bool',
+                                    'range':True
+                                },
+                                'Text type':{
+                                    'type':'text',
+                                    'range':'Placeholder'
+                                },
+                            }
+                        }
+                    }
                 }
             }
         else:
@@ -110,7 +242,7 @@ class DevicePropertyWidget(QtGui.QWidget):
                 else:
                     label = item
                 text = self.create_label(label)
-                if iobj['type'] == 'selection':
+                if iobj['type'] == 'selection' or iobj['type'] == 'selector':
                     qtobject = self.create_selector(item, iobj['range'])
                 elif iobj['type'] == 'float':
                     qtobject = self.create_float(item, iobj['range'])
@@ -119,7 +251,17 @@ class DevicePropertyWidget(QtGui.QWidget):
                 elif iobj['type'] == 'bool':
                     qtobject = self.create_bool(item, iobj['range'])
                 elif iobj['type'] == 'text':
-                    qtobject = self.create_text(item, iobj['range'])
+                    if 'readonly' in iobj.keys():
+                        readonly = iobj['readonly']
+                    else:
+                        readonly = False
+                    qtobject = self.create_text(item, iobj['range'], readonly)
+                elif iobj['type'] == 'multi':
+                    if 'properties' not in iobj.keys():
+                        print("Error in multi type. Required 'properties' type. We have: ", iobj.keys())
+                    else:
+                        #print(iobj['properties'])
+                        qtobject = self.create_multi(item, iobj['range'], iobj['properties'])
                 else:
                     qtobject = None
                     print("uh oh")
@@ -141,7 +283,7 @@ class DevicePropertyWidget(QtGui.QWidget):
         for name, obj in self.prop_items.items():
             if name in data.keys(): # this means it is valid property
                 self.write_property(data[name], obj)
-                print("working")
+                #print("working")
 
 
     def write_property(self, data, qtobject): #individual set type stuff
@@ -155,6 +297,8 @@ class DevicePropertyWidget(QtGui.QWidget):
                 qtobject.setChecked(True)
             else:
                 qtobject.setChecked(False)
+        elif typ == MultiPropertyWidget:
+            qtobject.set_properties(data)
         else:
             print("Unknown type for ",data,": ", typ)
         return qtobject # add any other types to the if statement
@@ -168,13 +312,16 @@ class DevicePropertyWidget(QtGui.QWidget):
             return qtobject.text()
         elif typ == QtGui.QCheckBox:
             return qtobject.isChecked()
+        elif typ == MultiPropertyWidget:
+            return qtobject.get_properties()
         else:
             return "unknown type"
         #return qtobject # If any other options are required, add em to if statement
 
 
     def change_setting(self, *args):
-        print(args)
+        i=1 # nothing here yet
+        #print(args)
 
     def create_selector(self, name, items):
         ret = QtGui.QComboBox()
@@ -197,11 +344,13 @@ class DevicePropertyWidget(QtGui.QWidget):
         ret.setValidator(float_validator)
         return ret
 
-    def create_text(self, name, range):
+    def create_text(self, name, range, readonly=False):
         ret = QtGui.QLineEdit()
         ret.setObjectName(name)
         if type(range) == str: #placeholder text
             ret.setPlaceholderText(range)
+        if readonly: # possibly unnecessary
+            ret.setReadOnly(readonly)
         return ret
 
     def create_bool(self, name, range):
@@ -213,6 +362,9 @@ class DevicePropertyWidget(QtGui.QWidget):
 
     def create_label(self, text):
         ret = QtGui.QLabel(text)
+        return ret
+    def create_multi(self, name, range, properties):
+        ret = MultiPropertyWidget(name, range, properties, parent=self, debug=self.DEBUG)
         return ret
 
 
@@ -394,13 +546,20 @@ class PropertiesWidget(QtGui.QWidget):
         return layout
 
     def save_properties(self, *args):
-        current_device = self.deviceComboBox.currentIndex()
-        if current_device == -1: #this means there are no connected devices
-            return
-        curr = self.widgets[self.currentDevice]
-        obj = curr.get_properties()
-        self.sanitized_list[current_device][2].set(obj)
-        print("reminder to add save_properties stuff", obj)
+        try:
+            if self.DEBUG:
+                print(self.stacked.currentWidget().get_properties())
+                return
+            current_device = self.deviceComboBox.currentIndex()
+            if current_device == -1: #this means there are no connected devices
+                return
+            curr = self.widgets[self.currentDevice]
+            obj = curr.get_properties()
+            #print(obj)
+            self.sanitized_list[current_device][2].set(obj)
+            #print("reminder to add save_properties stuff", obj)
+        except:
+            print(sys.exc_info())
 
     def refresh_properties(self, *args):
         try:

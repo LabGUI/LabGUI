@@ -53,7 +53,78 @@ properties = {
     'Text type':{
         'type':'text',
         'range':'Placeholder text'
+    },
+    'Readonly type':{
+        'type':'text',
+        'range':'Still a placeholder',
+        'readonly':True
+    },
+    # the following is a 'multi type' which basically nests a set of properties of the same set with differing options
+    'Multi type': {
+        'type': 'multi',
+        'range': ['option 1', 'option 2'],
+        # the following is the mandatory 'properties' object which models based on this property object. Included is a nested multi
+        'properties': {
+            'Selection box': {
+                'type': 'selection',
+                'range': [
+                    'option',
+                    'another option',
+                    'a third option',
+                    'unsurprisingly, a fourth option'
+                ]
+            },
+            'Float only': {
+                'type': 'float',
+                'range': [-100, 100]
+            },
+            'Int only': {
+                'type': 'int',
+                'range': [-100, 100]
+            },
+            'Boolean type': {
+                'type': 'bool',
+                'range': True
+            },
+            'Text type': {
+                'type': 'text',
+                'range': 'Placeholder'
+            },
+            'Nested Multi Type': {
+                'type': 'multi',
+                'range': ['option 1', 'option 2'],
+                'properties': {
+                    'Selection box': {
+                        'type': 'selection',
+                        'range': [
+                            'option',
+                            'another option',
+                            'a third option',
+                            'unsurprisingly, a fourth option'
+                        ]
+                    },
+                    'Float only': {
+                        'type': 'float',
+                        'range': [-100, 100]
+                    },
+                    'Int only': {
+                        'type': 'int',
+                        'range': [-100, 100]
+                    },
+                    'Boolean type': {
+                        'type': 'bool',
+                        'range': True
+                    },
+                    'Text type': {
+                        'type': 'text',
+                        'range': 'Placeholder'
+                    },
+                }
+            }
+        }
+        # note that when it is returned, it is an object dictionary similar to what is supposed to be returned by this object
     }
+
 }
 """
 The following is the default interface to use. This can be overwritten in the constructor of this function
@@ -153,6 +224,9 @@ class Instrument(Tool.MeasInstr): # Tool.MeasInstr is child class
                     # do something with boolean value True or False
                 elif channel == 'Text type':
                     # do something with string value
+                elif channel == 'Multi type':
+                    for option, data_obj in value.keys():
+                        # set things for each expected data object per option
                 else:
                     print("If you reached here, something went wrong: ", channel)
         else:
@@ -180,6 +254,11 @@ class Instrument(Tool.MeasInstr): # Tool.MeasInstr is child class
                 ret[channel] = self.get_value_for_specific_channel()  # user written function within driver
             elif channel == 'a_different_channel':
                 ret[channel] = self.get_value_for_a_different_channel()  # another user written function within driver
+            elif channel == 'multi_channel':
+                ret[channel] = {
+                    'option 1': self.get_multi_data('option 1'),
+                    'option 2': self.get_multi_data('option 2')
+                }
             else:
                 ret[channel] = default_value
 

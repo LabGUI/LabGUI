@@ -1,3 +1,2 @@
 dt(s), TIME, , dt, 'dt(s)', 0, 0, 0, 0, 0, #4477AA, 'None', '-'
-V(V), KT2400_function, GPIB0::28::INSTR, V, 'V(V)', 0, 0, 0, 0, 0, #DDCC77, 'None', '-'
-V_DC(V), HP34401A, GPIB0::19::INSTR, V_DC, 'V_DC(V)', 0, 0, 0, 0, 0, #CC6677, 'None', '-'
+CH1(V), SIM900, COM4, CH1, 'CH1(V)', 0, 0, 0, 0, 0, #CC6677, 'None', '-'

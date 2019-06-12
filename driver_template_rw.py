@@ -41,6 +41,69 @@ properties = {
     'Text type':{
         'type':'text',
         'range':'Placeholder'
+    },
+    'Multi type': {
+        'type': 'multi',
+        'range': ['option 1', 'option 2'],
+        # the following is the mandatory 'properties' object which models based on this property object. Included is a nested multi
+        'properties': {
+            'Selection box': {
+                'type': 'selection',
+                'range': [
+                    'option',
+                    'another option',
+                    'a third option',
+                    'unsurprisingly, a fourth option'
+                ]
+            },
+            'Float only': {
+                'type': 'float',
+                'range': [-100, 100]
+            },
+            'Int only': {
+                'type': 'int',
+                'range': [-100, 100]
+            },
+            'Boolean type': {
+                'type': 'bool',
+                'range': True
+            },
+            'Text type': {
+                'type': 'text',
+                'range': 'Placeholder'
+            },
+            'Nested Multi Type': {
+                'type': 'multi',
+                'range': ['option 1', 'option 2'],
+                'properties': {
+                    'Selection box': {
+                        'type': 'selection',
+                        'range': [
+                            'option',
+                            'another option',
+                            'a third option',
+                            'unsurprisingly, a fourth option'
+                        ]
+                    },
+                    'Float only': {
+                        'type': 'float',
+                        'range': [-100, 100]
+                    },
+                    'Int only': {
+                        'type': 'int',
+                        'range': [-100, 100]
+                    },
+                    'Boolean type': {
+                        'type': 'bool',
+                        'range': True
+                    },
+                    'Text type': {
+                        'type': 'text',
+                        'range': 'Placeholder'
+                    },
+                }
+            }
+        }
     }
 }
 functions = {
