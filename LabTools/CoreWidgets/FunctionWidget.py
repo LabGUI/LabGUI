@@ -19,6 +19,8 @@ import logging
 
 import LabDrivers.utils
 
+import LabTools.IO.IOTool as IOTools
+
 from LocalVars import USE_PYQT5
 
 if USE_PYQT5:
@@ -33,7 +35,17 @@ else:
 
 from LabTools.Display import QtTools
 
+import numpy as np
+
 from collections import Iterable
+
+try:
+    from LabTools.Display import PlotDisplayWindow
+    PLOT = True
+except:
+    PlotDisplayWindow = None
+    print("Unable to import PlotDisplay, plotting offline. Must be run from LabGui root")
+    PLOT = False
 
 import sys
 import io
@@ -153,8 +165,9 @@ class FunctionFormWidget(QtGui.QWidget):
 
     ## EVENTS ##
     def change_setting(self, *args):
-        print(args)
-
+        #print(args)
+        #unused for the moment:
+        i=1
     ### for getting input values ###
     def get_input(self):
         ret = {}
@@ -295,6 +308,7 @@ class DeviceFunctionWidget(QtGui.QWidget):
 
         self.current_function = None #'Voltage Pulse Sweep'
 
+
         if self.device == None:
             self.layout = QtGui.QVBoxLayout(self)
             label = QtGui.QLabel(self)
@@ -399,19 +413,33 @@ class DeviceFunctionWidget(QtGui.QWidget):
 
         if self.current_function in self.functions.keys():
             try:
-                data = self.parent.run_function(self.current_function, data)
+                rdata = self.parent.run_function(self.current_function, data)
             except:
                 print("Error executing function: ",sys.exc_info()[0])
                 print(sys.exc_info())
                 # add alert box maybe?
                 return
             #print(data)
+            # here is where we save the data:
+            filename = IOTools.get_funct_save_name(self.device, self.current_function)
+            if self.parent.save_data(filename, rdata, function=self.current_function, device=self.device, params=data):
+                print("Data saved to: "+filename)
+            return rdata
 
     def clear_event(self, *args):
         self.widgets[self.current_function].clear_input()
         #print(args)
     def plot_event(self, *args):
-        print("Not operational yet", args)
+        try:
+            data = self.run_event(*args)
+            # now to plot data
+            if PLOT:
+                self.parent.plot_function(self.current_function, data)
+            else:
+                print("Unable to plot")
+        except:
+            print(sys.exc_info())
+
 
     def defaults_event(self, *args):
         self.widgets[self.current_function].default_input()
@@ -558,8 +586,10 @@ class FunctionWidget(QtGui.QWidget):
         else:
             self.DEBUG = debug
         self.functions = LabDrivers.utils.list_functions()
+        self.plot = LabDrivers.utils.list_plot_axes() # none if none
         self.device_layouts = {}
         self.layouts = {}
+        self.ports = {}
 
         self.stacked = QtGui.QStackedWidget(self)
         # populate stacked widget
@@ -604,7 +634,7 @@ class FunctionWidget(QtGui.QWidget):
 
 
 
-
+        self.plot_window = []
 
 
 
@@ -616,6 +646,9 @@ class FunctionWidget(QtGui.QWidget):
             self.instr_hub = None
         #elif self.parentClass is None:
         #    self.instr_hub = None
+
+        self.setSizePolicy(QtGui.QSizePolicy(
+            QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Maximum))
 
 
     # create focus in override to refresh devices
@@ -727,13 +760,31 @@ class FunctionWidget(QtGui.QWidget):
         device = self.sanitized_list[id]
         #print(device)
         driver = device[2]
-        return driver.run(name, arguments)
+        data = driver.run(name, arguments)
+        #print(name+" Data:", data)
+        return data
         ### This is for generated functions, not supported yet ###
         if hasattr(driver, name) and callable(getattr(driver, name)):
             return getattr(driver, name)(*arguments)
+
         else:
             print("Error in function: ", name, arguments, device)
             return False
+
+    def plot_function(self, name, data):
+        npdata = np.array(data)
+        channels = np.size(npdata)
+        device = self.deviceComboBox.currentData()
+        window_name = device + ": "+name
+        print(channels, 1)
+        if self.plot[device] is None:
+            labels = []
+        else:
+            labels = self.plot[device]
+        pltw = PlotDisplayWindow.PlotDisplayWindow(self, npdata, window_name, default_channels=channels, labels=labels)
+        self.plot_window.append(pltw)
+        pltw.show()
+
 
 
     def update_instrument_list(self):
@@ -745,7 +796,7 @@ class FunctionWidget(QtGui.QWidget):
             #print(self.parentClass.instr_hub.get_instrument_nb())
 
             z = self.instrument_list.items()
-
+            self.ports = {}
             ports = list()
             instruments = list()
             names = list()
@@ -754,6 +805,7 @@ class FunctionWidget(QtGui.QWidget):
                     ports.append(x)
                     instruments.append(self.instrument_list[x])
                     names.append(self.instrument_list[x].ID_name)
+                    self.ports[self.instrument_list[x]] = x
                     #print(x,self.instrument_list[x].ID_name)
             self.sanitized_list = list(zip(names, ports, instruments))
             return
@@ -796,6 +848,40 @@ class FunctionWidget(QtGui.QWidget):
             return " ".join([str(i) for i in o])
         except:
             return "Unable to join object: "+sys.exc_info()[0]
+
+
+    def save_data(self, fname, data, device="", function="", params={}):
+        try:
+            ndata = np.array(data)
+            params = ", ".join(["{}={}".format(key, value) for key, value in params.items()])
+            print(params)
+            llabels = []
+            if device in self.plot.keys():
+                llabels = self.plot[device]
+            headers = []
+
+            if function != "":
+                if params != "":
+                    function = function + " (" + params + ")"
+                headers.append(function)
+            elif params != "": #incase only params are passed
+                headers.append(params)
+
+            if device != "":
+                if device in self.ports.keys():
+                    headers.append(device+"["+self.ports[device]+"]")
+                else:
+                    headers.append(device)
+            if llabels:
+                headers.append(" ".join(self.plot[device]))
+            else:
+                headers.append(" ".join([str(i+1) for i in range(0, np.size(ndata,1))]))
+            np.savetxt(fname, ndata, header="\n".join(headers))
+            return True
+        except:
+            print("Exception occured: "+sys.exc_info()[0])
+            return False
+
 
 
 
@@ -900,7 +986,6 @@ def add_widget_into_main(parent):
 #     parent.windowMenu.addAction(outDockWidget.toggleViewAction())
 
 if __name__ == "__main__":
-
 
     app = QtGui.QApplication(sys.argv)
     ex = FunctionWidget(parent=None)

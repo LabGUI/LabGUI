@@ -30,6 +30,9 @@ else:
     from PyQt4.QtGui import QKeySequence, QIcon, QCursor
 
 from QtTools import ZOOM_MODE, PAN_MODE, SELECT_MODE
+#from . import QtTools
+#ZOOM_MODE, PAN_MODE, SELECT_MODE = QtTools.ZOOM_MODE, QtTools.PAN_MODE, QtTools.SELECT_MODE
+
 from matplotlibwidget import MatplotlibWidget
 
 

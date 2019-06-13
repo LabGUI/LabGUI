@@ -1,2 +1,3 @@
-dt(s), TIME, , dt, 'dt(s)', 0, 0, 0, 0, 0, #4477AA, 'None', '-'
-CH1(V), SIM900, COM4, CH1, 'CH1(V)', 0, 0, 0, 0, 0, #CC6677, 'None', '-'
+dt(s), TIME, , dt
+V(V), KT2400, GPIB0::28::INSTR, V
+Summing Offset Voltage(microV), SIM900, GPIB0::1::INSTR, Summing Offset Voltage

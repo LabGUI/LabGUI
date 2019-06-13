@@ -39,11 +39,16 @@ else:
     from PyQt4.QtCore import Qt, QRect, QRectF
     from PyQt4.QtCore import SIGNAL
 
-
 import QtTools
+#from . import QtTools
 
 
 from mplZoomWidget import MatplotlibZoomWidget
+
+#from . import mplZoomWidget
+
+#MatplotlibZoomWidget = mplZoomWidget.MatplotlibWidget
+
 import ui_plotdisplaywindow
 
 from PlotPreferences import marker_set, line_set, color_blind_friendly_colors

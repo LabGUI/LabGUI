@@ -336,7 +336,7 @@ class DataDisplayer(QObject):
             print("displayer triggered")
 
 
-class DataWriter(QObject):
+class DataWriter(QObject): # possibly unused?
 
     def __init__(self, datataker, debug=False, parent=None):
         super(DataWriter, self).__init__(parent)
@@ -344,8 +344,8 @@ class DataWriter(QObject):
 
         if USE_PYQT5:
 
-            datataker.data.connect(self.displayer, Qt.QueuedConnection)
-
+            #datataker.data.connect(self.displayer, Qt.QueuedConnection)
+            datataker.data.connect(self.writer, Qt.QueuedConnection)
         else:
 
             self.connect(datataker, SIGNAL("data(PyQt_PyObject)"),

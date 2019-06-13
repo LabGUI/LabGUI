@@ -412,10 +412,8 @@ class Instrument(Tool.MeasInstr):
             state = '-1'
         elif 'pos' in state.lower():
             state = '1'
-        elif state.isdigit():
-            # this is good
-            unusedvariable = 1
-        else:
+
+        if state not in ['1','0','-1']:
             print("Invalid state: "+state)
             return
         if channel in self.connections.keys():

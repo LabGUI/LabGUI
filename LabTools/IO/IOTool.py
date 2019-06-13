@@ -178,10 +178,68 @@ def get_file_name(config_file_path=CONFIG_FILE_PATH):
 
         config_file.close()
     except IOError:
-        print("No configuration file " + config_file_name + "  found")
+        print("No configuration file " + config_file_path + "  found")
 
     return file_name
 
+def get_funct_save_name(device, funct, config_file_path=CONFIG_FILE_PATH):
+    """
+            returns the filename of output file as it is in the config file
+        """
+    file_name = "no CONFIG file"
+    cooldown = ""
+    therm_path = ""
+    sample_name = ""
+    file_format = ".dat"
+    data_path = ""
+
+    device = device.replace(" ","") #remove whitespaces
+    funct = funct.replace(" ","")
+    try:
+
+        config_file = open(config_file_path, 'r')
+
+        for line in config_file:
+
+            [left, right] = line.split("=")
+            left = left.strip()
+            right = right.strip()
+
+            if left == "COOLDOWN":
+                cooldown = right
+                cooldown = cooldown + "_"
+            elif left == "SAMPLE":
+                sample_name = right
+            elif left == "THERM_PATH":
+                therm_path = right
+            elif left == SAVE_DATA_PATH_ID:
+                data_path = right
+            elif left == "FILE_FORMAT":
+                file_format = eval(right)
+
+        try:
+
+
+            file_name = data_path + \
+                        device + "_" + funct + "_" + \
+                        time.strftime("%y%m%d") + "_" + cooldown + sample_name
+            n = 1
+
+            # make sure the file doesn't already exist by incrementing the
+            # number
+
+            while os.path.exists(file_name + "_%3.3d%s" % (n, file_format)):
+                n += 1
+            file_name = file_name + "_%3.3d%s" % (n, file_format)
+
+        except:
+            file_name = "No output file choosen"
+
+        config_file.close()
+    except IOError:
+        print("No configuration file " + config_file_path + "  found")
+
+    return file_name
 
 def get_config_setting(setting, config_file_path=CONFIG_FILE_PATH):
     """
