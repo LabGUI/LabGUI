@@ -220,9 +220,22 @@ def create_plw(parent, load_fname=None):
         labels = {}
         labels["param"] = lb_data.labels
     else:
-        [data, labels] = IOTool.load_file_windows(load_fname)
+        try:
+            data, labels = IOTool.load_file_windows(load_fname)
+        except IndexError: # empty file
+            print(load_fname+" is empty")
+            return
+        except:
+            print("Windows only currently supported. <create_plw>", sys.exc_info()[0])
+            return
+        if np.size(data) == 0:
+            print("No data to read")
+            return
         # add the header to the header text area
-        parent.widgets["loadPlotWidget"].header_text(labels['hdr'])
+        if 'hdr' in labels.keys():
+            parent.widgets["loadPlotWidget"].header_text(labels['hdr'])
+        else:
+            print("No headers present:",labels)
 
         # update the name information in the widget
         parent.widgets["loadPlotWidget"].load_file_name(load_fname)

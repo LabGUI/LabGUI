@@ -43,6 +43,7 @@ import shlex
 import time
 
 DEBUG = False
+SCROLLABLE = True
 
 class MultiPropertyWidget(QtGui.QWidget):
     """ widget for 'multi' type """
@@ -409,12 +410,19 @@ class PropertiesWidget(QtGui.QWidget):
         if self.DEBUG is True:
             print("Debug")
 
+
         #output console
         self.verticalLayout = QtGui.QVBoxLayout()
 
         self.verticalLayout.addWidget(self.deviceComboBox)
         self.verticalLayout.addStretch()
-        self.verticalLayout.addWidget(self.stacked)
+        if SCROLLABLE:
+            #create scrollarea for stacked:
+            self.scrollarea = QtGui.QScrollArea(self)
+            self.scrollarea.setWidget(self.stacked)
+            self.verticalLayout.addWidget(self.scrollarea) # instead of stacked
+        else:
+            self.verticalLayout.addWidget(self.stacked)
         self.verticalLayout.addStretch()
         self.footer = self.create_footer()
         self.verticalLayout.addLayout(self.footer)
