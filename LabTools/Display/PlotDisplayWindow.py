@@ -865,7 +865,7 @@ class PlotDisplayWindow(QtGui.QMainWindow, ui_plotdisplaywindow.Ui_PlotDisplayWi
             take a matrix (data_array) with a number of rows equal to the number of channel/lines in the window and plot them along the line direction
             it only plots if the checkbox of the line is checked
         """
-        print(data_array)
+        #print(data_array)
         if isnparray(data_array) == True:
             logging.debug("update the data_array")
             self.data_array = data_array

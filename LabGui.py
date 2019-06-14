@@ -796,10 +796,11 @@ have the right format, '%s' will be used instead" % (self.config_file,
         pdw = PlotDisplayWindow.PlotDisplayWindow(parent=None, #data_array=uscript_obj.data_array,
                                                   name=name,
                                                   default_channels=num_channels,
-                                                  labels=uscript_obj.get_labels())
+                                                  #labels=uscript_obj.get_labels()
+                                                   )
         #print(uscript_obj.get_labels())
-        if USE_PYQT5:
-            uscript_obj.data.connect(pdw.update_plot)
+        #if USE_PYQT5:
+        #    uscript_obj.data.connect(pdw.update_plot)
             #pdw.mplwidget.limits_changed.connect(self.emit_axis_lim)
 
             # this is here temporary, I would like to change the plw when the live
@@ -811,7 +812,7 @@ have the right format, '%s' will be used instead" % (self.config_file,
 
             #self.colorsChanged.connect(pdw.update_colors)
 
-            self.labelsChanged.connect(pdw.update_labels)
+         #   self.labelsChanged.connect(pdw.update_labels)
 
             #self.markersChanged.connect(pdw.update_markers)
         return pdw

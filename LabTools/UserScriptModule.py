@@ -53,7 +53,7 @@ FORBIDDEN_SCRIPTS = ['userscript_example.py', '__init__.py','UserTool.py']
 class UDataTaker(QThread):
 
     if USE_PYQT5:
-        data = pyqtSignal('PyQt_PyObject')
+        data = pyqtSignal('PyQt_PyObject', str)
 
         script_finished = pyqtSignal(bool)
 
@@ -94,7 +94,16 @@ class UDataTaker(QThread):
         self.reset_devices()
 
 
-
+    def data_change(self, data_list, name):
+        try:
+            #print(data_list, name)
+            if name in self.scripts.keys():
+                print("working")
+                #self.plots[name].update_labels(['time','voltage','current'])
+                #self.plots[name].time_Xaxis = False
+                self.plots[name].update_plot(np.array(data_list))
+        except:
+            print(sys.exc_info())
 
     def load_scripts(self):
         # called at the beginning of the function, imports all scripts and creates object for them
@@ -108,8 +117,10 @@ class UDataTaker(QThread):
                 name = file.split('.py')[0]
                 module = module_from_file(name, os.path.join(self.script_folder, file))
                 self.script_modules[name] = module
-                self.scripts[name] = module.Script(parent=self, debug=self.DEBUG)
+                self.scripts[name] = module.Script(name=name, parent=self, debug=self.DEBUG)
                 self.plots[name] = self.parent.create_plot_userscript(self.scripts[name], name)
+                self.scripts[name].data.connect(self.data_change)
+                self.plots[name].update_labels(self.scripts[name].get_labels())
                 self.plots[name].show()
                 self.active_scripts[name] = True#False # so it exists
 
@@ -182,7 +193,7 @@ class UDataTaker(QThread):
                     #print(dir(script))
                     print("Starting "+name)
                     script.start()
-                    self.plots[name].show()
+                    #self.plots[name].show()
         except:
             print(sys.exc_info())
 
@@ -221,21 +232,25 @@ class UserScript(QThread):
 
     Uses QThread so can be launched with inherited .start()
     """
-    data = pyqtSignal('PyQt_PyObject')
+    data = pyqtSignal('PyQt_PyObject', str)
     #data_array = pyqtSignal('PyQt_PyObject')
-    def __init__(self, devices = [], params={}, instr_hub = None, parent=None, debug=False):
+    def __init__(self, name = '', devices = [], params={}, instr_hub = None, parent=None, debug=False):
         super(UserScript, self).__init__(parent)
 
         self.instr_hub = instr_hub
         self.DEBUG = debug
         self.parent = parent
 
-        self.data_list = []
+
+
+        self.name = name
 
         self.devices = devices
         self.params = params
         self.properties = {}
+        self.data_list = []
         self.channels = 1+len(self.params)
+        self.start_time = None
         #self.devices = {}
     def set_property(self, name, value):
         setattr(self, name, value)
@@ -246,9 +261,19 @@ class UserScript(QThread):
             return None
 
     def addData(self, *args): # DO NOT OVERRIDE
-        self.data_list.append([time.time()]+list(args))
-        #self.parent.parent.data_array_updated.emit(np.array(self.data_list))
-        self.data.emit(np.array(self.data_list))
+        try:
+            if self.start_time is None:
+                self.start_time = time.time()-0.1
+                #print(self.start_time)
+                #time.sleep(1)
+            #currt = time.time() - self.start_time
+            #print(currt, args)
+
+            self.data_list.append([time.time()]+list(args))
+            #self.parent.parent.data_array_updated.emit(np.array(self.data_list))
+            self.data.emit(self.data_list, self.name)
+        except:
+            print(sys.exc_info())
 
     def get_labels(self):
         labels = ['Time(s)']

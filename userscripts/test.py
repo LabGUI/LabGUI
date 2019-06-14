@@ -15,11 +15,11 @@ params = {
 
 import time
 import sys
-
+import math
 
 class Script(UserScript):
-    def __init__(self, devices = devices, parent=None, debug=False):
-        super(Script, self).__init__(devices=devices , params = params, parent=parent, debug=debug)
+    def __init__(self, name = '', devices = devices, parent=None, debug=False):
+        super(Script, self).__init__(name = name, devices=devices , params = params, parent=parent, debug=debug)
         self.devices = devices
 
     def run(self):
@@ -28,7 +28,7 @@ class Script(UserScript):
         print("got to run in script")
         for i in range(0, 100):
             try:
-                self.addData(i, i/10)
+                self.addData(i+1, math.cos(i/10))
             except:
                 print(sys.exc_info())
             time.sleep(1)
