@@ -11,6 +11,7 @@ from importlib import import_module
 import logging
 import time
 import os
+import sys
 
 # the configuration file will always be in the parent of the parent of the
 # directory where this module is located. i.e. in the LabGUI main folder
@@ -28,6 +29,7 @@ SETTINGS_ID = "SETTINGS"
 WIDGETS_ID = "USER_WIDGETS"
 LOAD_DATA_FILE_ID = "DATAFILE"
 GPIB_INTF_ID = "GPIB_INTF"
+USERSCRIPT_ID = "USER_SCRIPTS"
 
 
 def create_config_file(config_path=CONFIG_FILE_PATH):
@@ -181,6 +183,25 @@ def get_file_name(config_file_path=CONFIG_FILE_PATH):
         print("No configuration file " + config_file_path + "  found")
 
     return file_name
+
+
+def get_userscript_directory(config_file_path=CONFIG_FILE_PATH):
+    try:
+
+        config_file = open(config_file_path, 'r')
+        path = os.path.join(MAIN_DIR, 'userscripts')
+        for line in config_file:
+
+            [left, right] = line.split("=")
+            left = left.strip()
+            right = right.strip()
+
+            if left == USERSCRIPT_ID:
+                path = right
+        return path
+    except:
+        print("Error getting directory: "+sys.exc_info())
+        return ""
 
 def get_funct_save_name(device, funct, config_file_path=CONFIG_FILE_PATH):
     """

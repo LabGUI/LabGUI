@@ -14,6 +14,7 @@ from LabTools.IO import IOTool
 from LabTools.Display import QtTools, PlotDisplayWindow, mplZoomWidget
 from LabDrivers import Tool
 from LabTools import DataManagement
+from LabTools import UserScriptModule
 from LabTools.DataStructure import LabeledData
 from LocalVars import USE_PYQT5
 
@@ -21,8 +22,11 @@ from LocalVars import USE_PYQT5
 from LabTools.CoreWidgets import CommandWidget
 
 import sys
+
 import getopt
 import os
+
+sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 from os.path import exists
 import warnings
 import time
@@ -326,6 +330,7 @@ have the right format, '%s' will be used instead" % (self.config_file,
         # DataTaker is responsible for taking data from instruments in the
         # InstrumentHub object
         self.datataker = DataManagement.DataTaker(self.lock, self.instr_hub)
+        self.udatataker = UserScriptModule.UDataTaker(self.lock, self.instr_hub, parent=self)
 
         self.cmdline = CommandWidget.CommandWidget(parent=self)
         self.cmddock = None
@@ -878,6 +883,20 @@ have the right format, '%s' will be used instead" % (self.config_file,
         self.datataker.ask_to_stop()
 
     def start_DTT(self):
+        # put first because there is no return type, if isrunning it just continues
+        try:
+            if not self.udatataker.isRunning():
+                self.udatataker.initialize()
+                self.udatataker.start()
+
+            elif self.udatataker.isPaused():
+                self.udatataker.resume()
+            else:
+                print("UDataTaker already running")
+        except:
+            print(sys.exc_info())
+
+
 
         if not self.datataker.isRunning():
 
@@ -951,6 +970,7 @@ have the right format, '%s' will be used instead" % (self.config_file,
             print("Paused: %s" % (self.datataker.isPaused()))
             print("Stopped: %s" % (self.datataker.isStopped()))
             return DDT_CODE_ALREADY_RUNNING
+
 
     def pause_DTT(self):
         #        if not self.datataker.isStopped():
