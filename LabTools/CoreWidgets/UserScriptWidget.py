@@ -37,10 +37,6 @@ from collections import Iterable
 
 import sys
 import io
-import inspect
-import matplotlib.pyplot as plt
-import shlex
-import time
 
 DEBUG = False
 SCROLLABLE = True
@@ -657,7 +653,7 @@ def add_widget_into_main(parent):
 
     create a QDock widget and store a reference to the widget
     """
-
+    print(dir(parent))
     mywidget = PropertiesWidget(parent)
 
     # create a QDockWidget

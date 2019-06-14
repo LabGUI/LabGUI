@@ -225,4 +225,4 @@ class UserScript(QThread):
             return None
 
     def addData(self, *args): # DO NOT OVERRIDE
-        
+        print(args)
