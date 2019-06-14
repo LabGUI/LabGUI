@@ -784,6 +784,37 @@ have the right format, '%s' will be used instead" % (self.config_file,
         self.zoneCentrale.addSubWindow(pdw)
 
         pdw.show()
+    def create_plot_userscript(self, uscript_obj, name):
+        """
+
+        :param uscript_obj: From UserScriptModule
+        :param num_channels: #Params + time
+        :return:
+        """
+        #print("data array", uscript_obj.data_array)
+        num_channels = uscript_obj.channels
+        pdw = PlotDisplayWindow.PlotDisplayWindow(parent=None, #data_array=uscript_obj.data_array,
+                                                  name=name,
+                                                  default_channels=num_channels,
+                                                  labels=uscript_obj.get_labels())
+        #print(uscript_obj.get_labels())
+        if USE_PYQT5:
+            uscript_obj.data.connect(pdw.update_plot)
+            #pdw.mplwidget.limits_changed.connect(self.emit_axis_lim)
+
+            # this is here temporary, I would like to change the plw when the live
+            # fit is ticked
+
+
+
+            #self.signal_remove_fit.connect(pdw.remove_fit)
+
+            #self.colorsChanged.connect(pdw.update_colors)
+
+            self.labelsChanged.connect(pdw.update_labels)
+
+            #self.markersChanged.connect(pdw.update_markers)
+        return pdw
 
     def get_last_window(self, window_ID="Live"):
         """

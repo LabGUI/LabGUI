@@ -31,6 +31,8 @@ else:
 
 from importlib import import_module
 import importlib.util
+import time
+import numpy as np
 
 def module_from_file(module_name, file_path):
     spec = importlib.util.spec_from_file_location(module_name, file_path)
@@ -66,7 +68,9 @@ class UDataTaker(QThread):
 
         self.parent = parent
         self.scripts = {}
+        self.script_modules = {}
         self.active_scripts = {}
+        self.plots = {}
 
         self.mutex = QMutex()
 
@@ -103,11 +107,12 @@ class UDataTaker(QThread):
 
                 name = file.split('.py')[0]
                 module = module_from_file(name, os.path.join(self.script_folder, file))
-                self.scripts[name] = module
-                self.active_scripts[name] = False # so it exists
-                print("Testing devices:", 'KT2500' in module.devices)
-                Test = module.Script()
-                Test.announce()
+                self.script_modules[name] = module
+                self.scripts[name] = module.Script(parent=self, debug=self.DEBUG)
+                self.plots[name] = self.parent.create_plot_userscript(self.scripts[name], name)
+                self.plots[name].show()
+                self.active_scripts[name] = True#False # so it exists
+
 
 
 
@@ -169,7 +174,17 @@ class UDataTaker(QThread):
     ### when .start() is called ###
 
     def run(self):
-        print("Reached here")
+        try:
+            for name, script in self.scripts.items():
+                print(name, self.active_scripts)
+                if self.active_scripts[name]:
+                    #self.plots[name].show()
+                    #print(dir(script))
+                    print("Starting "+name)
+                    script.start()
+                    self.plots[name].show()
+        except:
+            print(sys.exc_info())
 
 
 
@@ -206,16 +221,22 @@ class UserScript(QThread):
 
     Uses QThread so can be launched with inherited .start()
     """
-    def __init__(self, instr_hub = None, parent=None, debug=False):
+    data = pyqtSignal('PyQt_PyObject')
+    #data_array = pyqtSignal('PyQt_PyObject')
+    def __init__(self, devices = [], params={}, instr_hub = None, parent=None, debug=False):
         super(UserScript, self).__init__(parent)
 
         self.instr_hub = instr_hub
         self.DEBUG = debug
         self.parent = parent
 
-        self.params = {}
+        self.data_list = []
+
+        self.devices = devices
+        self.params = params
         self.properties = {}
-        self.devices = {}
+        self.channels = 1+len(self.params)
+        #self.devices = {}
     def set_property(self, name, value):
         setattr(self, name, value)
     def get_property(self, name):
@@ -225,4 +246,15 @@ class UserScript(QThread):
             return None
 
     def addData(self, *args): # DO NOT OVERRIDE
-        print(args)
+        self.data_list.append([time.time()]+list(args))
+        #self.parent.parent.data_array_updated.emit(np.array(self.data_list))
+        self.data.emit(np.array(self.data_list))
+
+    def get_labels(self):
+        labels = ['Time(s)']
+        for channel, unit in self.params.items():
+            if unit is not None:
+                labels.append(channel + "(" + unit + ")")
+            else:
+                labels.append(channel)
+        return labels

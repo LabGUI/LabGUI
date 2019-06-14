@@ -13,18 +13,27 @@ params = {
     'Current':'A'
 }
 
+import time
+import sys
 
 
 class Script(UserScript):
-    def __init__(self, devices = {}, properties = {}, parent=None, debug=False):
-        super(UserScript, self).__init__(devices=devices, properties=properties, parent=parent, debug=debug)
+    def __init__(self, devices = devices, parent=None, debug=False):
+        super(Script, self).__init__(devices=devices , params = params, parent=parent, debug=debug)
         self.devices = devices
 
     def run(self):
         # does something
         data_set = []
+        print("got to run in script")
+        for i in range(0, 100):
+            try:
+                self.addData(i, i/10)
+            except:
+                print(sys.exc_info())
+            time.sleep(1)
         ## stuff to add data
-
+        print("done")
 
 
 
