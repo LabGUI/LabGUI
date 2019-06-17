@@ -155,6 +155,10 @@ def get_file_name(config_file_path=CONFIG_FILE_PATH):
                 therm_path = right
             elif left == SAVE_DATA_PATH_ID:
                 data_path = right
+                #print(right)
+                #if not os.path.isabs(right):
+                #    data_path = os.path.abspath( right)
+                #    print(data_path)
             elif left == "FILE_FORMAT":
                 file_format = eval(right)
 

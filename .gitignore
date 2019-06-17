@@ -17,3 +17,5 @@ config_*
 htmlcov/
 .tox/
 .idea/
+venv37/
+StartLabGui.bat

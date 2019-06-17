@@ -1,7 +1,0 @@
-#C'dt(s)', 'V(V)', 'Summing Offset Voltage(microV)'
-#I'TIME[].dt', 'KT2400[GPIB0::28::INSTR].V', 'SIM900[GPIB0::1::INSTR].Summing Offset Voltage'
-#P'dt', 'V', 'Summing Offset Voltage'
-
-
-
-

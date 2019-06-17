@@ -33,6 +33,7 @@ import logging.config
 from importlib import import_module
 
 ABS_PATH = os.path.abspath(os.curdir)
+print(ABS_PATH)
 logging.config.fileConfig(os.path.join(ABS_PATH, "logging.conf"))
 
 if USE_PYQT5:

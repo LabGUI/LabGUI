@@ -13,7 +13,7 @@ from shutil import copyfile
 import sys
 
 OS = sys.platform
-if OS == 'Win32':
+if OS == 'win32':
     WINDOWS = True
 else:
     WINDOWS = False
@@ -27,9 +27,9 @@ JOIN = os.sep
 CURR_DIR = os.path.abspath(os.curdir)
 os.chdir(CURR_DIR)
 
-print(CURR_DIR)
-print(os.getcwd())
-print(os.fspath(sys.executable))
+#print(CURR_DIR)
+#print(os.getcwd())
+PYTHON_EXEC = os.fspath(sys.executable)
 
 
 
@@ -82,7 +82,7 @@ conf_dict = {}
 
 path = input("Set data-path ["+suffix+"scratch"+JOIN+"]")
 if path == '':
-    path = 'scratch'
+    path = 'scratch'+JOIN
 
 if path.startswith(JOIN):
     if WINDOWS or RELATIVE:

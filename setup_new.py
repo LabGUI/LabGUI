@@ -9,20 +9,156 @@ This is designed to setup LabGUI for first use on a system. It will determine wh
 
 import sys
 import os
+import pip
 
+try:
+    import virtualenv
+    VIRTUALENV_MODULE = True
+except:
+    VIRTUALENV_MODULE = False
+
+import subprocess
+
+### pip install for python 3 ###
+def pip_install(package_name):
+    print("Installing "+package_name)
+    reqs = subprocess.check_call([sys.executable, '-m', 'pip', 'install', package_name])
+    print(reqs)
+
+#pip_install('scipy')
+#exit(0)
 
 operating_system = sys.platform
 
 CURR_DIR = os.path.abspath(os.curdir)
 print(CURR_DIR)
+os.chdir(CURR_DIR)
 
+MAIN_FILE = 'LabGui.py'
 
-if operating_system == 'Win32':
+if operating_system == 'win32':
     WINDOWS = True
 else:
     print("Set up is currently not supported on "+operating_system)
     WINDOWS = False
     exit(5)
 
+DEBUG = True
+JOIN = os.sep
+
+NEWLINE = '\n'
+
+version_info = sys.version_info
+if version_info.major != 3:
+    print("You must be using python 3. Current version:"+sys.version)
+    exit(1)
+VER = str(version_info.major)+str(version_info.minor)
+
+#print(CURR_DIR)
+#print(os.getcwd())
+PYTHON_EXEC = os.fspath(sys.executable)
+
+
 
 print("=== LabGUI setup on "+operating_system+" ===")
+virtual_instructions = []
+virtual_instructions.append("If you wish to use a virtual environment, call the following commands")
+virtual_instructions.append("\t$ pip install virtualenv")
+virtual_instructions.append("\t$ cd "+CURR_DIR)
+virtual_instructions.append("\t$ virtualenv venv"+VER)
+if WINDOWS:
+    venv_exec = "venv"+VER+JOIN+"Scripts"+JOIN+"python.exe"
+    venv_activate = "venv"+VER+JOIN+"Scripts"+JOIN+"activate"
+else:
+    venv_exec = "venv"+VER+JOIN+"bin"+JOIN+"python"
+    venv_activate = "source venv"+VER+JOIN+"bin"+JOIN+"activate"
+virtual_instructions.append("Then run this setup file by:")
+virtual_instructions.append("\t$ "+os.path.abspath(os.path.join(CURR_DIR,venv_exec))+" "+os.path.relpath(sys.argv[0]))
+virtual_instructions.append("- or -")
+virtual_instructions.append("\t$ "+venv_activate)
+virtual_instructions.append("\t$ python "+os.path.relpath(sys.argv[0]))
+# check if running in virtual environment #
+if venv_exec in PYTHON_EXEC:
+    print("Using virtual environment venv"+VER)
+else:
+
+    if os.path.isfile(venv_exec):
+        print("Setting environment to virtual environment")
+        exec(open(venv_activate + "_this.py").read())
+        sys.executable = os.path.abspath(venv_exec)
+        VIRTUAL = True
+    else:
+        while True:
+            cont = input("Automatically generate virtual environment? [y/n]")
+            if cont == 'n':
+                print("Continuing on "+os.path.dirname(PYTHON_EXEC))
+                VIRTUAL = False
+                print(NEWLINE)
+                for instruction in virtual_instructions:
+                    print(instruction)
+                break
+            elif cont == 'y':
+                if not VIRTUALENV_MODULE:
+                    print("Installing virtualenv")
+                    pip.main(['install','virtualenv'])
+                    import virtualenv
+                venv_dir = os.join.path(CURR_DIR,"venv"+VER)
+                virtualenv.create_environment(venv_dir)
+                exec(open(venv_activate+"_this.py").read())
+
+                print(sys.executable)
+                VIRTUAL = True
+                break
+            else:
+                print("Invalid response: "+cont)
+
+
+print(NEWLINE)
+PYTHON_EXEC = os.fspath(sys.executable)
+
+
+
+print("Current python executable: "+PYTHON_EXEC)
+
+cont = input("Continue? [y/n]:")
+if cont != 'y':
+    exit(0)
+
+print("Installing requirements")
+reqs = []
+requirements = open("requirements.txt",'r')
+reqs = [i.rstrip('\n') for i in requirements.readlines()]
+requirements.close()
+
+for i in reqs:
+    pip_install(i)
+
+
+print(NEWLINE)
+print("Generating launcher")
+
+if WINDOWS:
+    launcher = open("StartLabGui.bat",'w+')
+    launcher.write(PYTHON_EXEC + " " + os.path.join(CURR_DIR, MAIN_FILE))
+    launcher.close()
+    LAUNCHER_FILE = 'StartLabGui.bat'
+else:
+    launcher = open("StartLabGui.sh", 'w+')
+    launcher.write("#/bin/sh")
+    launcher.write(PYTHON_EXEC + " " + os.path.join(CURR_DIR, MAIN_FILE))
+    launcher.close()
+    LAUNCHER_FILE = 'StartLabGui.sh'
+
+print("Launcher is "+LAUNCHER_FILE)
+
+cont = input("Create config.txt? [y/n]:")
+
+if cont == 'y':
+    import config_generate
+print(NEWLINE)
+cont = input("Setup complete. Launch LabGui? [y/n]")
+if cont == 'y':
+    print("Launching LabGui")
+    subprocess.call([os.path.join(CURR_DIR, LAUNCHER_FILE)])
+
+
