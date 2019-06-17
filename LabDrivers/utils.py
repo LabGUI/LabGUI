@@ -149,13 +149,13 @@ def find_prologix_ports():
         try:
             s = serial.Serial(port, 9600, timeout=0.2)
             if PYTHON_3:
-                s.write('++mode 1\n++auto 1\n++ver\n'.encode())
+                s.write("++mode 1\n++auto 1\n++ver\n".encode())
             else:
-                s.write('++mode 1\n++auto 1\n++ver\n')
+                s.write("++mode 1\n++auto 1\n++ver\n")
 
             answer = s.readline()
 
-            PROLOGIX_CONTROLLER = 'Prologix GPIB-USB Controller'
+            PROLOGIX_CONTROLLER = "Prologix GPIB-USB Controller"
 
             if PYTHON_3:
                 PROLOGIX_CONTROLLER = PROLOGIX_CONTROLLER.encode()
@@ -201,7 +201,7 @@ def is_IP_port(device_port, return_vals=False):
         # iterate through successive instances of ':' to get the server_port
         for part in info[3:]:
 
-            device_port = '%s:%s' % (device_port, part)
+            device_port = "%s:%s" % (device_port, part)
 
     else:
         # format of the input is wrong
@@ -261,7 +261,7 @@ def list_drivers(interface=[INTF_VISA, INTF_PROLOGIX, INTF_SERIAL, INTF_NONE]):
         dictionnary "param" containing the different parameters and their units.
     """
 
-    if interface == 'real':
+    if interface == "real":
         interface = [INTF_VISA, INTF_PROLOGIX, INTF_SERIAL]
 
     instruments = []
@@ -277,12 +277,12 @@ def list_drivers(interface=[INTF_VISA, INTF_PROLOGIX, INTF_SERIAL, INTF_NONE]):
 
     for file_name in driver_files:
 
-        if file_name.endswith('.py') \
+        if file_name.endswith(".py") \
                 and (not file_name == 'Tool.py' and not file_name == '__init__.py' and not file_name == 'utils.py'):
             name = file_name.split('.py')[0]
 
             # import the module of the instrument in the package drivers
-            driver = import_module('.' + name, package=LABDRIVER_PACKAGE_NAME)
+            driver = import_module("." + name, package=LABDRIVER_PACKAGE_NAME)
 
             try:
                 driver_interface = driver.INTERFACE
@@ -292,7 +292,7 @@ def list_drivers(interface=[INTF_VISA, INTF_PROLOGIX, INTF_SERIAL, INTF_NONE]):
                     "The following module is probably not an instrument driver, "
                     "please remove it from the package %s" % LABDRIVER_PACKAGE_NAME
                 )
-                driver_interface = ''
+                driver_interface = ""
 
             if driver_interface in interface:
                 # add to instruments list
@@ -308,15 +308,15 @@ def list_drivers(interface=[INTF_VISA, INTF_PROLOGIX, INTF_SERIAL, INTF_NONE]):
                         params[name].append(chan)
 
                 except:
-                    logging.error(('Invalid driver file: ' +
-                                   file_name + ' (no param variable found)'))
+                    logging.error(("Invalid driver file: " +
+                                   file_name + " (no param variable found)"))
 
     return [instruments, params, units]
 
 
 def test_prologix_controller_creation_with_com(com_port=None):
     if com_port is None:
-        com_port = 'COM3'
+        com_port = "COM3"
 
     pc = PrologixController(com_port)
     print(pc)
@@ -324,7 +324,7 @@ def test_prologix_controller_creation_with_com(com_port=None):
 
 
 def test_prologix_controller_creation_with_wrong_com():
-    pc = PrologixController('COM1')
+    pc = PrologixController("COM1")
     print(pc)
     print(pc.get_open_gpib_ports())
 
@@ -353,8 +353,8 @@ class PrologixController(object):
                 if com_port != []:
 
                     if len(com_port) > 1:
-                        logging.warning('There is more than one Prologix \
-                         controller, we are connecting to %s' % com_port[0])
+                        logging.warning("There is more than one Prologix \
+                         controller, we are connecting to %s" % com_port[0])
 
                     com_port = com_port[0]
 
@@ -365,7 +365,7 @@ class PrologixController(object):
 
                     self.connection = None
                     logging.warning(
-                        'There is no Prologix controller to connect to')
+                        "There is no Prologix controller to connect to")
 
             else:
 
@@ -378,69 +378,69 @@ class PrologixController(object):
 
                     self.connection = None
                     logging.error(
-                        'The port %s is not attributed to any device' % com_port
+                        "The port %s is not attributed to any device" % com_port
                     )
 
             if self.connection is not None:
 
                 # set the connector in controller mode and let the user
                 # ask for read without sending another command.
-                self.write('++mode 1')
-                self.write('++auto 1')
+                self.write("++mode 1")
+                self.write("++auto 1")
 
                 # check the version
-                self.write('++ver')
+                self.write("++ver")
                 version_number = self.readline()
 
-                if 'Prologix GPIB-USB Controller' not in version_number:
+                if "Prologix GPIB-USB Controller" not in version_number:
                     self.connection = None
                     logging.error(
-                        'The port %s isn''t related to a Prologix controller (try to plug and unplug '
-                        'the cable if it is there nevertheless)' % com_port
+                        "The port %s isn't related to a Prologix controller (try to plug and unplug "
+                        "the cable if it is there nevertheless)" % com_port
                     )
 
                 logging.info(
-                    '%s is connected on the port %s' % (version_number[:-2], com_port)
+                    "%s is connected on the port '%s'" % (version_number[:-2], com_port)
                 )
             else:
 
                 logging.error(
-                    'The connection to the Prologix connector failed'
+                    "The connection to the Prologix connector failed"
                 )
 
     def __str__(self):
         if self.connection is not None:
-            self.write('++ver')
+            self.write("++ver")
             return self.readline()
         else:
-            return ''
+            return ""
 
     def controller_id(self):
         return self.__str__()
 
     def write(self, cmd):
         """use serial.write"""
-        if cmd[-1] != '\n':
-            cmd += '\n'
+        if cmd[-1] != "\n":
+            cmd += "\n"
         if self.connection is not None:
-            #             print 'Prologix in : ', cmd
-            self.connection.write(cmd.encode())
+            #             print "Prologix in : ", cmd
+            self.connection.write(cmd)
 
     def read(self, num_bit):
         """use serial.read"""
         if self.connection is not None:
-            return self.connection.read(num_bit).decode()
+            return self.connection.read(num_bit)
         else:
-            return ''
+            return ""
 
     def readline(self):
         """use serial.readline"""
         if self.connection is not None:
             answer = self.connection.readline()
-#             print 'Prologix out : ', answer
-            return answer.decode()
+#             print "Prologix out : ", answer
+            return answer
         else:
-            return ''
+            return ""
 
     def timeout(self, new_timeout=None):
         """
@@ -476,11 +476,11 @@ class PrologixController(object):
                 # if it is longer than zero it is an instrument
                 # we store the GPIB address
                 if len(s) > 0:
-                    open_ports.append('GPIB0::%s' % i)
+                    open_ports.append("GPIB0::%s" % i)
 
             # resets the timeout to its original value
             self.timeout(old_timeout)
-    #        print 'Time out is', self.timeout()
+    #        print "Time out is", self.timeout()
 
         return open_ports
 
