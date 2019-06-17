@@ -1,3 +1,0 @@
-dt(s), TIME, , dt
-V(V), KT2400, GPIB0::28::INSTR, V
-Summing Offset Voltage(microV), SIM900, GPIB0::1::INSTR, Summing Offset Voltage

@@ -1,0 +1,4 @@
+[console_scripts]
+pyvisa-info = visa:visa_info
+pyvisa-shell = visa:visa_shell
+
