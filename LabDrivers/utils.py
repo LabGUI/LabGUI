@@ -47,6 +47,8 @@ INTF_SERIAL = 'serial'
 INTF_NONE = 'None'
 
 PROLOGIX_COM_PORT = "COM5"
+# cf section 8.2 of the manual : http://prologix.biz/downloads/PrologixGpibUsbManual-6.0.pdf
+PROLOGIX_AUTO = 'prologix_auto_opt'
 
 LABDRIVER_PACKAGE_NAME = "LabDrivers"
 
@@ -337,32 +339,48 @@ def test_prologix_controller_creation_with_no_arg_conflict():
 
 
 class PrologixController(object):
-
     connection = None
 
-    def __init__(self, com_port=None, debug=False, baud_rate=9600, timeout=3):
+    def __init__(
+            self,
+            com_port=None,
+            debug=False,
+            auto=1,
+            baud_rate=9600,
+            timeout=5,
+            **kwargs
+    ):
 
         self.debug = debug
 
         if not self.debug:
-
             if com_port is None:
                 # the user didn't provide a COM port, so we look for one
                 com_port = find_prologix_ports()
 
-                if com_port != []:
-
+                if com_port:
                     if len(com_port) > 1:
+<<<<<<< HEAD
                         logging.warning("There is more than one Prologix \
                          controller, we are connecting to %s" % com_port[0])
+=======
+
+                        logging.warning('There is more than one Prologix \
+                         controller, we are connecting to %s' % com_port[0])
+>>>>>>> 31f352902ed67ea76a5dc89fc5148452043d84c3
 
                     com_port = com_port[0]
+                    logging.info(
+                        "... found a Prologix controller on the port '%s'" %
+                        com_port
+                    )
 
                     self.connection = serial.Serial(
-                        com_port, baud_rate, timeout=timeout)
-
+                        com_port,
+                        baud_rate,
+                        timeout=timeout
+                    )
                 else:
-
                     self.connection = None
                     logging.warning(
                         "There is no Prologix controller to connect to")
@@ -370,20 +388,21 @@ class PrologixController(object):
             else:
 
                 try:
-
                     self.connection = serial.Serial(
-                        com_port, baud_rate, timeout=timeout)
-
+                        com_port,
+                        baud_rate,
+                        timeout=timeout
+                    )
                 except serial.serialutil.SerialException:
-
                     self.connection = None
+
                     logging.error(
                         "The port %s is not attributed to any device" % com_port
                     )
 
             if self.connection is not None:
-
                 # set the connector in controller mode and let the user
+<<<<<<< HEAD
                 # ask for read without sending another command.
                 self.write("++mode 1")
                 self.write("++auto 1")
@@ -391,15 +410,39 @@ class PrologixController(object):
                 # check the version
                 self.write("++ver")
                 version_number = self.readline()
+=======
+
+                self.write("++mode 1")
+                # auto == 1 : ask for read without sending another command.
+                # auto == 0 : simply send the command.
+                self.auto = auto
+                self.write("++auto %i" % self.auto)
+
+                # check the version
+                self.write("++ver")
+                # important not to use the self.readline() method
+                # at this stage if auto == 0, otherwise the connector is going
+                # to prompt the instrument for a reading an generate an error
+                version_number = (self.connection.readline()).decode()
+>>>>>>> 31f352902ed67ea76a5dc89fc5148452043d84c3
 
                 if "Prologix GPIB-USB Controller" not in version_number:
                     self.connection = None
                     logging.error(
+<<<<<<< HEAD
                         "The port %s isn't related to a Prologix controller (try to plug and unplug "
                         "the cable if it is there nevertheless)" % com_port
+=======
+                        "The port %s isn't related to a Prologix controller "
+                        "(try to plug and unplug the cable if it is there "
+                        "nevertheless). Returned version number : %s" % (
+                            com_port,
+                            version_number
+                        )
+>>>>>>> 31f352902ed67ea76a5dc89fc5148452043d84c3
                     )
-
                 logging.info(
+<<<<<<< HEAD
                     "%s is connected on the port '%s'" % (version_number[:-2], com_port)
                 )
             else:
@@ -407,11 +450,22 @@ class PrologixController(object):
                 logging.error(
                     "The connection to the Prologix connector failed"
                 )
+=======
+                    "%s is connected on the port '%s'"
+                    % (version_number[:-2], com_port)
+                )
+            else:
+                logging.error('The connection to the Prologix connector failed')
+>>>>>>> 31f352902ed67ea76a5dc89fc5148452043d84c3
 
     def __str__(self):
         if self.connection is not None:
             self.write("++ver")
+<<<<<<< HEAD
             return self.readline()
+=======
+            return (self.connection.readline()).decode()
+>>>>>>> 31f352902ed67ea76a5dc89fc5148452043d84c3
         else:
             return ""
 
@@ -420,32 +474,56 @@ class PrologixController(object):
 
     def write(self, cmd):
         """use serial.write"""
+<<<<<<< HEAD
         if cmd[-1] != "\n":
             cmd += "\n"
         if self.connection is not None:
             #             print "Prologix in : ", cmd
             self.connection.write(cmd)
+=======
+        # add a new line if the command didn't have one already
+        if not cmd.endswith('\n'):
+            cmd += '\n'
+        if self.connection is not None:
+            logging.debug("Prologix in : %s" % cmd)
+            self.connection.write(cmd.encode())
+>>>>>>> 31f352902ed67ea76a5dc89fc5148452043d84c3
 
     def read(self, num_bit):
         """use serial.read"""
         if self.connection is not None:
+<<<<<<< HEAD
             return self.connection.read(num_bit)
+=======
+            if not self.auto:
+                self.write('++read eoi')
+            answer = self.connection.read(num_bit)
+            logging.debug("Prologix out (read) : %s" % answer)
+            return answer.decode()
+>>>>>>> 31f352902ed67ea76a5dc89fc5148452043d84c3
         else:
             return ""
 
     def readline(self):
         """use serial.readline"""
         if self.connection is not None:
+            if not self.auto:
+                self.write('++read eoi')
             answer = self.connection.readline()
+<<<<<<< HEAD
 #             print "Prologix out : ", answer
             return answer
+=======
+            logging.debug("Prologix out (readline): %s " % answer)
+            return answer.decode()
+>>>>>>> 31f352902ed67ea76a5dc89fc5148452043d84c3
         else:
             return ""
 
     def timeout(self, new_timeout=None):
         """
         query the timeout setting of the serial port if no argument provided
-        change the 
+        change the timeout setting to new_timout if the latter is not None
         """
         if self.connection is not None:
             if new_timeout is None:
@@ -456,7 +534,7 @@ class PrologixController(object):
                 return old_timeout
 
     def get_open_gpib_ports(self, num_ports=30):
-        """Finds out which GPIB ports are available through prologix controller"""
+        """Finds out which GPIB ports are available for prologix controller"""
         open_ports = []
 
         if not self.debug:
@@ -480,7 +558,10 @@ class PrologixController(object):
 
             # resets the timeout to its original value
             self.timeout(old_timeout)
+<<<<<<< HEAD
     #        print "Time out is", self.timeout()
+=======
+>>>>>>> 31f352902ed67ea76a5dc89fc5148452043d84c3
 
         return open_ports
 
@@ -500,11 +581,11 @@ def command_line_test(instrument_class):
     msg += " and responds to commands."
     print(msg)
 
-    stri = raw_input("Please enter port to connect to: ")
+    stri = input("Please enter port to connect to: ")
     inst = instrument_class(stri)
 
     while True:
-        stri = raw_input("Enter command or type x to quit: ")
+        stri = input("Enter command or type x to quit: ")
         if stri.lower() == 'x':
             break
         try:

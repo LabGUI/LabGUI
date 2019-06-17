@@ -48,14 +48,14 @@ else:
 try:
 
     from .utils import INTF_VISA, INTF_SERIAL, INTF_PROLOGIX, INTF_NONE, \
-        INTF_GPIB, PROLOGIX_COM_PORT, refresh_device_port_list,\
+        INTF_GPIB, PROLOGIX_COM_PORT, PROLOGIX_AUTO, refresh_device_port_list,\
         is_IP_port, PrologixController, LABDRIVER_PACKAGE_NAME,\
         list_serial_ports, list_GPIB_ports
 
 except:
 
     from utils import INTF_VISA, INTF_SERIAL, INTF_PROLOGIX, INTF_NONE, \
-        INTF_GPIB, PROLOGIX_COM_PORT, refresh_device_port_list,\
+        INTF_GPIB, PROLOGIX_COM_PORT, PROLOGIX_AUTO, refresh_device_port_list,\
         is_IP_port, PrologixController, LABDRIVER_PACKAGE_NAME,\
         list_serial_ports, list_GPIB_ports
 
@@ -111,7 +111,7 @@ class MeasInstr(object):
         self.connection = None
         # debug mode trigger
         self.DEBUG = debug
-        # contains the different channels availiable
+        # contains the different channels available
         self.channels = []
         # store the instrument last measure in the different channels
         self.last_measure = {}
@@ -140,6 +140,12 @@ class MeasInstr(object):
         if self.interface == INTF_PROLOGIX:
             # there is only one COM port that the prologix has, then we go
             # through that for all GPIB communications
+            prologix_kwargs = {}
+            if PROLOGIX_AUTO in kwargs:
+                # if one instrument cannot read after write, it will cause IO errors
+                # cf. section 8.2 of the Prologix GPIB to USB manual
+                # http://prologix.biz/downloads/PrologixGpibUsbManual-6.0.pdf
+                prologix_kwargs['auto'] = kwargs[PROLOGIX_AUTO]
 
             if INTF_PROLOGIX in kwargs:
 
@@ -149,21 +155,31 @@ class MeasInstr(object):
                     # of prologix controller
                     if "COM" in kwargs[INTF_PROLOGIX]:
                         self.connection = PrologixController(
-                            kwargs[INTF_PROLOGIX])
+                            com_port=kwargs[INTF_PROLOGIX],
+                            **prologix_kwargs
+                        )
 
                 else:
                     # it was the PrologixController instance
                     self.connection = kwargs[INTF_PROLOGIX]
 
                     if "Prologix GPIB-USB Controller" in self.connection.controller_id():
-                        pass
+                        if 'auto' in prologix_kwargs:
+                            # if one instrument cannot read after write, it will cause IO errors
+                            # cf. section 8.2 of the Prologix GPIB to USB manual
+                            # http://prologix.biz/downloads/PrologixGpibUsbManual-6.0.pdf
+                            self.connection.auto = prologix_kwargs['auto']
                     else:
                         logging.error(
                             "The controller passed as an argument is not the good one")
 
             else:
                 # the connection doesn't exist so we create it
-                self.connection = PrologixController()
+                    self.connection = PrologixController(**prologix_kwargs)
+        else:
+            #Remove this
+            if PROLOGIX_AUTO in kwargs:
+                kwargs.pop(PROLOGIX_AUTO)
 
         # load the parameters and their unit for an instrument from the values
         # contained in the global variable of the latter's module
