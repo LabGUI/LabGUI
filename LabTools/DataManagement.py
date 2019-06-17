@@ -153,7 +153,9 @@ user variable")
     def run(self):
 
         rel_path = os.path.basename(os.path.abspath(os.path.curdir))
+        print(rel_path)
         rel_path = self.script_file_name.split(rel_path)[1]
+
 
         print("\nDTT begin run: '.%s'\n" % (rel_path))
         self.stopped = False
@@ -216,7 +218,7 @@ user variable")
         self.stop()
 
     def set_script(self, script_fname):
-        self.script_file_name = script_fname
+        self.script_file_name = os.path.abspath(script_fname) # FIX TO ALLOW RELATIVE PATHS
 
     def stop(self):
 

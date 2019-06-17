@@ -13,6 +13,7 @@ scratch/*
 LabDrivers/ArduinoUno.py
 scripts/script.py
 config_*
+!config_generate.py
 htmlcov/
 .tox/
 .idea/
