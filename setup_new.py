@@ -21,6 +21,8 @@ except:
 import subprocess
 
 UPGRADE = False
+if '--upgrade' in sys.argv or 'upgrade' in sys.argv:
+    UPGRADE = True
 
 ### pip install for python 3 ###
 def pip_install(package_name):
