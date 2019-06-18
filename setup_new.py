@@ -20,10 +20,15 @@ except:
 
 import subprocess
 
+UPGRADE = False
+
 ### pip install for python 3 ###
 def pip_install(package_name):
     print("Installing "+package_name)
-    reqs = subprocess.check_call([sys.executable, '-m', 'pip', 'install', package_name])
+    if UPGRADE:
+        reqs = subprocess.check_call([sys.executable, '-m', 'pip', 'install', '--upgrade', package_name])
+    else:
+        reqs = subprocess.check_call([sys.executable, '-m', 'pip', 'install', package_name])
     print(reqs)
 
 #pip_install('scipy')
@@ -74,20 +79,22 @@ virtual_instructions.append("If you wish to use a virtual environment, call the 
 virtual_instructions.append("\t$ pip install virtualenv")
 virtual_instructions.append("\t$ cd "+CURR_DIR)
 virtual_instructions.append("\t$ virtualenv venv"+VER)
-# THE FOLLOWING CHANGE MAKES THIS DYNAMIC REGARDLESS OF OS
-#if WINDOWS:
-#    venv_exec = "venv"+VER+JOIN+"Scripts"+JOIN+"python.exe"
-#    venv_activate = "venv"+VER+JOIN+"Scripts"+JOIN+"activate"
-#else:
-#    venv_exec = "venv"+VER+JOIN+"bin"+JOIN+"python"
-#    venv_activate = "source venv"+VER+JOIN+"bin"+JOIN+"activate"
-venv_bin_dir = os.path.relpath(virtualenv.path_locations("venv"+VER, dry_run=True)[-1])
-if WINDOWS:
-    venv_exec = os.path.join(venv_bin_dir, "python.exe")
-    venv_activate = os.path.join(venv_bin_dir, "activate")
-else:
-    venv_exec = os.path.join(venv_bin_dir, "python")
-    venv_activate = os.path.join(venv_bin_dir, "activate")
+
+try: # THE FOLLOWING CHANGE MAKES THIS DYNAMIC REGARDLESS OF OS
+    venv_bin_dir = os.path.relpath(virtualenv.path_locations("venv"+VER, dry_run=True)[-1])
+    if WINDOWS:
+        venv_exec = os.path.join(venv_bin_dir, "python.exe")
+        venv_activate = os.path.join(venv_bin_dir, "activate")
+    else:
+        venv_exec = os.path.join(venv_bin_dir, "python")
+        venv_activate = os.path.join(venv_bin_dir, "activate")
+except: # INCASE PATH HAS SPACES IN IT
+    if WINDOWS:
+        venv_exec = "venv"+VER+JOIN+"Scripts"+JOIN+"python.exe"
+        venv_activate = "venv"+VER+JOIN+"Scripts"+JOIN+"activate"
+    else:
+        venv_exec = "venv"+VER+JOIN+"bin"+JOIN+"python"
+        venv_activate = "source venv"+VER+JOIN+"bin"+JOIN+"activate"
 # CHANGE COMPLETE
 virtual_instructions.append("Then run this setup file by:")
 virtual_instructions.append("\t$ "+os.path.abspath(os.path.join(CURR_DIR,venv_exec))+" "+os.path.relpath(sys.argv[0]))
@@ -166,6 +173,8 @@ print("Generating launcher")
 LAUNCH_PATH = os.path.join(CURR_DIR, MAIN_FILE)
 if " " in LAUNCH_PATH: # FIX FOR SPACES
     LAUNCH_PATH = "\""+LAUNCH_PATH+"\""
+if " " in PYTHON_EXEC:
+    PYTHON_EXEC = "\""+PYTHON_EXEC+"\""
 if WINDOWS:
     launcher = open("StartLabGui.bat",'w+')
     launcher.write(PYTHON_EXEC + " " + LAUNCH_PATH)
