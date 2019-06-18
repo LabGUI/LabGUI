@@ -23,6 +23,7 @@ else:
 #else:
 #    JOIN = '/'
 DEBUG = False # for debugging purposes
+
 JOIN = os.sep
 
 CURR_DIR = os.path.abspath(os.curdir)
