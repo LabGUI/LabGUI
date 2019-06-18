@@ -126,7 +126,7 @@ else:
             elif cont == 'y':
                 if not VIRTUALENV_MODULE:
                     print("Installing virtualenv")
-                    pip.main(['install','virtualenv'])
+                    pip_install('virtualenv')
                     try:
                         import virtualenv
                     except ImportError:
@@ -136,7 +136,7 @@ else:
                 # the following line was taken almost directly out of virtualenv.py for verbosity #
                 virtualenv.logger = virtualenv.Logger([(log_lvl, sys.stdout)])
                 # create actual virtualenv
-                virtualenv.create_environment(venv_dir)
+                virtualenv.create_environment(venv_dir, clear=VENV_CLEAR)
                 # activate virtualenv
                 exec(open(venv_activate+"_this.py").read())
                 # update sys.executable (needed)

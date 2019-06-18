@@ -17,5 +17,7 @@ config_*
 htmlcov/
 .tox/
 .idea/
-venv37/
+venv*/
+build/
 StartLabGui.bat
+labgui.egg-info
