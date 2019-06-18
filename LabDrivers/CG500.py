@@ -23,8 +23,11 @@ class Instrument(Tool.MeasInstr):
     # const_label=''
 
     def __init__(self, resource_name, debug=False, **kwargs):
+
+        if 'interface' not in kwargs:
+            kwargs['interface'] = INTERFACE
         super(Instrument, self).__init__(resource_name, 'CG500',
-                                         debug=debug, interface=INTERFACE, **kwargs)
+                                         debug=debug, **kwargs)
 
 #------------------------------------------------------------------------------
 
@@ -95,5 +98,5 @@ class Instrument(Tool.MeasInstr):
 
 if (__name__ == '__main__'):
 
-    myInst = Instrument("GPIB0::7", interface='prologix')
+    myInst = Instrument("GPIB0::7")
     print(myInst.identify())
