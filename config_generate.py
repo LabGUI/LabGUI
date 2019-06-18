@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Created on June 17th 2019
 
@@ -21,7 +22,7 @@ else:
 #    JOIN = '\\'
 #else:
 #    JOIN = '/'
-DEBUG = False
+DEBUG = False # for debugging purposes
 JOIN = os.sep
 
 CURR_DIR = os.path.abspath(os.curdir)
@@ -83,10 +84,18 @@ conf_dict = {}
 path = input("Set data-path ["+suffix+"scratch"+JOIN+"]")
 if path == '':
     path = 'scratch'+JOIN
-
+# necessary stuff
 if path.startswith(JOIN):
     if WINDOWS or RELATIVE:
         path.lstrip(JOIN)
+try:
+    os.makedirs(os.path.dirname(path))
+except FileExistsError:
+    pass
+except:
+    print(sys.exc_info())
+
+#if not os.path.exists(os.path.dirname(path)):
 
 if not RELATIVE:
     conf_dict['DATA_PATH'] = os.path.abspath(path)
@@ -99,9 +108,17 @@ path = input("Default script file ["+suffix+"scripts"+JOIN+"script.py]")
 if path == '':
     path = "scripts"+JOIN+"script.py"
 
+# necessary stuff
 if path.startswith(JOIN):
     if WINDOWS or RELATIVE:
         path.lstrip(JOIN)
+try:
+    os.makedirs(os.path.dirname(path))
+except FileExistsError:
+    pass
+except:
+    print(sys.exc_info())
+
 # check if file exists
 if not os.path.isfile(os.path.abspath(path)) and not DEBUG:
     copyfile("script_example.py", path)
@@ -118,9 +135,16 @@ path = input("Default settings file ["+suffix+"settings"+JOIN+"settings.txt]")
 if path == '':
     path = "settings"+JOIN+"settings.txt"
 
+# necessary stuff
 if path.startswith(JOIN):
     if WINDOWS or RELATIVE:
         path.lstrip(JOIN)
+try:
+    os.makedirs(os.path.dirname(path))
+except FileExistsError:
+    pass
+except:
+    print(sys.exc_info())
 # check if file exists
 if not os.path.isfile(os.path.abspath(path)) and not DEBUG:
     settings = open(os.path.abspath(path), "w+")
@@ -139,6 +163,9 @@ path = input("Default drivers folder ["+suffix+"LabDrivers"+JOIN+"]")
 
 if path == '':
     path = 'LabDrivers'+JOIN
+
+if not os.path.exists(path):
+    print("NOTE: this directory currently does not exist. ", path)
 
 if not RELATIVE:
     conf_dict['DRIVERS'] = os.path.abspath(path)

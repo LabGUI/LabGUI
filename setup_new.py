@@ -10,6 +10,7 @@ This is designed to setup LabGUI for first use on a system. It will determine wh
 import sys
 import os
 import pip
+import logging
 
 try:
     import virtualenv
@@ -43,7 +44,14 @@ else:
     WINDOWS = False
     exit(5)
 
-DEBUG = True
+DEBUG = False
+
+if DEBUG:
+    log_lvl = logging.DEBUG
+else:
+    log_lvl = logging.INFO
+
+VENV_CLEAR = True #clears virtual event
 JOIN = os.sep
 
 NEWLINE = '\n'
@@ -66,12 +74,21 @@ virtual_instructions.append("If you wish to use a virtual environment, call the 
 virtual_instructions.append("\t$ pip install virtualenv")
 virtual_instructions.append("\t$ cd "+CURR_DIR)
 virtual_instructions.append("\t$ virtualenv venv"+VER)
+# THE FOLLOWING CHANGE MAKES THIS DYNAMIC REGARDLESS OF OS
+#if WINDOWS:
+#    venv_exec = "venv"+VER+JOIN+"Scripts"+JOIN+"python.exe"
+#    venv_activate = "venv"+VER+JOIN+"Scripts"+JOIN+"activate"
+#else:
+#    venv_exec = "venv"+VER+JOIN+"bin"+JOIN+"python"
+#    venv_activate = "source venv"+VER+JOIN+"bin"+JOIN+"activate"
+venv_bin_dir = os.path.relpath(virtualenv.path_locations("venv"+VER, dry_run=True)[-1])
 if WINDOWS:
-    venv_exec = "venv"+VER+JOIN+"Scripts"+JOIN+"python.exe"
-    venv_activate = "venv"+VER+JOIN+"Scripts"+JOIN+"activate"
+    venv_exec = os.path.join(venv_bin_dir, "python.exe")
+    venv_activate = os.path.join(venv_bin_dir, "activate")
 else:
-    venv_exec = "venv"+VER+JOIN+"bin"+JOIN+"python"
-    venv_activate = "source venv"+VER+JOIN+"bin"+JOIN+"activate"
+    venv_exec = os.path.join(venv_bin_dir, "python")
+    venv_activate = os.path.join(venv_bin_dir, "activate")
+# CHANGE COMPLETE
 virtual_instructions.append("Then run this setup file by:")
 virtual_instructions.append("\t$ "+os.path.abspath(os.path.join(CURR_DIR,venv_exec))+" "+os.path.relpath(sys.argv[0]))
 virtual_instructions.append("- or -")
@@ -101,11 +118,20 @@ else:
                 if not VIRTUALENV_MODULE:
                     print("Installing virtualenv")
                     pip.main(['install','virtualenv'])
-                    import virtualenv
-                venv_dir = os.join.path(CURR_DIR,"venv"+VER)
+                    try:
+                        import virtualenv
+                    except ImportError:
+                        print("Please rerun this script")
+                        exit(0)
+                venv_dir = os.path.join(CURR_DIR,"venv"+VER)
+                # the following line was taken almost directly out of virtualenv.py for verbosity #
+                virtualenv.logger = virtualenv.Logger([(log_lvl, sys.stdout)])
+                # create actual virtualenv
                 virtualenv.create_environment(venv_dir)
+                # activate virtualenv
                 exec(open(venv_activate+"_this.py").read())
-
+                # update sys.executable (needed)
+                sys.executable = os.path.abspath(venv_exec)
                 print(sys.executable)
                 VIRTUAL = True
                 break
