@@ -163,15 +163,18 @@ for i in reqs:
 print(NEWLINE)
 print("Generating launcher")
 
+LAUNCH_PATH = os.path.join(CURR_DIR, MAIN_FILE)
+if " " in LAUNCH_PATH: # FIX FOR SPACES
+    LAUNCH_PATH = "\""+LAUNCH_PATH+"\""
 if WINDOWS:
     launcher = open("StartLabGui.bat",'w+')
-    launcher.write(PYTHON_EXEC + " " + os.path.join(CURR_DIR, MAIN_FILE))
+    launcher.write(PYTHON_EXEC + " " + LAUNCH_PATH)
     launcher.close()
     LAUNCHER_FILE = 'StartLabGui.bat'
 else:
     launcher = open("StartLabGui.sh", 'w+')
     launcher.write("#/bin/sh")
-    launcher.write(PYTHON_EXEC + " " + os.path.join(CURR_DIR, MAIN_FILE))
+    launcher.write(PYTHON_EXEC + " " + LAUNCH_PATH)
     launcher.close()
     LAUNCHER_FILE = 'StartLabGui.sh'
 
