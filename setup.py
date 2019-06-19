@@ -21,6 +21,18 @@ else:
     START_FILE = 'StartLabGui.sh'
     END_FILE = os.path.join('bin','LabGui.sh')
 
+if 'install' not in sys.argv:
+    try:
+        os.mkdir('bin')
+    except: # already exists
+        pass
+
+    try:
+        with open(END_FILE, 'w+') as f:
+            f.close()
+    except:
+        print(sys.exc_info())
+
 
 def make_script():
     # MAKE LAUNCH SCRIPT
