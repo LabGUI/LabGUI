@@ -30,7 +30,6 @@ def make_script():
         pass
     copyfile(START_FILE, END_FILE)
 
-
 with open('README.rst') as readme_file:
     readme = readme_file.read()
 
@@ -65,7 +64,7 @@ setup(
     author="zackorenberg",
     author_email='zachary.berkson-korenberg@mail.mcgill.ca',
     classifiers=[
-        'Development Status :: 3 - Beta',
+        'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
         'Natural Language :: English',
@@ -93,7 +92,7 @@ setup(
     test_suite='test_suite',
     tests_require=test_requirements,
     url='https://github.com/labgui/labgui',
-    version='3.0.0',
+    version='0.3.1',
     zip_safe=False,
     cmdclass={
         'develop': PostDevelopCommand,
@@ -102,5 +101,7 @@ setup(
 )
 
 
-
-rmtree('bin')
+try:
+    rmtree('bin')
+except: # means no postdevelop/install script has been run
+    pass
