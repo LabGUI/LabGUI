@@ -24,6 +24,13 @@ UPGRADE = False
 if '--upgrade' in sys.argv or 'upgrade' in sys.argv:
     UPGRADE = True
 
+QUIET = False
+if 'quiet' in sys.argv or 'bdist_wheel' in sys.argv:
+    QUIET = True
+    def input(variable):
+        return 'y'
+
+
 ### pip install for python 3 ###
 def pip_install(package_name):
     print("Installing "+package_name)

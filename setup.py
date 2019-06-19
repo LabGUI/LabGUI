@@ -32,6 +32,9 @@ if 'install' not in sys.argv:
             f.close()
     except:
         print(sys.exc_info())
+    QUIET = True
+else:
+    QUIET = False
 
 
 def make_script():
@@ -57,14 +60,20 @@ test_requirements = []
 class PostDevelopCommand(develop):
     """Post-installation for development mode."""
     def run(self):
-        subprocess.check_call([sys.executable, 'setup_new.py'])
+        if QUIET:
+            subprocess.check_call([sys.executable, 'setup_new.py', 'quiet'])
+        else:
+            subprocess.check_call([sys.executable, 'setup_new.py'])
         make_script()
         develop.run(self)
 
 class PostInstallCommand(install):
     """Post-installation for installation mode."""
     def run(self):
-        subprocess.check_call([sys.executable, 'setup_new.py'])
+        if QUIET:
+            subprocess.check_call([sys.executable, 'setup_new.py', 'quiet'])
+        else:
+            subprocess.check_call([sys.executable, 'setup_new.py'])
         make_script()
         install.run(self)
 
