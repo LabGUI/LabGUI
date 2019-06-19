@@ -15,7 +15,7 @@ from shutil import copyfile
 import sys
 
 QUIET = False
-if 'quiet' in sys.argv or 'bdist_wheel' in sys.argv:
+if 'quiet' in sys.argv or True in ['wheel' in i for i in sys.argv] or True in ['dist' in i for i in sys.argv]:
     QUIET = True
     def input(variable):
         return ''
