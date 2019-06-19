@@ -46,7 +46,7 @@ def pip_install(package_name):
 operating_system = sys.platform
 
 CURR_DIR = os.path.abspath(os.curdir)
-print(CURR_DIR)
+#print(CURR_DIR)
 os.chdir(CURR_DIR)
 
 MAIN_FILE = 'LabGui.py'
