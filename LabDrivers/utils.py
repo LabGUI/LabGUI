@@ -590,11 +590,13 @@ class PrologixController(object):
             logging.debug("Prologix in : %s" % cmd)
             self.connection.write(cmd.encode())
 
-    def read(self, num_bit):
+    def read(self, num_bit=0): # ADDED NUM_BIT==0 INVOKES READLINE LIKE IT WOULD WITH PYVISA
         """use serial.read"""
         if self.connection is not None:
+            if num_bit == 0:
+                return self.readline()
             if not self.auto:
-                self.write('++read eoi')
+                self.write('++read eoi'.encode())
             answer = self.connection.read(num_bit)
             logging.debug("Prologix out (read) : %s" % answer)
             return answer.decode()
@@ -605,7 +607,7 @@ class PrologixController(object):
         """use serial.readline"""
         if self.connection is not None:
             if not self.auto:
-                self.write('++read eoi')
+                self.write('++read eoi'.encode())
             answer = self.connection.readline()
             logging.debug("Prologix out (readline): %s " % answer)
             return answer.decode()

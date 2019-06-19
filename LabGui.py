@@ -12,7 +12,7 @@ http://victorlin.me/posts/2012/08/26/good-logging-practice-in-python
 """
 import sys
 import os
-os.chdir(os.path.abspath(os.path.dirname(sys.argv[0]))) # necessary for launching LabGui
+os.chdir(os.path.abspath(os.path.dirname(sys.argv[0]))) # necessary for launching LabGui from another directory
 from LabTools.IO import IOTool
 from LabTools.Display import QtTools, PlotDisplayWindow, mplZoomWidget
 from LabDrivers import Tool
@@ -34,7 +34,7 @@ import logging.config
 from importlib import import_module
 
 ABS_PATH = os.path.abspath(os.curdir)
-print(ABS_PATH)
+#print(ABS_PATH)
 #logging.config.fileConfig(os.path.join(ABS_PATH, "logging.conf"))
 
 if USE_PYQT5:

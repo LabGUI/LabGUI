@@ -304,7 +304,8 @@ class Instrument(Tool.MeasInstr):
         # custom made
         self.connection.write(msg.encode() + self.term_chars)
     def read(self):
-        return self.connection.read(READ_BITS).decode()
+        return self.connection.readline().decode() # FIXES SPEED
+        #return self.connection.read(READ_BITS).decode()
 
     def ask_channel(self, channel, msg):
         #channel = int(channel) can be letter!

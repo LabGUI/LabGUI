@@ -107,9 +107,8 @@ virtual_instructions.append("\t$ python "+os.path.relpath(sys.argv[0]))
 if venv_exec in PYTHON_EXEC:
     print("Using virtual environment venv"+VER)
 else:
-
     if os.path.isfile(venv_exec):
-        print("Setting environment to virtual environment")
+        print("Activating virtual environment")
         exec(open(venv_activate + "_this.py").read())
         sys.executable = os.path.abspath(venv_exec)
         VIRTUAL = True
