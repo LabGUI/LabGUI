@@ -2,7 +2,9 @@
 """
 Created on Fri Jun 21 17:19:35 2013
 
-@author: pfduc
+@author: pfduc, zackorenberg
+
+Significant changes have occured after March 22, 2019
 """
 import sys
 import io

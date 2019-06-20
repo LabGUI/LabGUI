@@ -2,7 +2,10 @@
 """
 Created on Tue Jan 05 11:53:50 2016
 
-@author: schmidtb
+Modified on Jun 20 2019
+
+@author: schmidtb, zackorenberg
+
 
 This module contains useful fonctions and classes related to instrument connectic and drivers management
 The interfaces we use are defined with the prefix INTF 
