@@ -35,7 +35,10 @@ from importlib import import_module
 
 ABS_PATH = os.path.abspath(os.curdir)
 #print(ABS_PATH)
-#logging.config.fileConfig(os.path.join(ABS_PATH, "logging.conf"))
+try:
+    logging.config.fileConfig(os.path.join(ABS_PATH, "logging.conf"))
+except:
+    logging.basicConfig()
 
 if USE_PYQT5:
 
@@ -1331,7 +1334,20 @@ have the right format, '%s' will be used instead" % (self.config_file,
         intf = str(self.sender().text())
         # changes the GPIB interface in the instrument hub so the next time
         # one connects instrument it will be through this interface
+        try:
+            if not isinstance(self.output_file, str): # else, output_file.close() will be run
+                self.stop_DTT() # must stop and DC everything first
+        except:
+            print(sys.exc_info(), self.output_file)
+
         self.instr_hub.change_interface(intf)
+
+        self.setWindowTitle("LabGui (python%s)" % PYTHON_VERSION
+                            + " (GPIB_INTF: %s)" % Tool.INTF_GPIB
+                            + " (Configuration file :%s)" % self.config_file
+                            )
+
+        print("Please note: You cannot use both interfaces at the same time.")
         # change this setting into the configuration file as well
         IOTool.set_config_setting(IOTool.GPIB_INTF_ID, intf)
 

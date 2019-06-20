@@ -297,7 +297,7 @@ class MeasInstr(object):
             if self.interface == INTF_PROLOGIX:
                 # make sure the address is the right one (might be faster to
                 # check for that, might be not)
-                self.connection.write("++addr %s" % self.resource_name)
+                self.connection.write("++addr %s" % self.resource_number)
 
             if not self.connection is None:
                 #if self.interface == INTF_SERIAL:
@@ -416,10 +416,17 @@ with the instrument %s" % self.ID_name)
                 self.resource_name = resource_name
 
             elif self.interface == INTF_PROLOGIX:
-                # only keeps the number of the port
-                self.resource_name = resource_name.replace('GPIB0::', '')
-
-                self.connection.write(("++addr %s" % self.resource_name))
+                ### NOTE: consider implementing in connection
+                # only keeps the number of the port for resource_number
+                # for legacy reasons, resource_name accepts either just a number, or GPIB0::number::INSTR
+                if not resource_name.startswith('GPIB0::'):
+                    resource_name = 'GPIB0::'+resource_name
+                if not resource_name.endswith('::INSTR'):
+                    resource_name = resource_name+'::INSTR'
+                self.resource_name = resource_name
+                self.resource_number = resource_name.replace('GPIB0::', '').replace('::INSTR','')
+                logging.debug('Resource name is %s and resource number is %s'%(self.resource_name, self.resource_number))
+                self.connection.write(("++addr %s" % self.resource_number))
                 self.connection.readline()
                 # the \n termchar is embedded in the PrologixController class
                 self.term_chars = ""
@@ -466,10 +473,11 @@ file to see which are the ones implemented" % (self.ID_name, resource_name))
 
             try:
 
-                if self.interface == INTF_VISA:
+                if self.interface == INTF_VISA or self.interface == INTF_PROLOGIX:
 
                     self.connection.clear()
                     print("cleared " + self.ID_name)
+
 
             except:
 
@@ -496,6 +504,24 @@ file to see which are the ones implemented" % (self.ID_name, resource_name))
             print("existing channels :", self.channels)
             return np.nan
 
+    def change_interface(self, intf, **kwargs): # only really applicable to prologix/pyvisa
+        if intf == INTF_VISA and self.interface != INTF_VISA:
+            self.interface = INTF_VISA
+            self.resource_manager = visa.ResourceManager()
+            self.connect(self.resource_name)
+            self.connection.timeout = 1
+
+        elif intf == INTF_PROLOGIX and self.interface != INTF_PROLOGIX:
+            if INTF_PROLOGIX in kwargs:
+                if not isinstance(kwargs[INTF_PROLOGIX], str):
+                    self.interface = INTF_PROLOGIX
+                    self.connection = kwargs[INTF_PROLOGIX]
+                    self.connect(self.resource_name)
+                else:
+                    logging.debug('No instance of prologix controller given, did not change anything')
+
+        else:
+            logging.debug("Change interface called with %s, current interface is %s"%(intf, self.interface))
 
 def create_virtual_inst(parent_class):
     """
@@ -737,16 +763,44 @@ argument is not the good one")
         logging.info("InstrumentHub deleted")
 
     def change_interface(self, intf):
+        global INTF_GPIB
         """Change the way one connects to GPIB interface"""
-
         if intf == INTF_PROLOGIX:
             # the connection doesn't exist so we create it
-            self.prologix_com_port = PrologixController()
-
+            try:
+                if not self.prologix_com_port:
+                    self.prologix_com_port = PrologixController()
+            except:
+                print("Error changing to %s"%INTF_PROLOGIX)
+                logging.debug("Error changing to %s"%INTF_PROLOGIX, sys.exc_info())
+            #print(self.port_param_pairs, self.instrument_list)
+            for key, inst in self.instrument_list.items():
+                try:
+                    #print(key, dir(inst))
+                    if 'GPIB' in key:
+                        if inst.interface == INTF_VISA:
+                            #inst.interface = INTF_PROLOGIX does it in inst.change_interface(intf)
+                            inst.change_interface(intf, prologix=self.prologix_com_port)
+                        elif inst.interface != INTF_PROLOGIX:
+                            logging.debug("Interface value %s is invalid"%inst.interface)
+                except:
+                    logging.debug("Error caught in change_interface to prologix:", key, intf, sys.exc_info())
+            INTF_GPIB = intf
+            #self.connect_hub()
         elif intf == INTF_VISA:
 
-            self.prologix_com_port = None
-
+            #self.prologix_com_port = None
+            INTF_GPIB = intf
+            for key, inst in self.instrument_list.items():
+                try:
+                    if 'GPIB' in key:
+                        if inst.interface == INTF_PROLOGIX:
+                            #inst.interface == INTF_VISA does it in inst.change_interface(intf)
+                            inst.change_interface(intf)
+                        elif inst.interface != INTF_VISA:
+                            logging.debug("Interface value %s is invalid" % inst.interface)
+                except:
+                    logging.debug("Error caught in change_interface to prologix:", key, intf, sys.exc_info())
         else:
 
             logging.error("Problem with change of interface in the the \
@@ -835,6 +889,7 @@ which is connected to %s " % (param, instr_name, device_port))
 
         # the port is not used yet
         else:
+            #print(self.instrument_list) for debugging
             logging.debug("The port %s is not in the list already" %
                           (device_port))
 

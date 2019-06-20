@@ -49,6 +49,9 @@ INTF_NONE = 'None'
 PROLOGIX_COM_PORT = "COM5"
 # cf section 8.2 of the manual : http://prologix.biz/downloads/PrologixGpibUsbManual-6.0.pdf
 PROLOGIX_AUTO = 'prologix_auto_opt'
+PROLOGIX_BAUD = 115200 # apparently, this is meaningless
+
+PROLOGIX_SEARCH_PORTS = True
 
 LABDRIVER_PACKAGE_NAME = "LabDrivers"
 
@@ -87,6 +90,10 @@ def list_GPIB_ports():
     except:
         available_ports = []
 
+    if PROLOGIX_SEARCH_PORTS:
+        pc = PrologixController()
+        #if pc.connection is not None:
+        available_ports = available_ports + pc.get_open_gpib_ports()
 #    pc = PrologixController(com_port = PROLOGIX_COM_PORT)
 #    available_ports = available_ports + pc.get_open_gpib_ports()
 
@@ -150,7 +157,7 @@ def find_prologix_ports():
     result = []
     for port in serial_ports:
         try:
-            s = serial.Serial(port, 9600, timeout=0.2)
+            s = serial.Serial(port, PROLOGIX_BAUD, timeout=0.2)
             if PYTHON_3:
                 s.write('++mode 1\n++auto 1\n++ver\n'.encode())
             else:
@@ -475,6 +482,16 @@ def test_prologix_controller_creation_with_no_arg_conflict():
 
 
 class PrologixController(object):
+    """
+    This class is an attempt to mimic the visa.Resource class. Specifically, visa.GPIBInstrument class, with documentation here:
+    https://pyvisa.readthedocs.io/en/latest/api/resources.html#pyvisa.resources.GPIBInstrument
+    TODO:   - implement lock
+            - implement event callbacks
+            - implement specific control commands (currently only local)
+
+    Prologix GPIB-To-USB User manual is given here:
+        http://prologix.biz/gpib-usb-3.x-manual.html
+    """
     connection = None
 
     def __init__(
@@ -482,7 +499,7 @@ class PrologixController(object):
             com_port=None,
             debug=False,
             auto=1,
-            baud_rate=9600,
+            baud_rate=PROLOGIX_BAUD,
             timeout=5,
             **kwargs
     ):
@@ -572,14 +589,30 @@ class PrologixController(object):
                 logging.error('The connection to the Prologix connector failed')
 
     def __str__(self):
+        return self.controller_id()
+        #print("you should not arrive at this") # to isolate error
+        #return '0'
+        #if self.connection is not None:
+        #    self.write("++ver")
+        #    return (self.connection.readline()).decode()
+        #else:
+        #    return ''
+
+    def __getattr__(self, name): # catch-all for non-supported functions
+        def method(*args):
+            pstring = "%s is currently not supported under Prologix. "%name
+            if args:
+                pstring += "Called with arguments %s"%str(args)
+            print(pstring)
+        return method
+
+    def controller_id(self):
+        #return self.__str__() changed as having __str__ defined was causing errors
         if self.connection is not None:
             self.write("++ver")
             return (self.connection.readline()).decode()
         else:
             return ''
-
-    def controller_id(self):
-        return self.__str__()
 
     def write(self, cmd):
         """use serial.write"""
@@ -589,6 +622,8 @@ class PrologixController(object):
         if self.connection is not None:
             logging.debug("Prologix in : %s" % cmd)
             self.connection.write(cmd.encode())
+        else:
+            logging.info("There is no prologix connection. Consider restarting LabGUI.")
 
     def read(self, num_bit=0): # ADDED NUM_BIT==0 INVOKES READLINE LIKE IT WOULD WITH PYVISA
         """use serial.read"""
@@ -599,9 +634,12 @@ class PrologixController(object):
                 self.write('++read eoi'.encode())
             answer = self.connection.read(num_bit)
             logging.debug("Prologix out (read) : %s" % answer)
+            if answer == b'':
+                answer = 'nan'.encode()
             return answer.decode()
         else:
-            return ''
+            logging.info("There is no prologix connection. Consider restarting LabGUI.")
+            return '' # to fix conversion issues
 
     def readline(self):
         """use serial.readline"""
@@ -610,9 +648,22 @@ class PrologixController(object):
                 self.write('++read eoi'.encode())
             answer = self.connection.readline()
             logging.debug("Prologix out (readline): %s " % answer)
+            if answer == b'':
+                answer = 'nan'.encode()
             return answer.decode()
         else:
+            logging.info("There is no prologix connection. Consider restarting LabGUI.")
             return ''
+
+    def ask(self, cmd):
+        if self.connection is not None:
+            self.write(cmd)
+            return self.readline()
+        else:
+            return ''
+
+    def query(self, cmd): # ask to be depricated
+        return self.ask(cmd)
 
     def timeout(self, new_timeout=None):
         """
@@ -630,7 +681,8 @@ class PrologixController(object):
     def get_open_gpib_ports(self, num_ports=30):
         """Finds out which GPIB ports are available for prologix controller"""
         open_ports = []
-
+        if self.connection is None:
+            return open_ports
         if not self.debug:
 
             # sets the timeout to quite fast
@@ -648,13 +700,27 @@ class PrologixController(object):
                 # if it is longer than zero it is an instrument
                 # we store the GPIB address
                 if len(s) > 0:
-                    open_ports.append('GPIB0::%s' % i)
+                    open_ports.append('GPIB0::%s::INSTR' % i) # should have INSTR for consistency
 
             # resets the timeout to its original value
             self.timeout(old_timeout)
 
         return open_ports
 
+    def clear(self):
+        self.write("++clr")
+    def close(self):
+        # TODO decide on what to do for this, as I am unsure if there is a close
+        #self.write("++ifc") # interface clear
+        #self.reset()
+        pass
+    def control_ren(self, level):
+        logging.debug("Currently, control_ren only asserts local mode")
+        if level == 0 or True: # TODO: CHANGE `OR TRUE`
+            self.write('++loc')
+
+    def reset(self):
+        self.write("++rst")
 
 def command_line_test(instrument_class):
     """
@@ -687,4 +753,7 @@ def command_line_test(instrument_class):
 
 
 if __name__ == "__main__":
+    #print(find_prologix_ports())
+    #test_prologix_controller_creation_with_no_arg_conflict()
+    command_line_test(PrologixController)
     pass
