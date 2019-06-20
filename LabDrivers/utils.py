@@ -612,7 +612,7 @@ class PrologixController(object):
     def controller_id(self):
         #return self.__str__() changed as having __str__ defined was causing errors
         if self.connection is not None:
-            self.write("++ver")
+            self.write('++ver')
             return (self.connection.readline()).decode()
         else:
             return ''
@@ -712,11 +712,13 @@ class PrologixController(object):
 
     def clear(self):
         self.write("++clr")
+
     def close(self):
         # TODO decide on what to do for this, as I am unsure if there is a close
         #self.write("++ifc") # interface clear
         #self.reset()
         pass
+
     def control_ren(self, level):
         logging.debug("Currently, control_ren only asserts local mode")
         if level == 0 or True: # TODO: CHANGE `OR TRUE`
