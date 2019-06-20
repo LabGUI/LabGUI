@@ -21,3 +21,5 @@ venv*/
 build/
 StartLabGui.bat
 labgui.egg-info
+bin/
+dist*

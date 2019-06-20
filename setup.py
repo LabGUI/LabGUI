@@ -21,6 +21,21 @@ else:
     START_FILE = 'StartLabGui.sh'
     END_FILE = os.path.join('bin','LabGui.sh')
 
+if 'install' not in sys.argv:
+    try:
+        os.mkdir('bin')
+    except: # already exists
+        pass
+
+    try:
+        with open(END_FILE, 'w+') as f:
+            f.close()
+    except:
+        print(sys.exc_info())
+    QUIET = True
+else:
+    QUIET = False
+
 
 def make_script():
     # MAKE LAUNCH SCRIPT
@@ -29,7 +44,6 @@ def make_script():
     except:
         pass
     copyfile(START_FILE, END_FILE)
-
 
 with open('README.rst') as readme_file:
     readme = readme_file.read()
@@ -46,14 +60,20 @@ test_requirements = []
 class PostDevelopCommand(develop):
     """Post-installation for development mode."""
     def run(self):
-        subprocess.check_call([sys.executable, 'setup_new.py'])
+        if QUIET:
+            subprocess.check_call([sys.executable, 'setup_new.py', 'quiet'])
+        else:
+            subprocess.check_call([sys.executable, 'setup_new.py'])
         make_script()
         develop.run(self)
 
 class PostInstallCommand(install):
     """Post-installation for installation mode."""
     def run(self):
-        subprocess.check_call([sys.executable, 'setup_new.py'])
+        if QUIET:
+            subprocess.check_call([sys.executable, 'setup_new.py', 'quiet'])
+        else:
+            subprocess.check_call([sys.executable, 'setup_new.py'])
         make_script()
         install.run(self)
 
@@ -65,7 +85,7 @@ setup(
     author="zackorenberg",
     author_email='zachary.berkson-korenberg@mail.mcgill.ca',
     classifiers=[
-        'Development Status :: 3 - Beta',
+        'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
         'Natural Language :: English',
@@ -93,7 +113,7 @@ setup(
     test_suite='test_suite',
     tests_require=test_requirements,
     url='https://github.com/labgui/labgui',
-    version='3.0.0',
+    version='0.3.1',
     zip_safe=False,
     cmdclass={
         'develop': PostDevelopCommand,
@@ -102,5 +122,7 @@ setup(
 )
 
 
-
-rmtree('bin')
+try:
+    rmtree('bin')
+except: # means no postdevelop/install script has been run
+    pass

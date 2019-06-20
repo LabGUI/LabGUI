@@ -8,10 +8,18 @@ This file generates a configuration file based on config_example.txt. This scrip
 
 It will assume that drivers, widgets, and scripts can be found in LabDrivers, LabTools, and scripts respectively. Unless specified otherwise, it will use the default script is script.py, and will copy script_example.py to scripts folder. It will also assume the default settings file is settings\default-settings.txt unless otherwise specified
 """
+# DO QUIET TO SEE IF IMPORTED IN QUIET MODE FROM setup_new.py #
 
 import os
 from shutil import copyfile
 import sys
+
+QUIET = False
+if 'quiet' in sys.argv or True in ['wheel' in i for i in sys.argv] or True in ['dist' in i for i in sys.argv]:
+    QUIET = True
+    def input(variable):
+        return ''
+
 
 OS = sys.platform
 if OS == 'win32':
@@ -34,13 +42,15 @@ os.chdir(CURR_DIR)
 PYTHON_EXEC = os.fspath(sys.executable)
 
 
-
+RELATIVE = None
 ## welcome info ##
 print("=== LabGUI config.txt generator===")
 if len(sys.argv) > 1:
     if sys.argv[1] == '--relative' or sys.argv[1] == '-r':
         RELATIVE = True
     elif sys.argv[1] == '--absolute' or sys.argv[1] == '-a':
+        RELATIVE = False
+    elif QUIET:
         RELATIVE = False
 else:
     print("Current path: "+CURR_DIR)
@@ -50,6 +60,9 @@ else:
             RELATIVE = True
             break
         elif resp == 'a':
+            RELATIVE = False
+            break
+        elif QUIET:
             RELATIVE = False
             break
         else:
@@ -67,6 +80,9 @@ if os.path.exists(os.path.join(CURR_DIR, "config.txt")) and not DEBUG:
             REWRITE = True
             break
         elif val == 'n':
+            REWRITE = False
+            break
+        elif QUIET:
             REWRITE = False
             break
         else:
@@ -96,10 +112,14 @@ except FileExistsError:
 except:
     print(sys.exc_info())
 
-#if not os.path.exists(os.path.dirname(path)):
+if not os.path.exists(path):
+    try:
+        os.mkdir(path)
+    except:
+        pass
 
 if not RELATIVE:
-    conf_dict['DATA_PATH'] = os.path.abspath(path)
+    conf_dict['DATA_PATH'] = os.path.abspath(path)+JOIN
 else:
     conf_dict['DATA_PATH'] = path
 
@@ -169,7 +189,7 @@ if not os.path.exists(path):
     print("NOTE: this directory currently does not exist. ", path)
 
 if not RELATIVE:
-    conf_dict['DRIVERS'] = os.path.abspath(path)
+    conf_dict['DRIVERS'] = os.path.abspath(path)+JOIN
 else:
     conf_dict['DRIVERS'] = path
 

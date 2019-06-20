@@ -24,6 +24,13 @@ UPGRADE = False
 if '--upgrade' in sys.argv or 'upgrade' in sys.argv:
     UPGRADE = True
 
+QUIET = False
+if 'quiet' in sys.argv or True in ['wheel' in i for i in sys.argv] or True in ['dist' in i for i in sys.argv]:
+    QUIET = True
+    def input(variable):
+        return 'y'
+
+
 ### pip install for python 3 ###
 def pip_install(package_name):
     print("Installing "+package_name)
@@ -39,7 +46,7 @@ def pip_install(package_name):
 operating_system = sys.platform
 
 CURR_DIR = os.path.abspath(os.curdir)
-print(CURR_DIR)
+#print(CURR_DIR)
 os.chdir(CURR_DIR)
 
 MAIN_FILE = 'LabGui.py'
