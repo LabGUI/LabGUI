@@ -290,7 +290,6 @@ def get_driver_list():
     #my_path = inspect.getfile(list_drivers).rstrip('utils.py')
     #another option would be using pathlib.Path(__file__).parent, however I believe this should work
     my_path = os.path.dirname(__file__)
-    print(my_path)
     driver_files = os.listdir(my_path)
     if 'Tool.py' in driver_files:
         driver_files.remove('Tool.py')
@@ -310,9 +309,7 @@ def list_driver_properties():
     """
     interface = [INTF_VISA, INTF_PROLOGIX, INTF_SERIAL]
 
-    #    instruments.append('TIME')
     properties = {}
-    #    params['TIME']=[]
 
     # list all the .py files in the drivers folder
     driver_files = get_driver_list()
@@ -351,9 +348,7 @@ def list_driver_functions():
     """
     interface = [INTF_VISA, INTF_PROLOGIX, INTF_SERIAL]
 
-    #    instruments.append('TIME')
     functions = {}
-    #    params['TIME']=[]
 
     # list all the .py files in the drivers folder
     driver_files = get_driver_list()
@@ -392,9 +387,8 @@ def list_driver_plot_axes():
         """
     interface = [INTF_VISA, INTF_PROLOGIX, INTF_SERIAL]
 
-    #    instruments.append('TIME')
+
     plot = {}
-    #    params['TIME']=[]
 
     # list all the .py files in the drivers folder
     driver_files = get_driver_list()
@@ -442,10 +436,7 @@ def list_drivers(interface=[INTF_VISA, INTF_PROLOGIX, INTF_SERIAL, INTF_NONE]):
     instruments = []
     params = {}
     units = {}
-#    instruments.append('TIME')
     params[''] = []
-    #properties = {} MADE FUNCTION OF ITS OWN
-#    params['TIME']=[]
 
     # list all the .py files in the drivers folder
     driver_files = get_driver_list()

@@ -19,7 +19,7 @@ if sys.platform == 'win32':
     END_FILE = os.path.join('bin','LabGui.bat')
 else:
     START_FILE = 'StartLabGui.sh'
-    END_FILE = os.path.join('bin','LabGui.sh')
+    END_FILE = os.path.join('bin','LabGui') # changed from LabGui.sh to LabGui
 
 if 'install' not in sys.argv:
     try:

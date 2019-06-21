@@ -54,9 +54,16 @@ MAIN_FILE = 'LabGui.py'
 if operating_system == 'win32':
     WINDOWS = True
 else:
-    print("Set up is currently not supported on "+operating_system)
+    print("Set up is currently not supported on %s. Use at your own discretion."%operating_system)
+    while True:
+        cont = input("Continue? [y/n]:")
+        if cont == 'y':
+            break
+        elif cont == 'n':
+            exit(0)
+        else:
+            print("Invalid selection.")
     WINDOWS = False
-    exit(5)
 
 DEBUG = False
 
@@ -115,13 +122,17 @@ if venv_exec in PYTHON_EXEC:
     print("Using virtual environment venv"+VER)
 else:
     if os.path.isfile(venv_exec):
-        print("Activating virtual environment")
-        exec(open(venv_activate + "_this.py").read())
-        sys.executable = os.path.abspath(venv_exec)
-        VIRTUAL = True
+        #print("Activating virtual environment")
+        cont = input("Activate virtual environment located at %s? [y/n]:")
+        if cont == 'n':
+            VIRTUAL = False
+        else:
+            exec(open(venv_activate + "_this.py").read())
+            sys.executable = os.path.abspath(venv_exec)
+            VIRTUAL = True
     else:
         while True:
-            cont = input("Automatically generate virtual environment? [y/n]")
+            cont = input("Automatically generate virtual environment? [y/n]:")
             if cont == 'n':
                 print("Continuing on "+os.path.dirname(PYTHON_EXEC))
                 VIRTUAL = False
@@ -190,7 +201,7 @@ if WINDOWS:
     LAUNCHER_FILE = 'StartLabGui.bat'
 else:
     launcher = open("StartLabGui.sh", 'w+')
-    launcher.write("#/bin/sh")
+    launcher.write("#/bin/sh\n")
     launcher.write(PYTHON_EXEC + " " + LAUNCH_PATH)
     launcher.close()
     LAUNCHER_FILE = 'StartLabGui.sh'

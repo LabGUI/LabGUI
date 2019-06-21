@@ -4,10 +4,9 @@ Created on Jun 7 2019
 
 @author: zackorenberg
 
-A widget designed to read/write properties to machine. Not working YET
+A widget designed to read/write properties to machine.
 """
 
-# -*- coding: utf-8 -*-
 """
 Created for GervaisLabs
 """
