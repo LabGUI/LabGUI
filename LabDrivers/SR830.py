@@ -45,6 +45,7 @@ class Instrument(Tool.MeasInstr):
         Args:
             channel (string): the channel to measure. 
         """
+        #Note, if ordered, param.keys().index(channel) gives read number
         if channel in param:
             if channel == 'X':
                 answer = self.read_input(1)
@@ -199,3 +200,4 @@ if (__name__ == '__main__'):
     from utils import command_line_test
 
     command_line_test(Instrument)
+    print(i.identify())

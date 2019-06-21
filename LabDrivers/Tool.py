@@ -2,13 +2,16 @@
 """
 Created on Fri Jun 21 17:19:35 2013
 
-@author: pfduc
+@author: pfduc, zackorenberg
+
+Significant changes have occured after March 22, 2019
 """
 import sys
 import io
 from collections import OrderedDict
 from importlib import import_module
 
+import inspect
 import numpy as np
 
 import logging
@@ -36,6 +39,7 @@ except ImportError:
 import socket
 
 from LocalVars import USE_PYQT5
+
 
 if USE_PYQT5:
 
@@ -223,6 +227,9 @@ class MeasInstr(object):
 
         return self.identify()
 
+    def getID_name(self):
+        return self.ID_name
+
     def identify(self, msg=''):
         """ Try the IEEE standard identification request """
 
@@ -233,6 +240,8 @@ class MeasInstr(object):
             if id_string is not None:
 
                 return msg + id_string
+            elif "?*IDN?" in id_string:
+                print("Oxford")
 
             else:
 
@@ -290,12 +299,15 @@ class MeasInstr(object):
             if self.interface == INTF_PROLOGIX:
                 # make sure the address is the right one (might be faster to
                 # check for that, might be not)
-                self.connection.write("++addr %s" % self.resource_name)
+                self.connection.write("++addr %s" % self.resource_number)
 
             if not self.connection is None:
-
+                #if self.interface == INTF_SERIAL:
+                #    bytes = msg + self.term_chars
+                #    answer = self.connection.write(bytes.encode())
+                #else:
+                #    answer = self.connection.write(msg + self.term_chars)
                 answer = self.connection.write(msg + self.term_chars)
-
             else:
 
                 logging.debug("There is no physical connection established \
@@ -307,7 +319,7 @@ with the instrument %s" % self.ID_name)
 
         return answer
 
-    def ask(self, msg, num_bytes=None):
+    def ask(self, msg, num_bytes=None): #also known as query
         """ Writes a command to the instrument and reads its reply """
 
         answer = None
@@ -318,8 +330,17 @@ with the instrument %s" % self.ID_name)
 
                 try:
 
-                    answer = self.connection.ask(msg)
+                    answer = self.connection.query(msg) #ask is depricated
 
+                    """ Alternative Method
+                    
+                    self.connection.write(msg)
+                    
+                    answer = self.connection.read()
+                    
+                    Might be necessary for Oxford devices
+                    
+                    """
                 except:
                     print("\n\n### command %s bugged###\n\n" % msg)
                     answer = np.nan
@@ -327,7 +348,8 @@ with the instrument %s" % self.ID_name)
             elif self.interface == INTF_SERIAL or self.interface == INTF_PROLOGIX:
 
                 try:
-
+                    #msg = msg + self.term_chars
+                    #self.write(msg.encode())
                     self.write(msg)
                     answer = self.read(num_bytes)
 
@@ -396,10 +418,17 @@ with the instrument %s" % self.ID_name)
                 self.resource_name = resource_name
 
             elif self.interface == INTF_PROLOGIX:
-                # only keeps the number of the port
-                self.resource_name = resource_name.replace('GPIB0::', '')
-
-                self.connection.write(("++addr %s" % self.resource_name))
+                ### NOTE: consider implementing in connection
+                # only keeps the number of the port for resource_number
+                # for legacy reasons, resource_name accepts either just a number, or GPIB0::number::INSTR
+                if not resource_name.startswith('GPIB0::'):
+                    resource_name = 'GPIB0::'+resource_name
+                if not resource_name.endswith('::INSTR'):
+                    resource_name = resource_name+'::INSTR'
+                self.resource_name = resource_name
+                self.resource_number = resource_name.replace('GPIB0::', '').replace('::INSTR','')
+                logging.debug('Resource name is %s and resource number is %s'%(self.resource_name, self.resource_number))
+                self.connection.write(("++addr %s" % self.resource_number))
                 self.connection.readline()
                 # the \n termchar is embedded in the PrologixController class
                 self.term_chars = ""
@@ -446,10 +475,11 @@ file to see which are the ones implemented" % (self.ID_name, resource_name))
 
             try:
 
-                if self.interface == INTF_VISA:
+                if self.interface == INTF_VISA or self.interface == INTF_PROLOGIX:
 
                     self.connection.clear()
                     print("cleared " + self.ID_name)
+
 
             except:
 
@@ -476,6 +506,24 @@ file to see which are the ones implemented" % (self.ID_name, resource_name))
             print("existing channels :", self.channels)
             return np.nan
 
+    def change_interface(self, intf, **kwargs): # only really applicable to prologix/pyvisa
+        if intf == INTF_VISA and self.interface != INTF_VISA:
+            self.interface = INTF_VISA
+            self.resource_manager = visa.ResourceManager()
+            self.connect(self.resource_name)
+            self.connection.timeout = 1
+
+        elif intf == INTF_PROLOGIX and self.interface != INTF_PROLOGIX:
+            if INTF_PROLOGIX in kwargs:
+                if not isinstance(kwargs[INTF_PROLOGIX], str):
+                    self.interface = INTF_PROLOGIX
+                    self.connection = kwargs[INTF_PROLOGIX]
+                    self.connect(self.resource_name)
+                else:
+                    logging.debug('No instance of prologix controller given, did not change anything')
+
+        else:
+            logging.debug("Change interface called with %s, current interface is %s"%(intf, self.interface))
 
 def create_virtual_inst(parent_class):
     """
@@ -717,21 +765,49 @@ argument is not the good one")
         logging.info("InstrumentHub deleted")
 
     def change_interface(self, intf):
+        global INTF_GPIB
         """Change the way one connects to GPIB interface"""
-
         if intf == INTF_PROLOGIX:
             # the connection doesn't exist so we create it
-            self.prologix_com_port = PrologixController()
-
+            try:
+                if not self.prologix_com_port:
+                    self.prologix_com_port = PrologixController()
+            except:
+                print("Error changing to %s"%INTF_PROLOGIX)
+                logging.debug("Error changing to %s"%INTF_PROLOGIX, sys.exc_info())
+            #print(self.port_param_pairs, self.instrument_list)
+            for key, inst in self.instrument_list.items():
+                try:
+                    #print(key, dir(inst))
+                    if 'GPIB' in key:
+                        if inst.interface == INTF_VISA:
+                            #inst.interface = INTF_PROLOGIX does it in inst.change_interface(intf)
+                            inst.change_interface(intf, prologix=self.prologix_com_port)
+                        elif inst.interface != INTF_PROLOGIX:
+                            logging.debug("Interface value %s is invalid"%inst.interface)
+                except:
+                    logging.debug("Error caught in change_interface to prologix:", key, intf, sys.exc_info())
+            INTF_GPIB = intf
+            #self.connect_hub()
         elif intf == INTF_VISA:
 
-            self.prologix_com_port = None
-
+            #self.prologix_com_port = None
+            INTF_GPIB = intf
+            for key, inst in self.instrument_list.items():
+                try:
+                    if 'GPIB' in key:
+                        if inst.interface == INTF_PROLOGIX:
+                            #inst.interface == INTF_VISA does it in inst.change_interface(intf)
+                            inst.change_interface(intf)
+                        elif inst.interface != INTF_VISA:
+                            logging.debug("Interface value %s is invalid" % inst.interface)
+                except:
+                    logging.debug("Error caught in change_interface to prologix:", key, intf, sys.exc_info())
         else:
 
             logging.error("Problem with change of interface in the the \
 instrument hub. Interface passed as an argument : %s" % intf)
-
+    # debug note may23rd2019 - HP34401A throws error in this function
     def connect_hub(self, instr_list, dev_list, param_list):
         """ 
             triggers the connection of a list of instruments instr_list,
@@ -815,6 +891,7 @@ which is connected to %s " % (param, instr_name, device_port))
 
         # the port is not used yet
         else:
+            #print(self.instrument_list) for debugging
             logging.debug("The port %s is not in the list already" %
                           (device_port))
 
@@ -1054,6 +1131,63 @@ def test_hub_connect_virtual_inst():
     print(ls.use_method("identify", 3, 87))
     print(ls.resource_name)
 
+def generate_function_obj(**kwargs):
+    ret = {}
+    for name, o in kwargs.items():
+        if (callable(o)):
+            sig = inspect.signature(o)
+            params = []
+            for key, obj in sig.parameters.items():
+                #print(obj)
+                dic = {}
+                #print(obj)
+                #key = obj['name']
+                dic['name'] = key
+                typ = obj.annotation
+                dic['default'] = obj.default
+                if dic['default'] == inspect._empty:
+                    dic['required'] = True
+                    del dic['default']
+                else:
+                    if typ == inspect._empty:
+                        typ = type(dic['default'])
+                    dic['required'] = False
+
+                dic['units'] = None
+
+                #print(dic['type'], typ)
+                if typ == int:
+                    typ = 'int'
+                    dic['range'] = [-100, 100]
+                    dic['units'] = 'U'
+                elif typ == float:
+                    typ = 'float'
+                    dic['range'] = [-100.1, 100.1]
+                    dic['units'] = 'U'
+                elif typ == str:
+                    typ = 'selector'
+                    dic['range'] = ['option 1', 'option 2', 'option 3']
+                elif typ == bool:
+                    typ = 'bool'
+                    dic['range'] = True
+                else:
+                    typ = 'text'
+                    dic['range'] = 'Placeholder text'
+                dic['type'] = typ
+
+                ordered = {
+                    'name':dic['name'],
+                    'type':dic['type'],
+                    'range': dic['range'],
+                    'units': dic['units'],
+                    'required': dic['required']
+                }
+                if 'default' in dic.keys():
+                    ordered['default'] = dic['default']
+                params.append(ordered)
+            ret[name] = params
+
+    return ret
 
 if __name__ == "__main__":
 

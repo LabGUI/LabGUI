@@ -28,9 +28,15 @@ else:
     import PyQt4.QtCore as QtCore
     from PyQt4.QtCore import SIGNAL
     from PyQt4.QtGui import QKeySequence, QIcon, QCursor
-
-from QtTools import ZOOM_MODE, PAN_MODE, SELECT_MODE
-from matplotlibwidget import MatplotlibWidget
+try:
+    from QtTools import ZOOM_MODE, PAN_MODE, SELECT_MODE
+except:
+    from . import QtTools
+#ZOOM_MODE, PAN_MODE, SELECT_MODE = QtTools.ZOOM_MODE, QtTools.PAN_MODE, QtTools.SELECT_MODE
+try:
+    from matplotlibwidget import MatplotlibWidget
+except:
+    from .matplotlibwidget import MatplotlibWidget
 
 
 class MatplotlibZoomWidget(MatplotlibWidget):

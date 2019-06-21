@@ -12,12 +12,15 @@ param = {'V_DC': 'V', 'V_AC': 'V', 'I_DC': 'A',
 
 INTERFACE = Tool.INTF_GPIB
 
+REMOTE_LOCK = False
+
 
 class Instrument(Tool.MeasInstr):
 
     def __init__(self, resource_name, debug=False, **kwargs):
         super(Instrument, self).__init__(resource_name, 'HP34401A', debug=debug,
                                          interface=INTERFACE, **kwargs)
+
 
     def identify(self, msg=''):
         if not self.DEBUG:
@@ -30,6 +33,7 @@ class Instrument(Tool.MeasInstr):
         if channel in self.last_measure:
             if not self.DEBUG:
                 if channel == 'V_DC':
+                    #print(self.ask(":SYST:LOC?"))
                     answer = self.read_voltage_DC()
                 elif channel == 'V_AC':
                     answer = self.read_voltage_AC()
@@ -48,6 +52,10 @@ class Instrument(Tool.MeasInstr):
             print("you are trying to measure a non existent channel : " + channel)
             print("existing channels :", self.channels)
             answer = None
+        # to prevent remote lockout
+        if not REMOTE_LOCK:
+            self.connection.control_ren(0) #deassert remote lock
+            self.connection.control_ren(1) #reassert remote lock
         return answer
 
     def read_any(self):
@@ -60,7 +68,7 @@ class Instrument(Tool.MeasInstr):
     def read_voltage_DC(self):
         if not self.DEBUG:
             string_data = self.ask(':MEAS:VOLT:DC?')
-            print(string_data)
+            #print(string_data) # prevents output from writing twice
             return float(string_data)
         else:
             return 123.4
@@ -71,6 +79,7 @@ class Instrument(Tool.MeasInstr):
             return float(string_data)
         else:
             return 123.4
+
 
     def read_current_DC(self):
         if not self.DEBUG:
@@ -94,8 +103,12 @@ class Instrument(Tool.MeasInstr):
             return 123.4
 
     # if run as own program
-    # if (__name__ == '__main__'):
+    if (__name__ == '__main__'):
+        i = Instrument('GPIB0::19')
+        # print(i.identify())
+        print(i.measure('V'))
+        i.close()
 
-     #   lockin = device('dev9')
+    #   lockin = device('dev9')
      #   lockin.set_ref_internal  # no averaging
      #   lockin.close()

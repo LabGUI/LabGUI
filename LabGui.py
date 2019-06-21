@@ -10,6 +10,9 @@ nice logging example
 http://victorlin.me/posts/2012/08/26/good-logging-practice-in-python
 
 """
+import sys
+import os
+os.chdir(os.path.abspath(os.path.dirname(sys.argv[0]))) # necessary for launching LabGui from another directory
 from LabTools.IO import IOTool
 from LabTools.Display import QtTools, PlotDisplayWindow, mplZoomWidget
 from LabDrivers import Tool
@@ -17,9 +20,10 @@ from LabTools import DataManagement
 from LabTools.DataStructure import LabeledData
 from LocalVars import USE_PYQT5
 
-import sys
+# for commandwidget
+from LabTools.CoreWidgets import CommandWidget
+
 import getopt
-import os
 from os.path import exists
 import warnings
 import time
@@ -30,7 +34,11 @@ import logging.config
 from importlib import import_module
 
 ABS_PATH = os.path.abspath(os.curdir)
-logging.config.fileConfig(os.path.join(ABS_PATH, "logging.conf"))
+#print(ABS_PATH)
+try:
+    logging.config.fileConfig(os.path.join(ABS_PATH, "logging.conf"))
+except:
+    logging.basicConfig()
 
 if USE_PYQT5:
 
@@ -288,7 +296,7 @@ have the right format, '%s' will be used instead" % (self.config_file,
             )
             logging.warning(msg)
             # default setting
-            Tool.INTF_GPIB = Tool.INTF_PROLOGIX
+            Tool.INTF_GPIB = Tool.INTF_VISA # DEFAULT SHOULD BE PYVISA, MUCH MORE COMPATIBLE
 
         else:
 
@@ -323,6 +331,10 @@ have the right format, '%s' will be used instead" % (self.config_file,
         # DataTaker is responsible for taking data from instruments in the
         # InstrumentHub object
         self.datataker = DataManagement.DataTaker(self.lock, self.instr_hub)
+
+        self.cmdline = CommandWidget.CommandWidget(parent=self)
+        self.cmddock = None
+        #self.cmdline.instr_hub = self.instr_hub
 
         # handle data emitted by datataker (basically stuff it into a shared,
         # central array)
@@ -411,6 +423,7 @@ have the right format, '%s' will be used instead" % (self.config_file,
 
         # these are widgets which were added by users
         user_widget_path = os.path.join(widget_path, 'UserWidgets')
+
 
         # this is the legitimate list of core widgets
         widgets_list = [o.rstrip('.py') for o in os.listdir(core_widget_path)
@@ -590,6 +603,17 @@ have the right format, '%s' will be used instead" % (self.config_file,
 
         self.optionMenu.addAction(self.toggle_debug_state)
 
+        self.toggle_cmd_state = QtTools.create_action(
+            self,
+            "Open GPIB CommandLine",
+            slot=self.option_command_window_state,
+            shortcut=None,
+            icon=None,
+            tip="Launch or focus GPIB CommandLine"
+        )
+        self.optionMenu.addAction(self.toggle_cmd_state)
+
+
         # Option to change the logging level displayed in the console
         for log_level in ["DEBUG", "INFO", "WARNING", "ERROR"]:
             action = QtTools.create_action(
@@ -676,7 +700,7 @@ have the right format, '%s' will be used instead" % (self.config_file,
         if reply == QtGui.QMessageBox.Yes:
 
             # save the current settings
-            #            self.file_save_settings(self.default_settings_fname)
+            self.file_save_settings(self.default_settings_fname)
 
             self.settings.setValue("windowState", self.saveState())
             self.settings.setValue("geometry", self.saveGeometry())
@@ -1292,12 +1316,38 @@ have the right format, '%s' will be used instead" % (self.config_file,
 
             self.emit(SIGNAL("DEBUG_mode_changed(bool)"), self.DEBUG)
 
+
+    def option_command_window_state(self):
+        """launches or focuses commandline """
+        if self.cmddock:
+            self.cmddock.setFloating(True)
+            self.cmddock.toggleViewAction()
+            self.cmddock.show()
+        else:
+            self.cmdline.show()
+            self.cmdline.update_devices()
+            self.cmdline.raise_()
+
+
     def option_change_interface(self):
         """changes GPIB interface"""
         intf = str(self.sender().text())
         # changes the GPIB interface in the instrument hub so the next time
         # one connects instrument it will be through this interface
+        try:
+            if not isinstance(self.output_file, str): # else, output_file.close() will be run
+                self.stop_DTT() # must stop and DC everything first
+        except:
+            print(sys.exc_info(), self.output_file)
+
         self.instr_hub.change_interface(intf)
+
+        self.setWindowTitle("LabGui (python%s)" % PYTHON_VERSION
+                            + " (GPIB_INTF: %s)" % Tool.INTF_GPIB
+                            + " (Configuration file :%s)" % self.config_file
+                            )
+
+        print("Please note: You cannot use both interfaces at the same time.")
         # change this setting into the configuration file as well
         IOTool.set_config_setting(IOTool.GPIB_INTF_ID, intf)
 

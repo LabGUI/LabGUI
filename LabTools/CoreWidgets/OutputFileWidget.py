@@ -25,6 +25,8 @@ else:
 
 from LabTools.IO import IOTool
 
+#from os import path UNCOMMENT TO HAVE ABS PATH
+
 
 class OutputFileWidget(QtGui.QWidget):
 
@@ -115,8 +117,8 @@ def add_widget_into_main(parent):
     """
 
     ofname = IOTool.get_file_name(config_file_path=parent.config_file)
-
     mywidget = OutputFileWidget(parent=parent, fname=ofname)
+    #mywidget = OutputFileWidget(parent=parent, fname=path.abspath(ofname))
 
     outDockWidget = QtGui.QDockWidget("Output file and header text", parent)
     outDockWidget.setObjectName("OutputFileDockWidget")
@@ -134,7 +136,8 @@ def add_widget_into_main(parent):
 
 
 if __name__ == "__main__":
-
+    #ofname = IOTool.get_file_name(config_file_path="C:\\Users\\admin\\Documents\\LabGUI\\config.txt")
+    #print("ofname", ofname)
     app = QtGui.QApplication(sys.argv)
     ex = OutputFileWidget()
     ex.show()

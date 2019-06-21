@@ -153,7 +153,9 @@ user variable")
     def run(self):
 
         rel_path = os.path.basename(os.path.abspath(os.path.curdir))
+        print(rel_path)
         rel_path = self.script_file_name.split(rel_path)[1]
+
 
         print("\nDTT begin run: '.%s'\n" % (rel_path))
         self.stopped = False
@@ -170,6 +172,7 @@ user variable")
             script = open(userScriptName)
             py_compile.compile(script.name, doraise=True)
             code = compile(script.read(), script.name, 'exec')
+
             exec(code)
             script.close()
 
@@ -215,7 +218,7 @@ user variable")
         self.stop()
 
     def set_script(self, script_fname):
-        self.script_file_name = script_fname
+        self.script_file_name = os.path.abspath(script_fname) # FIX TO ALLOW RELATIVE PATHS
 
     def stop(self):
 
@@ -334,52 +337,3 @@ class DataDisplayer(QObject):
         else:
             print("displayer triggered")
 
-
-class DataWriter(QObject):
-
-    def __init__(self, datataker, debug=False, parent=None):
-        super(DataWriter, self).__init__(parent)
-        self.debug = debug
-
-        if USE_PYQT5:
-
-            datataker.data.connect(self.displayer, Qt.QueuedConnection)
-
-        else:
-
-            self.connect(datataker, SIGNAL("data(PyQt_PyObject)"),
-                         self.writer, Qt.QueuedConnection)
-
-    def writer(self, data):
-
-        #       print self.output_file_name
-        #        self.out_file = open(self.output_file_name, 'a')
-        #        self.log_file = open(self.output_file_name.rstrip('.dat') + ".log", 'a')
-        #         self.log_file.write("%s %s %s\n\n"%(instr_type.center(w), dev.center(w), param.center(w)))
-        #        self.log_file.write('Starting time: ' + str(self.t_start) + ' = ' + time.ctime() +'\n\n')
-        #
-        #        # print list of names to the terminal and to the file as headers
-        #        stri = str(type_list).strip('[]')
-        # print stri
-        #        #print self.out_file.name
-        #        self.out_file.write(stri + '\n')
-        #
-        #
-        #        w = 15
-        #        self.log_file.write("Instrument Configuration:\n\n")
-        #        self.log_file.write("%s %s %s %s\n\n"%("Name".center(w),
-        #                                               "Type".center(w), "Device".center(w), "Param".center(w)))
-
-        #                self.out_file.close()
-        #        self.log_file.close()
-
-        if not self.debug:
-
-            stri = str(data).strip('[]\n\r')
-            # numpy arrays include newlines in their strings, get rid of them.
-#            stri = stri.replace(' ', '\t')
-            # print exactly the string which is going to be written in the file
-            print('>>>>' + stri)
-
-        else:
-            print("writer triggered")

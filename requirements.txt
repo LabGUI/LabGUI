@@ -3,3 +3,4 @@ matplotlib
 numpy
 pyserial
 pyqt5
+zhinst

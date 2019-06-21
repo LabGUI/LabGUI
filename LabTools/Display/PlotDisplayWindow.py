@@ -39,14 +39,25 @@ else:
     from PyQt4.QtCore import Qt, QRect, QRectF
     from PyQt4.QtCore import SIGNAL
 
+try:
+    import QtTools
+except:
+    from . import QtTools
 
-import QtTools
 
-
-from mplZoomWidget import MatplotlibZoomWidget
-import ui_plotdisplaywindow
-
-from PlotPreferences import marker_set, line_set, color_blind_friendly_colors
+try:
+    from mplZoomWidget import MatplotlibZoomWidget
+except:
+    from . import mplZoomWidget
+    MatplotlibZoomWidget = mplZoomWidget.MatplotlibWidget
+try:
+    import ui_plotdisplaywindow
+except:
+    from . import ui_plotdisplaywindow
+try:
+    from PlotPreferences import marker_set, line_set, color_blind_friendly_colors
+except:
+    from .PlotPreferences import marker_set, line_set, color_blind_friendly_colors
 
 
 # this label is used to know when the axis should be a formated time

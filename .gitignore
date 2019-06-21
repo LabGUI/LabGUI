@@ -13,6 +13,13 @@ scratch/*
 LabDrivers/ArduinoUno.py
 scripts/script.py
 config_*
+!config_generate.py
 htmlcov/
 .tox/
 .idea/
+venv*/
+build/
+StartLabGui.bat
+labgui.egg-info
+bin/
+dist*

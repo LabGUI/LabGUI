@@ -2,7 +2,10 @@
 """
 Created on Tue Jan 05 11:53:50 2016
 
-@author: schmidtb
+Modified on Jun 20 2019
+
+@author: schmidtb, pfduc, zackorenberg
+
 
 This module contains useful fonctions and classes related to instrument connectic and drivers management
 The interfaces we use are defined with the prefix INTF 
@@ -49,6 +52,9 @@ INTF_NONE = 'None'
 PROLOGIX_COM_PORT = "COM5"
 # cf section 8.2 of the manual : http://prologix.biz/downloads/PrologixGpibUsbManual-6.0.pdf
 PROLOGIX_AUTO = 'prologix_auto_opt'
+PROLOGIX_BAUD = 115200 # apparently, this is meaningless
+
+PROLOGIX_SEARCH_PORTS = True
 
 LABDRIVER_PACKAGE_NAME = "LabDrivers"
 
@@ -87,6 +93,10 @@ def list_GPIB_ports():
     except:
         available_ports = []
 
+    if PROLOGIX_SEARCH_PORTS:
+        pc = PrologixController()
+        #if pc.connection is not None:
+        available_ports = available_ports + pc.get_open_gpib_ports()
 #    pc = PrologixController(com_port = PROLOGIX_COM_PORT)
 #    available_ports = available_ports + pc.get_open_gpib_ports()
 
@@ -113,10 +123,11 @@ def list_serial_ports(max_port_num=20):
         raise EnvironmentError('Unsupported platform')
 
     result = []
+    print(ports)
     for port in ports:
         try:
             s = serial.Serial(port, 9600, timeout=0.1)
-
+            print(port)
             result.append(str(port))
             s.close()
 
@@ -149,7 +160,7 @@ def find_prologix_ports():
     result = []
     for port in serial_ports:
         try:
-            s = serial.Serial(port, 9600, timeout=0.2)
+            s = serial.Serial(port, PROLOGIX_BAUD, timeout=0.2)
             if PYTHON_3:
                 s.write('++mode 1\n++auto 1\n++ver\n'.encode())
             else:
@@ -254,6 +265,162 @@ COM" % device_port)
     else:
         return True
 
+def get_driver_list():
+    """
+        Returns a list of all files in driver folder, minus utils.py, Tool.py and __init__.py
+
+        Designed to replace:
+
+            my_path = inspect.getfile(list_drivers).rstrip('utils.py')
+            driver_files = os.listdir(my_path)
+
+        with
+
+            driver_files = get_driver_list()
+
+        in
+
+            list_properties
+            list_functions
+            list_plot_axes
+            list_drivers
+
+    """
+    # Perhaps the implemented method is better?
+    #my_path = inspect.getfile(list_drivers).rstrip('utils.py')
+    #another option would be using pathlib.Path(__file__).parent, however I believe this should work
+    my_path = os.path.dirname(__file__)
+    driver_files = os.listdir(my_path)
+    if 'Tool.py' in driver_files:
+        driver_files.remove('Tool.py')
+    if '__init__.py' in driver_files:
+        driver_files.remove('__init__.py')
+    if 'utils.py' in driver_files:
+        driver_files.remove('utils.py')
+
+    return driver_files
+
+def list_driver_properties():
+    """
+        This returns a dictionary of all drivers that have properties dictionary in form:
+        return {
+            'NAME': object
+        }
+    """
+    interface = [INTF_VISA, INTF_PROLOGIX, INTF_SERIAL]
+
+    properties = {}
+
+    # list all the .py files in the drivers folder
+    driver_files = get_driver_list()
+
+    for file_name in driver_files:
+
+        if file_name.endswith('.py') \
+                and (
+                not file_name == 'Tool.py' and not file_name == '__init__.py' and not file_name == 'utils.py'):  # yikes
+            name = file_name.split('.py')[0]
+
+            # import the module of the instrument in the package drivers
+            driver = import_module('.' + name, package=LABDRIVER_PACKAGE_NAME)
+
+            try:
+                driver_interface = driver.INTERFACE
+
+            except AttributeError:
+                logging.error(
+                    "The following module is probably not an instrument driver, "
+                    "please remove it from the package %s" % LABDRIVER_PACKAGE_NAME
+                )
+                driver_interface = ''
+
+            if hasattr(driver, 'properties'):
+                properties[name] = driver.properties
+
+    return properties
+
+def list_driver_functions():
+    """
+        This returns a dictionary of all drivers that have function dictionary in form:
+        return {
+            'NAME': object
+        }
+    """
+    interface = [INTF_VISA, INTF_PROLOGIX, INTF_SERIAL]
+
+    functions = {}
+
+    # list all the .py files in the drivers folder
+    driver_files = get_driver_list()
+
+    for file_name in driver_files:
+
+        if file_name.endswith('.py') \
+                and (
+                not file_name == 'Tool.py' and not file_name == '__init__.py' and not file_name == 'utils.py'):  # yikes
+            name = file_name.split('.py')[0]
+
+            # import the module of the instrument in the package drivers
+            driver = import_module('.' + name, package=LABDRIVER_PACKAGE_NAME)
+
+            try:
+                driver_interface = driver.INTERFACE
+
+            except AttributeError:
+                logging.error(
+                    "The following module is probably not an instrument driver, "
+                    "please remove it from the package %s" % LABDRIVER_PACKAGE_NAME
+                )
+                driver_interface = ''
+
+            if hasattr(driver, 'functions'):
+                functions[name] = driver.functions
+
+    return functions
+
+def list_driver_plot_axes():
+    """
+            This returns a dictionary of all axes labels for drivers that have function dictionary in form:
+            return {
+                'NAME': [axes list] -or- None
+            }
+        """
+    interface = [INTF_VISA, INTF_PROLOGIX, INTF_SERIAL]
+
+
+    plot = {}
+
+    # list all the .py files in the drivers folder
+    driver_files = get_driver_list()
+
+    for file_name in driver_files:
+
+        if file_name.endswith('.py') \
+                and (
+                not file_name == 'Tool.py' and not file_name == '__init__.py' and not file_name == 'utils.py'):  # yikes
+            name = file_name.split('.py')[0]
+
+            # import the module of the instrument in the package drivers
+            driver = import_module('.' + name, package=LABDRIVER_PACKAGE_NAME)
+
+            try:
+                driver_interface = driver.INTERFACE
+
+            except AttributeError:
+                logging.error(
+                    "The following module is probably not an instrument driver, "
+                    "please remove it from the package %s" % LABDRIVER_PACKAGE_NAME
+                )
+                driver_interface = ''
+
+            if hasattr(driver, 'functions'):
+                if hasattr(driver, 'plot'):
+                    plot[name] = driver.plot
+                else:
+                    plot[name] = None
+
+    return plot
+
 
 def list_drivers(interface=[INTF_VISA, INTF_PROLOGIX, INTF_SERIAL, INTF_NONE]):
     """
@@ -269,18 +436,15 @@ def list_drivers(interface=[INTF_VISA, INTF_PROLOGIX, INTF_SERIAL, INTF_NONE]):
     instruments = []
     params = {}
     units = {}
-#    instruments.append('TIME')
     params[''] = []
-#    params['TIME']=[]
 
     # list all the .py files in the drivers folder
-    my_path = inspect.getfile(list_drivers).rstrip('utils.py')
-    driver_files = os.listdir(my_path)
+    driver_files = get_driver_list()
 
     for file_name in driver_files:
 
         if file_name.endswith('.py') \
-                and (not file_name == 'Tool.py' and not file_name == '__init__.py' and not file_name == 'utils.py'):
+                and (not file_name == 'Tool.py' and not file_name == '__init__.py' and not file_name == 'utils.py'): #yikes
             name = file_name.split('.py')[0]
 
             # import the module of the instrument in the package drivers
@@ -302,6 +466,7 @@ def list_drivers(interface=[INTF_VISA, INTF_PROLOGIX, INTF_SERIAL, INTF_NONE]):
 
                 # create an array for the parameters
                 params[name] = []
+                #properties[name] = {}
 
                 # load the parameters and their units from the module
                 try:
@@ -312,6 +477,10 @@ def list_drivers(interface=[INTF_VISA, INTF_PROLOGIX, INTF_SERIAL, INTF_NONE]):
                 except:
                     logging.error(('Invalid driver file: ' +
                                    file_name + ' (no param variable found)'))
+
+                # add properties if it exists
+                #if hasattr(driver, 'properties'):
+                #    properties[name] = driver.properties
 
     return [instruments, params, units]
 
@@ -339,6 +508,16 @@ def test_prologix_controller_creation_with_no_arg_conflict():
 
 
 class PrologixController(object):
+    """
+    This class is an attempt to mimic the visa.Resource class. Specifically, visa.GPIBInstrument class, with documentation here:
+    https://pyvisa.readthedocs.io/en/latest/api/resources.html#pyvisa.resources.GPIBInstrument
+    TODO:   - implement lock
+            - implement event callbacks
+            - implement specific control commands (currently only local)
+
+    Prologix GPIB-To-USB User manual is given here:
+        http://prologix.biz/gpib-usb-3.x-manual.html
+    """
     connection = None
 
     def __init__(
@@ -346,7 +525,7 @@ class PrologixController(object):
             com_port=None,
             debug=False,
             auto=1,
-            baud_rate=9600,
+            baud_rate=PROLOGIX_BAUD,
             timeout=5,
             **kwargs
     ):
@@ -360,19 +539,9 @@ class PrologixController(object):
 
                 if com_port:
                     if len(com_port) > 1:
-<<<<<<< HEAD
-<<<<<<< HEAD
-                        logging.warning("There is more than one Prologix \
-                         controller, we are connecting to %s" % com_port[0])
-=======
 
                         logging.warning('There is more than one Prologix \
                          controller, we are connecting to %s' % com_port[0])
->>>>>>> 31f352902ed67ea76a5dc89fc5148452043d84c3
-=======
-                        logging.warning('There is more than one Prologix \
-                         controller, we are connecting to %s' % com_port[0])
->>>>>>> parent of 5685a9a... Necessary commit to change branches
 
                     com_port = com_port[0]
                     logging.info(
@@ -380,11 +549,18 @@ class PrologixController(object):
                         com_port
                     )
 
-                    self.connection = serial.Serial(
-                        com_port,
-                        baud_rate,
-                        timeout=timeout
-                    )
+                    try:
+                        self.connection = serial.Serial(
+                            com_port,
+                            baud_rate,
+                            timeout=timeout
+                        )
+                    except serial.serialutil.SerialException:
+                        self.connection = None
+
+                        logging.error(
+                            'The port %s is not attributed to any device' % com_port
+                        )
                 else:
                     self.connection = None
                     logging.warning(
@@ -407,15 +583,6 @@ class PrologixController(object):
 
             if self.connection is not None:
                 # set the connector in controller mode and let the user
-<<<<<<< HEAD
-                # ask for read without sending another command.
-                self.write('++mode 1')
-                self.write('++auto 1')
-
-                # check the version
-                self.write('++ver')
-                version_number = self.readline()
-=======
 
                 self.write("++mode 1")
                 # auto == 1 : ask for read without sending another command.
@@ -429,131 +596,100 @@ class PrologixController(object):
                 # at this stage if auto == 0, otherwise the connector is going
                 # to prompt the instrument for a reading an generate an error
                 version_number = (self.connection.readline()).decode()
->>>>>>> 31f352902ed67ea76a5dc89fc5148452043d84c3
 
                 if 'Prologix GPIB-USB Controller' not in version_number:
                     self.connection = None
                     logging.error(
-<<<<<<< HEAD
-<<<<<<< HEAD
-                        "The port %s isn't related to a Prologix controller (try to plug and unplug "
-                        "the cable if it is there nevertheless)" % com_port
-=======
                         "The port %s isn't related to a Prologix controller "
                         "(try to plug and unplug the cable if it is there "
                         "nevertheless). Returned version number : %s" % (
                             com_port,
                             version_number
                         )
->>>>>>> 31f352902ed67ea76a5dc89fc5148452043d84c3
-=======
-                        'The port %s isn''t related to a Prologix controller (try to plug and unplug '
-                        'the cable if it is there nevertheless)' % com_port
->>>>>>> parent of 5685a9a... Necessary commit to change branches
                     )
                 logging.info(
-<<<<<<< HEAD
-<<<<<<< HEAD
-                    "%s is connected on the port '%s'" % (version_number[:-2], com_port)
-=======
-                    '%s is connected on the port %s' % (version_number[:-2], com_port)
->>>>>>> parent of 5685a9a... Necessary commit to change branches
-                )
-            else:
-
-                logging.error(
-                    'The connection to the Prologix connector failed'
-                )
-=======
                     "%s is connected on the port '%s'"
                     % (version_number[:-2], com_port)
                 )
             else:
                 logging.error('The connection to the Prologix connector failed')
->>>>>>> 31f352902ed67ea76a5dc89fc5148452043d84c3
 
     def __str__(self):
+        return self.controller_id()
+        #print("you should not arrive at this") # to isolate error
+        #return '0'
+        #if self.connection is not None:
+        #    self.write("++ver")
+        #    return (self.connection.readline()).decode()
+        #else:
+        #    return ''
+
+    def __getattr__(self, name): # catch-all for non-supported functions
+        def method(*args):
+            pstring = "%s is currently not supported under Prologix. "%name
+            if args:
+                pstring += "Called with arguments %s"%str(args)
+            print(pstring)
+        return method
+
+    def controller_id(self):
+        #return self.__str__() changed as having __str__ defined was causing errors
         if self.connection is not None:
-<<<<<<< HEAD
-            self.write("++ver")
-<<<<<<< HEAD
-=======
             self.write('++ver')
->>>>>>> parent of 5685a9a... Necessary commit to change branches
-            return self.readline()
-=======
             return (self.connection.readline()).decode()
->>>>>>> 31f352902ed67ea76a5dc89fc5148452043d84c3
         else:
             return ''
 
-    def controller_id(self):
-        return self.__str__()
-
     def write(self, cmd):
         """use serial.write"""
-<<<<<<< HEAD
-<<<<<<< HEAD
-        if cmd[-1] != "\n":
-            cmd += "\n"
-        if self.connection is not None:
-            #             print "Prologix in : ", cmd
-            self.connection.write(cmd)
-=======
         # add a new line if the command didn't have one already
         if not cmd.endswith('\n'):
             cmd += '\n'
         if self.connection is not None:
             logging.debug("Prologix in : %s" % cmd)
             self.connection.write(cmd.encode())
->>>>>>> 31f352902ed67ea76a5dc89fc5148452043d84c3
-=======
-        if cmd[-1] != '\n':
-            cmd += '\n'
-        if self.connection is not None:
-            #             print 'Prologix in : ', cmd
-            self.connection.write(cmd.encode())
->>>>>>> parent of 5685a9a... Necessary commit to change branches
+        else:
+            logging.info("There is no prologix connection. Consider restarting LabGUI.")
 
-    def read(self, num_bit):
+    def read(self, num_bit=0): # ADDED NUM_BIT==0 INVOKES READLINE LIKE IT WOULD WITH PYVISA
         """use serial.read"""
         if self.connection is not None:
-<<<<<<< HEAD
-<<<<<<< HEAD
-            return self.connection.read(num_bit)
-=======
+            if num_bit == 0:
+                return self.readline()
             if not self.auto:
-                self.write('++read eoi')
+                self.write('++read eoi'.encode())
             answer = self.connection.read(num_bit)
             logging.debug("Prologix out (read) : %s" % answer)
+            if answer == b'':
+                answer = 'nan'.encode()
             return answer.decode()
->>>>>>> 31f352902ed67ea76a5dc89fc5148452043d84c3
-=======
-            return self.connection.read(num_bit).decode()
->>>>>>> parent of 5685a9a... Necessary commit to change branches
         else:
-            return ''
+            logging.info("There is no prologix connection. Consider restarting LabGUI.")
+            return '' # to fix conversion issues
 
     def readline(self):
         """use serial.readline"""
         if self.connection is not None:
             if not self.auto:
-                self.write('++read eoi')
+                self.write('++read eoi'.encode())
             answer = self.connection.readline()
-<<<<<<< HEAD
-<<<<<<< HEAD
-#             print "Prologix out : ", answer
-            return answer
-=======
             logging.debug("Prologix out (readline): %s " % answer)
+            if answer == b'':
+                answer = 'nan'.encode()
             return answer.decode()
->>>>>>> 31f352902ed67ea76a5dc89fc5148452043d84c3
-=======
-#             print 'Prologix out : ', answer
-            return answer.decode()
->>>>>>> parent of 5685a9a... Necessary commit to change branches
+        else:
+            logging.info("There is no prologix connection. Consider restarting LabGUI.")
+            return ''
+
+    def ask(self, cmd):
+        if self.connection is not None:
+            self.write(cmd)
+            return self.readline()
         else:
             return ''
+
+    def query(self, cmd): # ask to be depricated
+        return self.ask(cmd)
 
     def timeout(self, new_timeout=None):
         """
@@ -571,7 +707,8 @@ class PrologixController(object):
     def get_open_gpib_ports(self, num_ports=30):
         """Finds out which GPIB ports are available for prologix controller"""
         open_ports = []
-
+        if self.connection is None:
+            return open_ports
         if not self.debug:
 
             # sets the timeout to quite fast
@@ -589,21 +726,29 @@ class PrologixController(object):
                 # if it is longer than zero it is an instrument
                 # we store the GPIB address
                 if len(s) > 0:
-                    open_ports.append('GPIB0::%s' % i)
+                    open_ports.append('GPIB0::%s::INSTR' % i) # should have INSTR for consistency
 
             # resets the timeout to its original value
             self.timeout(old_timeout)
-<<<<<<< HEAD
-<<<<<<< HEAD
-    #        print "Time out is", self.timeout()
-=======
->>>>>>> 31f352902ed67ea76a5dc89fc5148452043d84c3
-=======
-    #        print 'Time out is', self.timeout()
->>>>>>> parent of 5685a9a... Necessary commit to change branches
 
         return open_ports
 
+    def clear(self):
+        self.write("++clr")
+
+    def close(self):
+        # TODO decide on what to do for this, as I am unsure if there is a close
+        #self.write("++ifc") # interface clear
+        #self.reset()
+        pass
+
+    def control_ren(self, level):
+        logging.debug("Currently, control_ren only asserts local mode")
+        if level == 0 or True: # TODO: CHANGE `OR TRUE`
+            self.write('++loc')
+
+    def reset(self):
+        self.write("++rst")
 
 def command_line_test(instrument_class):
     """
@@ -636,4 +781,8 @@ def command_line_test(instrument_class):
 
 
 if __name__ == "__main__":
+    print(get_driver_list())
+    #print(find_prologix_ports())
+    #test_prologix_controller_creation_with_no_arg_conflict()
+    command_line_test(PrologixController)
     pass
