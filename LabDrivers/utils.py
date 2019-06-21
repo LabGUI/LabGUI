@@ -4,7 +4,7 @@ Created on Tue Jan 05 11:53:50 2016
 
 Modified on Jun 20 2019
 
-@author: schmidtb, zackorenberg
+@author: schmidtb, pfduc, zackorenberg
 
 
 This module contains useful fonctions and classes related to instrument connectic and drivers management
@@ -265,7 +265,43 @@ COM" % device_port)
     else:
         return True
 
-def list_properties():
+def get_driver_list():
+    """
+        Returns a list of all files in driver folder, minus utils.py, Tool.py and __init__.py
+
+        Designed to replace:
+
+            my_path = inspect.getfile(list_drivers).rstrip('utils.py')
+            driver_files = os.listdir(my_path)
+
+        with
+
+            driver_files = get_driver_list()
+
+        in
+
+            list_properties
+            list_functions
+            list_plot_axes
+            list_drivers
+
+    """
+    # Perhaps the implemented method is better?
+    #my_path = inspect.getfile(list_drivers).rstrip('utils.py')
+    #another option would be using pathlib.Path(__file__).parent, however I believe this should work
+    my_path = os.path.dirname(__file__)
+    print(my_path)
+    driver_files = os.listdir(my_path)
+    if 'Tool.py' in driver_files:
+        driver_files.remove('Tool.py')
+    if '__init__.py' in driver_files:
+        driver_files.remove('__init__.py')
+    if 'utils.py' in driver_files:
+        driver_files.remove('utils.py')
+
+    return driver_files
+
+def list_driver_properties():
     """
         This returns a dictionary of all drivers that have properties dictionary in form:
         return {
@@ -279,8 +315,7 @@ def list_properties():
     #    params['TIME']=[]
 
     # list all the .py files in the drivers folder
-    my_path = inspect.getfile(list_drivers).rstrip('utils.py')
-    driver_files = os.listdir(my_path)
+    driver_files = get_driver_list()
 
     for file_name in driver_files:
 
@@ -307,7 +342,7 @@ def list_properties():
 
     return properties
 
-def list_functions():
+def list_driver_functions():
     """
         This returns a dictionary of all drivers that have function dictionary in form:
         return {
@@ -321,8 +356,7 @@ def list_functions():
     #    params['TIME']=[]
 
     # list all the .py files in the drivers folder
-    my_path = inspect.getfile(list_drivers).rstrip('utils.py')
-    driver_files = os.listdir(my_path)
+    driver_files = get_driver_list()
 
     for file_name in driver_files:
 
@@ -349,7 +383,7 @@ def list_functions():
 
     return functions
 
-def list_plot_axes():
+def list_driver_plot_axes():
     """
             This returns a dictionary of all axes labels for drivers that have function dictionary in form:
             return {
@@ -363,8 +397,7 @@ def list_plot_axes():
     #    params['TIME']=[]
 
     # list all the .py files in the drivers folder
-    my_path = inspect.getfile(list_drivers).rstrip('utils.py')
-    driver_files = os.listdir(my_path)
+    driver_files = get_driver_list()
 
     for file_name in driver_files:
 
@@ -415,8 +448,7 @@ def list_drivers(interface=[INTF_VISA, INTF_PROLOGIX, INTF_SERIAL, INTF_NONE]):
 #    params['TIME']=[]
 
     # list all the .py files in the drivers folder
-    my_path = inspect.getfile(list_drivers).rstrip('utils.py')
-    driver_files = os.listdir(my_path)
+    driver_files = get_driver_list()
 
     for file_name in driver_files:
 
@@ -758,6 +790,7 @@ def command_line_test(instrument_class):
 
 
 if __name__ == "__main__":
+    print(get_driver_list())
     #print(find_prologix_ports())
     #test_prologix_controller_creation_with_no_arg_conflict()
     command_line_test(PrologixController)

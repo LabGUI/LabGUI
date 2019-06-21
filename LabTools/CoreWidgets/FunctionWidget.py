@@ -585,8 +585,8 @@ class FunctionWidget(QtGui.QWidget):
             self.DEBUG = True
         else:
             self.DEBUG = debug
-        self.functions = LabDrivers.utils.list_functions()
-        self.plot = LabDrivers.utils.list_plot_axes() # none if none
+        self.functions = LabDrivers.utils.list_driver_functions()
+        self.plot = LabDrivers.utils.list_driver_plot_axes() # none if none
         self.device_layouts = {}
         self.layouts = {}
         self.ports = {}

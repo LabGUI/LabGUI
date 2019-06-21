@@ -6,8 +6,6 @@ Created on May 28 2019
 
 A GPIB commandline widget
 """
-
-# -*- coding: utf-8 -*-
 """
 Created for GervaisLabs
 """
@@ -469,7 +467,7 @@ class CommandWidget(QtGui.QWidget):
             if command is None:
                 self.update_console("Usage: help <command>")
                 self.update_console("=== Commands ===")
-                self.update_console("\tread\n\twrite <cmd>\n\tquery/ask <cmd>\n\tmethods\n\trun <funct> <parameters>\n\tclear\n\tplot <funct> <parameters>\n\tset <variable> <parameters>\n\thistory <number>\n\tlast <index>")
+                self.update_console("\tread\n\twrite <cmd>\n\tquery/ask <cmd>\n\tmethods\n\trun <funct> <parameters>\n\tclear\n\tplot <funct> <parameters>\n\tset <variable> <parameters>\n\techo <parameters>\n\thistory <number>\n\tlast <index>")
             elif command.lower() == "read":
                 text = [
                     "Usage: " + command.lower(),
