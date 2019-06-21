@@ -4,10 +4,9 @@ Created on Jun 7 2019
 
 @author: zackorenberg
 
-A widget designed to read/write properties to machine. Not working YET
+A widget designed to read/write properties to machine.
 """
 
-# -*- coding: utf-8 -*-
 """
 Created for GervaisLabs
 """
@@ -382,7 +381,7 @@ class PropertiesWidget(QtGui.QWidget):
             self.DEBUG = True
         else:
             self.DEBUG = debug
-        self.properties = LabDrivers.utils.list_properties()
+        self.properties = LabDrivers.utils.list_driver_properties()
         self.device_layouts = {}
         self.layouts = {}
 

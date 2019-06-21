@@ -4,10 +4,9 @@ Created on Jun 7 2019
 
 @author: zackorenberg
 
-A widget designed to read/write properties to machine. Not working YET
+A widget designed to read/write properties to machine.
 """
 
-# -*- coding: utf-8 -*-
 """
 Created for GervaisLabs
 """
@@ -585,8 +584,8 @@ class FunctionWidget(QtGui.QWidget):
             self.DEBUG = True
         else:
             self.DEBUG = debug
-        self.functions = LabDrivers.utils.list_functions()
-        self.plot = LabDrivers.utils.list_plot_axes() # none if none
+        self.functions = LabDrivers.utils.list_driver_functions()
+        self.plot = LabDrivers.utils.list_driver_plot_axes() # none if none
         self.device_layouts = {}
         self.layouts = {}
         self.ports = {}
