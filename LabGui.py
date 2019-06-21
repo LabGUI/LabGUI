@@ -10,85 +10,92 @@ nice logging example
 http://victorlin.me/posts/2012/08/26/good-logging-practice-in-python
 
 """
+
 import sys
 import os
-os.chdir(os.path.abspath(os.path.dirname(sys.argv[0]))) # necessary for launching LabGui from another directory
-from LabTools.IO import IOTool
-from LabTools.Display import QtTools, PlotDisplayWindow, mplZoomWidget
-from LabDrivers import Tool
-from LabTools import DataManagement
-from LabTools.DataStructure import LabeledData
-from LocalVars import USE_PYQT5
-
-# for commandwidget
-from LabTools.CoreWidgets import CommandWidget
-
-import getopt
 from os.path import exists
+import getopt
 import warnings
-import time
-import numpy as np
-from collections import OrderedDict
 import logging
 import logging.config
 from importlib import import_module
+import numpy as np
 
-ABS_PATH = os.path.abspath(os.curdir)
-#print(ABS_PATH)
-try:
-    logging.config.fileConfig(os.path.join(ABS_PATH, "logging.conf"))
-except:
-    logging.basicConfig()
+from LabTools.IO import IOTool
+from LabTools.Display import QtTools, PlotDisplayWindow, mplZoomWidget
+from LabTools import DataManagement
+# for commandwidget
+from LabTools.CoreWidgets import CommandWidget
+from LabDrivers import Tool
 
+from LocalVars import USE_PYQT5
 if USE_PYQT5:
 
-    from PyQt5.QtWidgets import (QWidget, QLabel, QLineEdit, QPushButton,
-                                 QFileDialog, QHBoxLayout, QApplication)
+    from PyQt5.QtWidgets import (
+        QFileDialog,
+        QApplication,
+    )
 
     import PyQt5.QtWidgets as QtGui
 
     from PyQt5.QtTest import QTest
 
     from PyQt5.QtGui import QIcon, QKeySequence
+
     # just grab the parts we need from QtCore
     from PyQt5.QtCore import Qt, QReadWriteLock, QSettings, pyqtSignal
 
 else:
 
-    from PyQt4.QtGui import (QWidget, QLabel, QLineEdit, QPushButton, QIcon,
-                             QFileDialog, QHBoxLayout, QApplication)
+    from PyQt4.QtGui import (
+        QIcon,
+        QFileDialog,
+        QApplication,
+        QKeySequence
+    )
 
     import PyQt4.QtGui as QtGui
 
     from PyQt4.QtTest import QTest
 
-    from PyQt4.QtGui import QIcon, QKeySequence
-
     from PyQt4.QtCore import Qt, SIGNAL, QReadWriteLock, QSettings
+
+os.chdir(
+    os.path.abspath(os.path.dirname(sys.argv[0]))
+)  # necessary for launching LabGui from another directory
+
+ABS_PATH = os.path.abspath(os.curdir)
+
+try:
+    logging.config.fileConfig(os.path.join(ABS_PATH, "logging.conf"))
+except:
+    logging.basicConfig()
 
 PYTHON_VERSION = int(sys.version[0])
 COREWIDGETS_PACKAGE_NAME = "LabTools"
 USERWIDGETS_PACKAGE_NAME = "LabTools"
 CONFIG_FILE = IOTool.CONFIG_FILE_PATH
-DDT_CODE_STARTED = 'started'
-DDT_CODE_RESUMED = 'resumed'
-DDT_CODE_ALREADY_RUNNING = 'start_error'
+DDT_CODE_STARTED = "started"
+DDT_CODE_RESUMED = "resumed"
+DDT_CODE_ALREADY_RUNNING = "start_error"
 
 
 class LabGuiMain(QtGui.QMainWindow):
     """
 
-        This project was started in a lab with two sub teams having different experiments but using similar equipment,
-        efforts were made to try capture what was the common core which should be shared and how to make sure we have
-        the more modularity to be able to share the code with others.
-        One thing is sure, we are physicists and not computer scientists, we learned python on the side and we might
-        lack some standards in code writing/commenting, one of the reason we decided to share the code is to have you
-        seeing the bugs and wierd features we don't notice anymore as we know how the code works internally.
+        This project was started in a lab with two sub teams having different experiments but
+        using similar equipment. Efforts were made to try capture what was the common core which
+        should be shared and how to make sure we have the more modularity to be able to share the
+        code with others. One thing is sure, we are physicists and not computer scientists,
+        we learned python on the side and we might lack some standards in code
+        writing/commenting, one of the reason we decided to share the code is to have you seeing
+        the bugs and wierd features we don't notice anymore as we know how the code works
+        internally.
         It would be greatly appreciated if you want to report those bugs or contribute.
 
 
-        This is the main window in which all the widgets and plots are displayed and from which one manage the
-        experiments
+        This is the main window in which all the widgets and plots are displayed and from which one
+        manage the experiments.
 
         It is a class and has certains attributes :
             -zoneCentrale which is a QMdiArea (where all your plot widget are going to be displayed)
@@ -97,73 +104,81 @@ class LabGuiMain(QtGui.QMainWindow):
             the plots do not freeze
             -cmdwin : a class widget which allow you to choose which instrument you want to place
             in your instrument hub
-            -loadplotwidget : a class widget which allow loading of previously recorder data for visualization
-            or fitting
-            -startwidget : a class widger in which you select your script file and where to save, you can also
-            start the experiment from this wigdet
-            -dataAnalysewidget : a class widget used to do the fitting (this one is still in a beta mode and
-            would need to be improved to be more flexible)
-            -limitswidget : a class widget to visualise the values of the current plot axis limits in X and Y 
+            -loadplotwidget : a class widget which allow loading of previously recorder data for
+            visualization or fitting
+            -startwidget : a class widger in which you select your script file and where to save,
+            you can also start the experiment from this wigdet
+            -dataAnalysewidget : a class widget used to do the fitting (this one is still in a
+             beta mode and would need to be improved to be more flexible)
+            -limitswidget : a class widget to visualise the values of the current plot axis
+            limits in X and Y
             -calc widget :
             -logTextEdit :
 
         All these instances are "connected" to the fp instance, so they exchange information
-        with the use of QtCore.SIGNAL (read more about this in http://zetcode.com/gui/pyqt4/eventsandsignals/).
+        with the use of QtCore.SIGNAL (read more about this in
+        http://zetcode.com/gui/pyqt4/eventsandsignals/).
 
-        You should have a file called config.txt with some keywords, the file config_example.txt contains them.
+        You should have a file called config.txt with some keywords, the file config_example.txt
+        contains them.
 
-        This is a list of them with some explanation about their role. These don't need to be there, they will
-        just make your life easier :)
+        This is a list of them with some explanation about their role. These don't need to be
+        there, they will just make your life easier :)
 
-            DEBUG= "if this is set to True, the instruments will not be actually connected to the computer,
-            this is useful to debug the interface when away from your lab"
+            DEBUG= "if this is set to True, the instruments will not be actually connected to the
+            computer, this is useful to debug the interface when away from your lab"
             SCRIPT="the path to the script and script name (.py) which contains the command you want
-            to send and recieve to and from your instruments, basically this is where you set your experiment"
-            SETTINGS="the path of the setting file and setting file name (.*) which contains your most used instrument
-            connections so you don't have to reset them manually"
-            DATAFILE="The path of the older data file and its name to load them into the plotting system"    
+            to send and recieve to and from your instruments, basically this is where you set your
+            experiment"
+            SETTINGS="the path of the setting file and setting file name (.*) which contains your
+            most used instrument connections so you don't have to reset them manually"
+            DATAFILE="The path of the older data file and its name to load them into the plotting
+            system"
             SAMPLE= "this is simply the sample_name which will display automatically in the filename
             chosen to save the data
             DATA_PATH= "this is the path where the data should be saved"
 
-            You can add any keyword you want and get what the value is using the function get_config_setting
-            from the module IOTool
+            You can add any keyword you want and get what the value is using the function
+            get_config_setting from the module IOTool
 
         The datataker instance will take care of executing the script you choosed when you click the
         "play"(green triangle) button or click "start" in the "Run Experiment"(startwidget) panel.
-        The script is anything you want your instruments to do, a few examples are provided in the script
-        folder under the names demo_*.py
+        The script is anything you want your instruments to do, a few examples are provided in the
+        script folder under the names demo_*.py
 
-        If measures are performed and you want to save them in a file and/or plot them, simply use the signal
-        named "data(PyQt_PyObject)" in your script. The instance of LabGuiMain will catch it save it in a file
-        and relay it through the signal "data_array_updated(PyQt_PyObject)"
-        The data will always be saved if you use the signal "data(PyQt_PyObject)", and the filename will change
-        automatically in case you stop the datataker and restart it, this way you will never erase your data.
+        If measures are performed and you want to save them in a file and/or plot them, simply use
+        the signal named "data(PyQt_PyObject)" in your script. The instance of LabGuiMain will
+        catch it save it in a file and relay it through the signal "data_array_updated(
+        PyQt_PyObject)"
+        The data will always be saved if you use the signal "data(PyQt_PyObject)", and the filename
+        will change automatically in case you stop the datataker and restart it, this way you
+        will never erase your data.
 
-        It is therefore quite easy to add your own widget which treats the data and do something else with them,
-        you only need to connect it to the signal "data_array_updated(PyQt_PyObject)"
-        and you will have access to the data.
+        It is therefore quite easy to add your own widget which treats the data and do something
+        else with them, you only need to connect it to the signal "data_array_updated(
+        PyQt_PyObject)" and you will have access to the data.
         The comments about each widgets can be found in their respective modules.
 
         A wiki should be created to help understand and contribute to this project
     """
-#    cmdwin = None
+
+    #    cmdwin = None
     if USE_PYQT5:
         # creating a signal
         debug_mode_changed = pyqtSignal(bool)
 
         triggered = pyqtSignal()
 
-        colorsChanged = pyqtSignal('PyQt_PyObject')
+        colorsChanged = pyqtSignal("PyQt_PyObject")
 
-        labelsChanged = pyqtSignal('PyQt_PyObject')
-#        print(triggered.__dict__)
+        labelsChanged = pyqtSignal("PyQt_PyObject")
+        #        print(triggered.__dict__)
 
-        markersChanged = pyqtSignal('PyQt_PyObject')
+        markersChanged = pyqtSignal("PyQt_PyObject")
 
-        selections_limits = pyqtSignal('PyQt_PyObject', int, int, int, int)
+        selections_limits = pyqtSignal("PyQt_PyObject", int, int, int, int)
 
-        data_array_updated = pyqtSignal('PyQt_PyObject')
+        data_array_updated = pyqtSignal("PyQt_PyObject")
 
         signal_remove_fit = pyqtSignal()
 
@@ -171,7 +186,7 @@ class LabGuiMain(QtGui.QMainWindow):
 
         # should be loaded directly form InstrumentWidget
 
-        instrument_hub_connected = pyqtSignal('PyQt_PyObject')
+        instrument_hub_connected = pyqtSignal("PyQt_PyObject")
 
     def __init__(self, argv=[]):
 
@@ -186,44 +201,50 @@ class LabGuiMain(QtGui.QMainWindow):
         self.DEBUG = True
 
         # variable to store the configfile name
-        self.config_file = ''
+        self.config_file = ""
 
         # variable to store the outputfile name
-        self.output_file = ''
+        self.output_file = ""
 
         # variable to store the display window handle
         self.current_pdw = None
 
         # variable containing the name of the instrument settings file
-        self.instrument_connexion_setting_fname = ''
+        self.instrument_connexion_setting_fname = ""
 
         # parse the argument(s) passed inline
         try:
             # option c is to provide a name for config file
-            opts, args = getopt.getopt(argv, "c:")
+            opts, _ = getopt.getopt(argv, "c:")
 
             # loop through the arguments on the inline command
             for opt, arg in opts:
 
                 # user passed configfile
-                if opt == '-c':
+                if opt == "-c":
 
                     self.config_file = arg
 
         except getopt.GetoptError:
 
-            logging.error('configuration file : option -c argument missing')
+            logging.error("configuration file : option -c argument missing")
 
         # verify if the config file passed by the user is valid and exists
         if self.config_file:
 
             if not exists(self.config_file):
 
-                logging.error("The config file you provided ('%s') doesn't \
-exist, '%s' will be used instead" % (self.config_file, CONFIG_FILE))
+                logging.error(
+                    "The config file you provided ('%s') doesn't \
+exist, '%s' will be used instead"
+                    % (self.config_file, CONFIG_FILE)
+                )
 
-                warnings.warn("The config file you provided ('%s') doesn't \
-exist, '%s' will be used instead" % (self.config_file, CONFIG_FILE))
+                warnings.warn(
+                    "The config file you provided ('%s') doesn't \
+exist, '%s' will be used instead"
+                    % (self.config_file, CONFIG_FILE)
+                )
 
                 self.config_file = CONFIG_FILE
 
@@ -232,10 +253,13 @@ exist, '%s' will be used instead" % (self.config_file, CONFIG_FILE))
             # check whether the default config file exists or not
             if not exists(CONFIG_FILE):
 
-                logging.warning("A '%s' file has been generated for you." % (
-                    CONFIG_FILE))
-                logging.warning("Please modify it to change the default \
-    script, settings and data locations, or to enter debug mode.")
+                logging.warning(
+                    "A '%s' file has been generated for you." % (CONFIG_FILE)
+                )
+                logging.warning(
+                    "Please modify it to change the default \
+    script, settings and data locations, or to enter debug mode."
+                )
 
                 # creates a config.txt with basic needs
                 IOTool.create_config_file()
@@ -253,26 +277,31 @@ exist, '%s' will be used instead" % (self.config_file, CONFIG_FILE))
             try:
                 # try to read the DEBUG parameter from the configuration file
                 # as a test of the good formatting of the file
-                self.DEBUG = IOTool.get_debug_setting(
-                    config_file_path=self.config_file)
+                self.DEBUG = IOTool.get_debug_setting(config_file_path=self.config_file)
 
                 # if this didn't generate errors we allow to get out of the loop
                 config_file_ok = True
 
             except IOError:
 
-                logging.error("The config file you provided ('%s') doesn't \
-have the right format, '%s' will be used instead" % (self.config_file,
-                                                     CONFIG_FILE))
+                logging.error(
+                    "The config file you provided ('%s') doesn't \
+have the right format, '%s' will be used instead"
+                    % (self.config_file, CONFIG_FILE)
+                )
 
                 # check whether the default config file exists or not
                 if not exists(CONFIG_FILE):
-                    warnings.warn("A '%s' file has been generated for you." % (
-                        CONFIG_FILE))
-                    logging.warning("A '%s' file has been generated for you." % (
-                        CONFIG_FILE))
-                    logging.warning("Please modify it to change the default \
-    script, settings and data locations, or to enter debug mode.")
+                    warnings.warn(
+                        "A '%s' file has been generated for you." % (CONFIG_FILE)
+                    )
+                    logging.warning(
+                        "A '%s' file has been generated for you." % (CONFIG_FILE)
+                    )
+                    logging.warning(
+                        "Please modify it to change the default \
+    script, settings and data locations, or to enter debug mode."
+                    )
 
                     # creates a config.txt with basic needs
                     IOTool.create_config_file()
@@ -281,8 +310,7 @@ have the right format, '%s' will be used instead" % (self.config_file,
                 self.config_file = CONFIG_FILE
 
         # load the parameter for the GPIB interface setting of the instruments
-        interface = IOTool.get_interface_setting(
-            config_file_path=self.config_file)
+        interface = IOTool.get_interface_setting(config_file_path=self.config_file)
 
         # test if the parameter is correct
         if interface not in [Tool.INTF_VISA, Tool.INTF_PROLOGIX]:
@@ -292,11 +320,13 @@ have the right format, '%s' will be used instead" % (self.config_file,
                 IOTool.GPIB_INTF_ID,
                 self.config_file,
                 Tool.INTF_VISA,
-                Tool.INTF_PROLOGIX
+                Tool.INTF_PROLOGIX,
             )
             logging.warning(msg)
             # default setting
-            Tool.INTF_GPIB = Tool.INTF_VISA # DEFAULT SHOULD BE PYVISA, MUCH MORE COMPATIBLE
+            Tool.INTF_GPIB = (
+                Tool.INTF_VISA
+            )  # DEFAULT SHOULD BE PYVISA, MUCH MORE COMPATIBLE
 
         else:
 
@@ -316,8 +346,7 @@ have the right format, '%s' will be used instead" % (self.config_file,
 
         # create the central part of the application
         self.zoneCentrale = QtGui.QMdiArea()
-        self.zoneCentrale.subWindowActivated.connect(
-            self.update_current_window)
+        self.zoneCentrale.subWindowActivated.connect(self.update_current_window)
         self.setCentralWidget(self.zoneCentrale)
 
         # the lock is something for multithreading... not sure if it's important in our application.
@@ -325,8 +354,7 @@ have the right format, '%s' will be used instead" % (self.config_file,
 
         # InstrumentHub is responsible for storing and managing the user
         # choices about which instrument goes on which port
-        self.instr_hub = Tool.InstrumentHub(parent=self,
-                                            debug=self.DEBUG)
+        self.instr_hub = Tool.InstrumentHub(parent=self, debug=self.DEBUG)
 
         # DataTaker is responsible for taking data from instruments in the
         # InstrumentHub object
@@ -334,7 +362,7 @@ have the right format, '%s' will be used instead" % (self.config_file,
 
         self.cmdline = CommandWidget.CommandWidget(parent=self)
         self.cmddock = None
-        #self.cmdline.instr_hub = self.instr_hub
+        # self.cmdline.instr_hub = self.instr_hub
 
         # handle data emitted by datataker (basically stuff it into a shared,
         # central array)
@@ -346,11 +374,15 @@ have the right format, '%s' will be used instead" % (self.config_file,
 
         else:
 
-            self.connect(self.datataker, SIGNAL(
-                "data(PyQt_PyObject)"), self.update_data_array)
+            self.connect(
+                self.datataker, SIGNAL("data(PyQt_PyObject)"), self.update_data_array
+            )
 
-            self.connect(self.datataker, SIGNAL(
-                "script_finished(bool)"), self.DTT_script_finished)
+            self.connect(
+                self.datataker,
+                SIGNAL("script_finished(bool)"),
+                self.DTT_script_finished,
+            )
 
         # the array in which the data will be stored
         self.data_array = np.array([])
@@ -368,7 +400,7 @@ have the right format, '%s' will be used instead" % (self.config_file,
         # the connect button
         self.plot_window_settings = None
 
-# set up menus and toolbars
+        # set up menus and toolbars
 
         self.fileMenu = self.menuBar().addMenu("File")
         self.plotMenu = self.menuBar().addMenu("&Plot")
@@ -387,19 +419,31 @@ have the right format, '%s' will be used instead" % (self.config_file,
 
         # start/stop/pause buttons
         self.start_DTT_action = QtTools.create_action(
-            self, "Start DTT", slot=self.start_DTT,
-            shortcut=QKeySequence("F5"), icon="start",
-            tip="Start script")
+            self,
+            "Start DTT",
+            slot=self.start_DTT,
+            shortcut=QKeySequence("F5"),
+            icon="start",
+            tip="Start script",
+        )
 
         self.stop_DTT_action = QtTools.create_action(
-            self, "Stop DTT", slot=self.stop_DTT,
-            shortcut=QKeySequence("F6"), icon="stop",
-            tip="stop script")
+            self,
+            "Stop DTT",
+            slot=self.stop_DTT,
+            shortcut=QKeySequence("F6"),
+            icon="stop",
+            tip="stop script",
+        )
 
         self.pause_DTT_action = QtTools.create_action(
-            self, "Pause DTT", slot=self.pause_DTT,
-            shortcut=QKeySequence("F7"), icon="pause",
-            tip="pause script")
+            self,
+            "Pause DTT",
+            slot=self.pause_DTT,
+            shortcut=QKeySequence("F7"),
+            icon="pause",
+            tip="pause script",
+        )
 
         self.pause_DTT_action.setEnabled(False)
         self.stop_DTT_action.setEnabled(False)
@@ -416,26 +460,30 @@ have the right format, '%s' will be used instead" % (self.config_file,
         cur_path = os.path.dirname(__file__)
 
         # find the path to the widgets folders
-        widget_path = os.path.join(cur_path, 'LabTools')
+        widget_path = os.path.join(cur_path, "LabTools")
 
         # these are widgets essential to the interface
-        core_widget_path = os.path.join(widget_path, 'CoreWidgets')
+        core_widget_path = os.path.join(widget_path, "CoreWidgets")
 
         # these are widgets which were added by users
-        user_widget_path = os.path.join(widget_path, 'UserWidgets')
-
+        user_widget_path = os.path.join(widget_path, "UserWidgets")
 
         # this is the legitimate list of core widgets
-        widgets_list = [o.rstrip('.py') for o in os.listdir(core_widget_path)
-                        if o.endswith(".py") and "__init__" not in o]
+        widgets_list = [
+            o.rstrip(".py")
+            for o in os.listdir(core_widget_path)
+            if o.endswith(".py") and "__init__" not in o
+        ]
 
         # this is the legitimate list of user widgets
-        user_widgets_list = [o.rstrip('.py') for o in os.listdir(user_widget_path)
-                             if o.endswith(".py") and "__init__" not in o]
+        user_widgets_list = [
+            o.rstrip(".py")
+            for o in os.listdir(user_widget_path)
+            if o.endswith(".py") and "__init__" not in o
+        ]
 
         # the user widgets the user would like to run, given in the config file
-        user_widgets = IOTool.get_user_widgets(
-            config_file_path=self.config_file)
+        user_widgets = IOTool.get_user_widgets(config_file_path=self.config_file)
 
         if user_widgets:
 
@@ -448,8 +496,10 @@ have the right format, '%s' will be used instead" % (self.config_file,
 
                 else:
 
-                    logging.warning("The user widget '%s' is not found at %s" % (
-                        user_widget, user_widget_path))
+                    logging.warning(
+                        "The user widget '%s' is not found at %s"
+                        % (user_widget, user_widget_path)
+                    )
 
         # add the widgets to the interface
         for widget in widgets_list:
@@ -457,12 +507,14 @@ have the right format, '%s' will be used instead" % (self.config_file,
             widget_name = widget
 
             try:
-                widget_module = import_module(widget_name,
-                                              package=COREWIDGETS_PACKAGE_NAME)
+                widget_module = import_module(
+                    widget_name, package=COREWIDGETS_PACKAGE_NAME
+                )
             except ImportError:
 
-                widget_module = import_module(widget_name,
-                                              package=USERWIDGETS_PACKAGE_NAME)
+                widget_module = import_module(
+                    widget_name, package=USERWIDGETS_PACKAGE_NAME
+                )
 
             try:
 
@@ -473,7 +525,7 @@ have the right format, '%s' will be used instead" % (self.config_file,
                 logging.error(widget_module)
                 raise e
 
-# ##### FILE MENU SETUP ######
+        # ##### FILE MENU SETUP ######
 
         self.file_save_settings_action = QtTools.create_action(
             self,
@@ -481,7 +533,7 @@ have the right format, '%s' will be used instead" % (self.config_file,
             slot=self.file_save_settings,
             shortcut=QKeySequence.SaveAs,
             icon=None,
-            tip="Save the current instrument settings"
+            tip="Save the current instrument settings",
         )
 
         self.file_load_settings_action = QtTools.create_action(
@@ -490,7 +542,7 @@ have the right format, '%s' will be used instead" % (self.config_file,
             slot=self.file_load_settings,
             shortcut=QKeySequence.Open,
             icon=None,
-            tip="Load instrument settings from file"
+            tip="Load instrument settings from file",
         )
 
         self.file_load_data_action = QtTools.create_action(
@@ -499,7 +551,7 @@ have the right format, '%s' will be used instead" % (self.config_file,
             slot=self.file_load_data,
             shortcut=None,
             icon=None,
-            tip="Load previous data from file"
+            tip="Load previous data from file",
         )
 
         self.file_save_config_action = QtTools.create_action(
@@ -508,7 +560,8 @@ have the right format, '%s' will be used instead" % (self.config_file,
             slot=self.file_save_config,
             shortcut=None,
             icon=None,
-            tip="Save the setting file path, the script path and the data output path into the config file"
+            tip="Save the setting file path, the script path and the data output path into the "
+                "config file",
         )
 
         self.fileMenu.addAction(self.file_save_settings_action)
@@ -517,7 +570,7 @@ have the right format, '%s' will be used instead" % (self.config_file,
         self.fileMenu.addAction(self.action_manager.saveFigAction)
         self.fileMenu.addAction(self.file_save_config_action)
 
-# ##### PLOT MENU + TOOLBAR SETUP ######
+        # ##### PLOT MENU + TOOLBAR SETUP ######
 
         self.plotToolbar.setObjectName("PlotToolBar")
 
@@ -531,7 +584,7 @@ have the right format, '%s' will be used instead" % (self.config_file,
             slot=self.clear_plot,
             shortcut=None,
             icon="clear_plot",
-            tip="Clears the live data arrays"
+            tip="Clears the live data arrays",
         )
 
         self.removeFitAction = QtTools.create_action(
@@ -540,29 +593,29 @@ have the right format, '%s' will be used instead" % (self.config_file,
             slot=self.remove_fit,
             shortcut=None,
             icon="clear",
-            tip="Reset the fit data to an empty array"
+            tip="Reset the fit data to an empty array",
         )
 
         self.plotMenu.addAction(self.clearPlotAction)
         self.plotMenu.addAction(self.removeFitAction)
 
-
-# ##### INSTRUMENT MENU SETUP ######
+        # ##### INSTRUMENT MENU SETUP ######
         self.read_DTT = QtTools.create_action(
             self,
             "Read",
             slot=self.single_measure_DTT,
             shortcut=None,
             icon=None,
-            tip="Take a one shot measure with DTT"
+            tip="Take a one shot measure with DTT",
         )
 
         self.connect_hub = QtTools.create_action(
-            self, "Connect Instruments",
+            self,
+            "Connect Instruments",
             slot=self.connect_instrument_hub,
             shortcut=QKeySequence("Ctrl+I"),
             icon=None,
-            tip="Refresh the list of selected instruments"
+            tip="Refresh the list of selected instruments",
         )
 
         self.refresh_ports_list_action = QtTools.create_action(
@@ -570,7 +623,7 @@ have the right format, '%s' will be used instead" % (self.config_file,
             "Refresh ports list",
             slot=self.refresh_ports_list,
             icon=None,
-            tip="Refresh the list of availiable ports"
+            tip="Refresh the list of availiable ports",
         )
 
         self.instMenu.addAction(self.start_DTT_action)
@@ -578,27 +631,26 @@ have the right format, '%s' will be used instead" % (self.config_file,
         self.instMenu.addAction(self.connect_hub)
         self.instMenu.addAction(self.refresh_ports_list_action)
 
-
-# ##### WINDOW MENU SETUP ######
+        # ##### WINDOW MENU SETUP ######
         self.add_pdw = QtTools.create_action(
             self,
             "Add a Plot",
             slot=self.create_pdw,
             shortcut=None,
             icon=None,
-            tip="Add a recordsweep window"
+            tip="Add a recordsweep window",
         )
 
         self.windowMenu.addAction(self.add_pdw)
 
-# ##### OPTION MENU SETUP ######
+        # ##### OPTION MENU SETUP ######
         self.toggle_debug_state = QtTools.create_action(
-                self,
-                "Change debug mode",
-                slot=self.option_change_debug_state,
-                shortcut=None,
-                icon=None,
-                tip="Change the state of the debug mode"
+            self,
+            "Change debug mode",
+            slot=self.option_change_debug_state,
+            shortcut=None,
+            icon=None,
+            tip="Change the state of the debug mode",
         )
 
         self.optionMenu.addAction(self.toggle_debug_state)
@@ -609,10 +661,9 @@ have the right format, '%s' will be used instead" % (self.config_file,
             slot=self.option_command_window_state,
             shortcut=None,
             icon=None,
-            tip="Launch or focus GPIB CommandLine"
+            tip="Launch or focus GPIB CommandLine",
         )
         self.optionMenu.addAction(self.toggle_cmd_state)
-
 
         # Option to change the logging level displayed in the console
         for log_level in ["DEBUG", "INFO", "WARNING", "ERROR"]:
@@ -622,7 +673,7 @@ have the right format, '%s' will be used instead" % (self.config_file,
                 slot=self.option_change_log_level,
                 shortcut=None,
                 icon=None,
-                tip="Change the state of the logger to %s" % log_level
+                tip="Change the state of the logger to %s" % log_level,
             )
             self.loggingSubMenu.addAction(action)
 
@@ -634,37 +685,39 @@ have the right format, '%s' will be used instead" % (self.config_file,
                 slot=self.option_change_interface,
                 shortcut=None,
                 icon=None,
-                tip="Change the GPIB interface to %s" % interface
+                tip="Change the GPIB interface to %s" % interface,
             )
             self.intfSubMenu.addAction(action)
-###############################
+        ###############################
 
         # Load the user settings for the instrument connectic and parameters
         self.default_settings_fname = IOTool.get_settings_name(
-            config_file_path=self.config_file)
+            config_file_path=self.config_file
+        )
 
         if not exists(self.default_settings_fname):
 
-            logging.warning("The filename '%s' wasn't found, using '%s'" % (
-                self.default_settings_fname, 'settings/default_settings.txt'))
+            logging.warning(
+                "The filename '%s' wasn't found, using '%s'"
+                % (self.default_settings_fname, "settings/default_settings.txt")
+            )
 
-            self.default_settings_fname = 'settings/default_settings.txt'
+            self.default_settings_fname = "settings/default_settings.txt"
 
         if os.path.isfile(self.default_settings_fname):
 
-            logging.debug("Using '%s' as setting file" % (
-                self.default_settings_fname))
+            logging.debug("Using '%s' as setting file" % (self.default_settings_fname))
 
-            self.widgets['CalcWidget'].load_settings(
-                self.default_settings_fname)
+            self.widgets["CalcWidget"].load_settings(self.default_settings_fname)
 
-            self.widgets['InstrumentWidget'].load_settings(
-                self.default_settings_fname)
+            self.widgets["InstrumentWidget"].load_settings(self.default_settings_fname)
 
         else:
 
-            logging.warning("The chosen file '%s' is not a setting file" % (
-                self.default_settings_fname))
+            logging.warning(
+                "The chosen file '%s' is not a setting file"
+                % (self.default_settings_fname)
+            )
 
         # Create the object responsible to display information send by the
         # datataker
@@ -678,7 +731,7 @@ have the right format, '%s' will be used instead" % (self.config_file,
             self.restoreState(self.settings.value("windowState").toByteArray())
             self.restoreGeometry(self.settings.value("geometry").toByteArray())
         except:
-            logging.debug('Using default window configuration')
+            logging.debug("Using default window configuration")
             # no biggie - probably means settings haven't been saved on this machine yet
             # hide some of the advanced widgets so they don't show for new users
             # the objects are not actually deleted, just hidden
@@ -693,9 +746,13 @@ have the right format, '%s' will be used instead" % (self.config_file,
         widget_creation(self)
 
     def closeEvent(self, event):
-        reply = QtGui.QMessageBox.question(self, 'Message',
-                                           "Are you sure you want to quit?", QtGui.QMessageBox.Yes,
-                                           QtGui.QMessageBox.No)
+        reply = QtGui.QMessageBox.question(
+            self,
+            "Message",
+            "Are you sure you want to quit?",
+            QtGui.QMessageBox.Yes,
+            QtGui.QMessageBox.No,
+        )
 
         if reply == QtGui.QMessageBox.Yes:
 
@@ -712,19 +769,23 @@ have the right format, '%s' will be used instead" % (self.config_file,
 
     def create_pdw(self, num_channels=None, settings=None):
         """
-            add a new plot display window in the MDI area its channels are labeled according to the channel names
-            on the cmd window.
+            add a new plot display window in the MDI area its channels are
+            labeled according to the channel names on the cmd window.
             It is connected to the signal of data update.
         """
 
         if num_channels is None:
 
-            num_channels = self.instr_hub.get_instrument_nb() + \
-                self.widgets['CalcWidget'].get_calculation_nb()
+            num_channels = (
+                self.instr_hub.get_instrument_nb()
+                + self.widgets["CalcWidget"].get_calculation_nb()
+            )
 
-        pdw = PlotDisplayWindow.PlotDisplayWindow(data_array=self.data_array,
-                                                  name="Live Data Window",
-                                                  default_channels=num_channels)
+        pdw = PlotDisplayWindow.PlotDisplayWindow(
+            data_array=self.data_array,
+            name="Live Data Window",
+            default_channels=num_channels,
+        )
 
         if USE_PYQT5:
 
@@ -735,8 +796,7 @@ have the right format, '%s' will be used instead" % (self.config_file,
             # this is here temporary, I would like to change the plw when the live
             # fit is ticked
 
-            self.widgets['AnalyseDataWidget'].update_fit.connect(
-                pdw.update_fit)
+            self.widgets["AnalyseDataWidget"].update_fit.connect(pdw.update_fit)
 
             self.signal_remove_fit.connect(pdw.remove_fit)
 
@@ -748,28 +808,38 @@ have the right format, '%s' will be used instead" % (self.config_file,
 
         else:
 
-            self.connect(self, SIGNAL("data_array_updated(PyQt_PyObject)"),
-                         pdw.update_plot)
+            self.connect(
+                self, SIGNAL("data_array_updated(PyQt_PyObject)"), pdw.update_plot
+            )
 
-            self.connect(pdw.mplwidget, SIGNAL(
-                "limits_changed(int,PyQt_PyObject)"), self.emit_axis_lim)
+            self.connect(
+                pdw.mplwidget,
+                SIGNAL("limits_changed(int,PyQt_PyObject)"),
+                self.emit_axis_lim,
+            )
 
             # this is here temporary, I would like to change the plw when the live
             # fit is ticked
 
-            self.connect(self.widgets['AnalyseDataWidget'], SIGNAL(
-                "update_fit(PyQt_PyObject)"), pdw.update_fit)
+            self.connect(
+                self.widgets["AnalyseDataWidget"],
+                SIGNAL("update_fit(PyQt_PyObject)"),
+                pdw.update_fit,
+            )
 
             self.connect(self, SIGNAL("remove_fit()"), pdw.remove_fit)
 
-            self.connect(self, SIGNAL("colorsChanged(PyQt_PyObject)"),
-                         pdw.update_colors)
+            self.connect(
+                self, SIGNAL("colorsChanged(PyQt_PyObject)"), pdw.update_colors
+            )
 
-            self.connect(self, SIGNAL("labelsChanged(PyQt_PyObject)"),
-                         pdw.update_labels)
+            self.connect(
+                self, SIGNAL("labelsChanged(PyQt_PyObject)"), pdw.update_labels
+            )
 
-            self.connect(self, SIGNAL(
-                "markersChanged(PyQt_PyObject)"), pdw.update_markers)
+            self.connect(
+                self, SIGNAL("markersChanged(PyQt_PyObject)"), pdw.update_markers
+            )
 
         if settings is None:
 
@@ -787,7 +857,7 @@ have the right format, '%s' will be used instead" % (self.config_file,
 
     def get_last_window(self, window_ID="Live"):
         """
-        should return the window that was created when the 
+        should return the window that was created when the
         instrument hub was connected
         """
 
@@ -802,8 +872,10 @@ have the right format, '%s' will be used instead" % (self.config_file,
             logging.error("No pdw available")
 
     def update_colors(self):
-        color_list = self.widgets['InstrumentWidget'].get_color_list() \
-            + self.widgets['CalcWidget'].get_color_list()
+        color_list = (
+            self.widgets["InstrumentWidget"].get_color_list()
+            + self.widgets["CalcWidget"].get_color_list()
+        )
 
         if USE_PYQT5:
 
@@ -814,8 +886,10 @@ have the right format, '%s' will be used instead" % (self.config_file,
             self.emit(SIGNAL("colorsChanged(PyQt_PyObject)"), color_list)
 
     def update_labels(self):
-        label_list = self.widgets['InstrumentWidget'].get_label_list() \
-            + self.widgets['CalcWidget'].get_label_list()
+        label_list = (
+            self.widgets["InstrumentWidget"].get_label_list()
+            + self.widgets["CalcWidget"].get_label_list()
+        )
 
         if USE_PYQT5:
 
@@ -834,9 +908,9 @@ have the right format, '%s' will be used instead" % (self.config_file,
         if current_window:
             current_widget = self.zoneCentrale.activeSubWindow().widget()
 
-        # this is a small check that we are no trying to get the limits from
-        # the wrong plot
-#            if current_widget.windowTitle() == "Past Data Window":
+            # this is a small check that we are no trying to get the limits from
+            # the wrong plot
+            #            if current_widget.windowTitle() == "Past Data Window":
             try:
                 paramX = current_widget.get_X_axis_index()
             except:
@@ -849,7 +923,7 @@ have the right format, '%s' will be used instead" % (self.config_file,
                 paramYfit = current_widget.get_fit_axis_index()
             except:
                 paramYfit = 1
-#
+            #
             try:
                 #                logging.warning("%i%i"%(paramX,paramY))
                 x = current_widget.data_array[:, paramX]
@@ -862,14 +936,22 @@ have the right format, '%s' will be used instead" % (self.config_file,
 
                     self.selections_limits.emit(
                         np.array([imin, imax, xmin, xmax]),
-                        paramX, paramY, paramYfit, mode)
+                        paramX,
+                        paramY,
+                        paramYfit,
+                        mode,
+                    )
 
                 else:
 
-                    self.emit(SIGNAL(
-                        "selections_limits(PyQt_PyObject,int,int,int,int)"),
+                    self.emit(
+                        SIGNAL("selections_limits(PyQt_PyObject,int,int,int,int)"),
                         np.array([imin, imax, xmin, xmax]),
-                        paramX, paramY, paramYfit, mode)
+                        paramX,
+                        paramY,
+                        paramYfit,
+                        mode,
+                    )
 
             except IndexError:
                 logging.debug("There is apparently no data generated yet")
@@ -887,45 +969,44 @@ have the right format, '%s' will be used instead" % (self.config_file,
         if not self.datataker.isRunning():
 
             # forbid the user to connect instruments to the hub while measuring
-            self.widgets['InstrumentWidget'].bt_connecthub.setEnabled(False)
+            self.widgets["InstrumentWidget"].bt_connecthub.setEnabled(False)
 
             # just update the color boxes in case
             self.update_colors()
             self.update_labels()
 
             # read the name of the output file and determine if it exists
-            of_name = self.widgets['OutputFileWidget'].get_output_fname()
+            of_name = self.widgets["OutputFileWidget"].get_output_fname()
             is_new_file = not os.path.exists(of_name)
 
             # if this file is new, the first 2 lines contain the instrument and
             # parameters list
             if is_new_file:
 
-                self.output_file = open(of_name, 'w')
+                self.output_file = open(of_name, "w")
                 [instr_name_list, dev_list, param_list] = self.collect_instruments()
                 self.output_file.write(
                     "#C"
-                    + str(self.widgets['InstrumentWidget'].get_label_list()).strip('[]')
-                    + '\n')
+                    + str(self.widgets["InstrumentWidget"].get_label_list()).strip("[]")
+                    + "\n"
+                )
                 self.output_file.write(
                     "#I"
-                    + str(self.widgets['InstrumentWidget'].get_descriptor_list()).strip('[]')
-                    + '\n')
+                    + str(self.widgets["InstrumentWidget"].get_descriptor_list()).strip(
+                        "[]"
+                    )
+                    + "\n"
+                )
 
-                self.output_file.write(
-                    "#P"
-                    + str(param_list).strip('[]')
-                    + '\n')
+                self.output_file.write("#P" + str(param_list).strip("[]") + "\n")
 
             else:
                 # here I want to perform a check to see whether the number of instrument match
                 # open it in append mode, so it won't erase previous data
-                self.output_file = open(of_name, 'a')
+                self.output_file = open(of_name, "a")
 
             self.datataker.initialize(is_new_file)
-            self.datataker.set_script(
-                self.widgets['ScriptWidget'].get_script_fname()
-            )
+            self.datataker.set_script(self.widgets["ScriptWidget"].get_script_fname())
 
             # this command is specific to Qthread, it will execute whatever is defined in
             # the method run() from DataManagement.py module
@@ -978,24 +1059,23 @@ have the right format, '%s' will be used instead" % (self.config_file,
         self.stop_DTT_action.setEnabled(False)
 
         # Enable changes to the instrument connections
-        self.widgets['InstrumentWidget'].bt_connecthub.setEnabled(True)
+        self.widgets["InstrumentWidget"].bt_connecthub.setEnabled(True)
 
         # close the output file
         self.output_file.close()
 
         # reopen the output file to read its content
-        self.output_file = open(self.output_file.name, 'r')
+        self.output_file = open(self.output_file.name, "r")
         data = self.output_file.read()
         self.output_file.close()
 
         # insert the comments written by the user in the first line
-        self.output_file = open(self.output_file.name, 'w')
-        self.output_file.write(
-            self.widgets['OutputFileWidget'].get_header_text())
+        self.output_file = open(self.output_file.name, "w")
+        self.output_file.write(self.widgets["OutputFileWidget"].get_header_text())
         self.output_file.write(data)
         self.output_file.close()
 
-        self.widgets['OutputFileWidget'].increment_filename()
+        self.widgets["OutputFileWidget"].increment_filename()
 
     def DTT_script_finished(self, completed):
         """signal triggered by the completion of the script
@@ -1022,16 +1102,16 @@ have the right format, '%s' will be used instead" % (self.config_file,
         if self.output_file:
             if not self.output_file.closed:
                 # a quick way to make a comma separated list of the values
-                stri = str(data_set).strip('[]\n\r')
+                stri = str(data_set).strip("[]\n\r")
                 # numpy arrays include newlines in their strings, get rid of
                 # them.
-                stri = stri.replace('\n', '')
+                stri = stri.replace("\n", "")
 
                 # np.loadtxt uses whitespace delimiter by default, so we do too
-                stri = stri.replace(',', ' ')
+                stri = stri.replace(",", " ")
 
-                self.output_file.write(stri + '\n')
-                print('>>' + stri)
+                self.output_file.write(stri + "\n")
+                print(">>" + stri)
 
     def update_data_array(self, data_set):
         """ slot for when the thread emits data """
@@ -1039,10 +1119,10 @@ have the right format, '%s' will be used instead" % (self.config_file,
         # convert this latest data to an array
         data = np.array(data_set)
 
-        for calculation in self.widgets['CalcWidget'].get_calculation_list():
+        for calculation in self.widgets["CalcWidget"].get_calculation_list():
             calculation = calculation.strip()
             if calculation:
-                data = np.append(data, eval(calculation + '\n'))
+                data = np.append(data, eval(calculation + "\n"))
 
         # writes data and calculated columns
         self.write_data(data.tolist())
@@ -1067,19 +1147,18 @@ have the right format, '%s' will be used instead" % (self.config_file,
 
         else:
 
-            self.emit(SIGNAL("data_array_updated(PyQt_PyObject)"),
-                      self.data_array)
+            self.emit(SIGNAL("data_array_updated(PyQt_PyObject)"), self.data_array)
 
-#
+    #
 
     def collect_instruments(self):
         """list properties of the connected instruments (comport, parameter)"""
-        return self.widgets['InstrumentWidget'].collect_device_info()
+        return self.widgets["InstrumentWidget"].collect_device_info()
 
     def refresh_ports_list(self):
         """Update the availiable port list in the InstrumentWindow module """
 
-        self.widgets['InstrumentWidget'].refresh_cbb_port()
+        self.widgets["InstrumentWidget"].refresh_cbb_port()
 
     def update_current_window(self):
         """
@@ -1090,8 +1169,7 @@ have the right format, '%s' will be used instead" % (self.config_file,
         current_window = self.zoneCentrale.activeSubWindow()
 
         if current_window:
-            self.action_manager.update_current_widget(
-                current_window.widget().mplwidget)
+            self.action_manager.update_current_widget(current_window.widget().mplwidget)
 
         if current_window is not None:
             current_widget = self.zoneCentrale.activeSubWindow().widget()
@@ -1099,8 +1177,7 @@ have the right format, '%s' will be used instead" % (self.config_file,
             window_type = getattr(current_widget, "window_type", "unknown")
 
             if window_type == "unknown":
-                msg = "The type of PlotDisplayWindow '%s' is unknown" % (
-                    window_type)
+                msg = "The type of PlotDisplayWindow '%s' is unknown" % (window_type)
                 raise ValueError(msg)
             else:
 
@@ -1111,14 +1188,14 @@ have the right format, '%s' will be used instead" % (self.config_file,
 
                     # extract the file name from the window title
                     # see LoadPlotWidget for more info on that
-                    load_fname = title.split(
-                        PlotDisplayWindow.PLOT_WINDOW_TITLE_PAST)
+                    load_fname = title.split(PlotDisplayWindow.PLOT_WINDOW_TITLE_PAST)
 
                     load_fname = load_fname[1]
 
                     # replace the header text by the one stored in memory
                     self.widgets["loadPlotWidget"].header_text(
-                        self.loaded_data_header[load_fname])
+                        self.loaded_data_header[load_fname]
+                    )
 
                     # update the file information in the widget
                     self.widgets["loadPlotWidget"].load_file_name(load_fname)
@@ -1140,8 +1217,7 @@ have the right format, '%s' will be used instead" % (self.config_file,
 
         else:
 
-            self.emit(SIGNAL("data_array_updated(PyQt_PyObject)"),
-                      self.data_array)
+            self.emit(SIGNAL("data_array_updated(PyQt_PyObject)"), self.data_array)
 
     def remove_fit(self):
 
@@ -1157,19 +1233,23 @@ have the right format, '%s' will be used instead" % (self.config_file,
         """
         this function get the actual values of parameters and save them into the config file
         """
-        script_fname = str(
-            self.widgets['ScriptWidget'].scriptFileLineEdit.text())
-        IOTool.set_config_setting(
-            IOTool.SCRIPT_ID, script_fname, self.config_file)
+        script_fname = str(self.widgets["ScriptWidget"].scriptFileLineEdit.text())
+        IOTool.set_config_setting(IOTool.SCRIPT_ID, script_fname, self.config_file)
 
-        output_path = os.path.dirname(
-            self.widgets['OutputFileWidget'].get_output_fname())+os.path.sep
+        output_path = (
+            os.path.dirname(self.widgets["OutputFileWidget"].get_output_fname())
+            + os.path.sep
+        )
         IOTool.set_config_setting(
-            IOTool.SAVE_DATA_PATH_ID, output_path, self.config_file)
+            IOTool.SAVE_DATA_PATH_ID, output_path, self.config_file
+        )
 
         if not self.instrument_connexion_setting_fname == "":
             IOTool.set_config_setting(
-                IOTool.SETTINGS_ID, self.instrument_connexion_setting_fname, self.config_file)
+                IOTool.SETTINGS_ID,
+                self.instrument_connexion_setting_fname,
+                self.config_file,
+            )
 
     def file_save_settings(self, fname=None):
         """save the settings for the instruments and plot window into a file
@@ -1182,14 +1262,18 @@ have the right format, '%s' will be used instead" % (self.config_file,
 
             if USE_PYQT5:
 
-                fname, fmt = QtGui.QFileDialog.getSaveFileName(
-                    self, 'Save settings file as', './')
+                fname, _ = QtGui.QFileDialog.getSaveFileName(
+                    self, "Save settings file as", "./"
+                )
                 fname = str(fname)
 
             else:
 
-                fname = str(QtGui.QFileDialog.getSaveFileName(
-                    self, 'Save settings file as', './'))
+                fname = str(
+                    QtGui.QFileDialog.getSaveFileName(
+                        self, "Save settings file as", "./"
+                    )
+                )
 
         if fname:
 
@@ -1205,7 +1289,7 @@ have the right format, '%s' will be used instead" % (self.config_file,
                 # this will do nothing
                 pdw_settings = []
 
-            self.widgets['InstrumentWidget'].save_settings(fname, pdw_settings)
+            self.widgets["InstrumentWidget"].save_settings(fname, pdw_settings)
 
             self.instrument_connexion_setting_fname = fname
 
@@ -1221,43 +1305,51 @@ have the right format, '%s' will be used instead" % (self.config_file,
 
             if USE_PYQT5:
 
-                fname, fmt = QFileDialog.getOpenFileName(
-                    self, 'Open settings file', './')
+                fname, _ = QFileDialog.getOpenFileName(
+                    self, "Open settings file", "./"
+                )
 
                 fname = str(fname)
 
             else:
 
-                fname = str(QtGui.QFileDialog.getOpenFileName(
-                    self, 'Open settings file', './'))
+                fname = str(
+                    QtGui.QFileDialog.getOpenFileName(self, "Open settings file", "./")
+                )
 
         if fname:
 
-            self.plot_window_settings = \
-                self.widgets['InstrumentWidget'].load_settings(fname)
+            self.plot_window_settings = self.widgets["InstrumentWidget"].load_settings(
+                fname
+            )
 
             if self.plot_window_settings:
                 self.instrument_connexion_setting_fname = fname
 
     def file_load_data(self):
-        default_path = IOTool.get_config_setting("DATAFILE",
-                                                 config_file_path=self.config_file)
+        default_path = IOTool.get_config_setting(
+            "DATAFILE", config_file_path=self.config_file
+        )
 
         if not default_path:
 
-            default_path = './'
+            default_path = "./"
 
         if USE_PYQT5:
 
-            fname, fmt = QtGui.QFileDialog.getOpenFileName(
-                self, 'Open settings file', default_path)
+            fname, _ = QtGui.QFileDialog.getOpenFileName(
+                self, "Open settings file", default_path
+            )
 
             fname = str(fname)
 
         else:
 
-            fname = str(QtGui.QFileDialog.getOpenFileName(
-                self, 'Open settings file', default_path))
+            fname = str(
+                QtGui.QFileDialog.getOpenFileName(
+                    self, "Open settings file", default_path
+                )
+            )
 
         if fname:
 
@@ -1269,11 +1361,11 @@ have the right format, '%s' will be used instead" % (self.config_file,
     def option_display_debug_state(self):
         """Visualy let the user know the programm is in DEBUG mode"""
 
-        self.setWindowIcon(
-            QIcon('images/icon_debug_py%s.png' % PYTHON_VERSION))
+        self.setWindowIcon(QIcon("images/icon_debug_py%s.png" % PYTHON_VERSION))
         self.setWindowTitle(
             "-" * 3
-            + "DEBUG MODE" + "-" * 3
+            + "DEBUG MODE"
+            + "-" * 3
             + " (python%s)" % PYTHON_VERSION
             + " (GPIB_INTF: %s)" % Tool.INTF_GPIB
             + " (Configuration file :%s)" % self.config_file
@@ -1282,12 +1374,12 @@ have the right format, '%s' will be used instead" % (self.config_file,
 
     def option_display_normal_state(self):
         """Visualy let the user know the programm is in DEBUG mode"""
-        self.setWindowIcon(
-            QIcon('images/icon_normal_py%s.png' % PYTHON_VERSION))
-        self.setWindowTitle("LabGui (python%s)" % PYTHON_VERSION
-                            + " (GPIB_INTF: %s)" % Tool.INTF_GPIB
-                            + " (Configuration file :%s)" % self.config_file
-                            )
+        self.setWindowIcon(QIcon("images/icon_normal_py%s.png" % PYTHON_VERSION))
+        self.setWindowTitle(
+            "LabGui (python%s)" % PYTHON_VERSION
+            + " (GPIB_INTF: %s)" % Tool.INTF_GPIB
+            + " (Configuration file :%s)" % self.config_file
+        )
         self.setWindowOpacity(1)
 
     def option_change_debug_state(self):
@@ -1304,9 +1396,9 @@ have the right format, '%s' will be used instead" % (self.config_file,
         # if DEBUG is false, the port list needs to be fetched
         self.refresh_ports_list()
 
-        IOTool.set_config_setting(IOTool.DEBUG_ID,
-                                  self.DEBUG,
-                                  config_file_path=self.config_file)
+        IOTool.set_config_setting(
+            IOTool.DEBUG_ID, self.DEBUG, config_file_path=self.config_file
+        )
 
         if USE_PYQT5:
 
@@ -1315,7 +1407,6 @@ have the right format, '%s' will be used instead" % (self.config_file,
         else:
 
             self.emit(SIGNAL("DEBUG_mode_changed(bool)"), self.DEBUG)
-
 
     def option_command_window_state(self):
         """launches or focuses commandline """
@@ -1328,24 +1419,26 @@ have the right format, '%s' will be used instead" % (self.config_file,
             self.cmdline.update_devices()
             self.cmdline.raise_()
 
-
     def option_change_interface(self):
         """changes GPIB interface"""
         intf = str(self.sender().text())
         # changes the GPIB interface in the instrument hub so the next time
         # one connects instrument it will be through this interface
         try:
-            if not isinstance(self.output_file, str): # else, output_file.close() will be run
-                self.stop_DTT() # must stop and DC everything first
+            # else, output_file.close() will be run
+            if not isinstance(self.output_file, str):
+                # must stop and DC everything first
+                self.stop_DTT()
         except:
             print(sys.exc_info(), self.output_file)
 
         self.instr_hub.change_interface(intf)
 
-        self.setWindowTitle("LabGui (python%s)" % PYTHON_VERSION
-                            + " (GPIB_INTF: %s)" % Tool.INTF_GPIB
-                            + " (Configuration file :%s)" % self.config_file
-                            )
+        self.setWindowTitle(
+            "LabGui (python%s)" % PYTHON_VERSION
+            + " (GPIB_INTF: %s)" % Tool.INTF_GPIB
+            + " (Configuration file :%s)" % self.config_file
+        )
 
         print("Please note: You cannot use both interfaces at the same time.")
         # change this setting into the configuration file as well
@@ -1356,21 +1449,22 @@ have the right format, '%s' will be used instead" % (self.config_file,
 
         log_level = str(self.sender().text())
 
-        IOTool.set_config_setting("level", log_level,
-                                  os.path.join(ABS_PATH, "logging.conf"))
+        IOTool.set_config_setting(
+            "level", log_level, os.path.join(ABS_PATH, "logging.conf")
+        )
 
         logging.config.fileConfig(os.path.join(ABS_PATH, "logging.conf"))
 
 
 def launch_LabGui():
-    app = QtGui.QApplication(sys.argv)
+    app = QApplication(sys.argv)
     ex = LabGuiMain()
     ex.show()
     sys.exit(app.exec_())
 
 
 def test_automatic_fitting():
-    app = QtGui.QApplication(sys.argv)
+    app = QApplication(sys.argv)
     ex = LabGuiMain()
     ex.connect_instrument_hub()
 
@@ -1383,8 +1477,8 @@ def test_automatic_fitting():
     ex.toggle_DTT()
 
     # choose the linear fonction to fit
-    ex.widgets['AnalyseDataWidget'].fitCombo.setCurrentIndex(2)
-    ex.widgets['AnalyseDataWidget'].on_live_fitButton_clicked()
+    ex.widgets["AnalyseDataWidget"].fitCombo.setCurrentIndex(2)
+    ex.widgets["AnalyseDataWidget"].on_live_fitButton_clicked()
 
     ex.show()
     sys.exit(app.exec_())
@@ -1392,19 +1486,19 @@ def test_automatic_fitting():
 
 def test_save_fig():
     """connect the Hub and save the figure"""
-    app = QtGui.QApplication(sys.argv)
+    app = QApplication(sys.argv)
     ex = LabGuiMain()
 
     ex.connect_instrument_hub()
 
-#    ex.action_manager.saveFigAction.triggered()
+    #    ex.action_manager.saveFigAction.triggered()
     ex.show()
     sys.exit(app.exec_())
 
 
 def test_save_settings(idx=0):
     """connect the Hub and save the settings"""
-    app = QtGui.QApplication(sys.argv)
+    app = QApplication(sys.argv)
     ex = LabGuiMain()
 
     if idx == 0:
@@ -1416,11 +1510,11 @@ def test_save_settings(idx=0):
     sys.exit(app.exec_())
 
 
-def test_load_previous_data(data_path=os.path.join(ABS_PATH, 'scratch', 'example_output.dat')):
+def test_load_previous_data(data_path=os.path.join(ABS_PATH, "scratch", "example_output.dat")):
     """
     open a new plot window with previous data
     """
-    app = QtGui.QApplication(sys.argv)
+    app = QApplication(sys.argv)
     ex = LabGuiMain()
 
     ex.create_plw(data_path)
@@ -1433,30 +1527,27 @@ def test_user_variable_widget():
     """
     open a new plot window with previous data
     """
-    app = QtGui.QApplication(sys.argv)
+    app = QApplication(sys.argv)
     ex = LabGuiMain()
 
     ex.file_load_settings("test_settings.set")
 
     ex.connect_instrument_hub()
 
-#    ex.widgets["userVariableWidget"].on_updateVariableButton_clicked()
+    #    ex.widgets["userVariableWidget"].on_updateVariableButton_clicked()
 
     ex.show()
     sys.exit(app.exec_())
 
 
-
 def build_test():
 
-    app = QtGui.QApplication(sys.argv)
+    app = QApplication(sys.argv)
     form = LabGuiMain()
 
-    widget_start = form.instToolbar.widgetForAction(
-        form.start_DTT_action)
+    widget_start = form.instToolbar.widgetForAction(form.start_DTT_action)
 
-    widget_stop = form.instToolbar.widgetForAction(
-        form.stop_DTT_action)
+    # widget_stop = form.instToolbar.widgetForAction(form.stop_DTT_action)
 
     form.file_load_settings("test_settings.set")
 
@@ -1471,53 +1562,52 @@ def build_test():
     # print the name of the data file
     ofname = form.output_file.name
     print("DTT output file : %s" % ofname)
-#    time.sleep(1)
+    #    time.sleep(1)
 
-#    QTest.mouseClick(widget_stop, Qt.LeftButton)
-    """
-    the script launches from cliking on start which triggers Datataker.run
-    when the script is finished it emits script_finished(bool) with the value completed = True
-    this is catched by the stop_DTT function from LabGui which then call stop_DTT from LabGui
-    which then calls datataker.stop and datataker.resume
-    this should probably be done be done within the Datataker class and only the reenabling of the 
-    buttons should be done here...
-    """
+    #    QTest.mouseClick(widget_stop, Qt.LeftButton)
+
+    # the script launches from cliking on start which triggers Datataker.run
+    # when the script is finished it emits script_finished(bool) with the value completed = True
+    # this is catched by the stop_DTT function from LabGui which then call stop_DTT from LabGui
+    # which then calls datataker.stop and datataker.resume
+    # this should probably be done be done within the Datataker class and only the reenabling of the
+    # buttons should be done here...
+
     form.show()
     sys.exit(app.exec_())
 
 
 def test_stop_DTT_isrunning_false():
 
-    app = QtGui.QApplication(sys.argv)
+    app = QApplication(sys.argv)
     form = LabGuiMain()
 
+    #    widget_start = form.instToolbar.widgetForAction(
+    #                                form.start_DTT_action)
+    #
+    #    widget_stop = form.instToolbar.widgetForAction(
+    #                                form.stop_DTT_action)
+    #
+    #    form.file_load_settings("test_settings.set")
+    #
+    #    form.connect_instrument_hub()
+    #
+    #
+    #    print("Intruments in the hub")
+    #    print(form.instr_hub.get_instrument_nb())
+    #
+    #    script_widget = form.widgets['ScriptWidget']
+    #
+    #    print("Script fname")
+    #    print(script_widget.scriptFileLineEdit.text())
 
-#    widget_start = form.instToolbar.widgetForAction(
-#                                form.start_DTT_action)
-#
-#    widget_stop = form.instToolbar.widgetForAction(
-#                                form.stop_DTT_action)
-#
-#    form.file_load_settings("test_settings.set")
-#
-#    form.connect_instrument_hub()
-#
-#
-#    print("Intruments in the hub")
-#    print(form.instr_hub.get_instrument_nb())
-#
-#    script_widget = form.widgets['ScriptWidget']
-#
-#    print("Script fname")
-#    print(script_widget.scriptFileLineEdit.text())
+    #    fname = "tests\scripts\script_test_DTT.py"
 
-#    fname = "tests\scripts\script_test_DTT.py"
+    #    script_widget.scriptFileLineEdit.setText('')
 
-#    script_widget.scriptFileLineEdit.setText('')
+    #    QTest.keyClicks(script_widget.scriptFileLineEdit, fname)
 
-#    QTest.keyClicks(script_widget.scriptFileLineEdit, fname)
-
-#    print form.datataker.script_file_name
+    #    print form.datataker.script_file_name
 
     form.show()
     sys.exit(app.exec_())
