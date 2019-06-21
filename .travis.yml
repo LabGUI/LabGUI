@@ -17,8 +17,8 @@ install:
 
 # command to run tests
 script:
-  - flake8 *.py
-  - pylint *.py
+  - flake8 LabGui.py
+  - pylint LabGui.py
 #jobs:
 #  include:
 #    - stage: "Tests"                # naming the Tests stage
