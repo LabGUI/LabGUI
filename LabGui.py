@@ -523,6 +523,9 @@ have the right format, '%s' will be used instead"
                 logging.error(widget_module)
                 raise e
 
+
+
+
         # ##### FILE MENU SETUP ######
 
         self.file_save_settings_action = QtTools.create_action(
