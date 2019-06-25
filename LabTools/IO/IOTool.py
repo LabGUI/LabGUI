@@ -70,7 +70,82 @@ def save_config_file(data_path=None):
         of.write("%s=%sdata\\\n" % (LOAD_DATA_FILE_ID, MAIN_DIR))
         of.close()
 
+def open_custom_file(name:str, index:int = 1, config_file_name='config.txt'):
+    ### USEFUL FOR FUTURE USERWIDGETS ###
+    """
+            returns the filename of output file as it is in the config file
 
+            Given @param name:
+
+            lets say name is 'test', index = 0
+
+            this will create a file of the form
+            test_[date]_[number].dat
+
+            if name is 'test', index = 1
+            this will create a file of the form
+
+            [date]_test_[number].dat
+    """
+    file_name = "no CONFIG file"
+    cooldown = ""
+    name_path = ""
+    sample_name = ""
+    file_format = ".dat"
+    formats = [
+        'data_path',
+        "time.strftime('%y%m%d')",
+        "'_'",
+        "cooldown",
+    ]
+    try:
+        if formats[index+1] == "'_'": # proper seperation
+            index += 1
+        formats.insert(index+1, "name.lower() + '_'")
+    except: # invalid index, so add to end
+        formats.append("name.lower() + '_'")
+    name_formatter = " + ".join(formats)
+    try:
+        config_file = open(config_file_name)
+        for line in config_file:
+            [left, right] = line.split("=")
+            left = left.strip()
+            right = right.strip()
+            if left == "COOLDOWN":
+                cooldown = right
+                cooldown = cooldown + "_"
+            #            print "cooldown " + cooldown
+            elif left == "SAMPLE":
+                sample_name = right
+            #            print "sample " + sample_name
+            elif left == name.upper()+"_PATH":
+                name_path = right
+            elif left == "DATA_PATH":
+                data_path = right
+            elif left == "FILE_FORMAT":
+                file_format = eval(right)
+
+        # if a separate thermometry path is specified, it will overrule
+        # data_path
+        if name_path:
+            data_path = name_path
+        try:
+            print(name_formatter)
+            file_name = eval(name_formatter)
+            n = 1
+            # make sure the file doesn't already exist by incrementing the
+            # number
+            while os.path.exists(file_name + "_%3.3d%s" % (n, file_format)):
+                n += 1
+            file_name = file_name + "_%3.3d%s" % (n, file_format)
+        except:
+            file_name = "No output file choosen"
+
+        config_file.close()
+    except IOError:
+        print("No configuration file " + config_file_name + "  found")
+
+    return file_name
 def open_therm_file(config_file_name='config.txt'):
     """
         returns the filename of output file as it is in the config file
@@ -357,6 +432,8 @@ successfully changed to %s" % (setting, setting_value)))
 
         logging.error("Could not set the parameter %s to %s in the config \
 file located at %s\n" % (setting, setting_value, config_file_path))
+        import sys
+        logging.error(sys.exc_info())
 
 
 def get_settings_name(**kwargs):
@@ -718,4 +795,5 @@ def match_value2index(array1D, val):
 
 
 if __name__ == "__main__":
+    print(open_custom_file("test", 5, "../../config.txt"))
     pass

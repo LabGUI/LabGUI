@@ -20,6 +20,7 @@ class Instrument(Tool.MeasInstr):
     def __init__(self, resource_name, debug=False, **kwargs):
         super(Instrument, self).__init__(resource_name, 'LS370_janis', debug=debug,
                                          interface=INTERFACE, timeout=12, **kwargs)
+        self.DEBUG = debug
 
     def measure(self, channel):
         if channel in self.last_measure:

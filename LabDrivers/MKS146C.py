@@ -18,7 +18,7 @@ class Instrument(Tool.MeasInstr):
     def __init__(self, resource_name, debug=False, **keyw):
         super(Instrument, self).__init__(resource_name, 'MKS', debug=debug, interface=INTERFACE, baud_rate=9600,
                                          term_chars="\r", timeout=1, bytesize=serial.SEVENBITS, parity=serial.PARITY_EVEN, stopbits=serial.STOPBITS_ONE)  # , xonxoff=False, dsrdtr=False, **keyw)
-
+        self.debug = debug
     def measure(self, channel):
         if channel in self.last_measure:
             if not self.debug:

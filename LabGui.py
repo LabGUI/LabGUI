@@ -481,7 +481,6 @@ have the right format, '%s' will be used instead"
             for o in os.listdir(user_widget_path)
             if o.endswith(".py") and "__init__" not in o
         ]
-
         # the user widgets the user would like to run, given in the config file
         user_widgets = IOTool.get_user_widgets(config_file_path=self.config_file)
 
@@ -500,7 +499,6 @@ have the right format, '%s' will be used instead"
                         "The user widget '%s' is not found at %s"
                         % (user_widget, user_widget_path)
                     )
-
         # add the widgets to the interface
         for widget in widgets_list:
 
@@ -1048,7 +1046,8 @@ have the right format, '%s' will be used instead"
         self.stop_DTT_action.setEnabled(True)
 
     def stop_DTT(self):
-
+        if self.output_file == "": # then it has never been started!
+            return
         if self.datataker.isRunning():
 
             self.datataker.ask_to_stop()
