@@ -12,7 +12,7 @@ param = {'V_DC': 'V', 'V_AC': 'V', 'I_DC': 'A',
 
 INTERFACE = Tool.INTF_GPIB
 
-REMOTE_LOCK = False
+REMOTE_LOCK = True
 
 
 class Instrument(Tool.MeasInstr):

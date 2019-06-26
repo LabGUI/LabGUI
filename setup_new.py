@@ -205,9 +205,13 @@ if WINDOWS:
     LAUNCHER_FILE = 'StartLabGui.bat'
 else:
     launcher = open("StartLabGui.sh", 'w+')
-    launcher.write("#/bin/sh\n")
+    launcher.write("#!/bin/sh\n")
     launcher.write(PYTHON_EXEC + " " + LAUNCH_PATH)
     launcher.close()
+    try:
+        subprocess.call("chmod +x StartLabGui.sh".split(" "))
+    except:
+        pass
     LAUNCHER_FILE = 'StartLabGui.sh'
 
 print("Launcher is "+LAUNCHER_FILE)

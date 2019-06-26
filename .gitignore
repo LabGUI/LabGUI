@@ -21,5 +21,7 @@ venv*/
 build/
 StartLabGui*
 labgui.egg-info
+LabGui.egg-info
 bin/
 dist*
+tools/linux/linux-gpib*
