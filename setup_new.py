@@ -85,8 +85,10 @@ VER = str(version_info.major)+str(version_info.minor)
 
 #print(CURR_DIR)
 #print(os.getcwd())
-PYTHON_EXEC = os.fspath(sys.executable)
-
+if hasattr(os, "fspath") and callable(os.fspath):
+    PYTHON_EXEC = os.fspath(sys.executable)
+else:
+    PYTHON_EXEC = os.path.abspath(sys.executable)
 
 
 print("=== LabGUI setup on "+operating_system+" ===")
@@ -123,7 +125,7 @@ if venv_exec in PYTHON_EXEC:
 else:
     if os.path.isfile(venv_exec):
         #print("Activating virtual environment")
-        cont = input("Activate virtual environment located at %s? [y/n]:")
+        cont = input("Activate virtual environment located at %s? [y/n]:"%venv_exec)
         if cont == 'n':
             VIRTUAL = False
         else:
@@ -166,8 +168,10 @@ else:
 
 
 print(NEWLINE)
-PYTHON_EXEC = os.fspath(sys.executable)
-
+if hasattr(os, "fspath") and callable(os.fspath):
+    PYTHON_EXEC = os.fspath(sys.executable)
+else:
+    PYTHON_EXEC = os.path.abspath(sys.executable)
 
 
 print("Current python executable: "+PYTHON_EXEC)

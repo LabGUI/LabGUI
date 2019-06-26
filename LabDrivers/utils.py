@@ -47,9 +47,11 @@ INTF_PROLOGIX = 'prologix'
 INTF_GPIB = IOTool.get_interface_setting()
 INTF_SERIAL = 'serial'
 
+VISA_BACKEND = IOTool.get_visa_backend_setting()
+
 INTF_NONE = 'None'
 
-PROLOGIX_COM_PORT = "COM5"
+PROLOGIX_COM_PORT = "COM5" # TODO: make/check dynamic
 # cf section 8.2 of the manual : http://prologix.biz/downloads/PrologixGpibUsbManual-6.0.pdf
 PROLOGIX_AUTO = 'prologix_auto_opt'
 PROLOGIX_BAUD = 115200 # apparently, this is meaningless
@@ -83,7 +85,7 @@ def list_GPIB_ports():
             available_ports = visa.get_instruments_list()
         else:
 
-            rm = visa.ResourceManager()
+            rm = visa.ResourceManager(VISA_BACKEND)
             available_ports = rm.list_resources()
             temp_ports = []
             for port in available_ports:

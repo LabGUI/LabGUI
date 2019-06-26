@@ -39,8 +39,10 @@ os.chdir(CURR_DIR)
 
 #print(CURR_DIR)
 #print(os.getcwd())
-PYTHON_EXEC = os.fspath(sys.executable)
-
+if hasattr(os, "fspath") and callable(os.fspath):
+    PYTHON_EXEC = os.fspath(sys.executable)
+else:
+    PYTHON_EXEC = os.path.abspath(sys.executable)
 
 RELATIVE = None
 ## welcome info ##

@@ -19,7 +19,7 @@ htmlcov/
 .idea/
 venv*/
 build/
-StartLabGui.bat
+StartLabGui*
 labgui.egg-info
 bin/
 dist*

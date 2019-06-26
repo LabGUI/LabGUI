@@ -28,7 +28,10 @@ SETTINGS_ID = "SETTINGS"
 WIDGETS_ID = "USER_WIDGETS"
 LOAD_DATA_FILE_ID = "DATAFILE"
 GPIB_INTF_ID = "GPIB_INTF"
+VISA_BACKEND_ID = "VISA_BACKEND"
 
+
+VISA_BACKEND_DEFAULT = 'ni'
 
 def create_config_file(config_path=CONFIG_FILE_PATH):
     """
@@ -395,6 +398,32 @@ def get_debug_setting(**kwargs):
 def get_interface_setting(**kwargs):
     return get_config_setting(GPIB_INTF_ID, **kwargs)
 
+def get_visa_backend_setting(**kwargs):
+    """
+        This function returns the backend which will be input into visa.ResourceManager(backend)
+        
+        @ni uses national instruments backend (proprietary)
+        @py uses pure python pyvisa backend (open source)
+        
+        NOTE: py requires other packages to be installed, such as linux-gpib, pyusb, pyserial, etc, etc
+        
+        If not specified in config.txt, VISA_BACKEND_DEFAULT will be used
+    """
+    backend = get_config_setting(VISA_BACKEND_ID, **kwargs).lower()
+    if backend is None:
+        backend = VISA_BACKEND_DEFAULT
+
+    if not backend.startswith('@'):
+        backend = '@' + backend
+
+    return backend
+
+def set_visa_backend_settings(backend, **kwargs):
+    """
+        No intention of saving with @ symbol
+    """
+    backend = backend.lstrip('@').rstrip('\n').lower()
+    set_config_setting(VISA_BACKEND_ID, backend, **kwargs)
 
 def get_drivers(_):
     print('DEPRECATED: USE LabDrivers.utils.list_drivers instead.')

@@ -14,6 +14,12 @@ from importlib import import_module
 import inspect
 import numpy as np
 
+try:
+    from LabTools.IO import IOTool
+    VISA_BACKEND = IOTool.get_visa_backend_setting()
+except:
+    VISA_BACKEND = '@ni' # current default
+
 import logging
 logging.basicConfig(level=logging.DEBUG)
 
@@ -34,6 +40,10 @@ except ImportError:
 
     visa_available = False
     print("pyvisa package not installed")
+
+
+def visa_resource_manager():
+    return visa.ResourceManager(VISA_BACKEND)
 
 
 import socket
@@ -139,7 +149,7 @@ class MeasInstr(object):
             # version of pyvisa
             if not old_visa:
 
-                self.resource_manager = visa.ResourceManager()
+                self.resource_manager = visa_resource_manager()
 
         if self.interface == INTF_PROLOGIX:
             # there is only one COM port that the prologix has, then we go
@@ -509,7 +519,7 @@ file to see which are the ones implemented" % (self.ID_name, resource_name))
     def change_interface(self, intf, **kwargs): # only really applicable to prologix/pyvisa
         if intf == INTF_VISA and self.interface != INTF_VISA:
             self.interface = INTF_VISA
-            self.resource_manager = visa.ResourceManager()
+            self.resource_manager = visa_resource_manager()
             self.connect(self.resource_name)
             self.connection.timeout = 1
 
@@ -1019,7 +1029,7 @@ def whoisthere():
 
     else:
 
-        rm = visa.ResourceManager()
+        rm = visa_resource_manager()
         port_addresses = rm.list_resources()
 
     connection_list = {}
