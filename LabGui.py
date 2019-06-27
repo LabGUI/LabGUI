@@ -79,6 +79,9 @@ DDT_CODE_STARTED = "started"
 DDT_CODE_RESUMED = "resumed"
 DDT_CODE_ALREADY_RUNNING = "start_error"
 
+## Variables so Tools do not restart with LabGui
+USERWIDGET_MANAGER = None
+CONFIG_MANAGER = None
 
 class LabGuiMain(QtGui.QMainWindow):
     """
@@ -187,7 +190,7 @@ class LabGuiMain(QtGui.QMainWindow):
         # should be loaded directly form InstrumentWidget
 
         instrument_hub_connected = pyqtSignal("PyQt_PyObject")
-
+    EXIT_CODE_REBOOT = -12121212 #unused
     def __init__(self, argv=[]):
 
         # run the initializer of the class inherited from6
@@ -363,8 +366,14 @@ have the right format, '%s' will be used instead"
         self.cmdline = CommandWidget.CommandWidget(parent=self)
         self.cmddock = None
 
-        self.config_manager = None
-        self.upserwidget_manager = None
+        # alert certain tool widgets of reboot
+        if USERWIDGET_MANAGER is not None:
+            USERWIDGET_MANAGER.set_parent(self)
+        if CONFIG_MANAGER is not None:
+            CONFIG_MANAGER.set_parent(self)
+
+        self.force = False # if true, it will not ask user if they are sure they want to quit
+
         # self.cmdline.instr_hub = self.instr_hub
 
         # handle data emitted by datataker (basically stuff it into a shared,
@@ -667,6 +676,18 @@ have the right format, '%s' will be used instead"
             tip="Enable/disable User-Widgets"
         )
         self.toolMenu.addAction(self.tool_widget_manager_state)
+
+        self.toolMenu.addSeparator()
+
+        self.tool_reboot_application_state = QtTools.create_action(
+            self,
+            "Reboot LabGUI",
+            slot=self.relaunch,
+            shortcut=None,
+            icon=None,
+            tip="Restarts LabGUI"
+        )
+        self.toolMenu.addAction(self.tool_reboot_application_state)
         # ##### OPTION MENU SETUP ######
         self.toggle_debug_state = QtTools.create_action(
             self,
@@ -769,8 +790,8 @@ have the right format, '%s' will be used instead"
         """
         widget_creation(self)
 
-    def closeEvent(self, event, force=False):
-        if force:
+    def closeEvent(self, event):
+        if self.force:
             reply = QtGui.QMessageBox.Yes
         else:
             reply = QtGui.QMessageBox.question(
@@ -1483,28 +1504,37 @@ have the right format, '%s' will be used instead"
         logging.config.fileConfig(os.path.join(ABS_PATH, "logging.conf"))
 
     def tool_configurationmanager(self):
-        self.config_manager = ConfigurationManager.ConfigurationManager(self)
-        self.config_manager.show()
+        global CONFIG_MANAGER
+        CONFIG_MANAGER = ConfigurationManager.ConfigurationManager(self)
+        CONFIG_MANAGER.show()
 
     def tool_widgetmanager(self):
-        self.upserwidget_manager = UserWidgetManager.UserWidgetManager()
-        self.upserwidget_manager.show()
-    #def relaunch(self):
+        global USERWIDGET_MANAGER
+        USERWIDGET_MANAGER = UserWidgetManager.UserWidgetManager(self)
+        USERWIDGET_MANAGER.show()
+    def relaunch(self, force=False, **kwargs):
+        self.force = force
+        if hasattr(self, 'Qapp'):
+            self.close()
+            self.Qapp.exit(self.EXIT_CODE_REBOOT)
+        else:
+            self.close()
+            QApplication.exit(self.EXIT_CODE_REBOOT)
+        #self.exit(self.EXIT_CODE_REBOOT)
     #    relaunch_LabGui()
 
-WIDGET_INSTANCE = None
-app = None
 def launch_LabGui():
-    global WIDGET_INSTANCE, app
-    app = QApplication(sys.argv)
-    WIDGET_INSTANCE = LabGuiMain()
-    WIDGET_INSTANCE.show()
-    sys.exit(app.exec_())
+    #global WIDGET_INSTANCE, app
+    currentExitCode = LabGuiMain.EXIT_CODE_REBOOT
+    while currentExitCode == LabGuiMain.EXIT_CODE_REBOOT:
+        app = QApplication(sys.argv)
+        ex = LabGuiMain()
+        ex.Qapp = app
+        ex.show()
+        currentExitCode = app.exec_()
+    sys.exit(currentExitCode)
 
-def relaunch_LabGui():
-    global WIDGET_INSTANCE, app
-    WIDGET_INSTANCE = LabGuiMain()
-    WIDGET_INSTANCE.show()
+
 
 def test_automatic_fitting():
     app = QApplication(sys.argv)

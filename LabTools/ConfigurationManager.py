@@ -545,7 +545,8 @@ class ConfigurationManager(QtGui.QWidget):
             self.values[name] = widget.getValue()
 
 
-
+    def set_parent(self, new_parent):
+        self.parent = new_parent
 
     ### EVENT STUFF ###
     def change_active_widgets(self, *args, **kwargs):
@@ -573,13 +574,13 @@ class ConfigurationManager(QtGui.QWidget):
 
     def save_event(self):
         self.save()
-        #if self.parent is None:
-        dia = QtGui.QMessageBox(self)
-        dia.setWindowTitle("Save confirmation")
-        dia.setText("Saved! Restart LabGUI to see changes.")
-        dia.show()
-        #else:
-        #    self.parent.relaunch()
+        if self.parent is None:
+            dia = QtGui.QMessageBox(self)
+            dia.setWindowTitle("Save confirmation")
+            dia.setText("Saved! Restart LabGUI to see changes.")
+            dia.show()
+        else:
+            self.parent.relaunch(force=True)
 
     def edit(self):
         try:

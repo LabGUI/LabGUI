@@ -179,6 +179,8 @@ class UserWidgetManager(QtGui.QWidget):
             if o.endswith(".py") and "__init__" not in o
         ]
 
+    def set_parent(self, new_parent):
+        self.parent = new_parent
 
     ### EVENT STUFF ###
     def change_active_widgets(self, *args, **kwargs):
@@ -202,11 +204,13 @@ class UserWidgetManager(QtGui.QWidget):
 
     def save_userwidget_selection_event(self):
         self.save_userwidget_selection()
-
-        dia = QtGui.QMessageBox(self)
-        dia.setWindowTitle("Save confirmation")
-        dia.setText("Saved! Restart LabGUI to see changes.")
-        dia.show()
+        if self.parent is None:
+            dia = QtGui.QMessageBox(self)
+            dia.setWindowTitle("Save confirmation")
+            dia.setText("Saved! Restart LabGUI to see changes.")
+            dia.show()
+        else:
+            self.parent.relaunch(force=True)
 
 
 if __name__ == "__main__":
