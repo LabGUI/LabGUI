@@ -56,6 +56,7 @@ class CommandWidget(QtGui.QWidget):
         #self.commandLineEdit.editingFinished.connect(self.enterPress)
         self.commandLineEdit.returnPressed.connect(self.enterPress)
         self.commandLineEdit.textChanged.connect(self.textChanged)
+        #self.commandLineEdit.keyPressEvent.connect(self.cmd_keyPress)
         self.commandLineEdit.setPlaceholderText("Please enter a command")
 
         #device dropdown
@@ -89,6 +90,7 @@ class CommandWidget(QtGui.QWidget):
         self.sanitized_list = list() # tuple, (name, port, object)
 
         self.history = list()
+        self.cmd_pos = 0
 
         self.numbers = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten']
 
@@ -119,6 +121,26 @@ class CommandWidget(QtGui.QWidget):
         else:
 
             self.consoleTextEdit.setPlainText(new_text)
+    def keyPressEvent(self, event):
+        if event.key() == QtCore.Qt.Key_Up:
+            self.cmd_pos += 1
+            try:
+                cmd = self.history[-self.cmd_pos]
+                self.commandLineEdit.setText(cmd)
+            except:
+                self.cmd_pos -= 1 #undo damage
+                pass
+        elif event.key() == QtCore.Qt.Key_Down:
+            if self.cmd_pos > 0:
+                self.cmd_pos -= 1
+                if self.cmd_pos == 0:
+                    self.commandLineEdit.clear()
+                else:
+                    try:
+                        cmd = self.history[-self.cmd_pos]
+                        self.commandLineEdit.setText(cmd)
+                    except:
+                        pass
 
     def enterPress(self):
         cmd = self.commandLineEdit.text()
@@ -188,6 +210,7 @@ class CommandWidget(QtGui.QWidget):
         if cmd in '': #default for empty string, returns as to not cause error and crash
             return
 
+        #self.history.insert(len(self.history)-self.cmd_pos, cmd)
         self.history.append(cmd)
         strl = cmd.split(' ', 1)
         if len(strl) is 0:

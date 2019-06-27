@@ -35,3 +35,5 @@ except ImportError:
     #print("using PyQt4")
 
 MAIN_DIR = os.path.abspath(os.path.dirname(__file__))
+
+PYVISA_PY = '@py'

@@ -23,7 +23,7 @@ import numpy as np
 
 from LabTools.IO import IOTool
 from LabTools.Display import QtTools, PlotDisplayWindow, mplZoomWidget
-from LabTools import DataManagement
+from LabTools import DataManagement, ConfigurationManager, UserWidgetManager
 # for commandwidget
 from LabTools.CoreWidgets import CommandWidget
 from LabDrivers import Tool
@@ -362,6 +362,9 @@ have the right format, '%s' will be used instead"
 
         self.cmdline = CommandWidget.CommandWidget(parent=self)
         self.cmddock = None
+
+        self.config_manager = None
+        self.upserwidget_manager = None
         # self.cmdline.instr_hub = self.instr_hub
 
         # handle data emitted by datataker (basically stuff it into a shared,
@@ -406,6 +409,7 @@ have the right format, '%s' will be used instead"
         self.plotMenu = self.menuBar().addMenu("&Plot")
         self.instMenu = self.menuBar().addMenu("&Meas/Connect")
         self.windowMenu = self.menuBar().addMenu("&Window")
+        self.toolMenu = self.menuBar().addMenu("&Tools")
         self.optionMenu = self.menuBar().addMenu("&Options")
 
         self.loggingSubMenu = self.optionMenu.addMenu("&Logger output level")
@@ -642,7 +646,27 @@ have the right format, '%s' will be used instead"
         )
 
         self.windowMenu.addAction(self.add_pdw)
+        ###### TOOL MENU SETUP #######
 
+        self.tool_config_manager_state = QtTools.create_action(
+            self,
+            "Configuration Manager",
+            slot=self.tool_configurationmanager,
+            shortcut=None,
+            icon=None,
+            tip="Launch Configuration Manager"
+        )
+        self.toolMenu.addAction(self.tool_config_manager_state)
+
+        self.tool_widget_manager_state = QtTools.create_action(
+            self,
+            "User-Widget Manager",
+            slot=self.tool_widgetmanager,
+            shortcut=None,
+            icon=None,
+            tip="Enable/disable User-Widgets"
+        )
+        self.toolMenu.addAction(self.tool_widget_manager_state)
         # ##### OPTION MENU SETUP ######
         self.toggle_debug_state = QtTools.create_action(
             self,
@@ -745,14 +769,17 @@ have the right format, '%s' will be used instead"
         """
         widget_creation(self)
 
-    def closeEvent(self, event):
-        reply = QtGui.QMessageBox.question(
-            self,
-            "Message",
-            "Are you sure you want to quit?",
-            QtGui.QMessageBox.Yes,
-            QtGui.QMessageBox.No,
-        )
+    def closeEvent(self, event, force=False):
+        if force:
+            reply = QtGui.QMessageBox.Yes
+        else:
+            reply = QtGui.QMessageBox.question(
+                self,
+                "Message",
+                "Are you sure you want to quit?",
+                QtGui.QMessageBox.Yes,
+                QtGui.QMessageBox.No,
+            )
 
         if reply == QtGui.QMessageBox.Yes:
 
@@ -1455,13 +1482,29 @@ have the right format, '%s' will be used instead"
 
         logging.config.fileConfig(os.path.join(ABS_PATH, "logging.conf"))
 
+    def tool_configurationmanager(self):
+        self.config_manager = ConfigurationManager.ConfigurationManager(self)
+        self.config_manager.show()
 
+    def tool_widgetmanager(self):
+        self.upserwidget_manager = UserWidgetManager.UserWidgetManager()
+        self.upserwidget_manager.show()
+    #def relaunch(self):
+    #    relaunch_LabGui()
+
+WIDGET_INSTANCE = None
+app = None
 def launch_LabGui():
+    global WIDGET_INSTANCE, app
     app = QApplication(sys.argv)
-    ex = LabGuiMain()
-    ex.show()
+    WIDGET_INSTANCE = LabGuiMain()
+    WIDGET_INSTANCE.show()
     sys.exit(app.exec_())
 
+def relaunch_LabGui():
+    global WIDGET_INSTANCE, app
+    WIDGET_INSTANCE = LabGuiMain()
+    WIDGET_INSTANCE.show()
 
 def test_automatic_fitting():
     app = QApplication(sys.argv)

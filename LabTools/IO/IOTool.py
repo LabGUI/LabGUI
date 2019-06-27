@@ -31,8 +31,13 @@ GPIB_INTF_ID = "GPIB_INTF"
 VISA_BACKEND_ID = "VISA_BACKEND"
 
 
-VISA_BACKEND_DEFAULT = 'ni'
 
+
+VISA_BACKEND_DEFAULT = '@ni'
+VISA_BACKEND_OPTIONS = ['@ni', '@py']
+
+INTERFACE_DEFAULT = 'pyvisa'
+INTERFACE_OPTIONS = ['pyvisa','prologix']
 def create_config_file(config_path=CONFIG_FILE_PATH):
     """
     this function generate a generic config file from a given path
@@ -73,6 +78,17 @@ def save_config_file(data_path=None):
         of.write("%s=%sdata\\\n" % (LOAD_DATA_FILE_ID, MAIN_DIR))
         of.close()
 
+def _read_config_file(config_file_path=CONFIG_FILE_PATH):
+    ret = ""
+    with open(CONFIG_FILE_PATH, 'r') as file:
+        ret = file.read()
+        file.close()
+    return ret
+
+def _write_config_file(raw_text, config_file_path=CONFIG_FILE_PATH):
+    with open(CONFIG_FILE_PATH, 'w+') as file:
+        file.write(raw_text)
+        #file.writelines(raw_text.split('\n'))
 
 def open_therm_file(config_file_name='config.txt'):
     """
@@ -361,10 +377,15 @@ successfully changed to %s" % (setting, setting_value)))
         logging.error("Could not set the parameter %s to %s in the config \
 file located at %s\n" % (setting, setting_value, config_file_path))
 
-
+def get_save_file_path(**kwargs):
+    return get_config_setting(SAVE_DATA_PATH_ID, **kwargs)
+def set_save_file_path(path, **kwargs):
+    set_config_setting(SAVE_DATA_PATH_ID, path, **kwargs)
 def get_settings_name(**kwargs):
     return get_config_setting(SETTINGS_ID, **kwargs)
 
+def set_settings_name(settings_name, **kwargs):
+    set_config_setting(SETTINGS_ID, settings_name, **kwargs)
 
 def get_user_widgets(**kwargs):
     """ collect the widget names the user would like to run"""
@@ -374,9 +395,17 @@ def get_user_widgets(**kwargs):
     else:
         return widgets.split(';')
 
+def set_user_widgets(widgets, **kwargs):
+    """ set user widgets, in form of list """
+    if type(widgets) != list:
+        widgets = [widgets]
+    set_config_setting(WIDGETS_ID, ";".join(widgets), **kwargs)
 
 def get_script_name(**kwargs):
     return get_config_setting("SCRIPT", **kwargs)
+
+def set_script_name(script_name, **kwargs):
+    set_config_setting("SCRIPT", script_name, **kwargs)
 
 
 def get_debug_setting(**kwargs):
@@ -397,6 +426,8 @@ def get_debug_setting(**kwargs):
 
 def get_interface_setting(**kwargs):
     return get_config_setting(GPIB_INTF_ID, **kwargs)
+def set_interface_setting(setting, **kwargs):
+    set_config_setting(GPIB_INTF_ID, setting, **kwargs)
 
 def get_visa_backend_setting(**kwargs):
     """
@@ -409,12 +440,12 @@ def get_visa_backend_setting(**kwargs):
         
         If not specified in config.txt, VISA_BACKEND_DEFAULT will be used
     """
-    backend = get_config_setting(VISA_BACKEND_ID, **kwargs).lower()
+    backend = get_config_setting(VISA_BACKEND_ID, **kwargs)
     if backend is None:
         backend = VISA_BACKEND_DEFAULT
 
     if not backend.startswith('@'):
-        backend = '@' + backend
+        backend = '@' + backend.lower()
 
     return backend
 
@@ -717,6 +748,16 @@ def list_module_func(module_name, package=None):
 
     return my_funcs
 
+def list_user_widgets():
+    path = os.path.dirname(os.path.dirname(__file__))
+    path = os.path.join(path, "UserWidgets")
+    return [
+        o.rstrip(".py")
+        for o in os.listdir(path)
+        if o.endswith(".py") and "__init__" not in o
+    ]
+def list_interface_options():
+    return ['pyvisa', 'prologix']
 
 def save_matrix(matrix_m):
     np.savetxt('matrix.dat', matrix_m)
@@ -745,6 +786,51 @@ def match_value2index(array1D, val):
                 index = max(np.where(my_array < val)[0])
     return index
 
+CONFIG_OPTIONS = {
+    SCRIPT_ID : {
+        "get" : get_script_name,
+        "set" : set_script_name,
+        "type": 'file',
+        "name": "Default Script"
+    },
+    SAVE_DATA_PATH_ID : {
+        "get" : get_save_file_path,
+        "set" : set_save_file_path,
+        "type": 'path',
+        "name": "Save Data Path"
+    },
+    SETTINGS_ID : {
+        "get" :  get_settings_name,
+        "set" : set_settings_name,
+        "type" : 'file',
+        "name" : "Settings File"
+    },
+    WIDGETS_ID : {
+        "get" :  get_user_widgets,
+        "set" : set_user_widgets,
+        "default" : None,
+        "options" : list_user_widgets(),
+        "reset" : list_user_widgets,
+        "name" : "User Widgets",
+        "type" : "listview"
+    },
+    GPIB_INTF_ID : {
+        "get" :  get_interface_setting,
+        "set" : set_interface_setting,
+        "options" : list_interface_options(),
+        "default" : INTERFACE_DEFAULT,
+        "type" : "selector",
+        "name" : "Interface Type"
+    },
+    VISA_BACKEND_ID : {
+        "get" : get_visa_backend_setting,
+        "set" : set_visa_backend_settings,
+        "default": VISA_BACKEND_DEFAULT,
+        "options": ['@ni','@py'],
+        "name": "VISA Backend",
+        "type" : "selector"
+    }
+}
 
 if __name__ == "__main__":
     pass
