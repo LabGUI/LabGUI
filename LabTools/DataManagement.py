@@ -153,7 +153,6 @@ user variable")
     def run(self):
 
         rel_path = os.path.basename(os.path.abspath(os.path.curdir))
-        print(rel_path)
         rel_path = self.script_file_name.split(rel_path)[1]
 
 

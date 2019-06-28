@@ -422,7 +422,7 @@ class InstrumentWindow(QtGui.QWidget):
                 self.bt_connecthub = QtGui.QPushButton("Connect", self)
                 self.bt_connecthub.setEnabled(True)
                 self.bt_connecthub.clicked.connect(self.bt_connecthub_clicked)
-
+                self.bt_connectHub_og_style = self.bt_connecthub.styleSheet()
 #                self.bt_refreshports = QtGui.QPushButton("RefreshPorts", self)
 #                self.bt_refreshports.setEnabled(True)
 #                self.connect(self.bt_refreshports, SIGNAL(
@@ -592,7 +592,7 @@ class InstrumentWindow(QtGui.QWidget):
         in the main window"""
         if self.bt_connecthub.isEnabled:
 
-            self.bt_connecthub.setStyleSheet("background-color : '#b3e0ff'")
+            # HANDLED IN ACTUAL CONNECT FUNCTION: self.bt_connectHub_clickedstyle()
 
             if USE_PYQT5:
 
@@ -601,6 +601,13 @@ class InstrumentWindow(QtGui.QWidget):
             else:
 
                 self.emit(SIGNAL("ConnectInstrumentHub(bool)"), True)
+    def bt_connectHub_clickedstyle(self):
+        self.bt_connecthub.setStyleSheet("background-color : '#b3e0ff'")
+    def bt_connectHub_resetstyle(self):
+        """
+        This method is called when forcing a disconnect
+        """
+        self.bt_connecthub.setStyleSheet(self.bt_connectHub_og_style)
 
     def bt_add_line_clicked(self):
         """
@@ -847,6 +854,24 @@ def refresh_ports_list(parent):
 
     parent.widgets['InstrumentWidget'].refresh_cbb_port()
 
+def disconnect_instrument_hub(parent):
+    """
+        When "disconnect" is called
+    """
+    if parent.DTT_isRunning():
+        parent.stop_DTT()
+    parent.instr_hub.disconnect_hub()
+
+    if USE_PYQT5:
+
+        parent.instrument_hub_disconnected.emit()
+
+    else:
+
+        parent.emit(
+            SIGNAL("instrument_hub_disconnected()") )
+
+    parent.widgets['InstrumentWidget'].bt_connectHub_resetstyle()
 
 def connect_instrument_hub(parent):
     """
@@ -887,8 +912,11 @@ def connect_instrument_hub(parent):
     if connect:
 
         print("Connect instrument hub...")
-        parent.instr_hub.connect_hub(
+        return_status = parent.instr_hub.connect_hub(
             instr_name_list, dev_list, param_list)
+        if not return_status:
+            print("...instrument hub not connected")
+            return False
         print("...instrument hub connected")
 
         if USE_PYQT5:
@@ -920,6 +948,9 @@ different than " + str(actual_instrument_number)
 
     except:
         pass
+
+    parent.widgets['InstrumentWidget'].bt_connectHub_clickedstyle()
+    return True
 
 
 def add_widget_into_main(parent):
@@ -967,9 +998,15 @@ def add_widget_into_main(parent):
         parent.connect_instrument_hub = MethodType(connect_instrument_hub,
                                                    parent)
 
+        parent.disconnect_instrument_hub = MethodType(disconnect_instrument_hub,
+                                                   parent)
+
     else:
 
         parent.connect_instrument_hub = MethodType(connect_instrument_hub,
+                                                   parent, parent.__class__)
+
+        parent.disconnect_instrument_hub = MethodType(disconnect_instrument_hub,
                                                    parent, parent.__class__)
 
     if USE_PYQT5:

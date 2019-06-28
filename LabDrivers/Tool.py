@@ -692,6 +692,7 @@ class InstrumentHub(QObject):
         changed_list = pyqtSignal()
 
         instrument_hub_connected = pyqtSignal()
+        instrument_hub_disconnected = pyqtSignal()
 
     def __init__(self, parent=None, debug=False, **kwargs):
 
@@ -818,6 +819,21 @@ argument is not the good one")
             logging.error("Problem with change of interface in the the \
 instrument hub. Interface passed as an argument : %s" % intf)
     # debug note may23rd2019 - HP34401A throws error in this function
+    def disconnect_hub(self):
+        self.clean_up()
+        if self.parent is not None:
+            if USE_PYQT5:
+
+                self.changed_list.emit()
+
+                self.instrument_hub_disconnected.emit()
+
+            else:
+
+                self.emit(SIGNAL("changed_list()"))
+
+                self.emit(SIGNAL("instrument_hub_disconnected()"))
+
     def connect_hub(self, instr_list, dev_list, param_list):
         """ 
             triggers the connection of a list of instruments instr_list,
@@ -838,10 +854,13 @@ instrument hub. Interface passed as an argument : %s" % intf)
 
             logging.debug("Trying to connecting %s to %s to measure %s" % (
                 instr_name, device_port, param))
-
-            self.connect_instrument(
-                instr_name, device_port, param, send_signal=False)
-
+            try:
+                self.connect_instrument(
+                    instr_name, device_port, param, send_signal=False)
+            except OSError as e:
+                print("Unable to connect to device %s on port %s"%(instr_name, device_port))
+                self.disconnect_hub()
+                return False
         if self.parent is not None:
             # notify that the list of instuments has been modified
 
@@ -860,6 +879,8 @@ instrument hub. Interface passed as an argument : %s" % intf)
         logging.debug("Connect_hub : the lists of instrument and port-params")
         logging.debug(self.port_param_pairs)
         logging.debug(self.instrument_list)
+
+        return True
 
     def connect_instrument(self, instr_name, device_port, param, send_signal=True):
         # device_port should contain the name of the GPIB or the COM port
