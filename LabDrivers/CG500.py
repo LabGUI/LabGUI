@@ -16,13 +16,18 @@ param = {'HeLevel': 'cm', 'HeLevel2': 'cm'}
 
 INTERFACE = Tool.INTF_GPIB
 
+
 class Instrument(Tool.MeasInstr):
 
     # a tag that will be initiallized with the same name than the module
     # const_label=''
 
     def __init__(self, resource_name, debug=False, **kwargs):
-        super(Instrument, self).__init__(resource_name, 'CG500', debug=debug, interface = INTERFACE, **kwargs)
+
+        if 'interface' not in kwargs:
+            kwargs['interface'] = INTERFACE
+        super(Instrument, self).__init__(resource_name, 'CG500',
+                                         debug=debug, **kwargs)
 
 #------------------------------------------------------------------------------
 
@@ -89,6 +94,7 @@ class Instrument(Tool.MeasInstr):
     # lab
     def set_alarm(self, value_alarm):
         return self.write('ALARM ' + str(value_alarm) + ';ALARM?')
+
 
 if (__name__ == '__main__'):
 

@@ -7,8 +7,18 @@ License: see LICENSE.txt file
 """
 
 import sys
-import PyQt4.QtGui as QtGui
-import PyQt4.QtCore as QtCore
+
+
+from LocalVars import USE_PYQT5
+
+if USE_PYQT5:
+
+    import PyQt5.QtCore as QtCore
+    import PyQt5.QtWidgets as QtGui
+
+else:
+    import PyQt4.QtGui as QtGui
+    import PyQt4.QtCore as QtCore
 
 
 class LimitsWidget(QtGui.QWidget):
@@ -32,7 +42,17 @@ class LimitsWidget(QtGui.QWidget):
         self.add_line(self.axisLayout, labels)
         self.setLayout(self.verticalLayout)
 
-        self.connect(parent, QtCore.SIGNAL("selections_limits(PyQt_PyObject,int,int,int)"), self.updated_selection)
+        if parent is not None:
+
+            if USE_PYQT5:
+
+                parent.selections_limits.connect(self.updated_selection)
+
+            else:
+
+                self.connect(parent, QtCore.SIGNAL(
+                    "selections_limits(PyQt_PyObject,int,int,int)"),
+                    self.updated_selection)
 
     def add_label(self, label):
 
@@ -92,30 +112,27 @@ class LimitsWidget(QtGui.QWidget):
 
 def add_widget_into_main(parent):
     """add a widget into the main window of LabGuiMain
-    
+
     create a QDock widget and store a reference to the widget
     """
 
-    mywidget = LimitsWidget(parent = parent)
-    
-    #create a QDockWidget
+    mywidget = LimitsWidget(parent=parent)
+
+    # create a QDockWidget
     limitsDockWidget = QtGui.QDockWidget("Limits", parent)
     limitsDockWidget.setObjectName("limitsWidget")
     limitsDockWidget.setAllowedAreas(
         QtCore.Qt.LeftDockWidgetArea | QtCore.Qt.RightDockWidgetArea)
-        
-    #fill the dictionnary with the widgets added into LabGuiMain
+
+    # fill the dictionnary with the widgets added into LabGuiMain
     parent.widgets['LimitsWidget'] = mywidget
-    
+
     limitsDockWidget.setWidget(mywidget)
     parent.addDockWidget(QtCore.Qt.RightDockWidgetArea, limitsDockWidget)
-    
-    #Enable the toggle view action
+
+    # Enable the toggle view action
     parent.windowMenu.addAction(limitsDockWidget.toggleViewAction())
     limitsDockWidget.hide()
-
-
-
 
 
 def fill_layout_textbox(layout, text):
@@ -126,6 +143,7 @@ def fill_layout_textbox(layout, text):
         item = layout.itemAt(i)
         widget = item.widget()
         widget.setText(str(label))
+
 
 if __name__ == "__main__":
 

@@ -18,14 +18,27 @@ Copyright © 2005 Florent Rougon, 2006 Darren Dale
 
 __version__ = "1.0.0"
 
-from PyQt4.QtGui import QSizePolicy
-from PyQt4.QtCore import QSize
 
-from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as Canvas
 from matplotlib.figure import Figure
 
 from matplotlib import rcParams
 rcParams['font.size'] = 9
+
+from LocalVars import USE_PYQT5
+
+if USE_PYQT5:
+
+    import PyQt5.QtWidgets as QtGui
+    from PyQt5.QtCore import QSize
+
+    from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as Canvas
+
+else:
+
+    import PyQt4.QtGui as QtGui
+    from PyQt4.QtCore import QSize
+
+    from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as Canvas
 
 
 class MatplotlibWidget(Canvas):
@@ -34,7 +47,7 @@ class MatplotlibWidget(Canvas):
     and matplotlib.backend_bases.FigureCanvasBase
 
     Options: option_name (default_value)
-    -------    
+    -------
     parent (None): parent widget
     title (''): figure title
     xlabel (''): X-axis label
@@ -46,7 +59,6 @@ class MatplotlibWidget(Canvas):
     width (4): width in inches
     height (3): height in inches
     dpi (100): resolution in dpi
-    hold (False): if False, figure will be cleared each time plot is called
 
     Widget attributes:
     -----------------
@@ -55,7 +67,7 @@ class MatplotlibWidget(Canvas):
 
     Example:
     -------
-    self.widget = MatplotlibWidget(self, yscale='log', hold=True)
+    self.widget = MatplotlibWidget(self, yscale='log')
     from numpy import linspace
     x = linspace(-10, 10)
     self.widget.axes.plot(x, x**2)
@@ -64,7 +76,8 @@ class MatplotlibWidget(Canvas):
 
     def __init__(self, parent=None, title='', xlabel='', ylabel='',
                  xlim=None, ylim=None, xscale='linear', yscale='linear',
-                 width=4, height=3, dpi=100, hold=False):
+                 width=4, height=3, dpi=100):
+
         self.figure = Figure(figsize=(width, height), dpi=dpi)
         self.axes = self.figure.add_subplot(111)
         self.axes.set_title(title)
@@ -78,13 +91,13 @@ class MatplotlibWidget(Canvas):
             self.axes.set_xlim(*xlim)
         if ylim is not None:
             self.axes.set_ylim(*ylim)
-        self.axes.hold(hold)
 
-        Canvas.__init__(self, self.figure)
+        super(MatplotlibWidget, self).__init__(self.figure)
+
         self.setParent(parent)
 
-        Canvas.setSizePolicy(self, QSizePolicy.Expanding,
-                             QSizePolicy.Expanding)
+        Canvas.setSizePolicy(self, QtGui.QSizePolicy.Expanding,
+                             QtGui.QSizePolicy.Expanding)
         Canvas.updateGeometry(self)
 
     def sizeHint(self):
@@ -110,7 +123,7 @@ if __name__ == '__main__':
             self.mplwidget = MatplotlibWidget(self, title='Example',
                                               xlabel='Linear scale',
                                               ylabel='Log scale',
-                                              hold=True, yscale='log')
+                                              yscale='log')
             self.mplwidget.setFocus()
             self.setCentralWidget(self.mplwidget)
             self.plot(self.mplwidget.axes)

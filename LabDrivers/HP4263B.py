@@ -12,11 +12,12 @@ param = {'': ''}
 
 INTERFACE = Tool.INTF_GPIB
 
+
 class Instrument(Tool.MeasInstr):
 
     def __init__(self, resource_name, debug=False, **kwargs):
         super(Instrument, self).__init__(resource_name, 'HP4263B', debug=debug,
-                                         interface = INTERFACE, **kwargs)
+                                         interface=INTERFACE, **kwargs)
 
     def identify(self, msg=''):
         if not self.DEBUG:

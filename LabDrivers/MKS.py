@@ -13,10 +13,11 @@ param = {'1': 'Torr', '2': 'Torr'}
 
 INTERFACE = Tool.INTF_SERIAL
 
+
 class Instrument(Tool.MeasInstr):
     def __init__(self, resource_name, debug=False, **keyw):
         super(Instrument, self).__init__(resource_name, 'MKS', debug=debug, interface=INTERFACE, baud_rate=9600,
-                                         term_chars="\r", timeout=1, bytesize=serial.SEVENBITS, parity=serial.PARITY_EVEN, stopbits=serial.STOPBITS_ONE)#, xonxoff=False, dsrdtr=False, **keyw)                                         
+                                         term_chars="\r", timeout=1, bytesize=serial.SEVENBITS, parity=serial.PARITY_EVEN, stopbits=serial.STOPBITS_ONE)  # , xonxoff=False, dsrdtr=False, **keyw)
 
     def measure(self, channel):
         if channel in self.last_measure:
@@ -46,7 +47,6 @@ class Instrument(Tool.MeasInstr):
         else:
             return 1.23e-3
 
-
     def read2(self):
         if not self.DEBUG:
             sio = self.sio
@@ -60,4 +60,3 @@ class Instrument(Tool.MeasInstr):
     def reopen(self):
         if not self.DEBUG:
             self.connexion.open()
-

@@ -8,19 +8,25 @@ Agilent E4400B 1GHz signal generator
 #!/usr/bin/env python
 import numpy as np
 import time
-import Tool # changed from "from . import Tool" (Simon, 2016-09-11)
+
+try:
+
+    from . import Tool
+
+except:
+
+    import Tool
 
 param = {'V': 'V', 'freq': 'Hz'}
 
 INTERFACE = Tool.INTF_VISA
 
+
 class Instrument(Tool.MeasInstr):
 
     def __init__(self, resource_name, debug=False, V_step_limit=None):
-        super(Instrument, self).__init__(resource_name, 'E4400B', debug=debug, interface = INTERFACE)
-
-    def __del__(self):
-        super(Instrument, self).__del__()
+        super(Instrument, self).__init__(resource_name,
+                                         'E4400B', debug=debug, interface=INTERFACE)
 
     def measure(self, channel='V'):
         if channel in self.last_measure:
@@ -32,7 +38,7 @@ class Instrument(Tool.MeasInstr):
                 if channel == 'freq':
                     answer = self.get_frequency()
             else:
-                answer = random.random()
+                answer = np.random.random()
             self.last_measure[channel] = answer
         else:
             print("you are trying to measure a non existent channel : " + channel)
@@ -55,11 +61,12 @@ class Instrument(Tool.MeasInstr):
         return answer
 
     def sweep_frequency(self, fstart, fstop, df, dwell=2e-3):
-        # NOTE : df should be multiple of 
+        # NOTE : df should be multiple of
         freq_range = np.arange(fstart, fstop + df, df)
         for freq in freq_range:
             self.set_frequency(freq)
             time.sleep(dwell)
+
 
 if __name__ == "__main__":
 

@@ -9,19 +9,20 @@ try:
     from . import Tool
 except:
     import Tool
-    
+
 import time
 
 param = {'': ''}
 
 INTERFACE = Tool.INTF_GPIB
 
+
 class Instrument(Tool.MeasInstr):
 
-    def __init__(self, resource_name, debug = False, **kwargs):
-        super(Instrument, self).__init__(resource_name, 'DAC488', debug=debug, 
-                                         interface = INTERFACE, **kwargs)
-        
+    def __init__(self, resource_name, debug=False, **kwargs):
+        super(Instrument, self).__init__(resource_name, 'DAC488', debug=debug,
+                                         interface=INTERFACE, **kwargs)
+
         if not self.DEBUG:
             #            self.name = instrument(name)
             self.currentVoltage = 0

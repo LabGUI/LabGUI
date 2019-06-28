@@ -13,11 +13,12 @@ param = {'': ''}
 
 INTERFACE = Tool.INTF_GPIB
 
+
 class Instrument(Tool.MeasInstr):
 
     def __init__(self, resource_name, debug=False, **kwargs):
         super(Instrument, self).__init__(resource_name, 'RF_source', debug=debug,
-                                         interface = INTERFACE, **kwargs)
+                                         interface=INTERFACE, **kwargs)
         if not self.DEBUG:
             self.POW_MIN = self.inst.ask(':SOUR:POW? MIN')
             self.POW_MAX = self.inst.ask(':SOUR:POW? MAX')

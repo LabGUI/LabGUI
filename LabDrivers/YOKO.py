@@ -9,17 +9,22 @@ Created on Mon Aug 12 16:16:02 2013
 #!/usr/bin/env python
 import time
 import random
-from . import Tool
+try:
+    from . import Tool
+except:
+    import Tool
 
 
 param = {'V': 'V'}
 
 INTERFACE = Tool.INTF_GPIB
 
+
 class Instrument(Tool.MeasInstr):
 
-    def __init__(self, resource_name, debug=False, V_step_limit = None, **kwargs):
-        super(Instrument, self).__init__(resource_name, 'YOKO', debug = debug, interface = INTERFACE, **kwargs)
+    def __init__(self, resource_name, debug=False, V_step_limit=None, **kwargs):
+        super(Instrument, self).__init__(resource_name, 'YOKO',
+                                         debug=debug, interface=INTERFACE, **kwargs)
         self.standard_setup()
         self.V_step_limit = V_step_limit
 
@@ -138,10 +143,10 @@ class Instrument(Tool.MeasInstr):
             s = ':SOUR:FUNC %s;:SOUR:%s %f;:%s:PROT %r;' % (
                 source_mode, source_mode, output_level, protection, compliance_level)
             self.write(s)
-            
+
     def move_voltage(self, p_target_voltage, step=0.0001, wait=0.001):
-    #    def move_voltage(self, p_reader, p_target_voltage, step=0.001, wait=0.005):
-    #        print 'Moving voltage'        
+        #    def move_voltage(self, p_reader, p_target_voltage, step=0.001, wait=0.005):
+        #        print 'Moving voltage'
         current_voltage = self.measure('V')
         # Parse move direction cases
         if current_voltage < p_target_voltage:  # If keithley needs to move up
@@ -149,9 +154,9 @@ class Instrument(Tool.MeasInstr):
             # target voltage
             while current_voltage < p_target_voltage:
                 # Stop if it needs to
-#                if p_reader.isStopped():
-#                    print "Stopping"
-#                    return 0
+                #                if p_reader.isStopped():
+                #                    print "Stopping"
+                #                    return 0
                 # Increment the current voltage by a safe amount
                 current_voltage += step
                 self.set_voltage(current_voltage)
@@ -162,9 +167,9 @@ class Instrument(Tool.MeasInstr):
             # target voltage
             while current_voltage > p_target_voltage:
                 # Stop if it needs to
-#                if p_reader.isStopped():
-#                    print "Stopping"
-#                    return 0
+                #                if p_reader.isStopped():
+                #                    print "Stopping"
+                #                    return 0
                 # Decrement the current voltage by a safe amount
                 current_voltage -= step
                 self.set_voltage(current_voltage)
@@ -243,7 +248,6 @@ class Instrument(Tool.MeasInstr):
 if __name__ == "__main__":
 
     BPO = Instrument("GPIB0::19")
-    print BPO.identify()
+    print(BPO.identify())
     BPO.set_voltage(-1)
-    print BPO.measure('V')
-
+    print(BPO.measure('V'))

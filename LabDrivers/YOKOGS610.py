@@ -9,34 +9,34 @@ Created on Mon Aug 12 16:16:02 2013
 #!/usr/bin/env python
 import time
 import random
-import Tool
+try:
+    from . import Tool
+except:
+    import Tool
 
 
 param = {'V': 'V'}
 
 INTERFACE = Tool.INTF_VISA
 
+
 class Instrument(Tool.MeasInstr):
 
     def __init__(self, resource_name, debug=False, V_step_limit=None):
-        super(Instrument, self).__init__(resource_name, 'YOKO', debug = debug, interface = INTERFACE)
+        super(Instrument, self).__init__(resource_name,
+                                         'YOKO', debug=debug, interface=INTERFACE)
         self.standard_setup()
         self.V_step_limit = V_step_limit
 
-    def __del__(self):
-        super(Instrument, self).__del__()
-        # self.disable_output()
-        # self.close()
-
     def standard_setup(self):
-        if not self.debug:
+        if not self.DEBUG:
             self.write(':OUTP 1')
             # self.enable_output()
 
     def measure(self, channel='V'):  # Do I nead to write the channel argument here?
         """ This method does not measure, it asks what value is
             displayed on the screen (asks the source level) """
-        if not self.debug:
+        if not self.DEBUG:
             answer = float(self.ask(':SOUR:VOLT:LEV?'))
 #            answer = float(answer.split(',', 1)[0])
         else:
@@ -49,9 +49,9 @@ class Instrument(Tool.MeasInstr):
 #        actual_range = self.ask(':SOUR:RANG?')
 #        actual_range = float(actual_range)
 
-        print "actual", actual_voltage
+        print("actual", actual_voltage)
         if abs(actual_voltage - val) > 0.3:
-            print "voltage increment is too high (>0.3)-->change refused"
+            print("voltage increment is too high (>0.3)-->change refused")
 
 #        """ WARNING: if val has more precision (digits) that the actual range allows,
 #            yoko crashes and go to 0.00000 so fix that"""
@@ -71,7 +71,7 @@ class Instrument(Tool.MeasInstr):
             self.set_voltage(val)
 
     def set_voltage(self, voltage, port=0):
-        if not self.debug:
+        if not self.DEBUG:
             prev_voltage = self.measure()
 
             # first check if there is a step limit, then do the math (no error if
@@ -86,22 +86,22 @@ class Instrument(Tool.MeasInstr):
                 s = ':SOUR:VOLT:LEV %f' % voltage
                 self.write(s)
             else:
-                print "Voltage step is too large!"
+                print("Voltage step is too large!")
         else:
-            print "voltage set to " + str(voltage) + " on " + self.ID_name
+            print("voltage set to " + str(voltage) + " on " + self.ID_name)
 
     def enable_output(self):
-        if not self.debug:
+        if not self.DEBUG:
             self.write(':OUTP 1')
 
     def disable_output(self):
-        if not self.debug:
+        if not self.DEBUG:
             self.write(':OUTP 0')
 
 
 #    def measure(self,channel='V'):
 #        if self.last_measure.has_key(channel):
-#            if not self.debug:
+#            if not self.DEBUG:
 #                answer=self.ask(':READ?') #  0 #this is to be defined for record sweep
 #                answer = float(answer.split(',',1)[0])
 #
@@ -118,20 +118,20 @@ class Instrument(Tool.MeasInstr):
             # yyyyy/zzzzz /a/d
 
     def reset(self):
-        if not self.debug:
+        if not self.DEBUG:
             self.write('*RST')
             time.sleep(1)
         # Resets the instrument
 
     def configure_measurement(self, sensor):
-        if not self.debug:
+        if not self.DEBUG:
             # VOLT,CURR RES
             s = ':%s:RANG:AUTO ON' % sensor
             print(s)
             self.write(s)
 
     def configure_output(self, source_mode='VOLT', output_level=0, compliance_level=0.001):
-        if not self.debug:
+        if not self.DEBUG:
             # source_mode: VOLT, CURR
             # output_level: in Volts or Amps
             # compliance level: in Amps or Vol
@@ -143,10 +143,10 @@ class Instrument(Tool.MeasInstr):
             s = ':SOUR:FUNC %s;:SOUR:%s %f;:%s:PROT %r;' % (
                 source_mode, source_mode, output_level, protection, compliance_level)
             self.write(s)
-            
+
     def move_voltage(self, p_reader, p_target_voltage, step=0.0001, wait=0.001):
-    #    def move_voltage(self, p_reader, p_target_voltage, step=0.001, wait=0.005):
-    #        print 'Moving voltage'        
+        #    def move_voltage(self, p_reader, p_target_voltage, step=0.001, wait=0.005):
+        #        print 'Moving voltage'
         current_voltage = self.measure('V')
         # Parse move direction cases
         if current_voltage < p_target_voltage:  # If keithley needs to move up
@@ -155,7 +155,7 @@ class Instrument(Tool.MeasInstr):
             while current_voltage < p_target_voltage:
                 # Stop if it needs to
                 if p_reader.isStopped():
-                    print "Stopping"
+                    print("Stopping")
                     return 0
                 # Increment the current voltage by a safe amount
                 current_voltage += step
@@ -168,7 +168,7 @@ class Instrument(Tool.MeasInstr):
             while current_voltage > p_target_voltage:
                 # Stop if it needs to
                 if p_reader.isStopped():
-                    print "Stopping"
+                    print("Stopping")
                     return 0
                 # Decrement the current voltage by a safe amount
                 current_voltage -= step
@@ -186,22 +186,22 @@ class Instrument(Tool.MeasInstr):
 """ BUNCH OF COMMENTED FUNCTIONS FROM THE ORIGINAL KT2400 DRIVER"""
 
 #    def operation_complete(self):
-#        if not self.debug:
+#        if not self.DEBUG:
 #            self.write('*OPC')
 #        # Returns a 1 after all the commands are complete
 #
 #
 #    def configure_voltage_source(self):
-#        if not self.debug:
+#        if not self.DEBUG:
 #            self.write(':SOUR:FUNC:MODE VOLT')
 #
 #    def set_current_compliance(self,compliance):
-#        if not self.debug:
+#        if not self.DEBUG:
 #            self.write(':SENS:CURR:PROT:LEV '+ str(compliance))
 #
 #
 #    def close(self):
-#        if not self.debug:
+#        if not self.DEBUG:
 #            self.disable_output()
 #            self.write('*RST')
 #            self.write('*CLS')
@@ -209,12 +209,12 @@ class Instrument(Tool.MeasInstr):
 #            super(Instrument,self).close()
 #
 #    def configure_multipoint(self,sample_count=1,trigger_count=1,output_mode='FIX'):
-#        if not self.debug:
+#        if not self.DEBUG:
 #            s = ':ARM:COUN %d;:TRIG:COUN %d;:SOUR:VOLT:MODE %s;:SOUR:CURR:MODE %s;' % (sample_count,trigger_count,output_mode,output_mode)
 #            self.write(s)
 #
 #    def configure_trigger(self,arming_source='IMM',timer_setting=0.01,trigger_source='IMM',trigger_delay=0.0):
-#        if not self.debug:
+#        if not self.DEBUG:
 #            # arming source: IMM,BUS,TIM,MAN,TLIN,NST,PST,BST
 #                # Immediate Arming
 #                # Software Trigger Signal
@@ -230,7 +230,7 @@ class Instrument(Tool.MeasInstr):
 #                self.write(s)
 #
 #    def initiate(self):
-#        if not self.debug:
+#        if not self.DEBUG:
 #            # Clears the trigger, then initiates
 #            s = ':TRIG:CLE;:INIT;'
 #            self.write(s)
@@ -238,19 +238,19 @@ class Instrument(Tool.MeasInstr):
 #            # delay to replace OPC
 #
 #    def wait_for_OPC(self):
-#        if not self.debug:
+#        if not self.DEBUG:
 #            self.write('*OPC;')
 #
 #    def fetch_measurements(self):
-#        if not self.debug:
+#        if not self.DEBUG:
 #            print self.ask(':FETC')
 
 if __name__ == "__main__":
 
     BPO = Instrument("GPIB0::11")
-    print BPO.identify()
+    print(BPO.identify())
     BPO.set_voltage(0)
-    print BPO.ask(':SOUR:VOLT:LEV?')
-    print BPO.ask(':SOUR:VOLT:LEV?')
+    print(BPO.ask(':SOUR:VOLT:LEV?'))
+    print(BPO.ask(':SOUR:VOLT:LEV?'))
 #    BPO.measure('V')
 #    print BPO.measure('V')

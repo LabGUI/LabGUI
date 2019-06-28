@@ -7,24 +7,38 @@
 #
 # WARNING! All changes made in this file will be lost!
 
-from PyQt4 import QtCore, QtGui
+from LocalVars import USE_PYQT5
+
+if USE_PYQT5:
+
+    import PyQt5.QtWidgets as QtGui
+    import PyQt5.QtCore as QtCore
+    from PyQt5.QtGui import QPalette, QBrush, QColor
+
+
+else:
+
+    import PyQt4.QtGui as QtGui
+    import PyQt4.QtCore as QtCore
+    from PyQt4.QtGui import QPalette, QBrush, QColor
+
 
 from QtTools import clear_layout
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
 except AttributeError:
-    _fromUtf8 = lambda s: s
+    def _fromUtf8(s): return s
 
 
-class Ui_PlotDisplayWindow(object):
+class Ui_PlotDisplayWindow(QtCore.QObject):
 
     def setupUi(self, PlotDisplayWindow, channel_controls={"groupBox_X": ["X", "radioButton"], "groupBox_Y": ["Y", "checkBox"], "groupBox_YR": ["Y", "checkBox"], "groupBox_invert": ["+/-", "checkBox"]}):
 
         PlotDisplayWindow.setObjectName("PlotDisplayWindow")
         PlotDisplayWindow.resize(959, 611)
         PlotDisplayWindow.setWindowTitle(QtGui.QApplication.translate(
-            "PlotDisplayWindow", "MainWindow", None, QtGui.QApplication.UnicodeUTF8))
+            "PlotDisplayWindow", "MainWindow", None))
         self.centralwidget = QtGui.QWidget(PlotDisplayWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.horizontalLayout_2 = QtGui.QHBoxLayout(self.centralwidget)
@@ -37,162 +51,162 @@ class Ui_PlotDisplayWindow(object):
         sizePolicy.setHeightForWidth(
             self.plot_holder.sizePolicy().hasHeightForWidth())
         self.plot_holder.setSizePolicy(sizePolicy)
-        palette = QtGui.QPalette()
-        brush = QtGui.QBrush(QtGui.QColor(0, 0, 0))
+        palette = QPalette()
+        brush = QBrush(QColor(0, 0, 0))
         brush.setStyle(QtCore.Qt.SolidPattern)
-        palette.setBrush(QtGui.QPalette.Active,
-                         QtGui.QPalette.WindowText, brush)
-        brush = QtGui.QBrush(QtGui.QColor(255, 255, 255))
+        palette.setBrush(QPalette.Active,
+                         QPalette.WindowText, brush)
+        brush = QBrush(QColor(255, 255, 255))
         brush.setStyle(QtCore.Qt.SolidPattern)
-        palette.setBrush(QtGui.QPalette.Active, QtGui.QPalette.Button, brush)
-        brush = QtGui.QBrush(QtGui.QColor(255, 255, 255))
+        palette.setBrush(QPalette.Active, QPalette.Button, brush)
+        brush = QBrush(QColor(255, 255, 255))
         brush.setStyle(QtCore.Qt.SolidPattern)
-        palette.setBrush(QtGui.QPalette.Active, QtGui.QPalette.Light, brush)
-        brush = QtGui.QBrush(QtGui.QColor(255, 255, 255))
+        palette.setBrush(QPalette.Active, QPalette.Light, brush)
+        brush = QBrush(QColor(255, 255, 255))
         brush.setStyle(QtCore.Qt.SolidPattern)
-        palette.setBrush(QtGui.QPalette.Active, QtGui.QPalette.Midlight, brush)
-        brush = QtGui.QBrush(QtGui.QColor(127, 127, 127))
+        palette.setBrush(QPalette.Active, QPalette.Midlight, brush)
+        brush = QBrush(QColor(127, 127, 127))
         brush.setStyle(QtCore.Qt.SolidPattern)
-        palette.setBrush(QtGui.QPalette.Active, QtGui.QPalette.Dark, brush)
-        brush = QtGui.QBrush(QtGui.QColor(170, 170, 170))
+        palette.setBrush(QPalette.Active, QPalette.Dark, brush)
+        brush = QBrush(QColor(170, 170, 170))
         brush.setStyle(QtCore.Qt.SolidPattern)
-        palette.setBrush(QtGui.QPalette.Active, QtGui.QPalette.Mid, brush)
-        brush = QtGui.QBrush(QtGui.QColor(0, 0, 0))
+        palette.setBrush(QPalette.Active, QPalette.Mid, brush)
+        brush = QBrush(QColor(0, 0, 0))
         brush.setStyle(QtCore.Qt.SolidPattern)
-        palette.setBrush(QtGui.QPalette.Active, QtGui.QPalette.Text, brush)
-        brush = QtGui.QBrush(QtGui.QColor(255, 255, 255))
+        palette.setBrush(QPalette.Active, QPalette.Text, brush)
+        brush = QBrush(QColor(255, 255, 255))
         brush.setStyle(QtCore.Qt.SolidPattern)
-        palette.setBrush(QtGui.QPalette.Active,
-                         QtGui.QPalette.BrightText, brush)
-        brush = QtGui.QBrush(QtGui.QColor(0, 0, 0))
+        palette.setBrush(QPalette.Active,
+                         QPalette.BrightText, brush)
+        brush = QBrush(QColor(0, 0, 0))
         brush.setStyle(QtCore.Qt.SolidPattern)
-        palette.setBrush(QtGui.QPalette.Active,
-                         QtGui.QPalette.ButtonText, brush)
-        brush = QtGui.QBrush(QtGui.QColor(255, 255, 255))
+        palette.setBrush(QPalette.Active,
+                         QPalette.ButtonText, brush)
+        brush = QBrush(QColor(255, 255, 255))
         brush.setStyle(QtCore.Qt.SolidPattern)
-        palette.setBrush(QtGui.QPalette.Active, QtGui.QPalette.Base, brush)
-        brush = QtGui.QBrush(QtGui.QColor(255, 255, 255))
+        palette.setBrush(QPalette.Active, QPalette.Base, brush)
+        brush = QBrush(QColor(255, 255, 255))
         brush.setStyle(QtCore.Qt.SolidPattern)
-        palette.setBrush(QtGui.QPalette.Active, QtGui.QPalette.Window, brush)
-        brush = QtGui.QBrush(QtGui.QColor(0, 0, 0))
+        palette.setBrush(QPalette.Active, QPalette.Window, brush)
+        brush = QBrush(QColor(0, 0, 0))
         brush.setStyle(QtCore.Qt.SolidPattern)
-        palette.setBrush(QtGui.QPalette.Active, QtGui.QPalette.Shadow, brush)
-        brush = QtGui.QBrush(QtGui.QColor(255, 255, 255))
+        palette.setBrush(QPalette.Active, QPalette.Shadow, brush)
+        brush = QBrush(QColor(255, 255, 255))
         brush.setStyle(QtCore.Qt.SolidPattern)
-        palette.setBrush(QtGui.QPalette.Active,
-                         QtGui.QPalette.AlternateBase, brush)
-        brush = QtGui.QBrush(QtGui.QColor(255, 255, 220))
+        palette.setBrush(QPalette.Active,
+                         QPalette.AlternateBase, brush)
+        brush = QBrush(QColor(255, 255, 220))
         brush.setStyle(QtCore.Qt.SolidPattern)
-        palette.setBrush(QtGui.QPalette.Active,
-                         QtGui.QPalette.ToolTipBase, brush)
-        brush = QtGui.QBrush(QtGui.QColor(0, 0, 0))
+        palette.setBrush(QPalette.Active,
+                         QPalette.ToolTipBase, brush)
+        brush = QBrush(QColor(0, 0, 0))
         brush.setStyle(QtCore.Qt.SolidPattern)
-        palette.setBrush(QtGui.QPalette.Active,
-                         QtGui.QPalette.ToolTipText, brush)
-        brush = QtGui.QBrush(QtGui.QColor(0, 0, 0))
+        palette.setBrush(QPalette.Active,
+                         QPalette.ToolTipText, brush)
+        brush = QBrush(QColor(0, 0, 0))
         brush.setStyle(QtCore.Qt.SolidPattern)
-        palette.setBrush(QtGui.QPalette.Inactive,
-                         QtGui.QPalette.WindowText, brush)
-        brush = QtGui.QBrush(QtGui.QColor(255, 255, 255))
+        palette.setBrush(QPalette.Inactive,
+                         QPalette.WindowText, brush)
+        brush = QBrush(QColor(255, 255, 255))
         brush.setStyle(QtCore.Qt.SolidPattern)
-        palette.setBrush(QtGui.QPalette.Inactive, QtGui.QPalette.Button, brush)
-        brush = QtGui.QBrush(QtGui.QColor(255, 255, 255))
+        palette.setBrush(QPalette.Inactive, QPalette.Button, brush)
+        brush = QBrush(QColor(255, 255, 255))
         brush.setStyle(QtCore.Qt.SolidPattern)
-        palette.setBrush(QtGui.QPalette.Inactive, QtGui.QPalette.Light, brush)
-        brush = QtGui.QBrush(QtGui.QColor(255, 255, 255))
+        palette.setBrush(QPalette.Inactive, QPalette.Light, brush)
+        brush = QBrush(QColor(255, 255, 255))
         brush.setStyle(QtCore.Qt.SolidPattern)
-        palette.setBrush(QtGui.QPalette.Inactive,
-                         QtGui.QPalette.Midlight, brush)
-        brush = QtGui.QBrush(QtGui.QColor(127, 127, 127))
+        palette.setBrush(QPalette.Inactive,
+                         QPalette.Midlight, brush)
+        brush = QBrush(QColor(127, 127, 127))
         brush.setStyle(QtCore.Qt.SolidPattern)
-        palette.setBrush(QtGui.QPalette.Inactive, QtGui.QPalette.Dark, brush)
-        brush = QtGui.QBrush(QtGui.QColor(170, 170, 170))
+        palette.setBrush(QPalette.Inactive, QPalette.Dark, brush)
+        brush = QBrush(QColor(170, 170, 170))
         brush.setStyle(QtCore.Qt.SolidPattern)
-        palette.setBrush(QtGui.QPalette.Inactive, QtGui.QPalette.Mid, brush)
-        brush = QtGui.QBrush(QtGui.QColor(0, 0, 0))
+        palette.setBrush(QPalette.Inactive, QPalette.Mid, brush)
+        brush = QBrush(QColor(0, 0, 0))
         brush.setStyle(QtCore.Qt.SolidPattern)
-        palette.setBrush(QtGui.QPalette.Inactive, QtGui.QPalette.Text, brush)
-        brush = QtGui.QBrush(QtGui.QColor(255, 255, 255))
+        palette.setBrush(QPalette.Inactive, QPalette.Text, brush)
+        brush = QBrush(QColor(255, 255, 255))
         brush.setStyle(QtCore.Qt.SolidPattern)
-        palette.setBrush(QtGui.QPalette.Inactive,
-                         QtGui.QPalette.BrightText, brush)
-        brush = QtGui.QBrush(QtGui.QColor(0, 0, 0))
+        palette.setBrush(QPalette.Inactive,
+                         QPalette.BrightText, brush)
+        brush = QBrush(QColor(0, 0, 0))
         brush.setStyle(QtCore.Qt.SolidPattern)
-        palette.setBrush(QtGui.QPalette.Inactive,
-                         QtGui.QPalette.ButtonText, brush)
-        brush = QtGui.QBrush(QtGui.QColor(255, 255, 255))
+        palette.setBrush(QPalette.Inactive,
+                         QPalette.ButtonText, brush)
+        brush = QBrush(QColor(255, 255, 255))
         brush.setStyle(QtCore.Qt.SolidPattern)
-        palette.setBrush(QtGui.QPalette.Inactive, QtGui.QPalette.Base, brush)
-        brush = QtGui.QBrush(QtGui.QColor(255, 255, 255))
+        palette.setBrush(QPalette.Inactive, QPalette.Base, brush)
+        brush = QBrush(QColor(255, 255, 255))
         brush.setStyle(QtCore.Qt.SolidPattern)
-        palette.setBrush(QtGui.QPalette.Inactive, QtGui.QPalette.Window, brush)
-        brush = QtGui.QBrush(QtGui.QColor(0, 0, 0))
+        palette.setBrush(QPalette.Inactive, QPalette.Window, brush)
+        brush = QBrush(QColor(0, 0, 0))
         brush.setStyle(QtCore.Qt.SolidPattern)
-        palette.setBrush(QtGui.QPalette.Inactive, QtGui.QPalette.Shadow, brush)
-        brush = QtGui.QBrush(QtGui.QColor(255, 255, 255))
+        palette.setBrush(QPalette.Inactive, QPalette.Shadow, brush)
+        brush = QBrush(QColor(255, 255, 255))
         brush.setStyle(QtCore.Qt.SolidPattern)
-        palette.setBrush(QtGui.QPalette.Inactive,
-                         QtGui.QPalette.AlternateBase, brush)
-        brush = QtGui.QBrush(QtGui.QColor(255, 255, 220))
+        palette.setBrush(QPalette.Inactive,
+                         QPalette.AlternateBase, brush)
+        brush = QBrush(QColor(255, 255, 220))
         brush.setStyle(QtCore.Qt.SolidPattern)
-        palette.setBrush(QtGui.QPalette.Inactive,
-                         QtGui.QPalette.ToolTipBase, brush)
-        brush = QtGui.QBrush(QtGui.QColor(0, 0, 0))
+        palette.setBrush(QPalette.Inactive,
+                         QPalette.ToolTipBase, brush)
+        brush = QBrush(QColor(0, 0, 0))
         brush.setStyle(QtCore.Qt.SolidPattern)
-        palette.setBrush(QtGui.QPalette.Inactive,
-                         QtGui.QPalette.ToolTipText, brush)
-        brush = QtGui.QBrush(QtGui.QColor(127, 127, 127))
+        palette.setBrush(QPalette.Inactive,
+                         QPalette.ToolTipText, brush)
+        brush = QBrush(QColor(127, 127, 127))
         brush.setStyle(QtCore.Qt.SolidPattern)
-        palette.setBrush(QtGui.QPalette.Disabled,
-                         QtGui.QPalette.WindowText, brush)
-        brush = QtGui.QBrush(QtGui.QColor(255, 255, 255))
+        palette.setBrush(QPalette.Disabled,
+                         QPalette.WindowText, brush)
+        brush = QBrush(QColor(255, 255, 255))
         brush.setStyle(QtCore.Qt.SolidPattern)
-        palette.setBrush(QtGui.QPalette.Disabled, QtGui.QPalette.Button, brush)
-        brush = QtGui.QBrush(QtGui.QColor(255, 255, 255))
+        palette.setBrush(QPalette.Disabled, QPalette.Button, brush)
+        brush = QBrush(QColor(255, 255, 255))
         brush.setStyle(QtCore.Qt.SolidPattern)
-        palette.setBrush(QtGui.QPalette.Disabled, QtGui.QPalette.Light, brush)
-        brush = QtGui.QBrush(QtGui.QColor(255, 255, 255))
+        palette.setBrush(QPalette.Disabled, QPalette.Light, brush)
+        brush = QBrush(QColor(255, 255, 255))
         brush.setStyle(QtCore.Qt.SolidPattern)
-        palette.setBrush(QtGui.QPalette.Disabled,
-                         QtGui.QPalette.Midlight, brush)
-        brush = QtGui.QBrush(QtGui.QColor(127, 127, 127))
+        palette.setBrush(QPalette.Disabled,
+                         QPalette.Midlight, brush)
+        brush = QBrush(QColor(127, 127, 127))
         brush.setStyle(QtCore.Qt.SolidPattern)
-        palette.setBrush(QtGui.QPalette.Disabled, QtGui.QPalette.Dark, brush)
-        brush = QtGui.QBrush(QtGui.QColor(170, 170, 170))
+        palette.setBrush(QPalette.Disabled, QPalette.Dark, brush)
+        brush = QBrush(QColor(170, 170, 170))
         brush.setStyle(QtCore.Qt.SolidPattern)
-        palette.setBrush(QtGui.QPalette.Disabled, QtGui.QPalette.Mid, brush)
-        brush = QtGui.QBrush(QtGui.QColor(127, 127, 127))
+        palette.setBrush(QPalette.Disabled, QPalette.Mid, brush)
+        brush = QBrush(QColor(127, 127, 127))
         brush.setStyle(QtCore.Qt.SolidPattern)
-        palette.setBrush(QtGui.QPalette.Disabled, QtGui.QPalette.Text, brush)
-        brush = QtGui.QBrush(QtGui.QColor(255, 255, 255))
+        palette.setBrush(QPalette.Disabled, QPalette.Text, brush)
+        brush = QBrush(QColor(255, 255, 255))
         brush.setStyle(QtCore.Qt.SolidPattern)
-        palette.setBrush(QtGui.QPalette.Disabled,
-                         QtGui.QPalette.BrightText, brush)
-        brush = QtGui.QBrush(QtGui.QColor(127, 127, 127))
+        palette.setBrush(QPalette.Disabled,
+                         QPalette.BrightText, brush)
+        brush = QBrush(QColor(127, 127, 127))
         brush.setStyle(QtCore.Qt.SolidPattern)
-        palette.setBrush(QtGui.QPalette.Disabled,
-                         QtGui.QPalette.ButtonText, brush)
-        brush = QtGui.QBrush(QtGui.QColor(255, 255, 255))
+        palette.setBrush(QPalette.Disabled,
+                         QPalette.ButtonText, brush)
+        brush = QBrush(QColor(255, 255, 255))
         brush.setStyle(QtCore.Qt.SolidPattern)
-        palette.setBrush(QtGui.QPalette.Disabled, QtGui.QPalette.Base, brush)
-        brush = QtGui.QBrush(QtGui.QColor(255, 255, 255))
+        palette.setBrush(QPalette.Disabled, QPalette.Base, brush)
+        brush = QBrush(QColor(255, 255, 255))
         brush.setStyle(QtCore.Qt.SolidPattern)
-        palette.setBrush(QtGui.QPalette.Disabled, QtGui.QPalette.Window, brush)
-        brush = QtGui.QBrush(QtGui.QColor(0, 0, 0))
+        palette.setBrush(QPalette.Disabled, QPalette.Window, brush)
+        brush = QBrush(QColor(0, 0, 0))
         brush.setStyle(QtCore.Qt.SolidPattern)
-        palette.setBrush(QtGui.QPalette.Disabled, QtGui.QPalette.Shadow, brush)
-        brush = QtGui.QBrush(QtGui.QColor(255, 255, 255))
+        palette.setBrush(QPalette.Disabled, QPalette.Shadow, brush)
+        brush = QBrush(QColor(255, 255, 255))
         brush.setStyle(QtCore.Qt.SolidPattern)
-        palette.setBrush(QtGui.QPalette.Disabled,
-                         QtGui.QPalette.AlternateBase, brush)
-        brush = QtGui.QBrush(QtGui.QColor(255, 255, 220))
+        palette.setBrush(QPalette.Disabled,
+                         QPalette.AlternateBase, brush)
+        brush = QBrush(QColor(255, 255, 220))
         brush.setStyle(QtCore.Qt.SolidPattern)
-        palette.setBrush(QtGui.QPalette.Disabled,
-                         QtGui.QPalette.ToolTipBase, brush)
-        brush = QtGui.QBrush(QtGui.QColor(0, 0, 0))
+        palette.setBrush(QPalette.Disabled,
+                         QPalette.ToolTipBase, brush)
+        brush = QBrush(QColor(0, 0, 0))
         brush.setStyle(QtCore.Qt.SolidPattern)
-        palette.setBrush(QtGui.QPalette.Disabled,
-                         QtGui.QPalette.ToolTipText, brush)
+        palette.setBrush(QPalette.Disabled,
+                         QPalette.ToolTipText, brush)
         self.plot_holder.setPalette(palette)
         self.plot_holder.setAutoFillBackground(True)
         self.plot_holder.setObjectName("plot_holder")
@@ -208,18 +222,6 @@ class Ui_PlotDisplayWindow(object):
         self.dockWidgetContents.setObjectName("dockWidgetContents")
         self.horizontalLayout = QtGui.QHBoxLayout(self.dockWidgetContents)
         self.horizontalLayout.setObjectName("horizontalLayout")
-
-
-#        self.groupBox_Name = QtGui.QGroupBox(self.dockWidgetContents)
-#        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Expanding)
-#        sizePolicy.setHorizontalStretch(0)
-#        sizePolicy.setVerticalStretch(0)
-#        sizePolicy.setHeightForWidth(self.groupBox_Name.sizePolicy().hasHeightForWidth())
-#        self.groupBox_Name.setSizePolicy(sizePolicy)
-#        self.groupBox_Name.setMinimumSize(QtCore.QSize(100, 0))
-#        self.groupBox_Name.setTitle(QtGui.QApplication.translate("PlotDisplayWindow", "Channel", None, QtGui.QApplication.UnicodeUTF8))
-#        self.groupBox_Name.setObjectName("groupBox_Name")
-#        self.horizontalLayout.addWidget(self.groupBox_Name)
 
         self.groupBoxes = {}
 #        print channel_controls.items()
@@ -239,7 +241,7 @@ class Ui_PlotDisplayWindow(object):
             if lbl[1] == "comboBox":
                 self.groupBoxes[name].setMinimumSize(QtCore.QSize(50, 0))
             self.groupBoxes[name].setTitle(QtGui.QApplication.translate(
-                "PlotDisplayWindow", lbl[0], None, QtGui.QApplication.UnicodeUTF8))
+                "PlotDisplayWindow", lbl[0], None))
             self.groupBoxes[name].setObjectName(name)
             self.horizontalLayout.addWidget(self.groupBoxes[name])
 
@@ -248,11 +250,11 @@ class Ui_PlotDisplayWindow(object):
             QtCore.Qt.DockWidgetArea(2), self.dockWidget)
         self.actionSave_figure = QtGui.QAction(PlotDisplayWindow)
         self.actionSave_figure.setText(QtGui.QApplication.translate(
-            "PlotDisplayWindow", "Save figure", None, QtGui.QApplication.UnicodeUTF8))
+            "PlotDisplayWindow", "Save figure", None))
         self.actionSave_figure.setObjectName("actionSave_figure")
         self.actionQuit = QtGui.QAction(PlotDisplayWindow)
         self.actionQuit.setText(QtGui.QApplication.translate(
-            "PlotDisplayWindow", "Quit", None, QtGui.QApplication.UnicodeUTF8))
+            "PlotDisplayWindow", "Quit", None))
         self.actionQuit.setObjectName("actionQuit")
 
         self.retranslateUi(PlotDisplayWindow)
@@ -262,7 +264,6 @@ class Ui_PlotDisplayWindow(object):
         """iterate through the layout and destroys the widgets properly"""
         clear_layout(self.horizontalLayout)
         clear_layout(self.horizontalLayout_2)
-        
 
     def retranslateUi(self, PlotDisplayWindow):
         pass

@@ -16,20 +16,22 @@ try:
     from . import Tool
 except:
     import Tool
-    
+
 
 # use an ordered dictionary so that the parameters show up in a pretty order :)
 param = OrderedDict([('Roll', '')])
 
 INTERFACE = Tool.INTF_NONE
 
+
 class Instrument(Tool.MeasInstr):
 
     def __init__(self, resource_name, debug=False, **kwargs):
-        super(Instrument, self).__init__('Dice', name = 'DICE', debug=debug, interface = INTERFACE, **kwargs)
+        super(Instrument, self).__init__('Dice', name='DICE',
+                                         debug=debug, interface=INTERFACE, **kwargs)
 
-    def measure(self, channel):
-        logging.debug("DICE measure %s"%(channel))
+    def measure(self, channel='Roll'):
+        logging.debug("DICE measure %s" % (channel))
         if channel in param:
             if channel == 'Roll':
                 answer = random.randint(1, 6)
@@ -39,11 +41,10 @@ class Instrument(Tool.MeasInstr):
             print("existing channels :", self.channels)
             answer = None
         return answer
-        
-if (__name__ == '__main__'):
-    
-    from utils import command_line_test
-    
-    command_line_test(Instrument)
 
-       
+
+if (__name__ == '__main__'):
+
+    from utils import command_line_test
+
+    command_line_test(Instrument)

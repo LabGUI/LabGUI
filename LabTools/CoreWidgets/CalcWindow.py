@@ -13,10 +13,18 @@ Created on Fri Jul 19 17:19:44 2013
 """
 
 import sys
-import PyQt4.QtGui as QtGui
-from PyQt4.QtCore import SIGNAL, Qt
-
 from numpy import mod
+
+from LocalVars import USE_PYQT5
+
+if USE_PYQT5:
+
+    from PyQt5.QtCore import Qt, pyqtSignal
+    import PyQt5.QtWidgets as QtGui
+
+else:
+    import PyQt4.QtGui as QtGui
+    from PyQt4.QtCore import SIGNAL, Qt
 
 
 class CalcWindow(QtGui.QWidget):
@@ -25,8 +33,19 @@ class CalcWindow(QtGui.QWidget):
     AVAILABLE_PORTS = []
     # Number of instrument that can be connected
     num_channels = 0
+
     color_set = ['cyan', 'black', 'blue', 'red', 'green',
                  'orange', 'magenta', 'maroon', 'plum', 'violet']
+
+    if USE_PYQT5:
+
+        labelsChanged = pyqtSignal()
+
+        colorsChanged = pyqtSignal()
+
+        textEdited = pyqtSignal('QString')
+
+        connectInstrumentHub = pyqtSignal('bool')
 
     def __init__(self, availiable_ports=["GPIB0::" + str(i) for i in range(30)], parent=None):
         super(CalcWindow, self).__init__(parent)
@@ -56,6 +75,7 @@ class CalcWindow(QtGui.QWidget):
         self.num_channels = num_channels
         # TickBoxes
         self.tb_list = []
+
         self.color_btn_list = []
         # Empty text boxes called Line Edit where the user can write which ever
         # title for plotting purposes
@@ -129,7 +149,7 @@ class CalcWindow(QtGui.QWidget):
         # add the new grid and a spacer
         self.vertical_layout.addLayout(self.grid)
         spacer_item = QtGui.QSpacerItem(
-            20, 183, QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
+            20, 183, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
         self.vertical_layout.addItem(spacer_item)
 
     def create_color_btn(self, color_btn_list, col, color):
@@ -143,16 +163,19 @@ class CalcWindow(QtGui.QWidget):
         btn.setStyleSheet('QPushButton {background-color: %s}' % color)
         btn.setFixedSize(20, 20)
 
-        self.connect(btn, SIGNAL("clicked()"), self.color_btn_handler)
+        btn.clicked.connect(self.color_btn_handler)
+
         # add the newly created widget to the list and tothe layout
-        color_btn_list.append(btn)
+        self.color_btn_list.append(btn)
         self.grid.addWidget(btn, index + 1, col, 1, 1)
 
     def create_lineedit(self, le_list, col, label_text="Name", width=None):
         index = len(le_list)
         le = QtGui.QLineEdit(self)
         le.setObjectName("param_name_le_list " + str(index))
-        self.connect(le, SIGNAL("textEdited(QString)"), self.lineEdit_handler)
+
+        le.textEdited.connect(self.color_btn_handler)
+
         # add the newly created widget to the list and tothe layout
         le_list.append(le)
         self.grid.addWidget(le, index + 1, col, 1, 1)
@@ -162,7 +185,13 @@ class CalcWindow(QtGui.QWidget):
 
     def lineEdit_handler(self, string):
 
-        self.emit(SIGNAL("labelsChanged()"))
+        if USE_PYQT5:
+
+            self.labelsChanged.emit()
+
+        else:
+
+            self.emit(SIGNAL("labelsChanged()"))
         pass
 #        print string
         # find on which line the user edited the lineEdit
@@ -176,13 +205,21 @@ class CalcWindow(QtGui.QWidget):
         # pass
 
     def color_btn_handler(self):
+
         btn = self.sender()
         idx = self.color_btn_list.index(btn)
 
         color = QtGui.QColorDialog.getColor(initial=btn.palette().color(1))
         btn.setStyleSheet('QPushButton {background-color: %s}' % color.name())
         print(self.get_color_list())
-        self.emit(SIGNAL("colorsChanged()"))
+
+        if USE_PYQT5:
+
+            self.colorsChanged.emit()
+
+        else:
+
+            self.emit(SIGNAL("colorsChanged()"))
 
     def tickbox_handler(self):
         print(self.collect_device_info())
@@ -192,7 +229,14 @@ class CalcWindow(QtGui.QWidget):
     def bt_connecthub_clicked(self):
         """when this method is called (upon button 'Connect' interaction) it send a signal, which will be treated in the main window"""
         if self.bt_connecthub.isEnabled:
-            self.emit(SIGNAL("ConnectInstrumentHub(bool)"), True)
+
+            if USE_PYQT5:
+
+                self.connectInstrumentHub.emit(True)
+
+            else:
+
+                self.emit(SIGNAL("ConnectInstrumentHub(bool)"), True)
 
     def get_label_list(self):
         calcs = self.get_calculation_list()
@@ -209,7 +253,7 @@ class CalcWindow(QtGui.QWidget):
         if calcs[-1] == '':
             return 0
         else:
-            return len (calcs)
+            return len(calcs)
        # return len(self.calculation_le_list)
 
     def get_color_list(self):
@@ -267,47 +311,50 @@ class CalcWindow(QtGui.QWidget):
             except:
                 answer = ""
         return answer
-        
 
-            
-     
-        
+
 def add_widget_into_main(parent):
     """add a widget into the main window of LabGuiMain
-    
-    create a QDock widget and store a reference to the widget
-    """    
 
-    mywidget = CalcWindow(parent = parent)
-    
-    #create a QDockWidget
+    create a QDock widget and store a reference to the widget
+    """
+
+    mywidget = CalcWindow(parent=parent)
+
+    # create a QDockWidget
     calcDockWidget = QtGui.QDockWidget("Live Calculations", parent)
     calcDockWidget.setObjectName("startDockWidget")
     calcDockWidget.setAllowedAreas(
         Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea)
-        
-    #fill the dictionnary with the widgets added into LabGuiMain
+
+    # fill the dictionnary with the widgets added into LabGuiMain
     parent.widgets['CalcWidget'] = mywidget
-    
+
     calcDockWidget.setWidget(mywidget)
     parent.addDockWidget(Qt.RightDockWidgetArea, calcDockWidget)
-    
-    #Enable the toggle view action
+
+    # Enable the toggle view action
     parent.windowMenu.addAction(calcDockWidget.toggleViewAction())
-    
+
     calcDockWidget.hide()
 
-    parent.connect(parent.widgets['CalcWidget'], SIGNAL(
-        "colorsChanged()"), parent.update_colors)
-        
-    parent.connect(parent.widgets['CalcWidget'], SIGNAL(
-        "labelsChanged()"), parent.update_labels)
-        
+    if USE_PYQT5:
 
-        
-        
-        
-        
+        parent.widgets['CalcWidget'].colorsChanged.connect(
+            parent.update_colors)
+
+        parent.widgets['CalcWidget'].labelsChanged.connect(
+            parent.update_labels)
+
+    else:
+
+        parent.connect(parent.widgets['CalcWidget'], SIGNAL(
+            "colorsChanged()"), parent.update_colors)
+
+        parent.connect(parent.widgets['CalcWidget'], SIGNAL(
+            "labelsChanged()"), parent.update_labels)
+
+
 if __name__ == "__main__":
 
     app = QtGui.QApplication(sys.argv)

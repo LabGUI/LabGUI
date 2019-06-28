@@ -21,10 +21,12 @@ param = {'A': 'K', 'B': 'K', 'C': 'kOhm', 'D': 'kOhm',
 
 INTERFACE = Tool.INTF_GPIB
 
+
 class Instrument(Tool.MeasInstr):
 
-    def __init__(self, resource_name, debug=False,**kwargs):
-        super(Instrument, self).__init__(resource_name, 'LS340', debug=debug, interface = INTERFACE,**kwargs)
+    def __init__(self, resource_name, debug=False, **kwargs):
+        super(Instrument, self).__init__(resource_name, 'LS340',
+                                         debug=debug, interface=INTERFACE, **kwargs)
         chan_names = ['Charcoal', '1Kpot', 'He3Pot', 'Cell']
         for chan, chan_name in zip(self.channels, chan_names):
             self.last_measure[chan] = 0
@@ -42,13 +44,14 @@ class Instrument(Tool.MeasInstr):
                         answer = self.last_measure[channel]
                 elif param[channel] == 'kOhm':
                     try:
-                        answer = float(self.ask('SRDG?' + channel))  # read in kOhm
+                        # read in kOhm
+                        answer = float(self.ask('SRDG?' + channel))
                     except ValueError:
                         answer = self.last_measure[channel]
                 elif param[channel] == 'kOhm_to_K':
                     try:
                         answer = round(convT.R_to_T(
-                        float(self.ask('SRDG?' + channel))), 4)
+                            float(self.ask('SRDG?' + channel))), 4)
                     except ValueError:
                         answer = self.last_measure[channel]
             else:
@@ -104,9 +107,8 @@ class Instrument(Tool.MeasInstr):
     def set_heater_range(self, value_range):
         return self.ask('RANGE ' + str(value_range) + ';RANGE?')
 
+
 if (__name__ == '__main__'):
 
     myInst = Instrument("GPIB0::12")
     print(myInst.identify())
-
-

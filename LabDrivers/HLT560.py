@@ -24,6 +24,7 @@ param = {'FLOW': 'mbarl/s', 'P2': 'mbar'}
 
 INTERFACE = Tool.INTF_SERIAL
 
+
 class Instrument(Tool.MeasInstr):
 
     # 1 will enable a watchdog function that will check every telegramm from
@@ -48,10 +49,11 @@ class Instrument(Tool.MeasInstr):
     display_infos = 0
 
     def __init__(self, resource_name, debug=False, serial_address='001', **kwargs):
-        super(Instrument, self).__init__(resource_name, 'HLT560', debug=debug, interface = INTERFACE, **kwargs)
+        super(Instrument, self).__init__(resource_name, 'HLT560',
+                                         debug=debug, interface=INTERFACE, **kwargs)
 
         self.__serial_address = str(serial_address)
-         
+
         self.__command_list = {}
 #        self.__get_param_manual_info()
         self.start_time = None
@@ -83,17 +85,17 @@ class Instrument(Tool.MeasInstr):
     def __read(self, msg):
         if not self.DEBUG:
             #            print 'Execute : ' +msg
-#            answer = self.ask(msg)
+            #            answer = self.ask(msg)
             self.connection.write(msg)
             answer = ""
             c = self.connection.read(1)
-            while c != '\r' :
+            while c != '\r':
                 answer = answer + c
                 c = self.connection.read(1)
-            
+
             if self.watchdog:
                 self.__communication_watchdog(msg, answer)
-                
+
             return self.message_parser(answer, self.display_infos)
         else:
             # print "DEBUG MODE : " + msg
@@ -129,7 +131,8 @@ class Instrument(Tool.MeasInstr):
             if data_length == 16:
                 data_length = str(data_length)
             else:
-                print("Not good data input, please refer to p19 of the pfeiffer vacuum communication protocole")
+                print(
+                    "Not good data input, please refer to p19 of the pfeiffer vacuum communication protocole")
 
         msg = self.__serial_address + action + \
             param_num + data_length + str(data)
@@ -146,7 +149,8 @@ class Instrument(Tool.MeasInstr):
 
         if display:
             self.__message_displayer(message)
-            print("Calculated checksum : " + self.__checksum(msg[0:(10 + data_length)]))
+            print("Calculated checksum : " +
+                  self.__checksum(msg[0:(10 + data_length)]))
             print(" ")
         return message
 
@@ -171,10 +175,12 @@ class Instrument(Tool.MeasInstr):
         if command_num == 643:
             param_list = self.__command_list[1][command_name]
             if self.watchdog:
-                print(str(command_num) + " " + command_name + " " + param_list[0])
+                print(str(command_num) + " " +
+                      command_name + " " + param_list[0])
             return param_list[1:3]
         else:
-            print(str(command_num) + " " + command_name + " " + self.__command_list[1][command_name])
+            print(str(command_num) + " " + command_name +
+                  " " + self.__command_list[1][command_name])
 #-----------------------------------------------------------------------------
 
     def measure(self, channel):
@@ -195,10 +201,10 @@ class Instrument(Tool.MeasInstr):
                 self.reset_start_time()
             dt = time.time() - self.start_time
             if dt < 10:
-                answer = 0.05 *(random.random() - 0.5)
+                answer = 0.05 * (random.random() - 0.5)
             else:
                 answer = exp_decay(dt-10, 2, 15) * (1 + 0.05 *
-                                             (random.random() - 0.5))
+                                                    (random.random() - 0.5))
         return answer
 
     # get the lastest value of the flow and update the last measure
@@ -409,13 +415,15 @@ class Instrument(Tool.MeasInstr):
         if msg_in[index] != msg_out[index]:
             error_code[index] = 1
             if display:
-                print("error: the adress of the master (" + msg_in[index] + ") and of the slave (" + msg_out[index] + ") are not the same!")
+                print("error: the adress of the master (" +
+                      msg_in[index] + ") and of the slave (" + msg_out[index] + ") are not the same!")
 
         index = 1
         if msg_in[index] != '00' and msg_in[index] != '10':
             error_code[index] = 1
             if display:
-                print("error: the master question is neither in write or read mode ('10'/'00')")
+                print(
+                    "error: the master question is neither in write or read mode ('10'/'00')")
 
         if msg_out[index] != '10':
             error_code[index] = 2
@@ -426,18 +434,21 @@ class Instrument(Tool.MeasInstr):
         if msg_in[index] != msg_out[index]:
             error_code[index] = 1
             if display:
-                print("error: the parameter# of the master (" + msg_in[index] + ") and of the slave (" + msg_out[index] + ") are not the same!")
+                print("error: the parameter# of the master (" +
+                      msg_in[index] + ") and of the slave (" + msg_out[index] + ") are not the same!")
 
         index = 3
         if msg_in[1] == '00':
             if msg_in[index] != '02':
                 error_code[index] = 1
                 if display:
-                    print("error: the master question is in read mode but the datalength is not equal to '02'")
+                    print(
+                        "error: the master question is in read mode but the datalength is not equal to '02'")
             if msg_in[index + 1] != '=?':
                 error_code[index + 1] = 2
                 if display:
-                    print("error: the master question is in read mode but the data is not equal to '=?'")
+                    print(
+                        "error: the master question is in read mode but the data is not equal to '=?'")
             # possibility to add a test to see whether the size of the data
             # matches the normally sent values
 
@@ -445,24 +456,25 @@ class Instrument(Tool.MeasInstr):
             if msg_in[index] != msg_out[index]:
                 error_code[index] = 3
                 if display:
-                    print("error: the datalength of the master (" + msg_in[index] + ") and of the slave (" + msg_out[index] + ") are not the same!")
+                    print("error: the datalength of the master (" +
+                          msg_in[index] + ") and of the slave (" + msg_out[index] + ") are not the same!")
             if msg_in[index + 1] != msg_out[index + 1]:
                 error_code[index + 1] = 4
                 if display:
-                    print("error: the data of the master (" + msg_in[index + 1] + ") and of the slave (" + msg_out[index + 1] + ") are not the same!")
+                    print("error: the data of the master (" +
+                          msg_in[index + 1] + ") and of the slave (" + msg_out[index + 1] + ") are not the same!")
 
         return error_code
 
 
-def checksum( string):
+def checksum(string):
     total = 0
     for i in range(len(string)):
         total = total + ord(string[i])
     return str(total % 256)
 
+
 if (__name__ == '__main__'):
-
-
 
     print(__file__.strip("HLT560.py"))
     myInst = Instrument("COM3")
@@ -470,4 +482,3 @@ if (__name__ == '__main__'):
     print(myInst.measure("FLOW"))
 #    print(myInst.get_MotorTMP())
     myInst.close()
-

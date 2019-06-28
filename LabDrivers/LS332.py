@@ -13,12 +13,12 @@ param = {'A': 'K', 'B': 'K'}
 
 INTERFACE = Tool.INTF_GPIB
 
+
 class Instrument(Tool.MeasInstr):
 
-    def __init__(self, resource_name, debug = False, **kwargs):
-        super(Instrument, self).__init__(resource_name, 'LS332', debug=debug, 
-                                         interface = INTERFACE, **kwargs)
-
+    def __init__(self, resource_name, debug=False, **kwargs):
+        super(Instrument, self).__init__(resource_name, 'LS332', debug=debug,
+                                         interface=INTERFACE, **kwargs)
 
     def measure(self, channel):
         if channel in self.last_measure:
@@ -40,7 +40,8 @@ class Instrument(Tool.MeasInstr):
     def setTemp(self, temp, loop):  # float value of resistance in Ohm, loop 1 or 2
         if not self.DEBUG:
             if loop == 1 or loop == 2:
-                print("that's good", 'SETP ' + str(loop) + ',' + "%.2f" % (temp))
+                print("that's good", 'SETP ' +
+                      str(loop) + ',' + "%.2f" % (temp))
                 self.write('SETP ' + str(loop) + ',' + "%.2f" % (temp))
                 # Controller can only take 6 numeric inputs (plus a sign)
             else:
@@ -61,7 +62,7 @@ class Instrument(Tool.MeasInstr):
                                                                              '+.5g') + sep + format(value_I, '+.5g') + sep + format(value_D, '+.5g'))
         else:
             print(('PID ' + format(value_loop, '.1g') + sep + format(value_P, '+.5g') +
-                  sep + format(value_I, '+.5g') + sep + format(value_D, '+.5g')))
+                   sep + format(value_I, '+.5g') + sep + format(value_D, '+.5g')))
 
     def set_heater_range(self, value_range):
         if not self.DEBUG:
@@ -82,7 +83,8 @@ class Instrument(Tool.MeasInstr):
                 print('invalid ramp setting')
         else:
             print(('RAMP ' + format(value_loop, '.1g') +
-                  sep + format(value_ramp_status, '.1g')))
+                   sep + format(value_ramp_status, '.1g')))
+
 
 if __name__ == "__main__":
     i = Instrument("GPIB0::15", False)

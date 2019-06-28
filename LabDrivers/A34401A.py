@@ -15,18 +15,19 @@ try:
     from . import Tool
 except:
     import Tool
-    
+
 from numpy import power
 
 param = {'V': 'V', 'P': 'mbar'}
 
 INTERFACE = Tool.INTF_GPIB
 
+
 class Instrument(Tool.MeasInstr):
 
     def __init__(self, resource_name, debug=False, **kwargs):
         super(Instrument, self).__init__(resource_name, 'A34401A', debug=debug,
-                                         interface = INTERFACE, **kwargs)
+                                         interface=INTERFACE, **kwargs)
         if not self.DEBUG:
             chan_names = ['Voltage', 'Pressure']
             for chan, chan_name in zip(self.channels, chan_names):
@@ -54,7 +55,7 @@ class Instrument(Tool.MeasInstr):
 
     def get_voltage(self):
         v = self.ask("MEAS:VOLT:DC?")
-        mantissa,exponent=v.split("E")
+        mantissa, exponent = v.split("E")
         answer = float(mantissa) * power(10, float(exponent))
         return answer
 #    MEASure[:VOLTage][:DC]? [{<
@@ -62,6 +63,7 @@ class Instrument(Tool.MeasInstr):
 #>|AUTO|MIN|MAX|DEF} [,{<
 # resolution
 #>|MIN|MAX|DEF}] ]
+
 
 # if run as own program
 if (__name__ == '__main__'):

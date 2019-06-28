@@ -8,17 +8,18 @@ try:
 except:
     import Tool
 
-CHANNELS_IDX = {"1K Pot":"LS_1","Still":"LS_2","ICP":"LS_3","MC":"LS_4"}
+CHANNELS_IDX = {"1K Pot": "LS_1", "Still": "LS_2", "ICP": "LS_3", "MC": "LS_4"}
 
-param = {'heater': '%',"1K Pot":"K","Still":"K","ICP":"K","MC":"K"}
+param = {'heater': '%', "1K Pot": "K", "Still": "K", "ICP": "K", "MC": "K"}
 
 INTERFACE = Tool.INTF_GPIB
 
+
 class Instrument(Tool.MeasInstr):
 
-    def __init__(self, resource_name, debug = False, **kwargs):
+    def __init__(self, resource_name, debug=False, **kwargs):
         super(Instrument, self).__init__(resource_name, 'LS370_janis', debug=debug,
-                                         interface = INTERFACE, timeout=12, **kwargs)
+                                         interface=INTERFACE, timeout=12, **kwargs)
 
     def measure(self, channel):
         if channel in self.last_measure:
@@ -44,9 +45,9 @@ class Instrument(Tool.MeasInstr):
             try:
                 return float(data)
             except:
-                logging.error("the reading from the lakeshore 370 is no a number, please check that the timout is sufficiently large, 0.1 s is too short")
+                logging.error(
+                    "the reading from the lakeshore 370 is no a number, please check that the timout is sufficiently large, 0.1 s is too short")
 
-                        
         else:
             return 1337.0
 
@@ -83,9 +84,7 @@ class Instrument(Tool.MeasInstr):
 
 if (__name__ == '__main__'):
 
-
     i = Instrument("GPIB0::12")
     print(i.identify())
     print(i.measure("1K Pot"))
     print(i.read_channel("ICP"))
-    
