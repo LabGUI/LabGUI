@@ -1139,7 +1139,9 @@ have the right format, '%s' will be used instead"
 
         # insert the comments written by the user in the first line
         self.output_file = open(self.output_file.name, "w")
-        self.output_file.write(self.widgets["OutputFileWidget"].get_header_text())
+        header = self.widgets["OutputFileWidget"].get_header_text()
+        if header not in data:
+            self.output_file.write(header)
         self.output_file.write(data)
         self.output_file.close()
 

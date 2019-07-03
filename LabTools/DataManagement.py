@@ -47,6 +47,8 @@ class DataTaker(QThread):
 
         self.instr_hub = instr_hub
 
+        self.user_data = {}
+
         if USE_PYQT5:
 
             self.instr_hub.changed_list.connect(self.reset_lists)
@@ -108,6 +110,13 @@ class DataTaker(QThread):
         if isinstance(adict, dict):
 
             self.user_variables = adict
+
+    def update_user_data(self, adict):
+        """
+        Replaces the user data with updated ones
+        """
+        if isinstance(adict, dict):
+            self.user_data = adict
 
     def assign_user_variable(self, key, value_type=float, default=None):
         """this is used to change variables while data are being taken
