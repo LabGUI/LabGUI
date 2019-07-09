@@ -320,6 +320,7 @@ class UserVariableWidget(QtGui.QWidget):
                 key = str(line.param_label_le.text())
                 value = str(line.param_value_le.text())
 
+
                 adict[key] = value
 
         # send the signal with the dict

@@ -113,6 +113,8 @@ class UserDataWidget(QtGui.QWidget):
 
         updateUserVariables = pyqtSignal('PyQt_PyObject')
 
+        loadUserVariables = pyqtSignal('PyQt_PyObject')
+
     def __init__(self, parent=None, load_fname='5'):
         super(UserDataWidget, self).__init__(parent)
 
@@ -258,6 +260,16 @@ class UserDataWidget(QtGui.QWidget):
                     logging.debug("Two data points of same name %s?"%name)
         self.update_lines()
 
+    def set_user_data_parse(self, arr):
+        """
+        :param arr: type list, read from header of data file
+        :return: nuthin
+        """
+        obj = {}
+        for item in arr:
+            obj[item[0].strip("'")] = item[1].strip("'")
+        self.set_user_data(obj)
+
 
 ### NOT USED
 def get_user_data(parent, variables_dict):
@@ -274,6 +286,7 @@ def set_user_data(parent, variables_dict):
     the variables information
     """
     parent.datataker.update_user_variables(variables_dict)
+    parent.widgets['userDataWidget'].loadUserVariables.emit(parent.datataker.user_data)
 
 
 
@@ -298,6 +311,7 @@ def add_widget_into_main(parent):
     # add a method to the 'parent' instance
     # depending on the python version this fonction take different arguments
     parent.get_user_data = mywidget.get_user_data
+    parent.set_user_data = mywidget.set_user_data
     # if sys.version_info[0] > 2:
     #
     #     parent.get_user_data = MethodType(mywidget.get_user_data,
@@ -313,7 +327,8 @@ def add_widget_into_main(parent):
     #     parent.set_user_data = MethodType(mywidget.set_user_data,
     #                                       parent,
     #                                       parent.__class__)
-
+    if USE_PYQT5:
+        parent.widgets['userDataWidget'].loadUserVariables.connect(parent.widgets['userDataWidget'].set_user_data)
     # connect a trigger to that method
     # if USE_PYQT5:
     #

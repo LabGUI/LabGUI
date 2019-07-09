@@ -103,7 +103,7 @@ class OutputFileWidget(QtGui.QWidget):
                 for name, value in data.items():
                     data_str += "D'%s', '%s'\n"%(name, value)
         if text:
-
+            # need space to prevent possible error
             text = "# " + text.replace("\n", "\n#") + "\n"
 
             if data_str != "":
@@ -116,6 +116,9 @@ class OutputFileWidget(QtGui.QWidget):
                 return "#" + data_str.strip("\n").replace("\n", "\n#") + "\n"
             else:
                 return ""
+
+    def set_header_text(self, text):
+        self.headerTextEdit.setPlainText(text.rstrip('\n'))
 
     def get_output_fname(self):
 

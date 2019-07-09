@@ -190,7 +190,8 @@ class LabGuiMain(QtGui.QMainWindow):
         # should be loaded directly form InstrumentWidget
 
         instrument_hub_connected = pyqtSignal("PyQt_PyObject")
-    EXIT_CODE_REBOOT = -12121212 #unused exit code afaik
+
+        EXIT_CODE_REBOOT = -12121212 #unused exit code afaik
     def __init__(self, argv=[]):
 
         # run the initializer of the class inherited from6

@@ -491,7 +491,7 @@ def load_file_windows(fname, splitchar=', ', headers=True):
     ifs = open(fname, 'r')
     label = {'hdr': ""}
 
-    labels_id = ['P', 'I', 'C']
+    labels_id = ['P', 'I', 'C', 'D']
 
     lines = ifs.readlines()
 
@@ -547,11 +547,16 @@ def load_file_windows(fname, splitchar=', ', headers=True):
                     label['channel_labels'][0] = \
                         label['channel_labels'][0][1:]
 
+            elif label_id == 'D':
+                if 'data' not in label.keys():
+                    label['data'] = []
+                label['data'].append(line.split(', '))
+
             # this is user comments we only save the ones that are
             # before the label_id, other lines will be ignored
             if i < end_normal_hdr_idx:
 
-                label['hdr'] = label['hdr'] + line
+                label['hdr'] = label['hdr'] + line.lstrip(' ')
 
     ifs.close()
 
@@ -575,7 +580,7 @@ missing, all lines starting with # are available in the second output dict")
 
     else:
 
-        return data
+        return data, {}
 
 
 def load_pset_file(fname, labels=None):

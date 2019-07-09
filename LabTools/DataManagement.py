@@ -117,6 +117,11 @@ class DataTaker(QThread):
         """
         if isinstance(adict, dict):
             self.user_data = adict
+        elif isinstance(adict, list):
+            self.user_data = {}
+            for item in adict:
+                if isinstance(item, list) and len(item) > 1:
+                    self.user_data[item[0].strip("'")] = item[1].strip("'")
 
     def assign_user_variable(self, key, value_type=float, default=None):
         """this is used to change variables while data are being taken
