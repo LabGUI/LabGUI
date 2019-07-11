@@ -184,9 +184,10 @@ class UserWidgetManager(QtGui.QWidget):
 
     ### EVENT STUFF ###
     def change_active_widgets(self, *args, **kwargs):
-        print("Active widget changed")
-        print(*args)
-        print(kwargs)
+        pass
+        #print("Active widget changed")
+        #print(*args)
+        #print(kwargs)
     def on_configFileButton_clicked(self):
 
         fname = str(QtGui.QFileDialog.getOpenFileName(self, 'Config file',

@@ -513,6 +513,7 @@ class ActionManager(QtCore.QObject):
     if USE_PYQT5:
 
         removed_selection_box = pyqtSignal()
+        current_widget_change = pyqtSignal()
 
     def __init__(self, parent):
 
@@ -624,7 +625,8 @@ class ActionManager(QtCore.QObject):
     def update_current_widget(self, current_widget):
         """this is used when there are multiple plot widgets that have 
         different zoom settings"""
-
+        if not hasattr(self, "current_widget"):
+            self.current_widget_change.emit()
         self.current_widget = current_widget
 
         mode = current_widget.mouseMode

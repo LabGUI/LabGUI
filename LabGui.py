@@ -190,7 +190,8 @@ class LabGuiMain(QtGui.QMainWindow):
         # should be loaded directly form InstrumentWidget
 
         instrument_hub_connected = pyqtSignal("PyQt_PyObject")
-    EXIT_CODE_REBOOT = -12121212 #unused
+
+        EXIT_CODE_REBOOT = -12121212 #unused exit code afaik
     def __init__(self, argv=[]):
 
         # run the initializer of the class inherited from6
@@ -358,7 +359,9 @@ have the right format, '%s' will be used instead"
         # InstrumentHub is responsible for storing and managing the user
         # choices about which instrument goes on which port
         self.instr_hub = Tool.InstrumentHub(parent=self, debug=self.DEBUG)
-
+        self.instrument_hub_disconnected = self.instr_hub.instrument_hub_disconnected
+        self.instrument_hub_disconnected.connect(self.disconnectInstrToolbar)
+        self.instrument_hub_connected.connect(self.connectInstrToolbar)
         # DataTaker is responsible for taking data from instruments in the
         # InstrumentHub object
         self.datataker = DataManagement.DataTaker(self.lock, self.instr_hub)
@@ -402,7 +405,8 @@ have the right format, '%s' will be used instead"
         # all actions related to the figure widget (mplZoomWidget.py) are
         # set up in the actionmanager
         self.action_manager = mplZoomWidget.ActionManager(self)
-
+        self.action_manager.current_widget_change.connect(self.activatePltToolbar)
+        self.deactivePltToolbar()
         # this will contain the widget of the latest pdw created upon
         # connecting the instrument Hub
         self.actual_pdw = None
@@ -630,6 +634,14 @@ have the right format, '%s' will be used instead"
             icon=None,
             tip="Refresh the list of selected instruments",
         )
+        self.disconnect_hub = QtTools.create_action(
+            self,
+            "Disconnect Instruments",
+            slot=self.disconnect_instrument_hub,
+            shortcut=None,
+            icon=None,
+            tip="Disconnect all connected instruments"
+        )
 
         self.refresh_ports_list_action = QtTools.create_action(
             self,
@@ -642,8 +654,10 @@ have the right format, '%s' will be used instead"
         self.instMenu.addAction(self.start_DTT_action)
         self.instMenu.addAction(self.read_DTT)
         self.instMenu.addAction(self.connect_hub)
+        self.instMenu.addAction(self.disconnect_hub)
         self.instMenu.addAction(self.refresh_ports_list_action)
 
+        self.disconnectInstrToolbar()
         # ##### WINDOW MENU SETUP ######
         self.add_pdw = QtTools.create_action(
             self,
@@ -810,6 +824,10 @@ have the right format, '%s' will be used instead"
             self.settings.setValue("windowState", self.saveState())
             self.settings.setValue("geometry", self.saveGeometry())
             self.settings.remove("script_name")
+
+            # make sure nothing is currently running
+            self.stop_DTT()
+            self.instrument_hub_disconnected.emit()
             event.accept()
 
         else:
@@ -1109,6 +1127,9 @@ have the right format, '%s' will be used instead"
         # Enable changes to the instrument connections
         self.widgets["InstrumentWidget"].bt_connecthub.setEnabled(True)
 
+        # make sure output file is actually open
+        if not hasattr(self.output_file, 'close'): # other option is, type(self.output_file) == str, or type(self.output) != io.TextIOWrapper
+            return
         # close the output file
         self.output_file.close()
 
@@ -1119,7 +1140,9 @@ have the right format, '%s' will be used instead"
 
         # insert the comments written by the user in the first line
         self.output_file = open(self.output_file.name, "w")
-        self.output_file.write(self.widgets["OutputFileWidget"].get_header_text())
+        header = self.widgets["OutputFileWidget"].get_header_text()
+        if header not in data:
+            self.output_file.write(header)
         self.output_file.write(data)
         self.output_file.close()
 
@@ -1512,6 +1535,19 @@ have the right format, '%s' will be used instead"
         global USERWIDGET_MANAGER
         USERWIDGET_MANAGER = UserWidgetManager.UserWidgetManager(self)
         USERWIDGET_MANAGER.show()
+
+    def connectInstrToolbar(self):
+        self.disconnect_hub.setEnabled(True)
+
+    def disconnectInstrToolbar(self):
+        self.disconnect_hub.setEnabled(False)
+    def activatePltToolbar(self):
+        for action in self.action_manager.actions:
+            action.setEnabled(True)
+
+    def deactivePltToolbar(self):
+        for action in self.action_manager.actions:
+            action.setEnabled(False)
     def relaunch(self, force=False, **kwargs):
         self.force = force
         if hasattr(self, 'Qapp'):
@@ -1523,16 +1559,51 @@ have the right format, '%s' will be used instead"
         #self.exit(self.EXIT_CODE_REBOOT)
     #    relaunch_LabGui()
 
+################ ENABLE ERROR HANDLING #######################
+ex = None
+app = None
+
+sys._excepthook = sys.excepthook
+def error_message(value):
+    global ex, app
+    msg = QtGui.QMessageBox.critical(ex,
+                                     "Error!",
+                                     "LabGUI failed with the following error:\n %s\n Relaunch?" % value,
+                                     QtGui.QMessageBox.Yes | QtGui.QMessageBox.No,
+                                     QtGui.QMessageBox.Yes
+                                     )
+    if msg == QtGui.QMessageBox.Yes:
+        for entry in QtGui.qApp.allWidgets():
+            if(type(entry).__name__ == 'LabGuiMain'):
+                print(entry, dir(entry), type(entry))
+                if hasattr(entry, "relaunch"):
+                    entry.relaunch(True)
+                else:
+                    entry.close()
+        app.exit(LabGuiMain.EXIT_CODE_REBOOT)
+    else:
+        sys.exit(0)
+def custom_exception_hook(exctype, value, traceback):
+    # Print the error and traceback
+    logging.error((exctype, value, traceback))
+    # Call the normal Exception hook after
+    sys._excepthook(exctype, value, traceback)
+    error_message(str(value))
+
+# Set the exception hook to our wrapping function
+sys.excepthook = custom_exception_hook
+####################################################################
 def launch_LabGui():
-    #global WIDGET_INSTANCE, app
+    global ex, app
     currentExitCode = LabGuiMain.EXIT_CODE_REBOOT
+    app = QApplication(sys.argv)
     while currentExitCode == LabGuiMain.EXIT_CODE_REBOOT:
-        app = QApplication(sys.argv)
         ex = LabGuiMain()
         ex.Qapp = app
         ex.show()
         currentExitCode = app.exec_()
     sys.exit(currentExitCode)
+
 
 
 

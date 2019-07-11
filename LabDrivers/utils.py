@@ -125,11 +125,10 @@ def list_serial_ports(max_port_num=20):
         raise EnvironmentError('Unsupported platform')
 
     result = []
-    print(ports)
     for port in ports:
         try:
             s = serial.Serial(port, 9600, timeout=0.1)
-            print(port)
+            logging.debug("Serial connection established with %s"%port)
             result.append(str(port))
             s.close()
 
