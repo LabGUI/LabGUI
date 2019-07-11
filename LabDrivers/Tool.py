@@ -694,6 +694,8 @@ class InstrumentHub(QObject):
         instrument_hub_connected = pyqtSignal()
         instrument_hub_disconnected = pyqtSignal()
 
+        time_changed = pyqtSignal('float')
+
     def __init__(self, parent=None, debug=False, **kwargs):
 
         #        self.
@@ -721,6 +723,11 @@ class InstrumentHub(QObject):
 
         self.DEBUG = debug
         logging.debug("debug mode of InstrumentHub Object :%s" % self.DEBUG)
+
+        # this is a variable that indicates the start time, in seconds since epoch
+        # if variable remains none, we know that there is no TIME device connected
+        self.start_time = None
+
 
         # this is an ordered dictionary where the keys are the port names
         # and the values are the Instrument objects (which should inherit from
@@ -881,6 +888,8 @@ instrument hub. Interface passed as an argument : %s" % intf)
         logging.debug(self.instrument_list)
 
         return True
+    def time_change(self, time):
+        self.start_time = time
 
     def connect_instrument(self, instr_name, device_port, param, send_signal=True):
         # device_port should contain the name of the GPIB or the COM port
@@ -962,6 +971,8 @@ which is connected to %s " % (param, instr_name, device_port))
                     #                    else:
                     obj = class_inst.Instrument(device_port,
                                                 debug=self.DEBUG)
+                if instr_name == 'TIME':
+                    obj.time_change = self.time_change # set change time function in TIME.py
 
                 if not self.DEBUG:
 
@@ -1036,6 +1047,7 @@ which is connected to %s " % (param, instr_name, device_port))
         self.port_param_pairs = []
         # I am not sure why this is useful anymore
         self.instrument_list[None] = None
+        self.start_time = None # no start timer
 
 
 def whoisthere():

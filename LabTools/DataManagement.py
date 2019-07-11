@@ -79,6 +79,7 @@ class DataTaker(QThread):
         # in real time while the script is ran
         self.user_variables = {}
 
+        # start time, taken from instr_hub
         self.t_start = None
         # scriptize the intruments and their parameters
         self.reset_lists()
@@ -91,6 +92,8 @@ class DataTaker(QThread):
                 # there's a none object in the Instruments list, ignore it
                 if inst:
                     inst.initialize()
+        # should be written at this point
+        self.t_start = self.instr_hub.start_time
 
     def reset_lists(self):
         """

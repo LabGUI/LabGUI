@@ -845,7 +845,7 @@ class PlotDisplayWindow(QtGui.QMainWindow, ui_plotdisplaywindow.Ui_PlotDisplayWi
 
             self.channel_objects["groupBox_Name"][idx].setText(label_text)
 
-    def update_legends(self):
+    def update_legends(self): # check the zip, as range is no longer a list
         """update the property of the lines in the legend box"""
         if self.legend_box:
             handles = []
