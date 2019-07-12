@@ -33,7 +33,7 @@ class DataSet(object):
         # this will read each file, and create the data set object.
         # the dataset object will contain a headers variable, raw_data variable
 
-        self.headers = {}
+        self.headers = {'hdr':''}
         self.instruments = []
         self.raw_data = []
 
@@ -69,6 +69,9 @@ class DataSet(object):
                             if 'data' not in self.headers.keys():
                                 self.headers['data'] = []
                             self.headers['data'].append(line[2:].split(splitchar))
+                        else:
+                            self.headers['hdr'] += line[1:]
+
             self.raw_data = np.loadtxt(file)
         else:
             self.raw_data, self.headers = load_file_windows(file)
@@ -76,6 +79,9 @@ class DataSet(object):
         if 'start_time' not in self.headers:
             print("Start time not specified, there may be unexpected results")
             self.headers['start_time'] = 0
+
+        if 'data' not in self.headers:
+            self.headers['data'] = {}
         # make all time absolute
         self.times = []
         if RELATIVE_TIME in self.headers['instr']:
@@ -85,6 +91,7 @@ class DataSet(object):
             for i, entry in enumerate(self.abs_data):
                 self.abs_data[i][column] += self.headers['start_time']
                 self.times.append( self.abs_data[i][column] ) # needed for min/max
+            self.column = column
         elif ABSOLUTE_TIME in self.headers['instr']:
             column = self.headers['instr'].index(ABSOLUTE_TIME)
             self.abs_data = self.raw_data.copy()
@@ -92,6 +99,7 @@ class DataSet(object):
             for i, entry in enumerate(self.rel_data):
                 self.times.append( self.rel_data[i][column] ) # still in abs time
                 self.rel_data[i][column] -= self.headers['start_time']
+            self.column = column
 
 
         # now to parse instrument list, and strip ports, leaving it in the same order as in headers
@@ -102,9 +110,12 @@ class DataSet(object):
                 continue
             # we want to strip '[possible port name]' from instrument
             # assuming in form 'INSTRUMENT[PORT].PARAM'
-            driver, rest = instr.split('[')
-            param = rest.split(']')[1]
-            self.instr_name[index] = driver + param
+            if '[' in instr:
+                driver, rest = instr.split('[')
+                param = rest.split(']')[1]
+                self.instr_name[index] = driver + param
+            else:
+                self.instr_name[index] = instr
 
     def min_time(self):
         return min(self.times)
@@ -157,7 +168,8 @@ class SyncData(object):
             'param':[],
             'channel_labels':[],
             'data':[],
-            'hdr':[]
+            'hdr':[],
+            'start_time':[]
         }
         data_combo = []
         margins = []
@@ -190,6 +202,7 @@ class SyncData(object):
 
                 # parse all headers, put them in some order
                 for header in dset.headers.keys():
+                    #print(header)
                     if header == 'instr':
                         headers['instr'] += head[1:]
                     else:
@@ -219,6 +232,21 @@ class SyncData(object):
                 abs_data.T[[0, index]] = abs_data.T[[index, 0]] # the most elegant way I could think of
             else:
                 head[0] = ABSOLUTE_TIME # we want it all in abs, we can convert later
+                for header in dset.headers.keys():
+                    #print(header)
+                    if header == 'instr':
+                        headers['instr'] += head[1:]
+                    else:
+                        swapped_head = dset.headers[header]
+                        if isinstance(swapped_head, list):
+                            headers[header].append(swapped_head)
+                        elif isinstance(swapped_head, dict): # data
+                            temp = {}
+                            for key, value in swapped_head.keys():
+                                temp[str(key)+str(i)] = value
+                            headers[header].append(temp)
+                        else: # typically a string, such as 'hdr', can just be appended
+                            headers[header].append(swapped_head)
 
 
             # now make data
@@ -237,7 +265,8 @@ class SyncData(object):
             'param':[ABSOLUTE_TIME.split('.')[-1]],
             'channel_labels':[ABSOLUTE_TIME.split('.')[-1] + "(s)"],
             'data':{},
-            'hdr':""
+            'hdr':"",
+            'start_time':[]
         }
         self.maxs = maxs
         self.mins = mins
@@ -268,22 +297,221 @@ class SyncData(object):
                 self.headers_all['channel_labels'] += head[1:]
         for head in headers['data']:
             self.headers_all['data'].update(head)
+        # parse hdr
+        hdr_list = []
+        for hdr in headers['hdr']:
+            if hdr != '':
+                hdr_list.append(hdr)
+        headers['hdr'] = hdr_list
+
         self.headers_all['hdr'] = "\n".join(headers['hdr'])
-        self.data_all.sort(axis=0) # sort with respect to time
+        self.headers_all['start_time'] = min(headers['start_time'])
+        self.data_all = self.data_all[self.data_all[:, 0].argsort()]
         return self.data_all
 
     def union(self, output_file=None):
         if output_file is None:
             output_file = self.output_file
+
+        if self.data_all is None:
+            self.parse_data()
         # just print everything together
         header = self.headers_all
+        data = self.data_all.copy()
+        start_time = min(self.start_times)
         if self.default == RELATIVE_TIME:
-            start_time = min(self.start_times)
-            for i, row in enumerate(self.data_all):
-                self.data_all[i][0] -= start_time # make relative time
-            header['instr'] = RELATIVE_TIME,
-            header['param'] = RELATIVE_TIME.split('.')[-1]
-            header['channel_labels'] = RELATIVE_TIME.split('.')[-1] + "(s)"
+            for i, row in enumerate(data):
+                data[i][0] -= start_time # make relative time
+            header['instr'][0] = RELATIVE_TIME
+            header['param'][0] = RELATIVE_TIME.split('.')[-1]
+            header['channel_labels'][0] = RELATIVE_TIME.split('.')[-1] + "(s)"
+        header['start_time'] = start_time
+
+        self.save(header, data, output_file=output_file)
+
+        return data
+
+    def intersect(self, output_file=None):
+        if output_file is None:
+            output_file = self.output_file
+
+        if self.data_all is None:
+            self.parse_data()
+
+        header = self.headers_all
+        # we need max of mins, and mins of maxs for itnersect
+        start_time = max(self.start_times) # cuz it is the last one thatll be in the intersection
+        st_point = max( [ min(self.data_all[~np.isnan(self.data_all[:,i+1])][:,0]) for i in range(np.size(self.data_all, 1)-1) ] ) # take max of mins of time
+        sp_point = min( [ max(self.data_all[~np.isnan(self.data_all[:,i+1])][:,0]) for i in range(np.size(self.data_all, 1)-1) ] ) # take mins of maxs of time
+
+        boolean_arr = np.array( [ st_point <= row[0] and row[0] <= sp_point for row in self.data_all ] )
+
+        data = self.data_all[boolean_arr]
+
+        if self.default == RELATIVE_TIME:
+            for i, row in enumerate(data):
+                data[i][0] -= start_time # make relative time
+            header['instr'][0] = RELATIVE_TIME
+            header['param'][0] = RELATIVE_TIME.split('.')[-1]
+            header['channel_labels'][0] = RELATIVE_TIME.split('.')[-1] + "(s)"
+        header['start_time'] = start_time
+
+        self.save(header, data, output_file=output_file)
+
+        return data
+
+    def align_min(self, output_file):
+        """
+        Intersect for the lower bound. Only thing that is ligned up is the mins (max of min)
+        """
+        if output_file is None:
+            output_file = self.output_file
+
+        if self.data_all is None:
+            self.parse_data()
+
+        header = self.headers_all
+        # we need max of mins, and mins of maxs for itnersect
+        start_time = max(self.start_times) # cuz it is the last one thatll be in the intersection
+        st_point = max( [ min(self.data_all[~np.isnan(self.data_all[:,i+1])][:,0]) for i in range(np.size(self.data_all, 1)-1) ] ) # take max of mins of time
+
+
+        boolean_arr = np.array( [ st_point <= row[0] for row in self.data_all ] )
+
+        data = self.data_all[boolean_arr]
+
+        if self.default == RELATIVE_TIME:
+            for i, row in enumerate(data):
+                data[i][0] -= start_time # make relative time
+            header['instr'][0] = RELATIVE_TIME
+            header['param'][0] = RELATIVE_TIME.split('.')[-1]
+            header['channel_labels'][0] = RELATIVE_TIME.split('.')[-1] + "(s)"
+        header['start_time'] = start_time
+
+        self.save(header, data, output_file=output_file)
+
+        return data
+
+    def align_max(self, output_file):
+        """
+        Same as intersect, but it aligns the endpoints (min maxs)
+        """
+        if output_file is None:
+            output_file = self.output_file
+
+        if self.data_all is None:
+            self.parse_data()
+
+        header = self.headers_all
+        # we need max of mins, and mins of maxs for itnersect
+        start_time = min(self.start_times) # WILL BE FIRST FOR THIS ONE
+        sp_point = min( [ max(self.data_all[~np.isnan(self.data_all[:,i+1])][:,0]) for i in range(np.size(self.data_all, 1)-1) ] ) # take mins of maxs of time
+
+        boolean_arr = np.array( [ row[0] <= sp_point for row in self.data_all ] )
+
+        data = self.data_all[boolean_arr]
+
+        if self.default == RELATIVE_TIME:
+            for i, row in enumerate(data):
+                data[i][0] -= start_time # make relative time
+            header['instr'][0] = RELATIVE_TIME
+            header['param'][0] = RELATIVE_TIME.split('.')[-1]
+            header['channel_labels'][0] = RELATIVE_TIME.split('.')[-1] + "(s)"
+        header['start_time'] = start_time
+
+        self.save(header, data, output_file=output_file)
+
+        return data
+
+
+    def difference(self, A, output_file, sets=None):
+        if sets is None:
+            sets = self.sets
+        if A not in list(range(len(sets))):
+            print("Invalid range")
+            return
+
+        A_set = sets[A]
+        A_arr = A_set.abs_data
+        idx = A_set.column
+
+        bounds = []
+        for i, set in enumerate(sets):
+            if i != A:
+                bounds.append( (set.min_time(), set.max_time()) )
+
+        def bool_from_bounds(t, bounds):
+            for min, max in bounds:
+                if min <= t and t <= max:
+                    return True
+            return False
+        data = A_arr.copy()
+        boolean_arr = [ bool_from_bounds(row[idx], bounds) for row in data ]
+        for j in [i for i in range(np.size(A_arr, 1)) if i != A_set.column]:
+            data[boolean_arr, j] = np.inf
+
+        header = A_set.headers
+        start_time = header['start_time']
+        if self.default == RELATIVE_TIME:
+            for i, row in enumerate(data):
+                data[i][idx] -= start_time # make relative time
+            header['instr'][idx] = RELATIVE_TIME
+            header['param'][idx] = RELATIVE_TIME.split('.')[-1]
+            header['channel_labels'][idx] = RELATIVE_TIME.split('.')[-1] + "(s)"
+
+        self.save(header, data, output_file=output_file)
+
+        return data
+
+
+    def symmetric_difference(self, output_file):
+        """
+        Computes the symmetric difference of the union and intersect.
+
+        I guess this can also be considered the intersect compliment?
+        """
+        union = self.union(output_file)
+        uset = DataSet(output_file)
+
+        intersect = self.intersect(output_file)
+        iset = DataSet(output_file)
+
+        # now to difference: union \ intersect
+
+        return self.difference(0, output_file, [uset, iset])
+
+
+
+
+
+
+    def save(self, header, data, output_file=None):
+
+        if header['hdr'] != '':
+            header_str = '# ' + header['hdr'].replace("\n", "\n#") + "\n"
+
+        if len(header['data']) > 0:
+            for key, value in header['data'].items():
+                header_str += "#D'%s', '%s'\n"%(key,value)
+        header_str = (
+            "#C"
+            + str(header['channel_labels']).strip("[]")
+            + "\n"
+        )
+        header_str += (
+            "#I"
+            + str(header['instr']).strip(
+                "[]"
+            )
+            + "\n"
+        )
+
+        header_str += ("#P" + str(header['param']).strip("[]") + "\n")
+        header_str += (
+            "#T'" + str(header['start_time']) + "'\n"
+        )
+        #print(dat)
+        np.savetxt(output_file, data, header=header_str.rstrip("\n"), comments='')
 
 
 
@@ -295,8 +523,25 @@ class SyncData(object):
 
 
 if __name__ == "__main__":
+    files = ['dat1.dat', 'dat2.dat']
+
+    ssync = SyncData([ 's'+file for file in files ])
+    ssync.symmetric_difference('sdat_symdiff.dat')
+    exit(0)
+    sync = SyncData(files)
+    sync.difference(0, 'dat_diff.dat')
+
+    exit(0)
+    sync.intersect('dat_intersect.dat')
+
+    exit(0)
+
+
+
+
+
     files = [r'C:\Users\admin\Documents\LabGUI\scratch\190711__004.dat',
-             r'C:\Users\admin\Documents\LabGUI\scratch\190711__005.dat',
+             #r'C:\Users\admin\Documents\LabGUI\scratch\190711__005.dat',
              r'C:\Users\admin\Documents\LabGUI\scratch\190711__006.dat',
              r'C:\Users\admin\Documents\LabGUI\scratch\190711__007.dat',
              r'C:\Users\admin\Documents\LabGUI\scratch\190711__008.dat'
@@ -305,4 +550,29 @@ if __name__ == "__main__":
     sync = SyncData(files, output_file=r'C:\Users\admin\Documents\LabGUI\scratch\190711__union.dat')
 
     dat = sync.parse_data()
-    np.savetxt('test.dat', dat)
+    header = sync.headers_all
+    sync.save(data=dat, header=header, output_file='realtest.dat')
+
+
+""" header_str = "#C"+", ".join(header['channel_labels'])
+output_file = open('text.dat', "w")
+output_file.write(
+    "#C"
+    + str(header['channel_labels']).strip("[]")
+    + "\n"
+)
+output_file.write(
+    "#I"
+    + str(header['instr']).strip(
+        "[]"
+    )
+    + "\n"
+)
+
+
+output_file.write("#P" + str(header['param']).strip("[]") + "\n")
+output_file.write(
+    "#T'" + str(header['start_time']) + "'\n"
+)
+# print(dat)
+np.savetxt('text.dat', dat)"""

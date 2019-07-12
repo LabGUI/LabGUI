@@ -77,6 +77,20 @@ def isnparray(an_array):
         return True
 
 
+
+
+def xyaxis(xaxis, yaxis):
+    # using masks
+    ymask = ~np.isnan(yaxis) # so nones or infinity are still present, and made to be disconnected
+    y = yaxis.copy() # copy so it isnt masked in a seperate function call
+    y[ y == np.inf ] = np.nan # disconnect graph
+    return xaxis[ymask], y[ymask]
+    # removes nan values
+    dat = np.array([xaxis, yaxis]).T
+    dat = dat[~np.isnan(dat).any(axis=1)]
+    return dat[:,0], dat[:,1]
+
+
 VOID_NPARRAY = np.array([])
 
 """
@@ -177,7 +191,7 @@ class PlotDisplayWindow(QtGui.QMainWindow, ui_plotdisplaywindow.Ui_PlotDisplayWi
 
         # create data_array attribute and use channel 0 as X by default
         self.data_array = data_array
-        self.chan_X = 0
+        self.chan_X = None
         self.time_Xaxis = False
 
 
@@ -551,6 +565,10 @@ class PlotDisplayWindow(QtGui.QMainWindow, ui_plotdisplaywindow.Ui_PlotDisplayWi
 
     def YCheckBoxHandler(self):
         """Update which data is used for the Y axis (both left and right)"""
+        if self.chan_X is None:
+            return
+        else:
+            print(self.chan_X)
         tot_label = []
 #        print "Y clicked"
         obj = self.sender()
@@ -568,7 +586,8 @@ class PlotDisplayWindow(QtGui.QMainWindow, ui_plotdisplaywindow.Ui_PlotDisplayWi
         elif get_groupBox_purpouse(name) == "YR":
             self.set_YR_axis_label(tot_label)
 
-        self.update_plot()
+        if self.is_any_radiobox_selected('groupBox_X'):
+            self.update_plot()
 
     def ComboBoxHandler(self, num):
         """This fonction is triggered when someones toggle a combobox"""
@@ -760,6 +779,20 @@ class PlotDisplayWindow(QtGui.QMainWindow, ui_plotdisplaywindow.Ui_PlotDisplayWi
 
         return answer
 
+    def is_any_radiobox_selected(self, group_radio_name):
+        """ Same as above, but for x-axis """
+        answer = False
+
+        if group_radio_name in self.channel_objects:
+
+            for radio in self.channel_objects[group_radio_name]:
+
+                if radio.isChecked():
+
+                    answer = True
+
+        return answer
+
     def convert_timestamp(self, timestamp):
 
         try:
@@ -873,6 +906,8 @@ class PlotDisplayWindow(QtGui.QMainWindow, ui_plotdisplaywindow.Ui_PlotDisplayWi
             take a matrix (data_array) with a number of rows equal to the number of channel/lines in the window and plot them along the line direction
             it only plots if the checkbox of the line is checked
         """
+        if self.chan_X is None:
+            return
 
         if isnparray(data_array) == True:
             logging.debug("update the data_array")
@@ -883,7 +918,10 @@ class PlotDisplayWindow(QtGui.QMainWindow, ui_plotdisplaywindow.Ui_PlotDisplayWi
             try:
                 num_channels = self.data_array.shape[1]
             except:
-                num_channels = np.size(self.data_array, 1)
+                try:
+                    num_channels = np.size(self.data_array, 1)
+                except:
+                    return
 
             # if there is more instruments than channel numbers we expand the channels on the window
             while self.num_channels < num_channels:
@@ -908,7 +946,7 @@ class PlotDisplayWindow(QtGui.QMainWindow, ui_plotdisplaywindow.Ui_PlotDisplayWi
 
                     # look which checkbox is checked and plot corresponding data
                     if self.channel_objects["groupBox_Y"][chan_Y].isChecked() and self.data_array.size > 0:
-                        line_L.set_data(xdata, ydata)
+                        line_L.set_data(xyaxis(xdata, ydata))
                         self.data_legends['L'].append(
                             str(self.channel_objects["groupBox_Name"][chan_Y].text()))
                     else:
@@ -917,7 +955,7 @@ class PlotDisplayWindow(QtGui.QMainWindow, ui_plotdisplaywindow.Ui_PlotDisplayWi
 
                     # look which checkbox is checked and plot corresponding data
                     if self.channel_objects["groupBox_YR"][chan_Y].isChecked() and self.data_array.size > 0:
-                        line_R.set_data(xdata, ydata)
+                        line_R.set_data(xyaxis(xdata, ydata))
                         self.data_legends['R'].append(
                             str(self.channel_objects["groupBox_Name"][chan_Y].text()))
                     else:
@@ -993,9 +1031,9 @@ class PlotDisplayWindow(QtGui.QMainWindow, ui_plotdisplaywindow.Ui_PlotDisplayWi
         fitYw = fitp["fit_func"](xdataw, *fitp["fitp_val"])
         fitY = fitp["fit_func"](xdata, *fitp["fitp_val"])
 
-        self.ax.lines[-1].set_data(xdataw, fitYw)
+        self.ax.lines[-1].set_data(xyaxis(xdataw, fitYw))
 
-        self.ax.lines[-2].set_data(xdata, fitY)
+        self.ax.lines[-2].set_data(xyaxis(xdata, fitY))
 
         # call a method defined in the module mplZoomwidget.py
         self.mplwidget.rescale_and_draw()
@@ -1235,13 +1273,13 @@ class MultiplePlotDisplayWindow(PlotDisplayWindow):
 
                         # look which checkbox is checked and plot corresponding data
                         if self.channel_objects["groupBox_Y"][chan_Y].isChecked() and self.data_array.ncols > 0:
-                            line_L.set_data(data[:, 0], data[:, 1])
+                            line_L.set_data(xyaxis(data[:, 0], data[:, 1]))
                         else:
                             line_L.set_data([], [])
 
                         # look which checkbox is checked and plot corresponding data
                         if self.channel_objects["groupBox_YR"][chan_Y].isChecked() and self.data_array.ncols > 0:
-                            line_R.set_data(data[:, 0], data[:, 2])
+                            line_R.set_data(xyaxis(data[:, 0], data[:, 2]))
                         else:
                             line_R.set_data([], [])
                     else:
@@ -1420,7 +1458,7 @@ class SetsPlotDisplayWindow(PlotDisplayWindow):
 
                 # If the Set checkbox is unticked the data will not be displayed
             if self.channel_objects["groupBox_setnum"][chan_set].isChecked():
-                line_L.set_data(data[self.X_axis_name], data[self.Y_axis_name])
+                line_L.set_data(xyaxis(data[self.X_axis_name], data[self.Y_axis_name]))
                 self.data_legends.append(
                     str(self.channel_objects["groupBox_Name"][chan_set].text()))
             else:
