@@ -804,6 +804,9 @@ have the right format, '%s' will be used instead"
         """
         widget_creation(self)
 
+    def get_ren(self):
+        # This returns default ren state from corewidget
+        return self.widgets['RENWidget'].get_default()
     def closeEvent(self, event):
         if self.force:
             reply = QtGui.QMessageBox.Yes
