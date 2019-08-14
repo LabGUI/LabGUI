@@ -364,6 +364,10 @@ class Instrument(Tool.MeasInstr):
         return None
 
     def set_voltage(self, channel, voltage):
+        """
+        voltage must be rounded to 3 decimal places, as SIM928 cannot process larger floating points. For example,
+        if the voltage 1.8889 is given, it will be unable to process it, however it would be able to process 1.889
+        """
         channel = str(channel)
         voltage = str(round(float(voltage),3))
         if channel in self.connections.keys():
