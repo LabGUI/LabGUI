@@ -487,3 +487,39 @@ USER_WIDGETS=ConnectTerminalWidget;ServerWidget
 Use the file `TemplateUserWidget.py` for more practical information and to start your own widgets!
 
 
+## Using LabGUI Core Widgets ##
+
+Built into LabGUI, there are a set of core widgets in which it bases it's operation.
+Among these are several designed to help analyse/manipulate data and aid in seemless communication with devices.
+
+These widgets can be enabled/disabled from the `Window` dropdown menu.
+
+#### Remote Enable  Widget ####
+This widget allows the user to bring any device into a specific REN state, as well as set the default state for all connected devices.
+
+#### Instrument Widget ####
+This widget allows the user to select which instruments to connect to, from a list of device drivers as well as connected ports. By default, the state of this widget is loaded on launch, and saved on exit.
+
+#### Command Widget ####
+This widget is the GPIB Command-Line Widget, described above.
+
+#### Output File Widget ####
+This widget allows to the user to specify where data is saved, as well as leave some notes as comments in that datafile. Notes left by the user is saved/loaded by default.
+
+#### Script Widget ####
+This widget allows the user to specify which script is to be run via DataTaker.
+
+#### Properties Widget ####
+This widget allows the user to select from a list of connected devices, and modify any properties that may be available within the devices' driver.
+
+#### Function Widget ####
+This widget allows the user to select from a list of connected devices, and run any functions that may be available within the devices' driver.
+
+#### User Data Widget ####
+This widget is an extension to the Output File Widget comment saver, 
+
+#### Load Plot Widget ####
+This widget allows the user to load and plot previously taken data, with functionality extending to `User Data Widget` and `Output File Widget`.
+
+#### Console Widget ####
+This widget intercepts all strings sent to the `Standard Output` and prints them within the window, acting as a read-only terminal window.
