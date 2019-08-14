@@ -138,12 +138,12 @@ class REN_State(QtGui.QWidget):
 
     def set_default(self):
         if self.parent is not None:
-            self.parent.set_default(self.REN)
+            self.parent.set_default(self.REN, from_widget=True)
             self.default_state(True) # this will run after parent.set_default is run
 
     def unset_default(self):
         if self.parent is not None:
-            self.parent.unset_default(self.REN)
+            self.parent.unset_default(self.REN, from_widget=True)
             self.default_state(False) # this will run after parent.unset_default is run
 
     def toggle_default(self):
@@ -201,7 +201,6 @@ class REN_Widget(QtGui.QWidget):
 
         self.REN_Lines = []
         for i in range(len(REN_MODES)):
-            print(i)
             default_mode = False
             if self.default_ren == i:
                 default_mode = True
@@ -240,29 +239,58 @@ class REN_Widget(QtGui.QWidget):
         if instr is not None:
             instr.set_ren(mode)
 
-
-    def set_default(self, mode):
+    def set_default(self, mode, from_widget = False):
         if self.default_ren != mode and self.default_ren is not None:
             self.REN_Lines[self.default_ren].default_state(False)
         self.default_ren = mode
         self.default_widget.set_default(mode)
         # TODO: add stuff to change default text
+        if not from_widget:
+            for i in range(len(REN_MODES)):
+                if self.default_ren != i:
+                    self.REN_Lines[i].default_state(False)
+                else:
+                    self.REN_Lines[i].default_state(True)
+        else:
+            self.save_default()
 
-    def unset_default(self, mode):
+    def unset_default(self, mode, from_widget = False):
         if self.default_ren == mode:
             self.default_ren = None
             self.default_widget.set_default(None)
             # TODO: add stuff to change default text
+        if not from_widget:
+            for i in range(len(REN_MODES)):
+                self.REN_Lines[i].default_state(False)
+        else:
+            self.save_default()
 
-    def unset_all(self):
+    def unset_all(self, from_widget = False):
         self.default_ren = None
         for state in self.REN_Lines:
             state.default_state(False)
 
         self.default_widget.set_default(None)
 
-    def get_default(self):
+        if from_widget:
+            self.save_default()
+
+    def save_default(self):
+        if self.parentClass is not None:
+            self.parentClass.save_ren()
+
+
+    # following two functions are used from LabGui.py to load/save defaults
+    def get_ren(self):
         return self.default_ren
+
+    def set_ren(self, level):
+        if level is None or level == 'None':
+            self.default_ren = None
+            self.unset_all()
+        else:
+            self.set_default(int(level)) # this will automatically update default_ren, as well as unsetting all
+
 
     ##### DEVICE DROPBOX STUFF #####
     def enterEvent(self, event):

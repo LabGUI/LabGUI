@@ -614,7 +614,8 @@ class PrologixController(object):
                 )
             else:
                 logging.error('The connection to the Prologix connector failed')
-
+        self.assertren = None
+        self.ren_level = None
     def __str__(self):
         return self.controller_id()
         #print("you should not arrive at this") # to isolate error
@@ -743,11 +744,35 @@ class PrologixController(object):
         #self.reset()
         pass
 
-    def control_ren(self, level):
-        logging.debug("Currently, control_ren only asserts local mode")
-        if level == 0 or True: # TODO: CHANGE `OR TRUE`
-            self.write('++loc')
+    def control_ren(self, level, addr = None):
+        if level is None:
+            return
+        ASSERT_REN = [1,3]
+        DEASSERT_REN = [0,2]
+        GTL = [2,6]
+        LLO = [4,5]
 
+        ADDR_DEV = [3,4]
+        logging.debug("Currently, control_ren only asserts local mode")
+        #### DO ASSERTS #####
+        if level in ASSERT_REN:
+            self.assertren = True
+            logging.warning("Unabled to assert REN on prologix controller")
+        elif level in DEASSERT_REN:
+            self.assertren = False
+            logging.warning("Unabled to deassert REN on prologix controller")
+        if level in GTL:
+            if level in ADDR_DEV and addr is not None:
+                self.write('++loc %d'%addr)
+            else:
+                self.write('++loc')
+        elif level in LLO:
+            if level in ADDR_DEV and addr is not None:
+                self.write('++llo %d'%addr)
+            else:
+                self.write('++llo')
+
+        self.ren_level = level
     def reset(self):
         self.write("++rst")
 

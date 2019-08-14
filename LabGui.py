@@ -778,6 +778,9 @@ have the right format, '%s' will be used instead"
                 % (self.default_settings_fname)
             )
 
+        # load default ren state
+        self.set_ren()
+
         # Create the object responsible to display information send by the
         # datataker
         self.data_displayer = DataManagement.DataDisplayer(self.datataker)
@@ -806,7 +809,16 @@ have the right format, '%s' will be used instead"
 
     def get_ren(self):
         # This returns default ren state from corewidget
-        return self.widgets['RENWidget'].get_default()
+        return self.widgets['RENWidget'].get_ren()
+
+    def set_ren(self):
+        self.widgets['RENWidget'].set_ren(IOTool.get_REN())
+
+    def save_ren(self):
+        level = self.widgets['RENWidget'].get_ren()
+        curr = IOTool.get_REN()
+        if level is not None or curr is not None:
+            IOTool.set_REN(level)
     def closeEvent(self, event):
         if self.force:
             reply = QtGui.QMessageBox.Yes
@@ -823,7 +835,6 @@ have the right format, '%s' will be used instead"
 
             # save the current settings
             self.file_save_settings(self.default_settings_fname)
-
             self.settings.setValue("windowState", self.saveState())
             self.settings.setValue("geometry", self.saveGeometry())
             self.settings.remove("script_name")
@@ -1324,6 +1335,8 @@ have the right format, '%s' will be used instead"
                 self.instrument_connexion_setting_fname,
                 self.config_file,
             )
+
+        self.save_ren()
 
     def file_save_settings(self, fname=None):
         """save the settings for the instruments and plot window into a file

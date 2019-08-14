@@ -539,11 +539,24 @@ file to see which are the ones implemented" % (self.ID_name, resource_name))
     def set_ren(self, level):
         # this function is used as an alias for control_ren, which is built in to pyvisa controller, and programmed into Prologix
         mode = int(level)
+        if self.interface == INTF_SERIAL:
+            self.serial_set_ren(level)
         if hasattr(self.connection, 'control_ren'):
-            self.connection.control_ren(mode)
+            if self.interface == INTF_PROLOGIX:
+                self.connection.control_ren(mode, self.resource_number)
+            else:
+                self.connection.control_ren(mode)
         else:
             print("Reminder to finish this")
 
+    def serial_set_ren(self, level):
+        if level in [1, 3]:
+            self.connection.write("REN")
+
+        if level in [2,6]:
+            self.connection.write("GTL")
+        elif level in [4,5]:
+            self.connection.write("LLO")
 
 def create_virtual_inst(parent_class):
     """
