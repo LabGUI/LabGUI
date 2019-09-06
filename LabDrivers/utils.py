@@ -745,6 +745,13 @@ class PrologixController(object):
         pass
 
     def control_ren(self, level, addr = None):
+        """
+        :param level: REN mode, integer
+        :param addr: GPIB address of device. If None, it will assert for all devices
+        :return:
+        ++loc and ++llo are located on page 11 of the GPIB USB manual, found here:
+            https://prologix.biz/downloads/PrologixGpibUsbManual-6.0.pdf
+        """
         if level is None:
             return
         ASSERT_REN = [1,3]

@@ -3,13 +3,24 @@ Created Aug 13th, 2019
 
 @author: zackorenberg
 
-This widget allows the user to set a default Remote Enable State, as well as assert specific modes to specific devices in real time
+This widget allows the user to set a default Remote Enable State, as well as assert specific modes to specific devices in real time.
+
+The widget works by storing the 'default REN level', which can be set and unset by the user, and/or loaded through the configuration file.
+This stored 'REN level' is then asserted for each device when it is connected via the instrument hub.
+
+Alternatively, the user may select a specific machine to assert any ren level via the graphical user interface.
+
+The remote enable 'level' corresponds to the constants stated by National Instruments in their VISA library.
+See http://zone.ni.com/reference/en-XX/help/371361R-01/lvinstio/visa_gpib_control_ren/ for exact values.
+
 """
 
 import sys
 
 from types import MethodType
 import logging
+
+from LabTools.IO import IOTool
 
 from LocalVars import USE_PYQT5
 
@@ -39,6 +50,8 @@ SET_DEFAULT = "Set Default"
 UNSET_DEFAULT = "Unset Default"
 SCROLLABLE = False
 DEBUG = False
+
+
 class REN_Default(QtGui.QWidget):
     def __init__(self, default=None, parent=None):
         super(REN_Default, self).__init__()
@@ -63,8 +76,6 @@ class REN_Default(QtGui.QWidget):
 
         self.set_default(default)
 
-
-
     def set_default(self, default):
         self.default = default
 
@@ -80,7 +91,6 @@ class REN_Default(QtGui.QWidget):
             self.parent.unset_all()
 
         self.btn_disable()
-
 
     def btn_enable(self):
         self.btn.setEnabled(True)
@@ -99,10 +109,7 @@ class REN_State(QtGui.QWidget):
         if self.REN < len(REN_MODES):
             self.REN_info = REN_MODES[self.REN]
 
-
-
         self.layout = QtGui.QHBoxLayout(self)
-
 
         self.inp_REN = QtGui.QLabel(str(self.REN))
         self.inp_info = QtGui.QLabel(self.REN_info)
@@ -115,9 +122,7 @@ class REN_State(QtGui.QWidget):
         self.layout.addWidget(self.but_send)
         self.layout.addWidget(self.but_default)
 
-        #self.layout.setSpacing(0)
         self.layout.setContentsMargins(0, 0, 0, 0)
-
 
         # not necessarily required, but is here for failsafe
         self.setLayout(self.layout)
@@ -129,12 +134,8 @@ class REN_State(QtGui.QWidget):
         else:
             self.but_default.setText(SET_DEFAULT)
 
-
         self.but_default.clicked.connect(self.btn_default_clicked)
         self.but_send.clicked.connect(self.btn_send_clicked)
-
-
-        #self.setFixedSize(self.width(), self.height())
 
     def set_default(self):
         if self.parent is not None:
@@ -151,7 +152,6 @@ class REN_State(QtGui.QWidget):
             self.unset_default()
         else:
             self.set_default()
-
 
     def default_state(self, state=False): # True or False
         if state is True:
@@ -171,19 +171,19 @@ class REN_State(QtGui.QWidget):
         if self.parent is not None:
             self.parent.send_mode(self.REN)
 
+
 class REN_Widget(QtGui.QWidget):
     """This class is a TextEdit with a few extra features"""
 
     def __init__(self, parent=None):
         super(REN_Widget, self).__init__()
 
-        # aesthetic stuff
+        # aesthetic
         self.setWindowTitle("Remote Enable Widget")
         self.resize(500, 250)
 
         self.instrument_list = {}
         self.sanitized_list = list()  # tuple, (name, port, object)
-
 
         self.default_ren = None
 
@@ -206,7 +206,6 @@ class REN_Widget(QtGui.QWidget):
                 default_mode = True
             self.REN_Lines.append(REN_State(i, default_mode, self))
 
-
         # output console
         self.verticalLayout = QtGui.QVBoxLayout()
         self.verticalLayout.addWidget(self.default_widget)
@@ -224,12 +223,8 @@ class REN_Widget(QtGui.QWidget):
             self.scrollarea.setWidget(self.scrollwidget)
             self.verticalLayout.addWidget(self.scrollarea)  # instead of stacked
         else:
-            # self.verticalLayout.addStretch()
             for state in self.REN_Lines:
                 self.verticalLayout.addWidget(state)
-            # self.verticalLayout.addStretch()
- #       #self.footer = self.create_footer()
-##        self.verticalLayout.addLayout(self.footer)
 
         self.setLayout(self.verticalLayout)
 
@@ -258,7 +253,6 @@ class REN_Widget(QtGui.QWidget):
         if self.default_ren == mode:
             self.default_ren = None
             self.default_widget.set_default(None)
-            # TODO: add stuff to change default text
         if not from_widget:
             for i in range(len(REN_MODES)):
                 self.REN_Lines[i].default_state(False)
@@ -278,7 +272,6 @@ class REN_Widget(QtGui.QWidget):
     def save_default(self):
         if self.parentClass is not None:
             self.parentClass.save_ren()
-
 
     # following two functions are used from LabGui.py to load/save defaults
     def get_ren(self):
@@ -300,10 +293,6 @@ class REN_Widget(QtGui.QWidget):
     def update_instrument_list(self):
         if self.parentClass is not None:
             self.instrument_list = self.parentClass.instr_hub.get_instrument_list()
-            #print(self.instrument_list)
-
-            #print(self.parentClass.instr_hub.get_port_param_pairs())
-            #print(self.parentClass.instr_hub.get_instrument_nb())
 
             z = self.instrument_list.items()
 
@@ -315,7 +304,6 @@ class REN_Widget(QtGui.QWidget):
                     ports.append(x)
                     instruments.append(self.instrument_list[x])
                     names.append(self.instrument_list[x].ID_name)
-                    #print(x,self.instrument_list[x].ID_name)
             self.sanitized_list = list(zip(names, ports, instruments))
             return
 
@@ -331,7 +319,6 @@ class REN_Widget(QtGui.QWidget):
         if index != -1:
             self.deviceComboBox.setCurrentIndex(index)
 
-
     def current_instrument(self):
         idx = self.deviceComboBox.currentIndex()
         if 0 <= idx < len(self.sanitized_list):
@@ -340,8 +327,31 @@ class REN_Widget(QtGui.QWidget):
             return None
 
 
+def get_ren(parent):
+    """
+    This returns default ren state set within the widget
+    """
+    return parent.widgets['RENWidget'].get_ren()
+
+
+def set_ren(parent):
+    """
+    Sets REN corresponding to configuration file
+    """
+    parent.widgets['RENWidget'].set_ren(IOTool.get_REN())
+
+
+def save_ren(self):
+    """
+    Save currently set REN to configuration file, if either one is set or one exists in the configuration file already
+    """
+    level = self.widgets['RENWidget'].get_ren()
+    curr = IOTool.get_REN()
+    if level is not None or curr is not None:
+        IOTool.set_REN(level)
+
+
 def add_widget_into_main(parent):
-    #return #we dont want this to happen yet
     """add a widget into the main window of LabGuiMain
 
     create a QDock widget and store a reference to the widget
@@ -367,6 +377,19 @@ def add_widget_into_main(parent):
 
     # redirect print statements to show a copy on "console"
     sys.stdout = QtTools.printerceptor(parent)
+
+    # add methods to LabGUI function
+    if sys.version_info[0] > 2:
+
+        parent.save_ren = MethodType(save_ren, parent)
+        parent.set_ren = MethodType(set_ren, parent)
+        parent.get_ren = MethodType(get_ren, parent)
+
+    else:
+
+        parent.save_ren = MethodType(save_ren, parent, parent.__class__)
+        parent.set_ren = MethodType(set_ren, parent, parent.__class__)
+        parent.get_ren = MethodType(get_ren, parent, parent.__class__)
 
     propDockWidget.resize(500,250)
     if not DEBUG:

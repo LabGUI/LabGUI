@@ -535,9 +535,14 @@ file to see which are the ones implemented" % (self.ID_name, resource_name))
         else:
             logging.debug("Change interface called with %s, current interface is %s"%(intf, self.interface))
 
-
     def set_ren(self, level):
-        # this function is used as an alias for control_ren, which is built in to pyvisa controller, and programmed into Prologix
+        """
+        :param level: REN mode
+        :return: None
+        this function is used as an alias for control_ren, which is built in to pyvisa controller, and programmed into
+         Prologix, and implemented in Serial
+
+        """
         mode = int(level)
         if self.interface == INTF_SERIAL:
             self.serial_set_ren(level)
@@ -547,16 +552,16 @@ file to see which are the ones implemented" % (self.ID_name, resource_name))
             else:
                 self.connection.control_ren(mode)
         else:
-            print("Reminder to finish this")
+            print("Remote Enable control is not implemented for this interface.")
 
     def serial_set_ren(self, level):
         if level in [1, 3]:
             self.connection.write("REN")
-
-        if level in [2,6]:
+        elif level in [2, 6]:
             self.connection.write("GTL")
-        elif level in [4,5]:
+        elif level in [4, 5]:
             self.connection.write("LLO")
+
 
 def create_virtual_inst(parent_class):
     """
