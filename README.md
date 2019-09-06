@@ -508,7 +508,7 @@ This widget allows to the user to specify where data is saved, as well as leave 
 
 #### Script Widget ####
 This widget allows the user to specify which script is to be run via DataTaker.
-
+This is where users defines their experiment (a sweep, timeseries, etc...)
 #### Properties Widget ####
 This widget allows the user to select from a list of connected devices, and modify any properties that may be available within the devices' driver.
 
