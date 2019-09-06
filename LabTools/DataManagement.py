@@ -165,7 +165,9 @@ user variable")
                 return self.assign_user_variable(key, value_type)
 
     def run(self):
-
+        """
+            related to https://github.com/LabGUI/LabGUI/pull/23
+        """
         rel_path = os.path.basename(os.path.abspath(os.path.curdir))
         rel_path = self.script_file_name.split(rel_path)[1]
 
