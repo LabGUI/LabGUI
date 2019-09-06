@@ -490,7 +490,7 @@ Use the file `TemplateUserWidget.py` for more practical information and to start
 ## Using LabGUI Core Widgets ##
 
 Built into LabGUI, there are a set of core widgets in which it bases it's operation.
-Among these are several designed to help analyse/manipulate data and aid in seemless communication with devices.
+Among these are several designed to help analysis/manipulation of data and aid in seemless communication with devices.
 
 These widgets can be enabled/disabled from the `Window` dropdown menu.
 
@@ -516,10 +516,12 @@ This widget allows the user to select from a list of connected devices, and modi
 This widget allows the user to select from a list of connected devices, and run any functions that may be available within the devices' driver.
 
 #### User Data Widget ####
-This widget is an extension to the Output File Widget comment saver, 
+This widget is an extension to the Output File Widget comment saver, which saves manually-inputted to the measurement data-file.
+This can be especially useful for post-measurement analysis while utilizing the LabGUI library, as the function `IOTool.load_file_windows` will separate
+these variables, supplied in the return variable `label['data']` in the form of a variable-value `tuple`.
 
 #### Load Plot Widget ####
 This widget allows the user to load and plot previously taken data, with functionality extending to `User Data Widget` and `Output File Widget`.
 
 #### Console Widget ####
-This widget intercepts all strings sent to the `Standard Output` and prints them within the window, acting as a read-only terminal window.
+This widget intercepts all strings sent to the `Standard Output` and prints them within a TextEdit, acting as a read-only terminal window.
