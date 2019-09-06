@@ -492,7 +492,7 @@ Use the file `TemplateUserWidget.py` for more practical information and to start
 Built into LabGUI, there are a set of core widgets in which it bases it's operation.
 Among these are several designed to help analysis/manipulation of data and aid in seemless communication with devices.
 
-These widgets can be enabled/disabled from the `Window` dropdown menu.
+These widgets can be displayed/hidden from the `Window` dropdown menu.
 
 #### Remote Enable  Widget ####
 This widget allows the user to bring any device into a specific REN state, as well as set the default state for all connected devices.
@@ -504,11 +504,11 @@ This widget allows the user to select which instruments to connect to, from a li
 This widget is the GPIB Command-Line Widget, described above.
 
 #### Output File Widget ####
-This widget allows to the user to specify where data is saved, as well as leave some notes as comments in that datafile. Notes left by the user is saved/loaded by default.
+This widget allows to the user to specify where data is saved, as well as leave some notes as comments in that datafile. Notes left by the user are saved/loaded by default.
 
 #### Script Widget ####
 This widget allows the user to specify which script is to be run via DataTaker.
-
+This is where users defines their experiment (a sweep, timeseries, etc...)
 #### Properties Widget ####
 This widget allows the user to select from a list of connected devices, and modify any properties that may be available within the devices' driver.
 
@@ -525,3 +525,4 @@ This widget allows the user to load and plot previously taken data, with functio
 
 #### Console Widget ####
 This widget intercepts all strings sent to the `Standard Output` and prints them within a TextEdit, acting as a read-only terminal window.
+
