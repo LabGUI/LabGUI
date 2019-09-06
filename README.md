@@ -492,7 +492,7 @@ Use the file `TemplateUserWidget.py` for more practical information and to start
 Built into LabGUI, there are a set of core widgets in which it bases it's operation.
 Among these are several designed to help analysis/manipulation of data and aid in seemless communication with devices.
 
-These widgets can be enabled/disabled from the `Window` dropdown menu.
+These widgets can be displayed/hidden from the `Window` dropdown menu.
 
 #### Remote Enable  Widget ####
 This widget allows the user to bring any device into a specific REN state, as well as set the default state for all connected devices.
