@@ -490,7 +490,7 @@ Use the file `TemplateUserWidget.py` for more practical information and to start
 ## Using LabGUI Core Widgets ##
 
 Built into LabGUI, there are a set of core widgets in which it bases it's operation.
-Among these are several designed to help analyse/manipulate data and aid in seemless communication with devices.
+Among these are several designed to help analysis/manipulation of data and aid in seemless communication with devices.
 
 These widgets can be enabled/disabled from the `Window` dropdown menu.
 
