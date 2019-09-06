@@ -504,7 +504,7 @@ This widget allows the user to select which instruments to connect to, from a li
 This widget is the GPIB Command-Line Widget, described above.
 
 #### Output File Widget ####
-This widget allows to the user to specify where data is saved, as well as leave some notes as comments in that datafile. Notes left by the user is saved/loaded by default.
+This widget allows to the user to specify where data is saved, as well as leave some notes as comments in that datafile. Notes left by the user are saved/loaded by default.
 
 #### Script Widget ####
 This widget allows the user to specify which script is to be run via DataTaker.
