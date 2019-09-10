@@ -535,6 +535,34 @@ file to see which are the ones implemented" % (self.ID_name, resource_name))
         else:
             logging.debug("Change interface called with %s, current interface is %s"%(intf, self.interface))
 
+    def set_ren(self, level):
+        """
+        :param level: REN mode
+        :return: None
+        this function is used as an alias for control_ren, which is built in to pyvisa controller, and programmed into
+         Prologix, and implemented in Serial
+
+        """
+        mode = int(level)
+        if self.interface == INTF_SERIAL:
+            self.serial_set_ren(level)
+        if hasattr(self.connection, 'control_ren'):
+            if self.interface == INTF_PROLOGIX:
+                self.connection.control_ren(mode, self.resource_number)
+            else:
+                self.connection.control_ren(mode)
+        else:
+            print("Remote Enable control is not implemented for this interface.")
+
+    def serial_set_ren(self, level):
+        if level in [1, 3]:
+            self.connection.write("REN")
+        elif level in [2, 6]:
+            self.connection.write("GTL")
+        elif level in [4, 5]:
+            self.connection.write("LLO")
+
+
 def create_virtual_inst(parent_class):
     """
     returns a instrument which connect to a server as a client to fetch 
@@ -713,6 +741,7 @@ class InstrumentHub(QObject):
                 self.connect(parent, SIGNAL(
                     "DEBUG_mode_changed(bool)"), self.set_debug_state)
 
+
         else:
 
             self.parent = None
@@ -769,6 +798,10 @@ argument is not the good one")
 
                 self.prologix_com_port = None
 
+
+
+        # The following is for default_ren widget, which will be set with clean_up function
+        self.default_ren = None
     def __del__(self):
         # free the existing connections
         self.clean_up()
@@ -967,6 +1000,13 @@ which is connected to %s " % (param, instr_name, device_port))
 
                     device_port = obj.resource_name
 
+                if self.default_ren is not None:
+                    try:
+                        obj.set_ren(self.default_ren)
+                    except:
+                        logging.warning("Unable to set %s to %d"%(instr_name, self.default_ren))
+                        #logging.debug(sys.exc_info())
+
                 self.instrument_list[device_port] = obj
 
                 print("Connect_instrument: Connected %s to %s to measure %s" %
@@ -1036,6 +1076,9 @@ which is connected to %s " % (param, instr_name, device_port))
         self.port_param_pairs = []
         # I am not sure why this is useful anymore
         self.instrument_list[None] = None
+
+        if self.parent is not None:
+            self.default_ren = self.parent.get_ren()
 
 
 def whoisthere():
