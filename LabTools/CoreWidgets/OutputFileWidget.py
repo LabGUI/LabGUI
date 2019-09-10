@@ -33,6 +33,7 @@ class OutputFileWidget(QtGui.QWidget):
     def __init__(self, parent=None, fname=IOTool.get_file_name()):
         super(OutputFileWidget, self).__init__(parent)
 
+        self.parent = parent
         # main layout of the form is the verticallayout
 
         self.verticalLayout = QtGui.QVBoxLayout()
@@ -94,16 +95,30 @@ class OutputFileWidget(QtGui.QWidget):
     def get_header_text(self):
 
         text = str(self.headerTextEdit.toPlainText())
-
+        data_str = ""
+        if self.parent is not None:
+            if hasattr(self.parent, "get_user_data"):
+                data = self.parent.get_user_data()
+                #data_str = ""
+                for name, value in data.items():
+                    data_str += "D'%s', '%s'\n"%(name, value)
         if text:
-
+            # need space to prevent possible error
             text = "# " + text.replace("\n", "\n#") + "\n"
+
+            if data_str != "":
+                text += "#" + data_str.strip("\n").replace("\n", "\n#") + "\n"
 
             return text
 
         else:
+            if data_str != "":
+                return "#" + data_str.strip("\n").replace("\n", "\n#") + "\n"
+            else:
+                return ""
 
-            return ""
+    def set_header_text(self, text):
+        self.headerTextEdit.setPlainText(text.rstrip('\n'))
 
     def get_output_fname(self):
 

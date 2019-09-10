@@ -25,3 +25,4 @@ LabGui.egg-info
 bin/
 dist*
 tools/linux/linux-gpib*
+*.dump

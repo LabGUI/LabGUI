@@ -23,7 +23,7 @@ import numpy as np
 
 from LabTools.IO import IOTool
 from LabTools.Display import QtTools, PlotDisplayWindow, mplZoomWidget
-from LabTools import DataManagement
+from LabTools import DataManagement, ConfigurationManager, UserWidgetManager
 # for commandwidget
 from LabTools.CoreWidgets import CommandWidget
 from LabDrivers import Tool
@@ -79,6 +79,9 @@ DDT_CODE_STARTED = "started"
 DDT_CODE_RESUMED = "resumed"
 DDT_CODE_ALREADY_RUNNING = "start_error"
 
+## Variables so Tools do not restart with LabGui
+USERWIDGET_MANAGER = None
+CONFIG_MANAGER = None
 
 class LabGuiMain(QtGui.QMainWindow):
     """
@@ -188,6 +191,7 @@ class LabGuiMain(QtGui.QMainWindow):
 
         instrument_hub_connected = pyqtSignal("PyQt_PyObject")
 
+        EXIT_CODE_REBOOT = -12121212 #unused exit code afaik
     def __init__(self, argv=[]):
 
         # run the initializer of the class inherited from6
@@ -355,13 +359,24 @@ have the right format, '%s' will be used instead"
         # InstrumentHub is responsible for storing and managing the user
         # choices about which instrument goes on which port
         self.instr_hub = Tool.InstrumentHub(parent=self, debug=self.DEBUG)
-
+        self.instrument_hub_disconnected = self.instr_hub.instrument_hub_disconnected
+        self.instrument_hub_disconnected.connect(self.disconnectInstrToolbar)
+        self.instrument_hub_connected.connect(self.connectInstrToolbar)
         # DataTaker is responsible for taking data from instruments in the
         # InstrumentHub object
         self.datataker = DataManagement.DataTaker(self.lock, self.instr_hub)
 
         self.cmdline = CommandWidget.CommandWidget(parent=self)
         self.cmddock = None
+
+        # alert certain tool widgets of reboot
+        if USERWIDGET_MANAGER is not None:
+            USERWIDGET_MANAGER.set_parent(self)
+        if CONFIG_MANAGER is not None:
+            CONFIG_MANAGER.set_parent(self)
+
+        self.force = False # if true, it will not ask user if they are sure they want to quit
+
         # self.cmdline.instr_hub = self.instr_hub
 
         # handle data emitted by datataker (basically stuff it into a shared,
@@ -390,7 +405,8 @@ have the right format, '%s' will be used instead"
         # all actions related to the figure widget (mplZoomWidget.py) are
         # set up in the actionmanager
         self.action_manager = mplZoomWidget.ActionManager(self)
-
+        self.action_manager.current_widget_change.connect(self.activatePltToolbar)
+        self.deactivePltToolbar()
         # this will contain the widget of the latest pdw created upon
         # connecting the instrument Hub
         self.actual_pdw = None
@@ -406,6 +422,7 @@ have the right format, '%s' will be used instead"
         self.plotMenu = self.menuBar().addMenu("&Plot")
         self.instMenu = self.menuBar().addMenu("&Meas/Connect")
         self.windowMenu = self.menuBar().addMenu("&Window")
+        self.toolMenu = self.menuBar().addMenu("&Tools")
         self.optionMenu = self.menuBar().addMenu("&Options")
 
         self.loggingSubMenu = self.optionMenu.addMenu("&Logger output level")
@@ -617,6 +634,14 @@ have the right format, '%s' will be used instead"
             icon=None,
             tip="Refresh the list of selected instruments",
         )
+        self.disconnect_hub = QtTools.create_action(
+            self,
+            "Disconnect Instruments",
+            slot=self.disconnect_instrument_hub,
+            shortcut=None,
+            icon=None,
+            tip="Disconnect all connected instruments"
+        )
 
         self.refresh_ports_list_action = QtTools.create_action(
             self,
@@ -629,8 +654,10 @@ have the right format, '%s' will be used instead"
         self.instMenu.addAction(self.start_DTT_action)
         self.instMenu.addAction(self.read_DTT)
         self.instMenu.addAction(self.connect_hub)
+        self.instMenu.addAction(self.disconnect_hub)
         self.instMenu.addAction(self.refresh_ports_list_action)
 
+        self.disconnectInstrToolbar()
         # ##### WINDOW MENU SETUP ######
         self.add_pdw = QtTools.create_action(
             self,
@@ -642,7 +669,39 @@ have the right format, '%s' will be used instead"
         )
 
         self.windowMenu.addAction(self.add_pdw)
+        ###### TOOL MENU SETUP #######
 
+        self.tool_config_manager_state = QtTools.create_action(
+            self,
+            "Configuration Manager",
+            slot=self.tool_configurationmanager,
+            shortcut=None,
+            icon=None,
+            tip="Launch Configuration Manager"
+        )
+        self.toolMenu.addAction(self.tool_config_manager_state)
+
+        self.tool_widget_manager_state = QtTools.create_action(
+            self,
+            "User-Widget Manager",
+            slot=self.tool_widgetmanager,
+            shortcut=None,
+            icon=None,
+            tip="Enable/disable User-Widgets"
+        )
+        self.toolMenu.addAction(self.tool_widget_manager_state)
+
+        self.toolMenu.addSeparator()
+
+        self.tool_reboot_application_state = QtTools.create_action(
+            self,
+            "Reboot LabGUI",
+            slot=self.relaunch,
+            shortcut=None,
+            icon=None,
+            tip="Restarts LabGUI"
+        )
+        self.toolMenu.addAction(self.tool_reboot_application_state)
         # ##### OPTION MENU SETUP ######
         self.toggle_debug_state = QtTools.create_action(
             self,
@@ -719,6 +778,9 @@ have the right format, '%s' will be used instead"
                 % (self.default_settings_fname)
             )
 
+        # load default ren state
+        self.set_ren()
+
         # Create the object responsible to display information send by the
         # datataker
         self.data_displayer = DataManagement.DataDisplayer(self.datataker)
@@ -746,22 +808,28 @@ have the right format, '%s' will be used instead"
         widget_creation(self)
 
     def closeEvent(self, event):
-        reply = QtGui.QMessageBox.question(
-            self,
-            "Message",
-            "Are you sure you want to quit?",
-            QtGui.QMessageBox.Yes,
-            QtGui.QMessageBox.No,
-        )
+        if self.force:
+            reply = QtGui.QMessageBox.Yes
+        else:
+            reply = QtGui.QMessageBox.question(
+                self,
+                "Message",
+                "Are you sure you want to quit?",
+                QtGui.QMessageBox.Yes,
+                QtGui.QMessageBox.No,
+            )
 
         if reply == QtGui.QMessageBox.Yes:
 
             # save the current settings
             self.file_save_settings(self.default_settings_fname)
-
             self.settings.setValue("windowState", self.saveState())
             self.settings.setValue("geometry", self.saveGeometry())
             self.settings.remove("script_name")
+
+            # make sure nothing is currently running
+            self.stop_DTT()
+            self.instrument_hub_disconnected.emit()
             event.accept()
 
         else:
@@ -1061,6 +1129,9 @@ have the right format, '%s' will be used instead"
         # Enable changes to the instrument connections
         self.widgets["InstrumentWidget"].bt_connecthub.setEnabled(True)
 
+        # make sure output file is actually open
+        if not hasattr(self.output_file, 'close'): # other option is, type(self.output_file) == str, or type(self.output) != io.TextIOWrapper
+            return
         # close the output file
         self.output_file.close()
 
@@ -1071,7 +1142,9 @@ have the right format, '%s' will be used instead"
 
         # insert the comments written by the user in the first line
         self.output_file = open(self.output_file.name, "w")
-        self.output_file.write(self.widgets["OutputFileWidget"].get_header_text())
+        header = self.widgets["OutputFileWidget"].get_header_text()
+        if header not in data:
+            self.output_file.write(header)
         self.output_file.write(data)
         self.output_file.close()
 
@@ -1250,6 +1323,8 @@ have the right format, '%s' will be used instead"
                 self.instrument_connexion_setting_fname,
                 self.config_file,
             )
+
+        self.save_ren()
 
     def file_save_settings(self, fname=None):
         """save the settings for the instruments and plot window into a file
@@ -1455,12 +1530,85 @@ have the right format, '%s' will be used instead"
 
         logging.config.fileConfig(os.path.join(ABS_PATH, "logging.conf"))
 
+    def tool_configurationmanager(self):
+        global CONFIG_MANAGER
+        CONFIG_MANAGER = ConfigurationManager.ConfigurationManager(self)
+        CONFIG_MANAGER.show()
 
+    def tool_widgetmanager(self):
+        global USERWIDGET_MANAGER
+        USERWIDGET_MANAGER = UserWidgetManager.UserWidgetManager(self)
+        USERWIDGET_MANAGER.show()
+
+    def connectInstrToolbar(self):
+        self.disconnect_hub.setEnabled(True)
+
+    def disconnectInstrToolbar(self):
+        self.disconnect_hub.setEnabled(False)
+    def activatePltToolbar(self):
+        for action in self.action_manager.actions:
+            action.setEnabled(True)
+
+    def deactivePltToolbar(self):
+        for action in self.action_manager.actions:
+            action.setEnabled(False)
+    def relaunch(self, force=False, **kwargs):
+        self.force = force
+        if hasattr(self, 'Qapp'):
+            self.close()
+            self.Qapp.exit(self.EXIT_CODE_REBOOT)
+        else:
+            self.close()
+            QApplication.exit(self.EXIT_CODE_REBOOT)
+        #self.exit(self.EXIT_CODE_REBOOT)
+    #    relaunch_LabGui()
+
+################ ENABLE ERROR HANDLING #######################
+ex = None
+app = None
+
+sys._excepthook = sys.excepthook
+def error_message(value):
+    global ex, app
+    msg = QtGui.QMessageBox.critical(ex,
+                                     "Error!",
+                                     "LabGUI failed with the following error:\n %s\n Relaunch?" % value,
+                                     QtGui.QMessageBox.Yes | QtGui.QMessageBox.No,
+                                     QtGui.QMessageBox.Yes
+                                     )
+    if msg == QtGui.QMessageBox.Yes:
+        for entry in QtGui.qApp.allWidgets():
+            if(type(entry).__name__ == 'LabGuiMain'):
+                print(entry, dir(entry), type(entry))
+                if hasattr(entry, "relaunch"):
+                    entry.relaunch(True)
+                else:
+                    entry.close()
+        app.exit(LabGuiMain.EXIT_CODE_REBOOT)
+    else:
+        sys.exit(0)
+def custom_exception_hook(exctype, value, traceback):
+    # Print the error and traceback
+    logging.error((exctype, value, traceback))
+    # Call the normal Exception hook after
+    sys._excepthook(exctype, value, traceback)
+    error_message(str(value))
+
+# Set the exception hook to our wrapping function
+sys.excepthook = custom_exception_hook
+####################################################################
 def launch_LabGui():
+    global ex, app
+    currentExitCode = LabGuiMain.EXIT_CODE_REBOOT
     app = QApplication(sys.argv)
-    ex = LabGuiMain()
-    ex.show()
-    sys.exit(app.exec_())
+    while currentExitCode == LabGuiMain.EXIT_CODE_REBOOT:
+        ex = LabGuiMain()
+        ex.Qapp = app
+        ex.show()
+        currentExitCode = app.exec_()
+    sys.exit(currentExitCode)
+
+
 
 
 def test_automatic_fitting():

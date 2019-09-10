@@ -109,6 +109,8 @@ def add_widget_into_main(parent):
     if USE_PYQT5:
 
         sys.stdout.print_to_console.connect(parent.update_console)
+        # TODO: add logging stuff here
+
 
     else:
 

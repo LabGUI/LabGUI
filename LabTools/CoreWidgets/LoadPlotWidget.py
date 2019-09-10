@@ -38,6 +38,8 @@ import numpy as np
 
 import logging
 
+# to replace the data in OutputWidget
+SET_OUTPUT_TEXT = False
 
 class LoadPlotWidget(QtGui.QWidget):
     """this widget is used to replot previously measured data"""
@@ -237,11 +239,16 @@ def create_plw(parent, load_fname=None):
         else:
             print("No headers present:",labels)
 
+        if 'data' in labels.keys():
+            parent.widgets['userDataWidget'].set_user_data_parse(labels['data'])
+
         # update the name information in the widget
         parent.widgets["loadPlotWidget"].load_file_name(load_fname)
 
         # store the hdr is there is more than one file
         parent.loaded_data_header[load_fname] = labels['hdr']
+        if SET_OUTPUT_TEXT:
+            parent.widgets['OutputFileWidget'].set_header_text(labels['hdr'])
 
     chan_contr = OrderedDict()
     chan_contr["groupBox_Name"] = ["Channel", "lineEdit"]

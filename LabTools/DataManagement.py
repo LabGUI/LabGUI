@@ -47,6 +47,8 @@ class DataTaker(QThread):
 
         self.instr_hub = instr_hub
 
+        self.user_data = {}
+
         if USE_PYQT5:
 
             self.instr_hub.changed_list.connect(self.reset_lists)
@@ -109,6 +111,18 @@ class DataTaker(QThread):
 
             self.user_variables = adict
 
+    def update_user_data(self, adict):
+        """
+        Replaces the user data with updated ones
+        """
+        if isinstance(adict, dict):
+            self.user_data = adict
+        elif isinstance(adict, list):
+            self.user_data = {}
+            for item in adict:
+                if isinstance(item, list) and len(item) > 1:
+                    self.user_data[item[0].strip("'")] = item[1].strip("'")
+
     def assign_user_variable(self, key, value_type=float, default=None):
         """this is used to change variables while data are being taken
         """
@@ -151,9 +165,10 @@ user variable")
                 return self.assign_user_variable(key, value_type)
 
     def run(self):
-
+        """
+            related to https://github.com/LabGUI/LabGUI/pull/23
+        """
         rel_path = os.path.basename(os.path.abspath(os.path.curdir))
-        print(rel_path)
         rel_path = self.script_file_name.split(rel_path)[1]
 
 
@@ -172,8 +187,24 @@ user variable")
             script = open(userScriptName)
             py_compile.compile(script.name, doraise=True)
             code = compile(script.read(), script.name, 'exec')
+            """
+                The following insertion is necessary for the following:
+                    For a local variable to be created and then utilized without unexpected results,
+                    typically globals() and locals() are called, which causes anything from within the script
+                    to modify the globals or locals in this namespace. This can cause a problem if, for example,
+                    a local variable is created, then a list comprehension is used, which searches for the 
+                    aforementioned variable under globals, to which it is not found, and thus throws an error.
+                    
+                    By creating a copy of the globals under this namespace, and resetting self so that it can be
+                    properly executed within the script, and finally setting both local and global variables to the
+                    same dict, any variables declared within the script will act both globally and locally, as well as
+                    be unable to modify any of the inner-workings of LabGUI, maintaining the required namespace: that
+                    of the datataker class.
+            """
+            namespace = globals().copy()
+            namespace['self'] = self
 
-            exec(code)
+            exec(code, namespace, namespace)
             script.close()
 
             self.running = False

@@ -535,6 +535,34 @@ file to see which are the ones implemented" % (self.ID_name, resource_name))
         else:
             logging.debug("Change interface called with %s, current interface is %s"%(intf, self.interface))
 
+    def set_ren(self, level):
+        """
+        :param level: REN mode
+        :return: None
+        this function is used as an alias for control_ren, which is built in to pyvisa controller, and programmed into
+         Prologix, and implemented in Serial
+
+        """
+        mode = int(level)
+        if self.interface == INTF_SERIAL:
+            self.serial_set_ren(level)
+        if hasattr(self.connection, 'control_ren'):
+            if self.interface == INTF_PROLOGIX:
+                self.connection.control_ren(mode, self.resource_number)
+            else:
+                self.connection.control_ren(mode)
+        else:
+            print("Remote Enable control is not implemented for this interface.")
+
+    def serial_set_ren(self, level):
+        if level in [1, 3]:
+            self.connection.write("REN")
+        elif level in [2, 6]:
+            self.connection.write("GTL")
+        elif level in [4, 5]:
+            self.connection.write("LLO")
+
+
 def create_virtual_inst(parent_class):
     """
     returns a instrument which connect to a server as a client to fetch 
@@ -692,6 +720,7 @@ class InstrumentHub(QObject):
         changed_list = pyqtSignal()
 
         instrument_hub_connected = pyqtSignal()
+        instrument_hub_disconnected = pyqtSignal()
 
     def __init__(self, parent=None, debug=False, **kwargs):
 
@@ -711,6 +740,7 @@ class InstrumentHub(QObject):
             else:
                 self.connect(parent, SIGNAL(
                     "DEBUG_mode_changed(bool)"), self.set_debug_state)
+
 
         else:
 
@@ -768,6 +798,10 @@ argument is not the good one")
 
                 self.prologix_com_port = None
 
+
+
+        # The following is for default_ren widget, which will be set with clean_up function
+        self.default_ren = None
     def __del__(self):
         # free the existing connections
         self.clean_up()
@@ -818,6 +852,21 @@ argument is not the good one")
             logging.error("Problem with change of interface in the the \
 instrument hub. Interface passed as an argument : %s" % intf)
     # debug note may23rd2019 - HP34401A throws error in this function
+    def disconnect_hub(self):
+        self.clean_up()
+        if self.parent is not None:
+            if USE_PYQT5:
+
+                self.changed_list.emit()
+
+                self.instrument_hub_disconnected.emit()
+
+            else:
+
+                self.emit(SIGNAL("changed_list()"))
+
+                self.emit(SIGNAL("instrument_hub_disconnected()"))
+
     def connect_hub(self, instr_list, dev_list, param_list):
         """ 
             triggers the connection of a list of instruments instr_list,
@@ -838,10 +887,13 @@ instrument hub. Interface passed as an argument : %s" % intf)
 
             logging.debug("Trying to connecting %s to %s to measure %s" % (
                 instr_name, device_port, param))
-
-            self.connect_instrument(
-                instr_name, device_port, param, send_signal=False)
-
+            try:
+                self.connect_instrument(
+                    instr_name, device_port, param, send_signal=False)
+            except OSError as e:
+                print("Unable to connect to device %s on port %s"%(instr_name, device_port))
+                self.disconnect_hub()
+                return False
         if self.parent is not None:
             # notify that the list of instuments has been modified
 
@@ -860,6 +912,8 @@ instrument hub. Interface passed as an argument : %s" % intf)
         logging.debug("Connect_hub : the lists of instrument and port-params")
         logging.debug(self.port_param_pairs)
         logging.debug(self.instrument_list)
+
+        return True
 
     def connect_instrument(self, instr_name, device_port, param, send_signal=True):
         # device_port should contain the name of the GPIB or the COM port
@@ -946,6 +1000,13 @@ which is connected to %s " % (param, instr_name, device_port))
 
                     device_port = obj.resource_name
 
+                if self.default_ren is not None:
+                    try:
+                        obj.set_ren(self.default_ren)
+                    except:
+                        logging.warning("Unable to set %s to %d"%(instr_name, self.default_ren))
+                        #logging.debug(sys.exc_info())
+
                 self.instrument_list[device_port] = obj
 
                 print("Connect_instrument: Connected %s to %s to measure %s" %
@@ -1015,6 +1076,9 @@ which is connected to %s " % (param, instr_name, device_port))
         self.port_param_pairs = []
         # I am not sure why this is useful anymore
         self.instrument_list[None] = None
+
+        if self.parent is not None:
+            self.default_ren = self.parent.get_ren()
 
 
 def whoisthere():

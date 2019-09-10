@@ -36,8 +36,25 @@ We designed it to acquire data from multiple instruments over timescales of the 
 
 # Installation #
 
-For the time being this package is only supported in python 2.7 (but we are working to make it work in python 3)
+This package is designed to work with Python 3. Fresh installations require Python >= 3.6
 
+## Using the setup script
+
+For a fresh install of LabGUI with Python3 and git in the directory where you wish to install, type the following into your favorite shell:
+```
+git clone https://github.com/LabGUI/LabGUI.git
+cd LabGUI
+python setup.py install
+```
+This will clone LabGUI to the current directory using git, set up a virtual environment, install all required packages, and create a configuration file via `setup_new.py` script, and will add LabGUI to the path.
+
+By cloning the repository, you can easily use git to update LabGUI by calling
+```
+git stash
+git pull
+git stash apply
+```
+Using git also has the added benefit of allowing you to create your own branches, to fully customize LabGUI to suit your needs, while still allowing you to fetch/merge new features/hotfixes/updates.
 ## Using pip ##
 
 Setup a [virtual environement](https://virtualenv.pypa.io/en/latest/)
@@ -67,32 +84,59 @@ and then from the anaconda console you can type
 ```
 conda install --yes --file requirements.txt
 ```
+## Using Linux ##
 
-## Install PyQt4/5 ##
-We use PyQt4/5 for the GUI and handling signals. If one of the version (i.e. 4 or 5 is not already installed you have to do it).
+Under some distributions of Linux, Python >= 3.6 may not be easily available through regular repositories. 
+To simplify installation under Linux, there are several scripts useful scripts under `tools/linux/`
 
-If you operate under python 3 you should be able to install PyQt5 simply by typing
+####Complete install script ####
+Built under Debian9, `install_all.sh`, which must be run as root, will install Python3.7, LabGUI, and Linux-GPIB. If you wish to install these components separately, please see the following:
+####Installing Python 3.7 ####
+The script `install_python3.7.sh` downloads the Python-3.7.3 tarball, and builds it from source. By default, this script assumes that there already exists an earlier version of Python 3, and therefore installs it as `python3.7`
 
+
+To overwrite your current version of Python 3, in `install_python3.7.sh`, comment out
+`make altinstall` and uncomment `make install`. You will need to run this with root privileges.
+
+If you would rather use an install package other than `apt-get`, simply replace all 3 occurences of it in this script.
+
+#### Installing USB-GPIB interface ####
+
+For certain distributions, you can download the proprietary NI visa drivers [here](https://www.ni.com/en-us/support/downloads/drivers/download.ni-linux-device-drivers.html).
+If you are unable or do not wish to install the NI visa drivers, you can instead install the open-source linux-gpib drivers. If this package is not easily available through regular repositories, you can either build linux-gpib from source, or install it using the `install_linux-gpib.sh` script. Note that this script MUST be run as root, and you must specify which Python3 installation to use.
+
+You can allow the script to copy the example `gpib.conf`, or make your own modifications to `/etc/gpib.conf` as you see fit.
+
+Afterwards, you simply need to add the following to config.txt
+
+```buildoutcfg
+VISA_BACKEND=py
 ```
-#!python
+
+Or change the PyVISA backend via the GUI configuration manager built into LabGUI.
+
+NOTE: If you do not allow for the devices under `/dev/gpib[0-9]` to be read/written by any user, you must launch LabGUI as root
+
+
+## Install PyQt5 ##
+We use PyQt5 for the GUI and handling signals.
+```
 pip install pyqt5
-
 ```
 
-If you have PyQt4 installed it should work as well (not 100% garanteed). We would not recommand installing PyQt4 and rather using PyQt5. However, if you really want to install PyQt4, here are some instructions on how to do so : http://pyqt.sourceforge.net/Docs/PyQt4/installation.html. Can also refer to the possibily outdated instructions.
+If you have PyQt4 installed it should work as well (however, there is no guarantee). We would recommend using PyQt5 rather than PyQt4. However, if you really want to install PyQt4, here are some instructions on how to do so : http://pyqt.sourceforge.net/Docs/PyQt4/installation.html. You can also install an out-dated version of LabGUI
 
 ### Installing SIP (prerequisite to PyQt4) ###
+* for newer version of python, simply run any of the following
+    * `python[3] -m pip install sip`
+    * `pip[3] install sip`
 * for python 3.5 (windows 10) simply  "c:\python35\python -m pip install sip"
 * for python 3.4 (linux), download https://www.riverbankcomputing.com/software/sip/download follow their instructions
 * for python 3.4 (windows 10), download https://www.riverbankcomputing.com/software/sip/download follow their instructions
 
-### Installing PyQt4 ###
-* for python 3.4 (windows 10), download https://www.riverbankcomputing.com/software/pyqt/download
-* for python 3.4 linux, download https://www.riverbankcomputing.com/software/pyqt/download and follow their instructions
+### About our use of PyQt5 ###
 
-### About our use of PyQt4/5 ###
-
-An interesting feature of PyQt4/5 is the signals and slot, they allow different widgets to communicate with each other. Learn more about those ![here](https://www.tutorialspoint.com/pyqt/pyqt_signals_and_slots.htm) for PyQt4 and ![here](https://pythonspot.com/pyqt5-signals-and-slots/) for PyQt5.
+An interesting feature of PyQt5 is the signals and slot, they allow different widgets to communicate with each other. Learn more about this ![here](https://pythonspot.com/pyqt5-signals-and-slots/)
 
 ## Additional drivers ##
 
@@ -146,6 +190,12 @@ python path_to_the_folder/LabGui.py
 ```
 or you can open the file LabGui.py in Spyder/PyCharm and run it.
 
+Alternatively, if you added LabGUI to the path via setup.py, it can be launched in your favorite shell as follows:
+```
+LabGUI
+```
+
+
 It should prompt a window similar to this one :
 
 ![Example_LabGui.png](https://bitbucket.org/repo/8gbrjn/images/400678764-Example_LabGui.png)
@@ -186,37 +236,65 @@ This menu shows you what are the widget currently displayed (they have a tick on
 * Output Console
 * Simple instrument console
 
+## Tools menu ##
+* Configurations Manager
+* User-Widget Manager
+* Restart LabGUI
+
 ## Options menu ##
+* Set logger level
 * Change debug mode
+* Change GPIB interface
+* Run the GPIB command line
 
 
 ## Output/input files ## 
 
-* config file
+* Configuration File
+
 This file should be in the same directory as the `LabGui.py` file, we named it `config.txt` (this can be changed).
-If you don't have one, it will be generated for you with basic settings. 
+If you don't have one, it will be generated for you with basic settings.
+
+Alternatively, you can run
+```buildoutcfg
+python config_generate.py
+```
+And follow the user prompts.
+
 This file contains the path of the script file, data folder, setting file, and the debug mode.
 It is possible to add more variable you might want to save there, you can use the functions get_config_setting() and set_config_setting() of the `IOTool.py` module to read and write them from/into the file.
 
-* the setting file
-contains the details of the instrument hub (each line corresponds to an instrument with its name, the port it is using and the parameter it is measuring).
+This file also defines where data is saved, what widgets are to be loaded, what GPIB and VISA interfaces to use, and the default script to run.
+
+* Settings File
+
+This contains the details of the instrument hub (each line corresponds to an instrument with its name, the port it is using and the parameter it is measuring).
 You can save your current instrument hub setting using "file -> save setting".
 You can load a previously saved instrument hub setting using "file -> load setting".
-You can have a setting file loading automatically by adding the line "SETTINGS=path_to_your_setting_file"
+You can have a setting file saved to and loaded from automatically on start/exit by adding the following line to your configuration file: `SETTINGS=path_to_your_setting_file`
 
-* script file
-As what one want their instrument(s) to do is probably different than what another person would want, this part is described into a separated script.
-It has the namespace of the DataTaker class in the DataManagement module and is executed whenever the method of the class DataTaker run() is called (which is whenever someone press the button play or start in the GUI)
-It was designed in a way so there is no need to restart the whole GUI when changing something in the script file to have those changes being effective.
+* Script File
 
-* data file
+As what one wants their instrument(s) to do is probably different than from person to person, LabGUI allows for custom scripts to be run.
+
+User scripts are in the namespace of the DataTaker class, in the DataManagement module, and is executed whenever the method of the class DataTaker run() is called (which is whenever someone press the button play or start in the GUI)
+
+It was designed to allow modifications in the script to be made between runs without having to restart LabGUI.
+
+
+* Data File
+
 This file contains the data in the format the user defined (depends on each experiments), the default format is that each line correspond to a different measurement, each row is a different parameter of an instrument.
+
 The first 3 lines are headers with the information about the instruments and their connections.
+
+Other commented lines correspond to user-variables or notes taken in the OutputFile and UserData widgets.
 
 ## Debug Mode ##
 
 The debug mode is accessible through the menu option file. This is used to test functionalities of the GUI when not in the lab or not having an actual connection to the instruments. It is a property that all or drivers have in their class Instrument, and also most of the widgets.
 
+## Main Module ##
 The module LabGui contains the main function, which is an instance of QMainWindow. It acts as mediator pattern and connect different services together:
 
 - instrument connection settings
@@ -226,6 +304,8 @@ The module LabGui contains the main function, which is an instance of QMainWindo
 	- plotting
 	- writing to a file
 	- fitting
+- running specific user-scripts/widgets
+
 The communication between the different services and the server is done using QtCore.SIGNAL, this way we can set up various listeners to the same signal which will all take different actions.
 
 # GPIB Command-Line #
@@ -326,32 +406,62 @@ and overloads the functions read, write and ask.
 
 An instrument driver is a module named after the instrument, it needs to have the following properties:
 
--a variable called "param" which is a dictionary
--a variable called INTERFACE which specifies which interface, amongst the ones available, will be used to connect to the instrument
--a class called "Instrument" inheriting from "Tool.MeasInstr"
--it needs to be within the folder/package `LabDrivers` to be accessible from LabGui
+- a variable called `param` which is a dictionary
+- a variable called <b>INTERFACE</b> which specifies which interface, amongst the ones available, will be used to connect to the instrument
+- a class called "Instrument" inheriting from "Tool.MeasInstr"
+- it needs to be within the folder/package `LabDrivers` to be accessible from LabGui
 
-When acquiring a new instrument, the first thing to find out is a file called "communication protocol". 
+The following are optional properties that allow for more functionality:
+
+- a variable called `properties` which is a special dictionary, allows you to write to the device through <b>PropertiesWidget</b>
+    - the key represents the <b>channel</b>
+    - the value is another dictionary, which specifies type, range, units, etc
+    - The `get` and `set` methods allow for these values to be read and written.
+
+Please see `driver_example_rw.py` for more detailed usage
+
+- a variable called `functions` which is a special dictionary, allows you to execute custom commands to connected devices at any stage through <b>FunctionWidget</b>
+    - the key represents the <b>function</b> (channel)
+    - the value is an array of objects describing the possible variables and variable type, as well as units, range, type, and whether or not it is a required argument
+    - the `run` method allows for these functions to be executed
+
+For driver examples and templates, see
+- driver_example[_rwx].py
+- driver_template[_rwx].py
+
+When acquiring a new instrument, the first thing to find out what is it's "communication protocol". 
 This will help you identify which port to connect to and what interface your instrument uses (visa, serial, raw, TCP/IP, etc...)
 
 There are different steps between this stage and the stage when you collect data and interact with your instrument using LabGui:
- -establish a physical connection between your computer and your instrument.
- -communicate with your instrument with its own vocabulary and grammar.
- -figure out which commands you need.
- -write a driver file with python methods that send the command using the instrument vocabulary
- -write what you want to ask your instrument in a script using these python methods
+
+- establish a physical connection between your computer and your instrument.
+- communicate with your instrument with its own vocabulary and grammar.
+- figure out which commands you need.
+- write a driver file with python methods that send the command using the instrument vocabulary
+- write what you want to ask/tell your instrument in a script using these python methods
  
 
 ## Physical connections to your instrument ##
 
-Ways to connect physically to the instrument through a port:
+Ways to connect physically to the instrument through a GPIB port:
 
-- PROLOGIX GPIB to USB
-- National Instruments GPIB to USB
-- Agilent GPIB to USB
+- PROLOGIX GPIB to USB ([driver here](http://prologix.biz/))
+- National Instruments GPIB to USB (PyVISA)
+- Agilent GPIB to USB (PyVisa)
 
-RS232 (RS232 to USB adapters are available from various vendors and should all work with LabGUI)
+Through serial:
+- RS232 (RS232 to USB adapters are available from various vendors and should all work with LabGUI)
 
+Through third-party software:
+- Sockets to read data from a server
+- Using third-party python libraries
+
+To use a specific interface, the <b>INTERFACE</b> property of you driver must be set to any of the following:
+- `INTF_GPIB` allows for any GPIB-type connection
+    - `INTF_VISA` specifies PyVISA
+    - `INTF_PROLOGIX` specifies prologix
+- `INTF_SERIAL` specifies RS232 using PySerial
+- `INTF_NONE` specifies the default connections are built in (IE third party)
 
 # Organisation scheme #
 

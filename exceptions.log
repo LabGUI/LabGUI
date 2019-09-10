@@ -1,0 +1,14 @@
+2019-06-28 13:28:35: Exception occurred:
+Traceback (most recent call last):
+  File "C:/Users/admin/Documents/LabGUI/LabGui.py", line 1532, in launch_LabGui
+    ex = LabGuiMain()
+  File "C:/Users/admin/Documents/LabGUI/LabGui.py", line 198, in __init__
+    raise Exception()
+Exception
+2019-06-28 13:29:04: Exception occurred:
+Traceback (most recent call last):
+  File "C:/Users/admin/Documents/LabGUI/LabGui.py", line 1532, in launch_LabGui
+    ex = LabGuiMain()
+  File "C:/Users/admin/Documents/LabGUI/LabGui.py", line 198, in __init__
+    raise Exception()
+Exception

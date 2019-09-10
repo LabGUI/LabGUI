@@ -32,6 +32,7 @@ class Instrument(Tool.MeasInstr):
     def measure(self, channel):
         if channel in self.last_measure:
             if not self.DEBUG:
+                self.connection.control_ren(1)  # Assert remote lock before to avoid error
                 if channel == 'V_DC':
                     #print(self.ask(":SYST:LOC?"))
                     answer = self.read_voltage_DC()
@@ -55,7 +56,6 @@ class Instrument(Tool.MeasInstr):
         # to prevent remote lockout
         if not REMOTE_LOCK:
             self.connection.control_ren(0) #deassert remote lock
-            self.connection.control_ren(1) #reassert remote lock
         return answer
 
     def read_any(self):
@@ -102,12 +102,12 @@ class Instrument(Tool.MeasInstr):
         else:
             return 123.4
 
-    # if run as own program
-    if (__name__ == '__main__'):
-        i = Instrument('GPIB0::19')
-        # print(i.identify())
-        print(i.measure('V'))
-        i.close()
+# if run as own program
+if (__name__ == '__main__'):
+    i = Instrument('GPIB0::19')
+    # print(i.identify())
+    print(i.measure('V'))
+    i.close()
 
     #   lockin = device('dev9')
      #   lockin.set_ref_internal  # no averaging

@@ -29,6 +29,12 @@ import sys
 
 #param = {'CH1': 'V', 'CH2': 'V', 'phase': 'deg', 'Z': 'Ohm', 'Z2': 'Ohm'}
 param = {'Summing Offset Voltage':'microV'}
+# 'SIM928 Voltage':'V'
+# create SIM928 on all possible channels
+for i in range(1, 9): # to add reading
+    param['SIM928 Chan %d'%i] = 'V'
+
+SIM928_READ_CHANNEL = 4
 
 # for summing offset voltage
 SIM928 = 4
@@ -190,6 +196,13 @@ class Instrument(Tool.MeasInstr):
                 answer = float(answer)
             else:
                 answer = None
+
+        elif channel.startswith('SIM928'):
+            answer = self.get_voltage(int(channel[-1]))
+            if answer is None:
+                answer = float('nan')
+            else:
+                answer = float(answer)
         else:
             print("invalid measurement channel: "+channel)
             return -1
@@ -351,8 +364,12 @@ class Instrument(Tool.MeasInstr):
         return None
 
     def set_voltage(self, channel, voltage):
+        """
+        voltage must be rounded to 3 decimal places, as SIM928 cannot process larger floating points. For example,
+        if the voltage 1.8889 is given, it will be unable to process it, however it would be able to process 1.889
+        """
         channel = str(channel)
-        voltage = str(float(voltage))
+        voltage = str(round(float(voltage),3))
         if channel in self.connections.keys():
             # check if SIM928
             if self.connections[channel] == 'SIM928':
