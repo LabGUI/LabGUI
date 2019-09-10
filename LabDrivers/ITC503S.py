@@ -180,6 +180,9 @@ class Instrument(Tool.MeasInstr):
         # the way it works is An, where n is a decimal number, whos first bit (2^0) represents if heater is auto, and second bit represents if gas flow is auto
         self.write("$A"+str(commandcode))
 
+    def setDesiredTemperature(self, temperature):
+        self.write("$T"+str(temperature))
+
     def setSweep(self, line, PointTemperature, SweepTime, HoldTime):
         line = int(line)
         if (line >= 1) and (line <= 16):

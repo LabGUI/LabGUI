@@ -490,6 +490,9 @@ file to see which are the ones implemented" % (self.ID_name, resource_name))
                     self.connection.clear()
                     print("cleared " + self.ID_name)
 
+                elif hasattr(self.connection, "clear"):
+                    getattr(self.connection, "clear")()
+
 
             except:
 
@@ -1012,6 +1015,17 @@ which is connected to %s " % (param, instr_name, device_port))
         """change the DEBUG property of the IntrumentHub instance"""
         self.DEBUG = state
         logging.debug("debug mode of InstrumentHub Object :%s" % self.DEBUG)
+
+    def clear(self):
+        """ Attempts to clear every buffer of every connected device """
+        for port, inst in list(self.instrument_list.items()):
+            if hasattr(inst, "clear"):
+                inst.clear()
+                if self.DEBUG:
+                    logging.debug("%s cleared"%port)
+            else:
+                if self.DEBUG:
+                    logging.debug("%s not cleared"%port)
 
     def clean_up(self):
         """ closes all instruments and reset the lists and dictionnaries """
