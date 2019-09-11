@@ -30,6 +30,54 @@ param = {
 
 }
 
+properties = {
+    'Version':{
+        'type':'text',
+        'range':'',
+        'readonly':True,
+    },
+    'Auto-Heater': {
+        'type':'bool',
+        'range':True,
+    },
+    'Auto-Gas Flow':{
+        'type':'bool',
+        'range':True,
+    },
+    'Auto-PID':{
+        'type':'bool',
+        'range':True,
+    },
+    'Locked':{
+        'type':'bool',
+        'range':True,
+    },
+    'Remote':{
+        'type':'bool',
+        'range':True,
+    },
+    'Heater Sensor':{
+        'type':'int',
+        'range':[1,3],
+    },
+    'Proportional Band':{
+        'type':'float',
+        'range':[0,9999]
+    },
+    'Integral Action Time':{
+        'type':'float',
+        'range':[0,9999]
+    },
+    'Derivative Action Time':{
+        'type':'float',
+        'range':[0,9999]
+    },
+    'Desired Temperature':{
+        'type':'float',
+        'range':[0,99999]
+    }
+
+}
 
 
 INTERFACE = Tool.INTF_GPIB
@@ -162,6 +210,50 @@ class Instrument(Tool.MeasInstr):
         else:
             self.write('$C2')
     """
+    def set(self, data):
+        # set control
+        self.setControl(data['Locked'], data['Remote'])
+
+        # set heater/gas flow
+        self.setHeaterAndGas(data['Auto-Heater'], data['Auto-Gas Flow'])
+
+        # set auto PID
+        self.setAutoPID(data['Auto-PID'])
+
+        # set heater sensor
+        self.setHeaterSensor(data['Heater Sensor'])
+
+        # set PID
+        self.setPID(data['Proportional Band'], data['Integral Action Time'], data['Desired Temperature'])
+
+        # set temperature
+        self.setDesiredTemperature(data['Desired Temperature'])
+
+    def get(self):
+        data = {}
+
+        # get control
+        data['Locked'], data['Remote'] = self.getControl()
+
+        # get heater and gas
+        data['Auto-Heater'], data['Auto-Gas Flow'] = self.getHeaterAndGas()
+
+        # get auto PID
+        data['Auto-PID'] = self.getAutoPID()
+
+        # get heater sensor
+        data['Heater Sensor'] = self.getHeaterSensor()
+
+        # get PID
+        data['Proportional Band'], data['Integral Action Time'], data['Desired Temperature'] = self.getPID()
+
+        # get temperature
+        data['Desired Temperature'] = self.getDesiredTemperature()
+
+        # get version
+        data['Version'] = self.version()
+        
+        return data
 
     def setControl(self, locked, remote):
         # same principles, its a binary number whos first bit is 0:local, 1:remote, and second bit is 0:lock, 1:unlock
@@ -173,6 +265,11 @@ class Instrument(Tool.MeasInstr):
         unlocked = not locked
         commandcode = int( str(int(unlocked)) + str(int(remote)), 2)
         self.write('$C'+str(commandcode))
+    def getControl(self):
+        C = self.Examine()["C"]
+        code = "{0:b}".format(int(C)).zfill(2)
+        return (not bool(code[0])), (bool(code[1])) # locked, remote
+
 
     def setHeaterAndGas(self, heater_auto, gas_auto):
         # these values MUST be booleans! TODO: implement check
@@ -181,17 +278,71 @@ class Instrument(Tool.MeasInstr):
         # the way it works is An, where n is a decimal number, whos first bit (2^0) represents if heater is auto, and second bit represents if gas flow is auto
         self.write("$A"+str(commandcode))
 
+    def getHeaterAndGas(self):
+        A = self.Examine()["A"]
+        code = "{0:b}".format(int(A)).zfill(2)
+        return (bool(code[0])), (bool(code[1]))  # heater_auto, gas_auto
+
+    def setAutoPID(self, AutoPID):
+        self.write("$L"+str(int(AutoPID)))
+
+    def getAutoPID(self):
+        L = self.Examine()["L"]
+        return bool(L)
+
+    def setHeaterSensor(self, sensor):
+        if 1 <= int(sensor) <= 3:
+            self.write("$H"+str(int(sensor)))
+        else:
+            print("Invalid sensor")
+
+    def getHeaterSensor(self):
+        H = self.Examine()["H"]
+        return int(H)
+
+    def setPID(self, P, I, D):
+        self.write("$P"+str(P))
+        self.write("$I"+str(I))
+        self.write("$D"+str(D))
+
+    def getPID(self):
+        return float(self.ask("R8")), float(self.ask("R9")), float(self.ask("R10"))
+
+    def Examine(self):
+        """Examine returns XnAnCnSnnHnLn, n all ints as status"""
+        resp = self.ask("X")
+        resp, L = resp.split("L")
+        resp, H = resp.split("H")
+        resp, S = resp.split("S")
+        resp, C = resp.split("C")
+        resp, A = resp.split("A")
+
+        return {
+            "X":int(resp),
+            "A":int(A),
+            "C":int(C),
+            "S":int(S),
+            "H":int(H),
+            "L":int(L)
+        }
+
+
+
     def setDesiredTemperature(self, temperature):
-        self.write("$T"+str(temperature))
+        self.write("$T"+str(round(float(temperature),3)))
+
+    def getDesiredTemperature(self):
+        return float(self.ask("R0"))
 
     def setSweep(self, line, PointTemperature, SweepTime, HoldTime):
         line = int(line)
         if (line >= 1) and (line <= 16):
-            self.write("x"+str(line))
-            if x not in 'x':
-                print("Error writing x:" + x)
+            x = self.ask("x"+str(line))
+            if line not in x:
+                print("Error writing line:" + line)
+                return False
 
-            values = [PointTemperature, SweepTime, HoldTime]
+            values = [round(float(PointTemperature),3), round(float(SweepTime),3), round(float(HoldTime),3)]
             i=1
             for x in values:
                 # point temperature
@@ -260,7 +411,27 @@ class Instrument(Tool.MeasInstr):
         else:
             print("Sweep values wiped")
 
+    def startSweep(self):
+        self.write("$S1")
+    def stopSweep(self):
+        self.write("$S0")
 
+    def statusSweep(self):
+        """
+        :return: Tuple (Sweeping, Step) of type (bool, int)
+        If sweeping not running, returns (False, -1)
+        """
+        S = self.Examine()['S']
+
+        if S == 0:
+            return (False, -1)
+        elif S%2 == 0:
+            return (True, S/2)
+        else:
+            return (False, (S+1)/2)
+
+    def version(self):
+        return self.ask("V")
 
     def query(self, command):
         self.write(command)
