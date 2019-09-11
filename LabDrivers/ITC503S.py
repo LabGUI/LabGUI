@@ -224,7 +224,7 @@ class Instrument(Tool.MeasInstr):
         self.setHeaterSensor(data['Heater Sensor'])
 
         # set PID
-        self.setPID(data['Proportional Band'], data['Integral Action Time'], data['Desired Temperature'])
+        self.setPID(data['Proportional Band'], data['Integral Action Time'], data['Derivative Action Time'])
 
         # set temperature
         self.setDesiredTemperature(data['Desired Temperature'])
@@ -245,7 +245,7 @@ class Instrument(Tool.MeasInstr):
         data['Heater Sensor'] = self.getHeaterSensor()
 
         # get PID
-        data['Proportional Band'], data['Integral Action Time'], data['Desired Temperature'] = self.getPID()
+        data['Proportional Band'], data['Integral Action Time'], data['Derivative Action Time'] = self.getPID()
 
         # get temperature
         data['Desired Temperature'] = self.getDesiredTemperature()
