@@ -252,7 +252,7 @@ class Instrument(Tool.MeasInstr):
 
         # get version
         data['Version'] = self.version()
-        
+
         return data
 
     def setControl(self, locked, remote):
@@ -318,7 +318,7 @@ class Instrument(Tool.MeasInstr):
         resp, A = resp.split("A")
 
         return {
-            "X":int(resp),
+            "X":int(resp.strip("X")),
             "A":int(A),
             "C":int(C),
             "S":int(S),
