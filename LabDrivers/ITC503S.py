@@ -268,7 +268,7 @@ class Instrument(Tool.MeasInstr):
     def getControl(self):
         C = self.Examine()["C"]
         code = "{0:b}".format(int(C)).zfill(2)
-        return (not bool(code[0])), (bool(code[1])) # locked, remote
+        return (not bool(int(code[0]))), (bool(int(code[1]))) # locked, remote
 
 
     def setHeaterAndGas(self, heater_auto, gas_auto):
@@ -281,14 +281,14 @@ class Instrument(Tool.MeasInstr):
     def getHeaterAndGas(self):
         A = self.Examine()["A"]
         code = "{0:b}".format(int(A)).zfill(2)
-        return (bool(code[0])), (bool(code[1]))  # heater_auto, gas_auto
+        return (bool(int(code[0]))), (bool(int(code[1])))  # heater_auto, gas_auto
 
     def setAutoPID(self, AutoPID):
         self.write("$L"+str(int(AutoPID)))
 
     def getAutoPID(self):
         L = self.Examine()["L"]
-        return bool(L)
+        return bool(int(L))
 
     def setHeaterSensor(self, sensor):
         if 1 <= int(sensor) <= 3:
