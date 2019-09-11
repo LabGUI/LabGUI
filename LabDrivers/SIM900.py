@@ -161,12 +161,18 @@ class Instrument(Tool.MeasInstr):
         self.ports = ['1','2','3','4','5','6','7','8']#,'A','B','C','D']
         print("Identifying devices")
         self.connected_devices = {}
+        mainframe = self.ask("*IDN?") # this prevents first port as being identified as mainframe on initial connect
         for port in self.ports:
+            self.clear(silent=True) # prevents any leftover buffer from bugging identification
             resp = self.ask_channel(port,"*IDN?")
             if resp == '' or resp == None:
                 print("There is no device at port "+port)
             else:
-                self.connections[port] = resp.split(',')[1]
+                try:
+                    self.connections[port] = resp.split(',')[1]
+                except:
+                    print("Warning: unexpected response on port %s: %s"%(port, resp)) # incase response is bugged, this will prevent program crash
+                    continue
                 if self.connections[port] in self.connected_devices.keys():
                     self.connected_devices[self.connections[port]].append(port)
                 else:
@@ -310,9 +316,9 @@ class Instrument(Tool.MeasInstr):
     def ask_channel(self, channel, msg):
         #channel = int(channel) can be letter!
         self.write("CONN "+str(channel)+", \"xyz\"")
-
-        answer = self.ask(msg)
+        self.write(msg)
         self.write("xyz")
+        answer = self.read()
         return answer.strip('\n').strip('\r').strip('\n') # incase sandwhich or reverse order
     def ask_channel_multiple(self, channel, *msgs):
         #channel = int(channel)
