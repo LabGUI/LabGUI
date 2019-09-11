@@ -254,7 +254,8 @@ class MeasInstr(object):
                 if hasattr(self, 'identification'):
                     return self.identification
                 else:
-                    return "Unknown instrument"
+                    return "Unknown instrument" \
+                           ""
             else:
                 return "Unknown instrument"
 
@@ -1028,7 +1029,7 @@ which is connected to %s " % (param, instr_name, device_port))
         """ Attempts to clear every buffer of every connected device """
         for port, inst in list(self.instrument_list.items()):
             if hasattr(inst, "clear"):
-                inst.clear(True)
+                inst.clear(silent=True)
                 logging.debug("%s cleared (port %s)"%(inst, port))
             else:
                 logging.debug("%s not cleared (port %s)"%(inst, port))
