@@ -47,6 +47,7 @@ class Instrument(Tool.MeasInstr):
             itfc = INTERFACE
 
         name='ITC503S'
+        self.identification = "Oxford Instrument Intelligent Temperature Controller 503"
         if "name" in kwargs:
             name = kwargs.pop("name")
             print(name)
