@@ -306,7 +306,7 @@ class Instrument(Tool.MeasInstr):
         self.write("$D"+str(D))
 
     def getPID(self):
-        return float(self.ask("R8")), float(self.ask("R9")), float(self.ask("R10"))
+        return float(self.ask("R8")[1:]), float(self.ask("R9")[1:]), float(self.ask("R10")[1:])
 
     def Examine(self):
         """Examine returns XnAnCnSnnHnLn, n all ints as status"""
@@ -332,7 +332,7 @@ class Instrument(Tool.MeasInstr):
         self.write("$T"+str(round(float(temperature),3)))
 
     def getDesiredTemperature(self):
-        return float(self.ask("R0"))
+        return float(self.ask("R0")[1:])
 
     def setSweep(self, line, PointTemperature, SweepTime, HoldTime):
         line = int(line)
