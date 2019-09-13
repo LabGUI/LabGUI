@@ -2,8 +2,7 @@
 """
 Created on Wed Jul 24 14:58:03 2013
 
-Copyright (C) 10th april 2015 Benjamin Schmidt
-License: see LICENSE.txt file
+@author: Benjamin Schmidt, zackorenberg
 """
 
 import sys
@@ -13,40 +12,57 @@ from LocalVars import USE_PYQT5
 if USE_PYQT5:
 
     from PyQt5.QtWidgets import (QWidget, QLabel, QLineEdit, QPushButton,
-                                 QFileDialog, QHBoxLayout, QApplication)
+                                 QFileDialog, QHBoxLayout, QApplication, QComboBox, QSizePolicy)
 
 else:
 
     from PyQt4.QtGui import (QWidget, QLabel, QLineEdit, QPushButton,
-                             QFileDialog, QHBoxLayout, QApplication)
+                             QFileDialog, QHBoxLayout, QApplication, QComboBox, QSizePolicy)
+
+try:
+    from pathlib import Path
+    PATHLIB=True
+except:
+    PATHLIB=False
 
 
 from LabTools.IO import IOTool
-
+import os
 
 class ScriptWidget(QWidget):
-    """widget with a lineEdit and a browse button"""
+    """widget with a dropdown and a browse button"""
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, legacy = False):
         super(ScriptWidget, self).__init__(parent)
+
+        self.LEGACY = legacy
 
         self.scriptLayout = QHBoxLayout()
 
         self.scriptFileLabel = QLabel(self)
         self.scriptFileLabel.setText("Script to run:")
 
-        self.scriptFileLineEdit = QLineEdit(self)
+        if self.LEGACY is True:
+            self.scriptFileLineEdit = QLineEdit(self)
+        else:
+            self.scriptFileComboBox = self.create_combobox()
 
         self.scriptFileButton = QPushButton(self)
         self.scriptFileButton.setText("Browse")
 
-        self.scriptLayout.addWidget(self.scriptFileLabel)
-        self.scriptLayout.addWidget(self.scriptFileLineEdit)
-        self.scriptLayout.addWidget(self.scriptFileButton)
+        self.scriptLayout.addWidget(self.scriptFileLabel,0)
+
+        if self.LEGACY is True:
+            self.scriptLayout.addWidget(self.scriptFileLineEdit,1)
+        else:
+            self.scriptLayout.addWidget(self.scriptFileComboBox,1)
+
+        self.scriptLayout.addWidget(self.scriptFileButton,0)
 
         self.setLayout(self.scriptLayout)
 
-        self.scriptFileLineEdit.setText(IOTool.get_script_name())
+        self.fname = IOTool.get_script_name()
+        self.set_script(self.fname)
 
         self.scriptFileButton.clicked.connect(self.on_scriptFileButton_clicked)
 
@@ -64,12 +80,57 @@ class ScriptWidget(QWidget):
                 'Script files (*.py)'))
 
         if fname:
-
-            self.scriptFileLineEdit.setText(fname)
+            if self.LEGACY is True:
+                self.scriptFileLineEdit.setText(fname)
+            else:
+                self.set_script(fname)
 
     def get_script_fname(self):
+        if self.LEGACY is True:
+            return str(self.scriptFileLineEdit.text())
+        else:
+            return str(self.scriptFileComboBox.currentText())
 
-        return str(self.scriptFileLineEdit.text())
+    def create_combobox(self):
+        cbb = QComboBox(self)
+        cbb.setObjectName("comboBox")
+        cbb.setStyleSheet(
+            "QComboBox::drop-down {border-width: 0px;} \
+QComboBox::down-arrow {image: url(noimg); border-width: 0px;}")
+        # this allow the user to edit the content of the combobox input
+        cbb.setEditable(True)
+
+        cbb.setSizePolicy(QSizePolicy(
+            QSizePolicy.Ignored, # instead of Expanding to allow shrinkage
+            QSizePolicy.Fixed,
+            QSizePolicy.ComboBox
+        ))
+
+        cbb.setMinimumWidth(55) # make it act similar to lineedit
+        cbb.setSizeAdjustPolicy(QComboBox.AdjustToContentsOnFirstShow)
+
+        return cbb
+
+    def fill_combobox(self):
+        directory = os.path.dirname(self.fname)
+        files = os.listdir(directory)
+
+        self.scriptFileComboBox.clear()
+        self.scriptFileComboBox.addItems(
+            [ os.path.join(directory, file) for file in files if file[-3:] == '.py']
+        )
+        self.scriptFileComboBox.setCurrentText(self.fname)
+
+    def set_script(self, script_name):
+        if PATHLIB:
+            self.fname = str(Path(script_name))
+        else:
+            self.fname = script_name
+
+        if self.LEGACY is True:
+            self.scriptFileLineEdit.setText(self.fname)
+        else:
+            self.fill_combobox()
 
 
 def add_widget_into_main(parent):
@@ -82,7 +143,7 @@ def add_widget_into_main(parent):
 
     fname = IOTool.get_script_name(config_file_path=parent.config_file)
 
-    parent.widgets['ScriptWidget'].scriptFileLineEdit.setText(fname)
+    parent.widgets['ScriptWidget'].set_script(fname)
 
     parent.instToolbar.addWidget(parent.widgets['ScriptWidget'])
 
@@ -90,6 +151,8 @@ def add_widget_into_main(parent):
 if __name__ == "__main__":
 
     app = QApplication(sys.argv)
-    ex = ScriptWidget()
+    ex = ScriptWidget(LEGACY=True)
     ex.show()
+    ex2 = ScriptWidget(LEGACY=False)
+    ex2.show()
     sys.exit(app.exec_())
