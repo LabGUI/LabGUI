@@ -6,6 +6,7 @@ Created on Wed Apr 05 23:24:14 2017
 """
 
 
+from LabDrivers import Tool
 import sys
 import socket
 import numpy as np
@@ -23,8 +24,6 @@ else:
     import PyQt4.QtGui as QtGui
 
     from PyQt4.QtCore import Qt, SIGNAL, QMutex, QThread
-
-from LabDrivers import Tool
 
 
 CLIENT = '132.206.186.166'
@@ -182,7 +181,7 @@ class DataServer(QThread):
         answer = np.nan
 
         # the request should be in the format
-        #"inst_ID.method(*args,**kwargs)@device_port"
+        # "inst_ID.method(*args,**kwargs)@device_port"
         try:
 
             id_name, method = client_request.split('.')
@@ -194,7 +193,7 @@ class DataServer(QThread):
             return answer
 
         # the request should be in the format
-        #"inst_ID.method(*args,**kwargs)@device_port"
+        # "inst_ID.method(*args,**kwargs)@device_port"
         try:
 
             method, device_port = method.split('@')

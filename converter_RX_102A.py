@@ -58,7 +58,7 @@ def R_to_T(resistance):
         # compute temperature from coefficients above (Chebychev polynomial)
         temperature = A0 * cos(0 * acos(k)) + A1 * cos(1 * acos(k)) + A2 * cos(2 * acos(k)) + A3 * cos(3 * acos(k)) + A4 * cos(4 * acos(k)) + A5 * cos(
             5 * acos(k)) + A6 * cos(6 * acos(k)) + A7 * cos(7 * acos(k)) + A8 * cos(8 * acos(k)) + A9 * cos(9 * acos(k))
-            
+
     elif resistance <= 63765.1 and resistance >= 2391.58:  # between 50mK and 992mK
         ZL = 3.35453159798  # minimum log10 of results
         ZU = 5.00000000000  # maximum log10 of results
@@ -96,6 +96,7 @@ def T_to_R(T):
 
     resistance = np.interp(T, T_range, Res_range)
     return resistance
+
 
 if __name__ == "__main__":
     print(R_to_T(2391.58))

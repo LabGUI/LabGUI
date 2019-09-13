@@ -21,7 +21,6 @@ class Instrument(Tool.MeasInstr):
         super(Instrument, self).__init__(resource_name, 'HP34401A', debug=debug,
                                          interface=INTERFACE, **kwargs)
 
-
     def identify(self, msg=''):
         if not self.DEBUG:
             # the *IDN? is probably not working
@@ -34,7 +33,7 @@ class Instrument(Tool.MeasInstr):
             if not self.DEBUG:
                 self.connection.control_ren(1)  # Assert remote lock before to avoid error
                 if channel == 'V_DC':
-                    #print(self.ask(":SYST:LOC?"))
+                    # print(self.ask(":SYST:LOC?"))
                     answer = self.read_voltage_DC()
                 elif channel == 'V_AC':
                     answer = self.read_voltage_AC()
@@ -55,7 +54,7 @@ class Instrument(Tool.MeasInstr):
             answer = None
         # to prevent remote lockout
         if not REMOTE_LOCK:
-            self.connection.control_ren(0) #deassert remote lock
+            self.connection.control_ren(0)  # deassert remote lock
         return answer
 
     def read_any(self):
@@ -68,7 +67,7 @@ class Instrument(Tool.MeasInstr):
     def read_voltage_DC(self):
         if not self.DEBUG:
             string_data = self.ask(':MEAS:VOLT:DC?')
-            #print(string_data) # prevents output from writing twice
+            # print(string_data) # prevents output from writing twice
             return float(string_data)
         else:
             return 123.4
@@ -79,7 +78,6 @@ class Instrument(Tool.MeasInstr):
             return float(string_data)
         else:
             return 123.4
-
 
     def read_current_DC(self):
         if not self.DEBUG:
@@ -102,6 +100,7 @@ class Instrument(Tool.MeasInstr):
         else:
             return 123.4
 
+
 # if run as own program
 if (__name__ == '__main__'):
     i = Instrument('GPIB0::19')
@@ -110,5 +109,5 @@ if (__name__ == '__main__'):
     i.close()
 
     #   lockin = device('dev9')
-     #   lockin.set_ref_internal  # no averaging
-     #   lockin.close()
+    #   lockin.set_ref_internal  # no averaging
+    #   lockin.close()

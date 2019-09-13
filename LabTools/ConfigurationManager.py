@@ -5,8 +5,7 @@ Created on Jun 27
 @author: zackorenberg
 
 GUI for configuration, based on IOTools info
-"""
-"""
+
 Created for GervaisLabs
 """
 
@@ -17,7 +16,7 @@ import logging
 try:
     from LocalVars import USE_PYQT5
 except:
-    USE_PYQT5=True # default
+    USE_PYQT5 = True  # default
 import os
 
 try:
@@ -40,9 +39,11 @@ try:
 except:
     from . import UserWidgetManager
 
-LAYOUT = 'form' # other option is hbox
+LAYOUT = 'form'  # other option is hbox
 
 #### TYPE WIDGETS ####
+
+
 class SelectorWidget(QtGui.QWidget):
     """
          Selector widget, data MUST have type!
@@ -78,8 +79,6 @@ class SelectorWidget(QtGui.QWidget):
         self.dropdown.setObjectName(name)
         self.dropdown.activated[str].connect(self.change_setting)
 
-
-
         # set layout
 
         #self.layout = QtGui.QHBoxLayout(self)
@@ -105,7 +104,7 @@ class SelectorWidget(QtGui.QWidget):
         if value in self.options:
             self.dropdown.setCurrentText(value)
         else:
-            logging.warning("No data saved, as %s is not in options."%value)
+            logging.warning("No data saved, as %s is not in options." % value)
 
     def save(self):
         self.set(self.getValue(), config_file_path=self.configFile)
@@ -118,6 +117,8 @@ class SelectorWidget(QtGui.QWidget):
 
     def getValue(self):
         return self.current
+
+
 class ListViewWidget(QtGui.QWidget):
     """
         ListView widget, data MUST have type!
@@ -154,7 +155,6 @@ class ListViewWidget(QtGui.QWidget):
 
         # set layout
 
-
         if LAYOUT == 'form':
             self.layout = QtGui.QFormLayout(self)
             self.layout.addWidget(self.op_label)
@@ -165,9 +165,9 @@ class ListViewWidget(QtGui.QWidget):
             self.layout.addWidget(self.listview)
         self.setLayout(self.layout)
 
-
     def refresh_all(self):
         self.reset()
+
     def refresh_listview(self):
         self.model.clear()
         for option in self.options:
@@ -175,9 +175,9 @@ class ListViewWidget(QtGui.QWidget):
             item.setData(option)
             item.setCheckable(True)
             item.setEditable(False)
-            check = (QtCore.Qt.Checked \
-                         if option in self.current \
-                         else QtCore.Qt.Unchecked
+            check = (QtCore.Qt.Checked
+                     if option in self.current
+                     else QtCore.Qt.Unchecked
                      )  # for no partials!
             item.setCheckState(check)
             self.model.appendRow(item)
@@ -214,13 +214,16 @@ class ListViewWidget(QtGui.QWidget):
                 selected_widgets.append(item.data())
         self.current = selected_widgets
         return selected_widgets
+
+
 class FileWidget(QtGui.QWidget):
     """
     File selector widget, data MUST have type!
 
     must have getValue and setValue and save and changeConfigFile attributes!
     """
-    def __init__(self, name,  data, config_file, parent=None, **kwargs):
+
+    def __init__(self, name, data, config_file, parent=None, **kwargs):
         super(type(self), self).__init__(parent=parent, **kwargs)
         self.name = name
         self.data = data
@@ -261,13 +264,11 @@ class FileWidget(QtGui.QWidget):
 
         self.setLayout(self.fileLayout)
 
-
-
     def on_FileButton_clicked(self):
 
         if self.type == 'file':
             fname = str(QtGui.QFileDialog.getOpenFileName(self, self.label,
-                                                     self.FileLineEdit.text())[0])
+                                                          self.FileLineEdit.text())[0])
         elif self.type == 'path':
             fname = str(QtGui.QFileDialog.getExistingDirectory(self, self.label,
                                                                self.FileLineEdit.text()))
@@ -297,6 +298,8 @@ class FileWidget(QtGui.QWidget):
         return self.FileLineEdit.text()
 
 #### RAW EDIT WIDGET ####
+
+
 class RawEditWidget(QtGui.QWidget):
     """
         RawEditWidget
@@ -315,14 +318,14 @@ class RawEditWidget(QtGui.QWidget):
 
         # set height restrictions
         self.fm = QFontMetrics(self.textEdit.font())
-        #self.margin = [
+        # self.margin = [
         #    self.textEdit.textCursor().blockFormat().topMargin()*2,
         #    self.textEdit.textCursor().blockFormat().leftMargin() * 2
-        #]
-        self.margin = [10]*2 # its 5 on each side
+        # ]
+        self.margin = [10] * 2  # its 5 on each side
         self.refresh_size()
 
-        self.setWindowTitle("Editing  %s"%self.configFile)
+        self.setWindowTitle("Editing  %s" % self.configFile)
 
         ### FOOTER ###
         self.saveButton = QtGui.QPushButton('Save')
@@ -349,14 +352,11 @@ class RawEditWidget(QtGui.QWidget):
 
         self.setLayout(self.layout)
 
-
-
-
-
     def refresh_size(self):
         split = self.plain.split('\n')
-        self.textEdit.setMinimumHeight(self.margin[0]+self.fm.height()*len(split))
-        self.textEdit.setMinimumWidth(self.margin[1]+max([self.fm.width(i) for i in split]))
+        self.textEdit.setMinimumHeight(self.margin[0] + self.fm.height() * len(split))
+        self.textEdit.setMinimumWidth(self.margin[1] + max([self.fm.width(i) for i in split]))
+
     def load_text(self):
         self.textEdit.setText(
             IOTool._read_config_file(config_file_path=self.configFile)
@@ -379,12 +379,13 @@ class RawEditWidget(QtGui.QWidget):
 
         dia = QtGui.QMessageBox(self)
         dia.setWindowTitle("Save confirmation")
-        dia.setText("Saved changes to %s"%self.configFile)
+        dia.setText("Saved changes to %s" % self.configFile)
         dia.show()
 
     def close_event(self):
         if self.plain != self.textEdit.toPlainText():
-            reply = QtGui.QMessageBox.question(self, 'Exit Confirmation','Unsaved data will be discarded. Continue?', QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No)
+            reply = QtGui.QMessageBox.question(self, 'Exit Confirmation', 'Unsaved data will be discarded. Continue?',
+                                               QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No)
             if reply == QtGui.QMessageBox.No:
                 return
         if self.parent is not None:
@@ -396,9 +397,9 @@ class RawEditWidget(QtGui.QWidget):
 
         if e.key() == QtCore.Qt.Key_Escape:
             self.close_event()
+
     def closeEvent(self, QCloseEvent):
         self.close_event()
-
 
 
 #### MAIN WIDGET ####
@@ -455,18 +456,12 @@ class ConfigurationManager(QtGui.QWidget):
                 elif data['type'] == 'listview':
                     self.widgets[name] = ListViewWidget(name, data, self.configFilePath)
                 else:
-                    logging.info("%s has an invalid type: %s"%(name, data['type']))
+                    logging.info("%s has an invalid type: %s" % (name, data['type']))
             else:
-                logging.info("%s has no type"%name)
+                logging.info("%s has no type" % name)
 
             if name in self.widgets:
                 self.values[name] = self.widgets[name].getValue()
-
-
-
-
-
-
 
         # footer buttons
         self.saveButton = QtGui.QPushButton('Save')
@@ -487,10 +482,6 @@ class ConfigurationManager(QtGui.QWidget):
         self.footerLayout.addWidget(self.resetButton)
         self.footerLayout.addWidget(self.editButton)
 
-
-
-
-
         # set the layout
         self.layout = QtGui.QVBoxLayout(self)
         # FORM LAYOUT self.layout = QtGui.QFormLayout(self)
@@ -503,10 +494,9 @@ class ConfigurationManager(QtGui.QWidget):
 
         self.layout.addLayout(self.footerLayout)
 
-
         self.setLayout(self.layout)
 
-        self.edit = None # so it doesnt automatically close
+        self.edit = None  # so it doesnt automatically close
 
     def get_config_userwidget_setting(self):
         return IOTool.get_user_widgets(config_file_path=self.configFilePath)
@@ -524,17 +514,17 @@ class ConfigurationManager(QtGui.QWidget):
                 selected_widgets.append(item.data())
         IOTool.set_user_widgets(selected_widgets)
 
-
-
-    def refresh_all(self): # also an event
+    def refresh_all(self):  # also an event
         self.refresh_subwidgets()
 
     def reset_all(self):
         self.reset_subwidgets()
         self.edit = None
+
     def reset(self):
         # called from RawEdit
         self.reset_all()
+
     def refresh_subwidgets(self):
         for name, widget in self.widgets.items():
             widget.setValue(self.values[name])
@@ -544,7 +534,6 @@ class ConfigurationManager(QtGui.QWidget):
             widget.changeConfigFile(self.configFilePath)
             self.values[name] = widget.getValue()
 
-
     def set_parent(self, new_parent):
         self.parent = new_parent
 
@@ -553,6 +542,7 @@ class ConfigurationManager(QtGui.QWidget):
         print("Active widget changed")
         print(*args)
         print(kwargs)
+
     def on_configFileButton_clicked(self):
 
         fname = str(QtGui.QFileDialog.getOpenFileName(self, 'Config file',
@@ -561,9 +551,11 @@ class ConfigurationManager(QtGui.QWidget):
         if fname:
 
             self.set_config_file_name(fname)
+
     def select_all(self):
         for i in range(self.model.rowCount()):
             self.model.item(i).setCheckState(QtCore.Qt.Checked)
+
     def unselect_all(self):
         for i in range(self.model.rowCount()):
             self.model.item(i).setCheckState(QtCore.Qt.Unchecked)
@@ -595,14 +587,15 @@ class ConfigurationManager(QtGui.QWidget):
             print(sys.exc_info())
         # open new widget that modifies text of config.txt
 
+
 if __name__ == "__main__":
     app = QtGui.QApplication(sys.argv)
     #ex = RawEditWidget(IOTool.CONFIG_FILE_PATH)
-    #ex.show()
+    # ex.show()
 
     ex = ConfigurationManager()
     ex.show()
     #fileWidget = FileWidget(IOTool.SAVE_DATA_PATH_ID, IOTool.CONFIG_OPTIONS[IOTool.SAVE_DATA_PATH_ID], IOTool.CONFIG_FILE_PATH)
 
-    #fileWidget.show()
+    # fileWidget.show()
     sys.exit(app.exec_())

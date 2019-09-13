@@ -5,8 +5,7 @@ Created on Jun 27
 @author: zackorenberg
 
 Meant to control which UserWidgets are configured to run
-"""
-"""
+
 Created for GervaisLabs
 """
 
@@ -17,7 +16,7 @@ import logging
 try:
     from LocalVars import USE_PYQT5
 except:
-    USE_PYQT5=True # default
+    USE_PYQT5 = True  # default
 import os
 
 try:
@@ -55,7 +54,6 @@ class UserWidgetManager(QtGui.QWidget):
             #widget_path = os.path.join(cur_path, "LabTools")
             widget_path = os.path.dirname(__file__)
 
-
             self.icon = os.path.abspath("images/icon_normal_py3.png")
 
         self.setWindowIcon(QIcon(self.icon))
@@ -66,17 +64,14 @@ class UserWidgetManager(QtGui.QWidget):
         # this is the legitimate list of user widgets
         self.refresh_widgets_list()
 
-
         # Now create actual widget
-
 
         # listview stuff for widgets
         self.listview = QtGui.QListView(self)
         self.model = QStandardItemModel()
         self.listview.setModel(self.model)
 
-
-        #config file selector
+        # config file selector
 
         self.configfileLayout = QtGui.QHBoxLayout()
         self.configfileLayout.setObjectName("configLayout")
@@ -113,10 +108,6 @@ class UserWidgetManager(QtGui.QWidget):
         self.footerLayout.addWidget(self.selectButton)
         self.footerLayout.addWidget(self.unselectButton)
 
-
-
-
-
         # Apply everything
 
         self.refresh_listview()
@@ -130,9 +121,7 @@ class UserWidgetManager(QtGui.QWidget):
         self.layout.addWidget(self.listview)
         self.layout.addLayout(self.footerLayout)
 
-
         self.setLayout(self.layout)
-
 
     def get_config_userwidget_setting(self):
         return IOTool.get_user_widgets(config_file_path=self.configFilePath)
@@ -150,7 +139,7 @@ class UserWidgetManager(QtGui.QWidget):
                 selected_widgets.append(item.data())
         IOTool.set_user_widgets(selected_widgets)
 
-    def refresh_all(self): # also an event
+    def refresh_all(self):  # also an event
         self.refresh_widgets_list()
         self.refresh_listview()
 
@@ -162,10 +151,10 @@ class UserWidgetManager(QtGui.QWidget):
             item.setData(widget)
             item.setCheckable(True)
             item.setEditable(False)
-            check = (QtCore.Qt.Checked \
-                         if widget in active_widgets \
-                         else QtCore.Qt.Unchecked
-                     ) # for no partials!
+            check = (QtCore.Qt.Checked
+                     if widget in active_widgets
+                     else QtCore.Qt.Unchecked
+                     )  # for no partials!
             item.setCheckState(check)
             self.model.appendRow(item)
         self.listview.selectionModel().currentChanged.disconnect()
@@ -186,8 +175,9 @@ class UserWidgetManager(QtGui.QWidget):
     def change_active_widgets(self, *args, **kwargs):
         pass
         #print("Active widget changed")
-        #print(*args)
-        #print(kwargs)
+        # print(*args)
+        # print(kwargs)
+
     def on_configFileButton_clicked(self):
 
         fname = str(QtGui.QFileDialog.getOpenFileName(self, 'Config file',
@@ -196,9 +186,11 @@ class UserWidgetManager(QtGui.QWidget):
         if fname:
 
             self.set_config_file_name(fname)
+
     def select_all(self):
         for i in range(self.model.rowCount()):
             self.model.item(i).setCheckState(QtCore.Qt.Checked)
+
     def unselect_all(self):
         for i in range(self.model.rowCount()):
             self.model.item(i).setCheckState(QtCore.Qt.Unchecked)
@@ -216,7 +208,6 @@ class UserWidgetManager(QtGui.QWidget):
 
 if __name__ == "__main__":
     app = QtGui.QApplication(sys.argv)
-
 
     widget = UserWidgetManager()
     print(widget.widgets_list)

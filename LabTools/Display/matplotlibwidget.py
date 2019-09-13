@@ -19,12 +19,12 @@ Copyright © 2005 Florent Rougon, 2006 Darren Dale
 __version__ = "1.0.0"
 
 
+from LocalVars import USE_PYQT5
 from matplotlib.figure import Figure
 
 from matplotlib import rcParams
 rcParams['font.size'] = 9
 
-from LocalVars import USE_PYQT5
 
 if USE_PYQT5:
 
@@ -108,9 +108,9 @@ class MatplotlibWidget(Canvas):
         return QSize(10, 10)
 
 
-#=========================================================================
+# =========================================================================
 #   Example
-#=========================================================================
+# =========================================================================
 if __name__ == '__main__':
     import sys
     from PyQt4.QtGui import QMainWindow, QApplication

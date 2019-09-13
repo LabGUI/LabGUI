@@ -22,7 +22,7 @@ class Instrument(Tool.MeasInstr):
                                          **kwargs)
 
         self.t_start = 0
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
     def initialize(self):
         """reset the time to the current time"""

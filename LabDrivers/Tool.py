@@ -6,6 +6,8 @@ Created on Fri Jun 21 17:19:35 2013
 
 Significant changes have occured after March 22, 2019
 """
+from LocalVars import USE_PYQT5
+import socket
 import sys
 import io
 from collections import OrderedDict
@@ -18,7 +20,7 @@ try:
     from LabTools.IO import IOTool
     VISA_BACKEND = IOTool.get_visa_backend_setting()
 except:
-    VISA_BACKEND = '@ni' # current default
+    VISA_BACKEND = '@ni'  # current default
 
 import logging
 logging.basicConfig(level=logging.DEBUG)
@@ -44,11 +46,6 @@ except ImportError:
 
 def visa_resource_manager():
     return visa.ResourceManager(VISA_BACKEND)
-
-
-import socket
-
-from LocalVars import USE_PYQT5
 
 
 if USE_PYQT5:
@@ -189,9 +186,9 @@ class MeasInstr(object):
 
             else:
                 # the connection doesn't exist so we create it
-                    self.connection = PrologixController(**prologix_kwargs)
+                self.connection = PrologixController(**prologix_kwargs)
         else:
-            #Remove this
+            # Remove this
             if PROLOGIX_AUTO in kwargs:
                 kwargs.pop(PROLOGIX_AUTO)
 
@@ -312,10 +309,10 @@ class MeasInstr(object):
                 self.connection.write("++addr %s" % self.resource_number)
 
             if not self.connection is None:
-                #if self.interface == INTF_SERIAL:
+                # if self.interface == INTF_SERIAL:
                 #    bytes = msg + self.term_chars
                 #    answer = self.connection.write(bytes.encode())
-                #else:
+                # else:
                 #    answer = self.connection.write(msg + self.term_chars)
                 answer = self.connection.write(msg + self.term_chars)
             else:
@@ -329,7 +326,7 @@ with the instrument %s" % self.ID_name)
 
         return answer
 
-    def ask(self, msg, num_bytes=None): #also known as query
+    def ask(self, msg, num_bytes=None):  # also known as query
         """ Writes a command to the instrument and reads its reply """
 
         answer = None
@@ -340,7 +337,7 @@ with the instrument %s" % self.ID_name)
 
                 try:
 
-                    answer = self.connection.query(msg) #ask is depricated
+                    answer = self.connection.query(msg)  # ask is depricated
 
                     """ Alternative Method
                     
@@ -359,7 +356,7 @@ with the instrument %s" % self.ID_name)
 
                 try:
                     #msg = msg + self.term_chars
-                    #self.write(msg.encode())
+                    # self.write(msg.encode())
                     self.write(msg)
                     answer = self.read(num_bytes)
 
@@ -428,16 +425,17 @@ with the instrument %s" % self.ID_name)
                 self.resource_name = resource_name
 
             elif self.interface == INTF_PROLOGIX:
-                ### NOTE: consider implementing in connection
+                # NOTE: consider implementing in connection
                 # only keeps the number of the port for resource_number
                 # for legacy reasons, resource_name accepts either just a number, or GPIB0::number::INSTR
                 if not resource_name.startswith('GPIB0::'):
-                    resource_name = 'GPIB0::'+resource_name
+                    resource_name = 'GPIB0::' + resource_name
                 if not resource_name.endswith('::INSTR'):
-                    resource_name = resource_name+'::INSTR'
+                    resource_name = resource_name + '::INSTR'
                 self.resource_name = resource_name
-                self.resource_number = resource_name.replace('GPIB0::', '').replace('::INSTR','')
-                logging.debug('Resource name is %s and resource number is %s'%(self.resource_name, self.resource_number))
+                self.resource_number = resource_name.replace('GPIB0::', '').replace('::INSTR', '')
+                logging.debug('Resource name is %s and resource number is %s' %
+                              (self.resource_name, self.resource_number))
                 self.connection.write(("++addr %s" % self.resource_number))
                 self.connection.readline()
                 # the \n termchar is embedded in the PrologixController class
@@ -490,7 +488,6 @@ file to see which are the ones implemented" % (self.ID_name, resource_name))
                     self.connection.clear()
                     print("cleared " + self.ID_name)
 
-
             except:
 
                 print("unable to clear  " + self.ID_name)
@@ -516,7 +513,7 @@ file to see which are the ones implemented" % (self.ID_name, resource_name))
             print("existing channels :", self.channels)
             return np.nan
 
-    def change_interface(self, intf, **kwargs): # only really applicable to prologix/pyvisa
+    def change_interface(self, intf, **kwargs):  # only really applicable to prologix/pyvisa
         if intf == INTF_VISA and self.interface != INTF_VISA:
             self.interface = INTF_VISA
             self.resource_manager = visa_resource_manager()
@@ -530,10 +527,12 @@ file to see which are the ones implemented" % (self.ID_name, resource_name))
                     self.connection = kwargs[INTF_PROLOGIX]
                     self.connect(self.resource_name)
                 else:
-                    logging.debug('No instance of prologix controller given, did not change anything')
+                    logging.debug(
+                        'No instance of prologix controller given, did not change anything')
 
         else:
-            logging.debug("Change interface called with %s, current interface is %s"%(intf, self.interface))
+            logging.debug("Change interface called with %s, current interface is %s" %
+                          (intf, self.interface))
 
     def set_ren(self, level):
         """
@@ -741,7 +740,6 @@ class InstrumentHub(QObject):
                 self.connect(parent, SIGNAL(
                     "DEBUG_mode_changed(bool)"), self.set_debug_state)
 
-
         else:
 
             self.parent = None
@@ -798,10 +796,9 @@ argument is not the good one")
 
                 self.prologix_com_port = None
 
-
-
         # The following is for default_ren widget, which will be set with clean_up function
         self.default_ren = None
+
     def __del__(self):
         # free the existing connections
         self.clean_up()
@@ -817,22 +814,23 @@ argument is not the good one")
                 if not self.prologix_com_port:
                     self.prologix_com_port = PrologixController()
             except:
-                print("Error changing to %s"%INTF_PROLOGIX)
-                logging.debug("Error changing to %s"%INTF_PROLOGIX, sys.exc_info())
+                print("Error changing to %s" % INTF_PROLOGIX)
+                logging.debug("Error changing to %s" % INTF_PROLOGIX, sys.exc_info())
             #print(self.port_param_pairs, self.instrument_list)
             for key, inst in self.instrument_list.items():
                 try:
                     #print(key, dir(inst))
                     if 'GPIB' in key:
                         if inst.interface == INTF_VISA:
-                            #inst.interface = INTF_PROLOGIX does it in inst.change_interface(intf)
+                            # inst.interface = INTF_PROLOGIX does it in inst.change_interface(intf)
                             inst.change_interface(intf, prologix=self.prologix_com_port)
                         elif inst.interface != INTF_PROLOGIX:
-                            logging.debug("Interface value %s is invalid"%inst.interface)
+                            logging.debug("Interface value %s is invalid" % inst.interface)
                 except:
-                    logging.debug("Error caught in change_interface to prologix:", key, intf, sys.exc_info())
+                    logging.debug("Error caught in change_interface to prologix:",
+                                  key, intf, sys.exc_info())
             INTF_GPIB = intf
-            #self.connect_hub()
+            # self.connect_hub()
         elif intf == INTF_VISA:
 
             #self.prologix_com_port = None
@@ -841,17 +839,19 @@ argument is not the good one")
                 try:
                     if 'GPIB' in key:
                         if inst.interface == INTF_PROLOGIX:
-                            #inst.interface == INTF_VISA does it in inst.change_interface(intf)
+                            # inst.interface == INTF_VISA does it in inst.change_interface(intf)
                             inst.change_interface(intf)
                         elif inst.interface != INTF_VISA:
                             logging.debug("Interface value %s is invalid" % inst.interface)
                 except:
-                    logging.debug("Error caught in change_interface to prologix:", key, intf, sys.exc_info())
+                    logging.debug("Error caught in change_interface to prologix:",
+                                  key, intf, sys.exc_info())
         else:
 
             logging.error("Problem with change of interface in the the \
 instrument hub. Interface passed as an argument : %s" % intf)
     # debug note may23rd2019 - HP34401A throws error in this function
+
     def disconnect_hub(self):
         self.clean_up()
         if self.parent is not None:
@@ -891,7 +891,7 @@ instrument hub. Interface passed as an argument : %s" % intf)
                 self.connect_instrument(
                     instr_name, device_port, param, send_signal=False)
             except OSError as e:
-                print("Unable to connect to device %s on port %s"%(instr_name, device_port))
+                print("Unable to connect to device %s on port %s" % (instr_name, device_port))
                 self.disconnect_hub()
                 return False
         if self.parent is not None:
@@ -955,7 +955,7 @@ which is connected to %s " % (param, instr_name, device_port))
 
         # the port is not used yet
         else:
-            #print(self.instrument_list) for debugging
+            # print(self.instrument_list) for debugging
             logging.debug("The port %s is not in the list already" %
                           (device_port))
 
@@ -1004,8 +1004,8 @@ which is connected to %s " % (param, instr_name, device_port))
                     try:
                         obj.set_ren(self.default_ren)
                     except:
-                        logging.warning("Unable to set %s to %d"%(instr_name, self.default_ren))
-                        #logging.debug(sys.exc_info())
+                        logging.warning("Unable to set %s to %d" % (instr_name, self.default_ren))
+                        # logging.debug(sys.exc_info())
 
                 self.instrument_list[device_port] = obj
 
@@ -1191,7 +1191,7 @@ def test_hub_connect_virtual_inst():
         ['TIME', 'PARO1000', 'LS370', 'TIME'],
         ['COM1', '132.206.186.166:48372:COM4', '132.206.186.71:48371:GPIB0::12::INSTR', ''],
         ['Time', '4K flange', '50K flange', 'dt']
-        )
+    )
 
     print(h.instrument_list)
     print(h.port_param_pairs)
@@ -1205,6 +1205,7 @@ def test_hub_connect_virtual_inst():
     print(ls.use_method("identify", 3, 87))
     print(ls.resource_name)
 
+
 def generate_function_obj(**kwargs):
     ret = {}
     for name, o in kwargs.items():
@@ -1212,9 +1213,9 @@ def generate_function_obj(**kwargs):
             sig = inspect.signature(o)
             params = []
             for key, obj in sig.parameters.items():
-                #print(obj)
+                # print(obj)
                 dic = {}
-                #print(obj)
+                # print(obj)
                 #key = obj['name']
                 dic['name'] = key
                 typ = obj.annotation
@@ -1250,8 +1251,8 @@ def generate_function_obj(**kwargs):
                 dic['type'] = typ
 
                 ordered = {
-                    'name':dic['name'],
-                    'type':dic['type'],
+                    'name': dic['name'],
+                    'type': dic['type'],
                     'range': dic['range'],
                     'units': dic['units'],
                     'required': dic['required']
@@ -1262,6 +1263,7 @@ def generate_function_obj(**kwargs):
             ret[name] = params
 
     return ret
+
 
 if __name__ == "__main__":
 

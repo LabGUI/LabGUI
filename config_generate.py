@@ -17,6 +17,7 @@ import sys
 QUIET = False
 if 'quiet' in sys.argv or True in ['wheel' in i for i in sys.argv] or True in ['dist' in i for i in sys.argv]:
     QUIET = True
+
     def input(variable):
         return ''
 
@@ -26,19 +27,19 @@ if OS == 'win32':
     WINDOWS = True
 else:
     WINDOWS = False
-#if OS == 'Win32':
+# if OS == 'Win32':
 #    JOIN = '\\'
-#else:
+# else:
 #    JOIN = '/'
-DEBUG = False # for debugging purposes
+DEBUG = False  # for debugging purposes
 
 JOIN = os.sep
 
 CURR_DIR = os.path.abspath(os.curdir)
 os.chdir(CURR_DIR)
 
-#print(CURR_DIR)
-#print(os.getcwd())
+# print(CURR_DIR)
+# print(os.getcwd())
 if hasattr(os, "fspath") and callable(os.fspath):
     PYTHON_EXEC = os.fspath(sys.executable)
 else:
@@ -55,7 +56,7 @@ if len(sys.argv) > 1:
     elif QUIET:
         RELATIVE = False
 else:
-    print("Current path: "+CURR_DIR)
+    print("Current path: " + CURR_DIR)
     while True:
         resp = input("Use relative or absolute path? [r/a]")
         if resp == 'r':
@@ -68,7 +69,7 @@ else:
             RELATIVE = False
             break
         else:
-            print("Invalid response: "+resp)
+            print("Invalid response: " + resp)
 
 if RELATIVE:
     suffix = ''
@@ -95,14 +96,14 @@ if os.path.exists(os.path.join(CURR_DIR, "config.txt")) and not DEBUG:
 
 # now to open/create config.txt
 if not DEBUG:
-    config = open("config.txt","w+")
+    config = open("config.txt", "w+")
 
 conf_dict = {}
 ## Setting data-path ##
 
-path = input("Set data-path ["+suffix+"scratch"+JOIN+"]")
+path = input("Set data-path [" + suffix + "scratch" + JOIN + "]")
 if path == '':
-    path = 'scratch'+JOIN
+    path = 'scratch' + JOIN
 # necessary stuff
 if path.startswith(JOIN):
     if WINDOWS or RELATIVE:
@@ -121,15 +122,15 @@ if not os.path.exists(path):
         pass
 
 if not RELATIVE:
-    conf_dict['DATA_PATH'] = os.path.abspath(path)+JOIN
+    conf_dict['DATA_PATH'] = os.path.abspath(path) + JOIN
 else:
     conf_dict['DATA_PATH'] = path
 
 ## scripts file ##
 
-path = input("Default script file ["+suffix+"scripts"+JOIN+"script.py]")
+path = input("Default script file [" + suffix + "scripts" + JOIN + "script.py]")
 if path == '':
-    path = "scripts"+JOIN+"script.py"
+    path = "scripts" + JOIN + "script.py"
 
 # necessary stuff
 if path.startswith(JOIN):
@@ -154,9 +155,9 @@ else:
 
 ## setting file ##
 
-path = input("Default settings file ["+suffix+"settings"+JOIN+"settings.txt]")
+path = input("Default settings file [" + suffix + "settings" + JOIN + "settings.txt]")
 if path == '':
-    path = "settings"+JOIN+"settings.txt"
+    path = "settings" + JOIN + "settings.txt"
 
 # necessary stuff
 if path.startswith(JOIN):
@@ -182,21 +183,21 @@ else:
 
 ## drivers file ##
 
-path = input("Default drivers folder ["+suffix+"LabDrivers"+JOIN+"]")
+path = input("Default drivers folder [" + suffix + "LabDrivers" + JOIN + "]")
 
 if path == '':
-    path = 'LabDrivers'+JOIN
+    path = 'LabDrivers' + JOIN
 
 if not os.path.exists(path):
     print("NOTE: this directory currently does not exist. ", path)
 
 if not RELATIVE:
-    conf_dict['DRIVERS'] = os.path.abspath(path)+JOIN
+    conf_dict['DRIVERS'] = os.path.abspath(path) + JOIN
 else:
     conf_dict['DRIVERS'] = path
 
 
-## GPIB_INTF
+# GPIB_INTF
 while True:
     gpib_intf = input("GPIB Interface; pyvisa or prologix: [pyvisa]")
     if gpib_intf == '':
@@ -205,7 +206,7 @@ while True:
     elif gpib_intf == 'pyvisa' or gpib_intf == 'prologix':
         break
     else:
-        print("Invalid option: "+gpib_intf)
+        print("Invalid option: " + gpib_intf)
 
 conf_dict['GPIB_INTF'] = gpib_intf
 
@@ -215,9 +216,10 @@ conf_dict['DEBUG'] = 'False'
 # TODO add userscripts when implemented fully
 
 if DEBUG:
-    for key,value in conf_dict.items():
-        print(key+"="+value)
+    for key, value in conf_dict.items():
+        print(key + "=" + value)
 else:
-    for key,value in conf_dict.items():
-        config.write(key+"="+value+"\n") # python will convert it to OS specific line seperator by default
+    for key, value in conf_dict.items():
+        # python will convert it to OS specific line seperator by default
+        config.write(key + "=" + value + "\n")
     config.close()

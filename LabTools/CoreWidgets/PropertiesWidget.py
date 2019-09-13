@@ -5,12 +5,17 @@ Created on Jun 7 2019
 @author: zackorenberg
 
 A widget designed to read/write properties to machine.
-"""
 
-"""
 Created for GervaisLabs
 """
 
+import time
+import shlex
+import matplotlib.pyplot as plt
+import inspect
+import io
+from collections import Iterable
+from LabTools.Display import QtTools
 import sys
 
 from types import MethodType
@@ -30,19 +35,10 @@ else:
     import PyQt4.QtGui as QtGui
     import PyQt4.QtCore as QtCore
 
-from LabTools.Display import QtTools
-
-from collections import Iterable
-
-import sys
-import io
-import inspect
-import matplotlib.pyplot as plt
-import shlex
-import time
 
 DEBUG = False
 SCROLLABLE = True
+
 
 class MultiPropertyWidget(QtGui.QWidget):
     """ widget for 'multi' type """
@@ -57,7 +53,8 @@ class MultiPropertyWidget(QtGui.QWidget):
         self.properties = property_obj
         self.widgets = {}
         for option in self.options:
-            self.widgets[option] = DevicePropertyWidget(option, self.properties, parent=parent, debug=False)
+            self.widgets[option] = DevicePropertyWidget(
+                option, self.properties, parent=parent, debug=False)
             # self.stacked.addWidget(self.widgets[option])
 
         self.stacked = QtGui.QStackedWidget(self)
@@ -71,8 +68,6 @@ class MultiPropertyWidget(QtGui.QWidget):
 
         self.current_option = self.dropdown.currentText()
         self.stacked.setCurrentWidget(self.widgets[self.current_option])
-
-
 
     def change_setting(self, name):
         self.current_option = self.dropdown.currentText()
@@ -106,12 +101,10 @@ class MultiPropertyWidget(QtGui.QWidget):
         return ret
 
 
-
 class DevicePropertyWidget(QtGui.QWidget):
 
     def __init__(self, device, property_obj, parent=None, debug=False):
         super(DevicePropertyWidget, self).__init__(parent=parent)
-
 
         self.DEBUG = debug
 
@@ -120,8 +113,8 @@ class DevicePropertyWidget(QtGui.QWidget):
             self.device = "Device"
             self.properties = {
                 'Selection box': {
-                    'type':'selection',
-                    'range':[
+                    'type': 'selection',
+                    'range': [
                         'option',
                         'another option',
                         'a third option',
@@ -129,33 +122,33 @@ class DevicePropertyWidget(QtGui.QWidget):
                     ]
                 },
                 'Float only': {
-                    'type':'float',
-                    'range':[-100, 100]
+                    'type': 'float',
+                    'range': [-100, 100]
                 },
                 'Int only': {
-                    'type':'int',
-                    'range':[-100, 100]
+                    'type': 'int',
+                    'range': [-100, 100]
                 },
-                'Boolean type':{
-                    'type':'bool',
-                    'range':True
+                'Boolean type': {
+                    'type': 'bool',
+                    'range': True
                 },
-                'Text type':{
-                    'type':'text',
-                    'range':'Placeholder'
+                'Text type': {
+                    'type': 'text',
+                    'range': 'Placeholder'
                 },
-                'Readonly type':{
-                    'type':'text',
-                    'range':'Value',
-                    'readonly':True
+                'Readonly type': {
+                    'type': 'text',
+                    'range': 'Value',
+                    'readonly': True
                 },
-                'Multi type':{
-                    'type':'multi',
-                    'range':['option 1', 'option 2'],
-                    'properties':{
+                'Multi type': {
+                    'type': 'multi',
+                    'range': ['option 1', 'option 2'],
+                    'properties': {
                         'Selection box': {
-                            'type':'selection',
-                            'range':[
+                            'type': 'selection',
+                            'range': [
                                 'option',
                                 'another option',
                                 'a third option',
@@ -163,28 +156,28 @@ class DevicePropertyWidget(QtGui.QWidget):
                             ]
                         },
                         'Float only': {
-                            'type':'float',
-                            'range':[-100, 100]
+                            'type': 'float',
+                            'range': [-100, 100]
                         },
                         'Int only': {
-                            'type':'int',
-                            'range':[-100, 100]
+                            'type': 'int',
+                            'range': [-100, 100]
                         },
-                        'Boolean type':{
-                            'type':'bool',
-                            'range':True
+                        'Boolean type': {
+                            'type': 'bool',
+                            'range': True
                         },
-                        'Text type':{
-                            'type':'text',
-                            'range':'Placeholder'
+                        'Text type': {
+                            'type': 'text',
+                            'range': 'Placeholder'
                         },
-                        'Nested Multi Type':{
-                            'type':'multi',
-                            'range':['option 1', 'option 2'],
-                            'properties':{
+                        'Nested Multi Type': {
+                            'type': 'multi',
+                            'range': ['option 1', 'option 2'],
+                            'properties': {
                                 'Selection box': {
-                                    'type':'selection',
-                                    'range':[
+                                    'type': 'selection',
+                                    'range': [
                                         'option',
                                         'another option',
                                         'a third option',
@@ -192,20 +185,20 @@ class DevicePropertyWidget(QtGui.QWidget):
                                     ]
                                 },
                                 'Float only': {
-                                    'type':'float',
-                                    'range':[-100, 100]
+                                    'type': 'float',
+                                    'range': [-100, 100]
                                 },
                                 'Int only': {
-                                    'type':'int',
-                                    'range':[-100, 100]
+                                    'type': 'int',
+                                    'range': [-100, 100]
                                 },
-                                'Boolean type':{
-                                    'type':'bool',
-                                    'range':True
+                                'Boolean type': {
+                                    'type': 'bool',
+                                    'range': True
                                 },
-                                'Text type':{
-                                    'type':'text',
-                                    'range':'Placeholder'
+                                'Text type': {
+                                    'type': 'text',
+                                    'range': 'Placeholder'
                                 },
                             }
                         }
@@ -236,9 +229,9 @@ class DevicePropertyWidget(QtGui.QWidget):
                 # print(item, iobj)
                 #label = item
                 if 'unit' in iobj.keys():
-                    label = item+"("+iobj['unit']+")"
+                    label = item + "(" + iobj['unit'] + ")"
                 elif 'units' in iobj.keys():
-                    label = item+"("+iobj['units']+")"
+                    label = item + "(" + iobj['units'] + ")"
                 else:
                     label = item
                 text = self.create_label(label)
@@ -260,7 +253,7 @@ class DevicePropertyWidget(QtGui.QWidget):
                     if 'properties' not in iobj.keys():
                         print("Error in multi type. Required 'properties' type. We have: ", iobj.keys())
                     else:
-                        #print(iobj['properties'])
+                        # print(iobj['properties'])
                         qtobject = self.create_multi(item, iobj['range'], iobj['properties'])
                 else:
                     qtobject = None
@@ -271,22 +264,21 @@ class DevicePropertyWidget(QtGui.QWidget):
 
         self.setLayout(self.layout)
 
-    def get_properties(self): # return properties to be set by another class
+    def get_properties(self):  # return properties to be set by another class
         ret = {}
-        #print(self.prop_items)
+        # print(self.prop_items)
         for name, obj in self.prop_items.items():
             ret[name] = self.extract_property(obj)
-            #print(obj.objectName())
+            # print(obj.objectName())
         return ret
 
-    def set_properties(self, data): # set properties with values provided by another class
+    def set_properties(self, data):  # set properties with values provided by another class
         for name, obj in self.prop_items.items():
-            if name in data.keys(): # this means it is valid property
+            if name in data.keys():  # this means it is valid property
                 self.write_property(data[name], obj)
-                #print("working")
+                # print("working")
 
-
-    def write_property(self, data, qtobject): #individual set type stuff
+    def write_property(self, data, qtobject):  # individual set type stuff
         typ = type(qtobject)
         if typ == QtGui.QComboBox:
             qtobject.setCurrentText(str(data))
@@ -300,10 +292,10 @@ class DevicePropertyWidget(QtGui.QWidget):
         elif typ == MultiPropertyWidget:
             qtobject.set_properties(data)
         else:
-            print("Unknown type for ",data,": ", typ)
-        return qtobject # add any other types to the if statement
+            print("Unknown type for ", data, ": ", typ)
+        return qtobject  # add any other types to the if statement
 
-    def extract_property(self, qtobject): # individual get type stuff
+    def extract_property(self, qtobject):  # individual get type stuff
         # make this check the type, and return a value based on that
         typ = type(qtobject)
         if typ == QtGui.QComboBox:
@@ -316,12 +308,11 @@ class DevicePropertyWidget(QtGui.QWidget):
             return qtobject.get_properties()
         else:
             return "unknown type"
-        #return qtobject # If any other options are required, add em to if statement
-
+        # return qtobject # If any other options are required, add em to if statement
 
     def change_setting(self, *args):
-        i=1 # nothing here yet
-        #print(args)
+        i = 1  # nothing here yet
+        # print(args)
 
     def create_selector(self, name, items):
         ret = QtGui.QComboBox()
@@ -347,9 +338,9 @@ class DevicePropertyWidget(QtGui.QWidget):
     def create_text(self, name, range, readonly=False):
         ret = QtGui.QLineEdit()
         ret.setObjectName(name)
-        if type(range) == str: #placeholder text
+        if type(range) == str:  # placeholder text
             ret.setPlaceholderText(range)
-        if readonly: # possibly unnecessary
+        if readonly:  # possibly unnecessary
             ret.setReadOnly(readonly)
         return ret
 
@@ -363,11 +354,10 @@ class DevicePropertyWidget(QtGui.QWidget):
     def create_label(self, text):
         ret = QtGui.QLabel(text)
         return ret
+
     def create_multi(self, name, range, properties):
         ret = MultiPropertyWidget(name, range, properties, parent=self, debug=self.DEBUG)
         return ret
-
-
 
 
 class PropertiesWidget(QtGui.QWidget):
@@ -390,39 +380,35 @@ class PropertiesWidget(QtGui.QWidget):
         self.addDevices()
         # set current device
         if self.DEBUG:
-            self.currentDevice = 'NotExist' # can change to any testing device
+            self.currentDevice = 'NotExist'  # can change to any testing device
         else:
             self.currentDevice = None
         self.stacked.setCurrentWidget(self.widgets[self.currentDevice])
-        #aesthetic stuff
+        # aesthetic stuff
         self.setWindowTitle("Device Properties")
-        self.resize(500,250)
+        self.resize(500, 250)
 
-
-
-        #device dropdown
+        # device dropdown
         self.deviceComboBox = QtGui.QComboBox()
         self.deviceComboBox.activated[str].connect(self.change_device)
-        #self.deviceComboBox.s
-
+        # self.deviceComboBox.s
 
         if self.DEBUG is True:
             print("Debug")
 
-
-        #output console
+        # output console
         self.verticalLayout = QtGui.QVBoxLayout()
 
         self.verticalLayout.addWidget(self.deviceComboBox)
         if SCROLLABLE:
-            #create scrollarea for stacked:
+            # create scrollarea for stacked:
             self.scrollarea = QtGui.QScrollArea(self)
             self.scrollarea.setWidget(self.stacked)
-            self.verticalLayout.addWidget(self.scrollarea) # instead of stacked
+            self.verticalLayout.addWidget(self.scrollarea)  # instead of stacked
         else:
-            #self.verticalLayout.addStretch()
+            # self.verticalLayout.addStretch()
             self.verticalLayout.addWidget(self.stacked)
-            #self.verticalLayout.addStretch()
+            # self.verticalLayout.addStretch()
         self.footer = self.create_footer()
         self.verticalLayout.addLayout(self.footer)
 
@@ -431,13 +417,7 @@ class PropertiesWidget(QtGui.QWidget):
         #self.console_text("Please enter GPIB command")
 
         self.instrument_list = {}
-        self.sanitized_list = list() # tuple, (name, port, object)
-
-
-
-
-
-
+        self.sanitized_list = list()  # tuple, (name, port, object)
 
         if parent is not None:
             self.parentClass = parent
@@ -445,20 +425,18 @@ class PropertiesWidget(QtGui.QWidget):
         else:
             self.parentClass = None
             self.instr_hub = None
-        #elif self.parentClass is None:
+        # elif self.parentClass is None:
         #    self.instr_hub = None
 
-
     # create focus in override to refresh devices
+
     def enterEvent(self, event):
-        #using this enterEvent until I find a more effective way
+        # using this enterEvent until I find a more effective way
         self.update_devices()
-        #return super(CommandWidget, self).enternEvent(event)
-
-
+        # return super(CommandWidget, self).enternEvent(event)
 
     # Floored till next commit
-    #def create_layouts(self):
+    # def create_layouts(self):
     #    print("should probably delete")
         # self.prop_items = {}
         # for name, obj in self.properties.items():
@@ -491,8 +469,6 @@ class PropertiesWidget(QtGui.QWidget):
         for name, widget in objs.items():
             self.stacked.addWidget(widget)
 
-
-
     def change_device(self, text):
         id = self.deviceComboBox.findText(text)
         name = self.deviceComboBox.currentData()
@@ -503,8 +479,7 @@ class PropertiesWidget(QtGui.QWidget):
         else:
             self.stacked.setCurrentWidget(self.widgets["NotExist"])
             self.currentDevice = "NotExist"
-        #turns out this is not needed, as on every command it gets current device
-
+        # turns out this is not needed, as on every command it gets current device
 
         # to remove item self.deviceComboBox.removeItem(id)
     # following was REMOVED, floored till next commit
@@ -536,7 +511,6 @@ class PropertiesWidget(QtGui.QWidget):
     #     ret = QtGui.QLabel(text)
     #     return ret
 
-
     def create_footer(self):
         layout = QtGui.QFormLayout()
         save = QtGui.QPushButton("Save")
@@ -545,8 +519,8 @@ class PropertiesWidget(QtGui.QWidget):
         save.clicked.connect(self.save_properties)
         refresh.clicked.connect(self.refresh_properties)
 
-        #layout.addWidget(save)
-        #layout.addWidget(refresh)
+        # layout.addWidget(save)
+        # layout.addWidget(refresh)
 
         layout.addRow(save, refresh)
 
@@ -558,11 +532,11 @@ class PropertiesWidget(QtGui.QWidget):
                 print(self.stacked.currentWidget().get_properties())
                 return
             current_device = self.deviceComboBox.currentIndex()
-            if current_device == -1: #this means there are no connected devices
+            if current_device == -1:  # this means there are no connected devices
                 return
             curr = self.widgets[self.currentDevice]
             obj = curr.get_properties()
-            #print(obj)
+            # print(obj)
             self.sanitized_list[current_device][2].set(obj)
             #print("reminder to add save_properties stuff", obj)
         except:
@@ -573,7 +547,7 @@ class PropertiesWidget(QtGui.QWidget):
             current_device = self.deviceComboBox.currentIndex()
             if current_device == -1:
                 return
-            curr = self.widgets[self.currentDevice] # will be the same!
+            curr = self.widgets[self.currentDevice]  # will be the same!
             data = self.sanitized_list[current_device][2].get()
             curr.set_properties(data)
         except:
@@ -582,10 +556,10 @@ class PropertiesWidget(QtGui.QWidget):
     def update_instrument_list(self):
         if self.parentClass is not None:
             self.instrument_list = self.parentClass.instr_hub.get_instrument_list()
-            #print(self.instrument_list)
+            # print(self.instrument_list)
 
-            #print(self.parentClass.instr_hub.get_port_param_pairs())
-            #print(self.parentClass.instr_hub.get_instrument_nb())
+            # print(self.parentClass.instr_hub.get_port_param_pairs())
+            # print(self.parentClass.instr_hub.get_instrument_nb())
 
             z = self.instrument_list.items()
 
@@ -597,17 +571,17 @@ class PropertiesWidget(QtGui.QWidget):
                     ports.append(x)
                     instruments.append(self.instrument_list[x])
                     names.append(self.instrument_list[x].ID_name)
-                    #print(x,self.instrument_list[x].ID_name)
+                    # print(x,self.instrument_list[x].ID_name)
             self.sanitized_list = list(zip(names, ports, instruments))
             return
 
     def update_devices(self):
         # going need to get get_instrument_list
         self.update_instrument_list()
-        text = self.deviceComboBox.currentText() # to set back to
+        text = self.deviceComboBox.currentText()  # to set back to
         self.deviceComboBox.clear()
         for tuples in self.sanitized_list:
-            self.deviceComboBox.addItem(tuples[0]+" on "+tuples[1], tuples[0])
+            self.deviceComboBox.addItem(tuples[0] + " on " + tuples[1], tuples[0])
         # now time to set current choice if it is still in the list
         index = self.deviceComboBox.findText(text)
         if index != -1:
@@ -622,9 +596,6 @@ class PropertiesWidget(QtGui.QWidget):
             self.stacked.setCurrentWidget(self.widgets["NotExist"])
             self.currentDevice = "NotExist"
         # now it should work perfectly with multiple devices
-
-
-
 
     def print_to_string(self, *args, **kwargs):
         output = io.StringIO()
@@ -643,7 +614,6 @@ class PropertiesWidget(QtGui.QWidget):
             return o
 
 
-
 # def toggleViewAction(dock_widget, docked=True):
 #     if docked:
 #         dock_widget.toggleViewAction()
@@ -651,7 +621,7 @@ class PropertiesWidget(QtGui.QWidget):
 #         dock_widget.widget().show()
 
 def add_widget_into_main(parent):
-    #return #we dont want this to happen yet
+    # return #we dont want this to happen yet
     """add a widget into the main window of LabGuiMain
 
     create a QDock widget and store a reference to the widget
@@ -678,11 +648,9 @@ def add_widget_into_main(parent):
     # redirect print statements to show a copy on "console"
     sys.stdout = QtTools.printerceptor(parent)
 
-    propDockWidget.resize(500,250)
+    propDockWidget.resize(500, 250)
     if not DEBUG:
         propDockWidget.hide()
-
-
 
     # assigning a method to the parent class
     # depending on the python version this fonction take different arguments
@@ -746,10 +714,9 @@ def add_widget_into_main(parent):
 
 if __name__ == "__main__":
 
-
     app = QtGui.QApplication(sys.argv)
     ex = PropertiesWidget()
     #ex = DevicePropertyWidget("AH", {}, debug=True)
     ex.show()
-    #print(ex.get_properties())
+    # print(ex.get_properties())
     sys.exit(app.exec_())

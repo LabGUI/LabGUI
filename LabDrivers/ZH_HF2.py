@@ -76,7 +76,7 @@ class Instrument(Tool.MeasInstr):
                 return self.daq.getSample(stri)
             except:
                 time.sleep(0.1)
-                print ("Zurich has died for a moment!")
+                print("Zurich has died for a moment!")
                 return self.daq.getSample(stri)
         else:
             return np.random.random()

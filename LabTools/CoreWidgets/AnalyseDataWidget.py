@@ -5,14 +5,18 @@ Created on Wed Nov 27 11:11:45 2013
 @author: pf
 """
 
+from LabTools.IO import IOTool as io
+from LabTools.Fitting import analyse_data as ad
+from collections import OrderedDict
+from LabTools.Display.QtTools import ZOOM_MODE, PAN_MODE, SELECT_MODE
+from LocalVars import USE_PYQT5
+import logging.config
 import sys
 import numpy as np
 
 import logging
 logging.basicConfig(level=logging.DEBUG)
-import logging.config
 
-from LocalVars import USE_PYQT5
 
 if USE_PYQT5:
 
@@ -22,14 +26,6 @@ if USE_PYQT5:
 else:
     import PyQt4.QtGui as QtGui
     from PyQt4.QtCore import SIGNAL, Qt
-
-
-from LabTools.Display.QtTools import ZOOM_MODE, PAN_MODE, SELECT_MODE
-
-from collections import OrderedDict
-from LabTools.Fitting import analyse_data as ad
-
-from LabTools.IO import IOTool as io
 
 
 FONCTIONS_MODULE = "Functions"
@@ -551,7 +547,7 @@ class FittingWidget(QtGui.QWidget):
                     # Y_inf     Y[-1]
                     # tau       X[-1]-X[0]
                     # t_offset  X[0]
-                    guess_param = [Y[-1], X[-1]-X[0], X[0]]
+                    guess_param = [Y[-1], X[-1] - X[0], X[0]]
 
                 elif self.fit_params["fit_func"] == "exp_decay":
                     # rough estimate of the parameters
@@ -560,7 +556,7 @@ class FittingWidget(QtGui.QWidget):
                     # tau       X[-1]-X[0]
                     # t_offset  X[0]
                     # Y_inf ,dY ,tau ,t_offset
-                    guess_param = [Y[-1], Y[0]-Y[-1], X[-1]-X[0], X[0]]
+                    guess_param = [Y[-1], Y[0] - Y[-1], X[-1] - X[0], X[0]]
 
                 else:
                     guess_param = None
@@ -699,7 +695,7 @@ class FittingWidget(QtGui.QWidget):
         self.selectionLayout.addWidget(alabel)
         self.selectionLayout.addWidget(self.Xmax)
         fill_layout_textbox(self.selectionLayout, [
-                            "", "",  "",  ""], alist=self.live_widgets)
+                            "", "", "", ""], alist=self.live_widgets)
 
         self.verticalLayout.addLayout(self.selectionLayout)
         self.setLayout(self.verticalLayout)
@@ -929,9 +925,9 @@ def test_fit_exponential():
             answer = np.append(answer, 0.05 * (random.random() - 0.5))
             dt = np.append(dt, idx)
             idx += 1
-        for t in range(3*tau):
+        for t in range(3 * tau):
             answer = np.append(answer, ad.exp_decay(
-                idx-t_off, Yfinal, tau, 0) * (1 + 0.05 * (random.random() - 0.5)))
+                idx - t_off, Yfinal, tau, 0) * (1 + 0.05 * (random.random() - 0.5)))
             dt = np.append(dt, idx)
             idx += 1
 

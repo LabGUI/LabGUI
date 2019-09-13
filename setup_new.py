@@ -27,26 +27,29 @@ if '--upgrade' in sys.argv or 'upgrade' in sys.argv:
 QUIET = False
 if 'quiet' in sys.argv or True in ['wheel' in i for i in sys.argv] or True in ['dist' in i for i in sys.argv]:
     QUIET = True
+
     def input(variable):
         return 'y'
 
 
 ### pip install for python 3 ###
 def pip_install(package_name):
-    print("Installing "+package_name)
+    print("Installing " + package_name)
     if UPGRADE:
-        reqs = subprocess.check_call([sys.executable, '-m', 'pip', 'install', '--upgrade', package_name])
+        reqs = subprocess.check_call(
+            [sys.executable, '-m', 'pip', 'install', '--upgrade', package_name])
     else:
         reqs = subprocess.check_call([sys.executable, '-m', 'pip', 'install', package_name])
     print(reqs)
 
-#pip_install('scipy')
-#exit(0)
+# pip_install('scipy')
+# exit(0)
+
 
 operating_system = sys.platform
 
 CURR_DIR = os.path.abspath(os.curdir)
-#print(CURR_DIR)
+# print(CURR_DIR)
 os.chdir(CURR_DIR)
 
 MAIN_FILE = 'LabGui.py'
@@ -54,7 +57,7 @@ MAIN_FILE = 'LabGui.py'
 if operating_system == 'win32':
     WINDOWS = True
 else:
-    print("Set up is currently not supported on %s. Use at your own discretion."%operating_system)
+    print("Set up is currently not supported on %s. Use at your own discretion." % operating_system)
     while True:
         cont = input("Continue? [y/n]:")
         if cont == 'y':
@@ -72,60 +75,61 @@ if DEBUG:
 else:
     log_lvl = logging.INFO
 
-VENV_CLEAR = True #clears virtual event
+VENV_CLEAR = True  # clears virtual event
 JOIN = os.sep
 
 NEWLINE = '\n'
 
 version_info = sys.version_info
 if version_info.major != 3:
-    print("You must be using python 3. Current version:"+sys.version)
+    print("You must be using python 3. Current version:" + sys.version)
     exit(1)
-VER = str(version_info.major)+str(version_info.minor)
+VER = str(version_info.major) + str(version_info.minor)
 
-#print(CURR_DIR)
-#print(os.getcwd())
+# print(CURR_DIR)
+# print(os.getcwd())
 if hasattr(os, "fspath") and callable(os.fspath):
     PYTHON_EXEC = os.fspath(sys.executable)
 else:
     PYTHON_EXEC = os.path.abspath(sys.executable)
 
 
-print("=== LabGUI setup on "+operating_system+" ===")
+print("=== LabGUI setup on " + operating_system + " ===")
 virtual_instructions = []
 virtual_instructions.append("If you wish to use a virtual environment, call the following commands")
 virtual_instructions.append("\t$ pip install virtualenv")
-virtual_instructions.append("\t$ cd "+CURR_DIR)
-virtual_instructions.append("\t$ virtualenv venv"+VER)
+virtual_instructions.append("\t$ cd " + CURR_DIR)
+virtual_instructions.append("\t$ virtualenv venv" + VER)
 
-try: # THE FOLLOWING CHANGE MAKES THIS DYNAMIC REGARDLESS OF OS
-    venv_bin_dir = os.path.relpath(virtualenv.path_locations("venv"+VER, dry_run=True)[-1])
+try:  # THE FOLLOWING CHANGE MAKES THIS DYNAMIC REGARDLESS OF OS
+    venv_bin_dir = os.path.relpath(virtualenv.path_locations("venv" + VER, dry_run=True)[-1])
     if WINDOWS:
         venv_exec = os.path.join(venv_bin_dir, "python.exe")
         venv_activate = os.path.join(venv_bin_dir, "activate")
     else:
         venv_exec = os.path.join(venv_bin_dir, "python")
         venv_activate = os.path.join(venv_bin_dir, "activate")
-except: # INCASE PATH HAS SPACES IN IT
+except:  # INCASE PATH HAS SPACES IN IT
     if WINDOWS:
-        venv_exec = "venv"+VER+JOIN+"Scripts"+JOIN+"python.exe"
-        venv_activate = "venv"+VER+JOIN+"Scripts"+JOIN+"activate"
+        venv_exec = "venv" + VER + JOIN + "Scripts" + JOIN + "python.exe"
+        venv_activate = "venv" + VER + JOIN + "Scripts" + JOIN + "activate"
     else:
-        venv_exec = "venv"+VER+JOIN+"bin"+JOIN+"python"
-        venv_activate = "source venv"+VER+JOIN+"bin"+JOIN+"activate"
+        venv_exec = "venv" + VER + JOIN + "bin" + JOIN + "python"
+        venv_activate = "source venv" + VER + JOIN + "bin" + JOIN + "activate"
 # CHANGE COMPLETE
 virtual_instructions.append("Then run this setup file by:")
-virtual_instructions.append("\t$ "+os.path.abspath(os.path.join(CURR_DIR,venv_exec))+" "+os.path.relpath(sys.argv[0]))
+virtual_instructions.append(
+    "\t$ " + os.path.abspath(os.path.join(CURR_DIR, venv_exec)) + " " + os.path.relpath(sys.argv[0]))
 virtual_instructions.append("- or -")
-virtual_instructions.append("\t$ "+venv_activate)
-virtual_instructions.append("\t$ python "+os.path.relpath(sys.argv[0]))
+virtual_instructions.append("\t$ " + venv_activate)
+virtual_instructions.append("\t$ python " + os.path.relpath(sys.argv[0]))
 # check if running in virtual environment #
 if venv_exec in PYTHON_EXEC:
-    print("Using virtual environment venv"+VER)
+    print("Using virtual environment venv" + VER)
 else:
     if os.path.isfile(venv_exec):
         #print("Activating virtual environment")
-        cont = input("Activate virtual environment located at %s? [y/n]:"%venv_exec)
+        cont = input("Activate virtual environment located at %s? [y/n]:" % venv_exec)
         if cont == 'n':
             VIRTUAL = False
         else:
@@ -136,7 +140,7 @@ else:
         while True:
             cont = input("Automatically generate virtual environment? [y/n]:")
             if cont == 'n':
-                print("Continuing on "+os.path.dirname(PYTHON_EXEC))
+                print("Continuing on " + os.path.dirname(PYTHON_EXEC))
                 VIRTUAL = False
                 print(NEWLINE)
                 for instruction in virtual_instructions:
@@ -151,20 +155,20 @@ else:
                     except ImportError:
                         print("Please rerun this script")
                         exit(0)
-                venv_dir = os.path.join(CURR_DIR,"venv"+VER)
+                venv_dir = os.path.join(CURR_DIR, "venv" + VER)
                 # the following line was taken almost directly out of virtualenv.py for verbosity #
                 virtualenv.logger = virtualenv.Logger([(log_lvl, sys.stdout)])
                 # create actual virtualenv
                 virtualenv.create_environment(venv_dir, clear=VENV_CLEAR)
                 # activate virtualenv
-                exec(open(venv_activate+"_this.py").read())
+                exec(open(venv_activate + "_this.py").read())
                 # update sys.executable (needed)
                 sys.executable = os.path.abspath(venv_exec)
                 print(sys.executable)
                 VIRTUAL = True
                 break
             else:
-                print("Invalid response: "+cont)
+                print("Invalid response: " + cont)
 
 
 print(NEWLINE)
@@ -174,7 +178,7 @@ else:
     PYTHON_EXEC = os.path.abspath(sys.executable)
 
 
-print("Current python executable: "+PYTHON_EXEC)
+print("Current python executable: " + PYTHON_EXEC)
 
 cont = input("Continue? [y/n]:")
 if cont != 'y':
@@ -182,7 +186,7 @@ if cont != 'y':
 
 print("Installing requirements")
 reqs = []
-requirements = open("requirements.txt",'r')
+requirements = open("requirements.txt", 'r')
 reqs = [i.rstrip('\n') for i in requirements.readlines()]
 requirements.close()
 
@@ -194,12 +198,12 @@ print(NEWLINE)
 print("Generating launcher")
 
 LAUNCH_PATH = os.path.join(CURR_DIR, MAIN_FILE)
-if " " in LAUNCH_PATH: # FIX FOR SPACES
-    LAUNCH_PATH = "\""+LAUNCH_PATH+"\""
+if " " in LAUNCH_PATH:  # FIX FOR SPACES
+    LAUNCH_PATH = "\"" + LAUNCH_PATH + "\""
 if " " in PYTHON_EXEC:
-    PYTHON_EXEC = "\""+PYTHON_EXEC+"\""
+    PYTHON_EXEC = "\"" + PYTHON_EXEC + "\""
 if WINDOWS:
-    launcher = open("StartLabGui.bat",'w+')
+    launcher = open("StartLabGui.bat", 'w+')
     launcher.write(PYTHON_EXEC + " " + LAUNCH_PATH)
     launcher.close()
     LAUNCHER_FILE = 'StartLabGui.bat'
@@ -210,7 +214,7 @@ else:
     launcher.close()
     LAUNCHER_FILE = 'StartLabGui.sh'
 
-print("Launcher is "+LAUNCHER_FILE)
+print("Launcher is " + LAUNCHER_FILE)
 
 cont = input("Create config.txt? [y/n]:")
 
@@ -221,5 +225,3 @@ cont = input("Setup complete. Launch LabGui? [y/n]")
 if cont == 'y':
     print("Launching LabGui")
     subprocess.call([os.path.join(CURR_DIR, LAUNCHER_FILE)])
-
-

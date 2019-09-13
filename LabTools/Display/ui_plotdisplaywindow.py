@@ -7,6 +7,7 @@
 #
 # WARNING! All changes made in this file will be lost!
 
+from QtTools import clear_layout
 from LocalVars import USE_PYQT5
 
 if USE_PYQT5:
@@ -22,8 +23,6 @@ else:
     import PyQt4.QtCore as QtCore
     from PyQt4.QtGui import QPalette, QBrush, QColor
 
-
-from QtTools import clear_layout
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8

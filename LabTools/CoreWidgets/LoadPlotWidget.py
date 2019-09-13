@@ -9,6 +9,13 @@ License: see LICENSE.txt file
 #from PyQt4.QtGui import *
 #from PyQt4.QtCore import Qt
 #
+import logging
+import numpy as np
+from LabTools.IO import IOTool
+from LabTools.DataStructure import LabeledData
+from types import MethodType
+from LabTools.Display import PlotDisplayWindow
+from collections import OrderedDict
 import sys
 import os
 
@@ -28,18 +35,9 @@ else:
     from PyQt4.QtCore import Qt, SIGNAL
 
 
-from collections import OrderedDict
-from LabTools.Display import PlotDisplayWindow
-from types import MethodType
-from LabTools.DataStructure import LabeledData
-from LabTools.IO import IOTool
-
-import numpy as np
-
-import logging
-
 # to replace the data in OutputWidget
 SET_OUTPUT_TEXT = False
+
 
 class LoadPlotWidget(QtGui.QWidget):
     """this widget is used to replot previously measured data"""
@@ -224,8 +222,8 @@ def create_plw(parent, load_fname=None):
     else:
         try:
             data, labels = IOTool.load_file_windows(load_fname)
-        except IndexError: # empty file
-            print(load_fname+" is empty")
+        except IndexError:  # empty file
+            print(load_fname + " is empty")
             return
         except:
             print("Windows only currently supported. <create_plw>", sys.exc_info()[0])
@@ -237,7 +235,7 @@ def create_plw(parent, load_fname=None):
         if 'hdr' in labels.keys():
             parent.widgets["loadPlotWidget"].header_text(labels['hdr'])
         else:
-            print("No headers present:",labels)
+            print("No headers present:", labels)
 
         if 'data' in labels.keys():
             parent.widgets['userDataWidget'].set_user_data_parse(labels['data'])

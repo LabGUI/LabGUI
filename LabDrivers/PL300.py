@@ -25,7 +25,7 @@ class Instrument(Tool.MeasInstr):
         if not self.DEBUG:
             self.connection.delay = 0.25
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
     def measure(self, channel='FLOW'):
         if channel in self.last_measure:

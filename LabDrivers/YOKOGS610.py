@@ -78,7 +78,7 @@ class Instrument(Tool.MeasInstr):
             # self.V_step_limit is None, thanks to lazy evaluation)
             do_it = False
 
-            if self.V_step_limit == None:
+            if self.V_step_limit is None:
                 do_it = True
             elif abs(voltage - prev_voltage) < self.V_step_limit:
                 do_it = True
@@ -116,6 +116,7 @@ class Instrument(Tool.MeasInstr):
 
             # Should Read KEITHLEY INSTRUMENTS INC., MODEL nnnn, xxxxxxx,
             # yyyyy/zzzzz /a/d
+
 
     def reset(self):
         if not self.DEBUG:

@@ -16,6 +16,8 @@ TODO:
 """
 
 from __future__ import division
+import sys
+import logging
 import time
 import datetime
 
@@ -64,7 +66,6 @@ except:
 # year, month, day, hours, mintues etc...
 TIME_LABEL = "Time(s)"
 
-import logging
 logging.basicConfig(level=logging.DEBUG)
 
 
@@ -372,12 +373,12 @@ class PlotDisplayWindow(QtGui.QMainWindow, ui_plotdisplaywindow.Ui_PlotDisplayWi
 
                 self.channel_objects[name][i].setObjectName(
                     "%s#%i" % (name, i))
-                self.channel_objects[name][i].setGeometry(QRect(7, 20*(i+1),
+                self.channel_objects[name][i].setGeometry(QRect(7, 20 * (i + 1),
                                                                 16, 16))
 
             else:
 
-                self.channel_objects[name].setGeometry(QRect(7, 10*(i+1),
+                self.channel_objects[name].setGeometry(QRect(7, 10 * (i + 1),
                                                              70, 16))
 
             # resize the comboBoxes and the lineEdit
@@ -388,7 +389,7 @@ class PlotDisplayWindow(QtGui.QMainWindow, ui_plotdisplaywindow.Ui_PlotDisplayWi
 
             elif item[1] == "comboBox":
 
-                self.channel_objects[name][i].setGeometry(QRect(7, 20*(i+1),
+                self.channel_objects[name][i].setGeometry(QRect(7, 20 * (i + 1),
                                                                 32, 16))
 
             if multiple_item:
@@ -459,7 +460,7 @@ class PlotDisplayWindow(QtGui.QMainWindow, ui_plotdisplaywindow.Ui_PlotDisplayWi
             if line:
                 for j, name in enumerate(self.channel_controls):
 
-                    #[name, role] of the channel control
+                    # [name, role] of the channel control
                     item = self.channel_controls[name]
 
                     if item[1] == "radioButton" or item[1] == "checkBox":
@@ -786,7 +787,7 @@ class PlotDisplayWindow(QtGui.QMainWindow, ui_plotdisplaywindow.Ui_PlotDisplayWi
             if self.data_array.size > 0:
 
                 time_interval = self.data_array[-1,
-                                                self.chan_X]-self.data_array[0, self.chan_X]
+                                                self.chan_X] - self.data_array[0, self.chan_X]
 
                 if time_interval < 500:
                     hfmt = dates.DateFormatter('%m/%d %H:%M:%S')
@@ -1061,35 +1062,35 @@ class PlotDisplayWindow(QtGui.QMainWindow, ui_plotdisplaywindow.Ui_PlotDisplayWi
         margin_inches = 0.5
         paper_width = 8.5
 
-        max_width = paper_width - 2*margin_inches
+        max_width = paper_width - 2 * margin_inches
         max_height = 7
 
         width = self.fig.bbox_inches.width
         height = self.fig.bbox_inches.height
 
-        ratio = height/width
-        if ratio > max_height/max_width:
+        ratio = height / width
+        if ratio > max_height / max_width:
             # scale on width, because otherwise won't fit on page.
-            dpi_scale = max_height/height
+            dpi_scale = max_height / height
             height = max_height
-            width = ratio/height
+            width = ratio / height
         else:
-            dpi_scale = max_width/width
+            dpi_scale = max_width / width
             width = max_width
             height = ratio * width
 
         self.fig.savefig("temp.png", dpi=dpi * dpi_scale * 10)
 
         # half inch margins
-        margin_top = 0.5*dpi
-        margin_left = 0.5*dpi
+        margin_top = 0.5 * dpi
+        margin_left = 0.5 * dpi
 
         # matplotlib's svg rendering has a bug if the data extends beyond the
         # plot limits. Below is what would be used for temp.svg
         #svg = QtSvg.QSvgRenderer("temp.svg")
         #svg.render(p, QRectF(margin_top,margin_left, 8*dpi, 5*dpi))
 
-        p.drawImage(QRectF(margin_top, margin_left, width*dpi, height*dpi),
+        p.drawImage(QRectF(margin_top, margin_left, width * dpi, height * dpi),
                     QtGui.QImage("temp.png", format='png'))
         p.drawText(margin_left, 600, "Data recorded to: " + file_name)
         p.end()
@@ -1132,7 +1133,7 @@ class MultiplePlotDisplayWindow(PlotDisplayWindow):
 
         self.sets_to_plot = []
         self.add_channel_controls()
-        self.num_channels = self.num_channels-1
+        self.num_channels = self.num_channels - 1
 
     """#####################################################################"""
     """These handler function take action when someone interact with the button, checkbox, lineEdit etc... the names are explicit"""
@@ -1431,9 +1432,6 @@ class SetsPlotDisplayWindow(PlotDisplayWindow):
         self.update_legends()
 
 
-import sys
-
-
 def test_pdw():
     app = QtGui.QApplication(sys.argv)
     form = PlotDisplayWindow()
@@ -1502,7 +1500,6 @@ def test_pdw_load_setting():
     app.exec_()
 
 
-
 # This snippet makes it run as a standalone program
 if __name__ == "__main__":
     #    test_pdw_save_setting()
@@ -1531,8 +1528,8 @@ if __name__ == "__main__":
 #    print time_interval
 #    time_data = convert_timestamp(data[:,0])
 ##        xlim = convert_timestamp(self.ax.get_xlim())
-##        print xlim
-##    print time_data
+# print xlim
+# print time_data
 #        # matplotlib date format object
 #    hfmt = dates.DateFormatter('%m/%d %H:%M:%S')
 #
@@ -1545,18 +1542,18 @@ if __name__ == "__main__":
 #        #plt.show()
 # for li in self.ax.lines:
 # if li.get_xdata().size >0:
-####                print li.get_data()
+# print li.get_data()
 # li.set_xdata(time_data)
 ##
 # ax.xaxis.set_major_locator()
 #    ax.xaxis.set_major_formatter(hfmt)
 #
-##    print ax.xaxis.get_xticklabels()
+# print ax.xaxis.get_xticklabels()
 #
 #    for i in ax.xaxis.get_major_ticks():
 #        print i.label.get_text()
 ##
-###        print "ready to draw"
+# print "ready to draw"
 # self.mplwidget.rescale_and_draw()
 #
 #

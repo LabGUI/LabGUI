@@ -14,8 +14,8 @@ except:
 
 
 param = {
-    'HeLevel_1':'cm',
-    'HeLevel_2':'cm'
+    'HeLevel_1': 'cm',
+    'HeLevel_2': 'cm'
 }
 
 INTERFACE = Tool.INTF_GPIB
@@ -28,10 +28,10 @@ class Instrument(Tool.MeasInstr):
     def __init__(self, resource_name, debug=False, **kwargs):
 
         super(Instrument, self).__init__(resource_name,
-                                          name=NAME,
-                                          debug=debug,
-                                          interface=INTERFACE,
-                                          **kwargs)
+                                         name=NAME,
+                                         debug=debug,
+                                         interface=INTERFACE,
+                                         **kwargs)
 
     def measure(self, channel):
 
@@ -76,7 +76,7 @@ class Instrument(Tool.MeasInstr):
         bits.reverse()
         chan1 = []
         for i in range(0, len(bits)):
-            j = i+1
+            j = i + 1
             if bits[i] == '1':
                 chan1.append(bit_status[j])
         if len(chan1) == 0:
@@ -100,83 +100,82 @@ class Instrument(Tool.MeasInstr):
         else:
             mode = 'Menu Mode'
 
-        return { 'Channel_1':chan1, 'Channel_2':chan2, 'Mode':mode}
+        return {'Channel_1': chan1, 'Channel_2': chan2, 'Mode': mode}
 
     def set_low(self, channel, level):
         channel = int(channel)
         level = float(level)
-        return self.ask("CHAN "+str(channel)+"; LOW "+str(level)+"; LOW?")
+        return self.ask("CHAN " + str(channel) + "; LOW " + str(level) + "; LOW?")
 
     def set_high(self, channel, level):
         channel = int(channel)
         level = float(level)
-        return self.ask("CHAN "+str(channel)+"; HIGH "+str(level)+"; HIGH?")
+        return self.ask("CHAN " + str(channel) + "; HIGH " + str(level) + "; HIGH?")
 
     def get_low(self, channel):
         channel = int(channel)
-        return self.ask("CHAN "+str(channel)+"; LOW?")
+        return self.ask("CHAN " + str(channel) + "; LOW?")
+
     def get_high(self, channel):
         channel = int(channel)
-        return self.ask("CHAN "+str(channel)+"; HIGH?")
+        return self.ask("CHAN " + str(channel) + "; HIGH?")
 
     def set_alarm(self, channel, level):
         channel = int(channel)
         level = float(level)
-        return self.ask("CHAN "+str(channel)+"; ALARM "+str(level)+"; ALARM?")
+        return self.ask("CHAN " + str(channel) + "; ALARM " + str(level) + "; ALARM?")
 
     def get_alarm(self, channel):
         channel = int(channel)
-        return self.ask("CHAN "+str(channel)+"; ALARM?")
+        return self.ask("CHAN " + str(channel) + "; ALARM?")
 
     def set_mode(self, channel, mode):
         channel = int(channel)
-        return self.ask("CHAN "+str(channel)+"; MODE "+str(mode)+"; MODE?")
+        return self.ask("CHAN " + str(channel) + "; MODE " + str(mode) + "; MODE?")
+
     def get_mode(self, channel, mode):
         channel = int(channel)
-        return self.ask("CHAN "+str(channel)+"; MODE?")
+        return self.ask("CHAN " + str(channel) + "; MODE?")
 
     def get_length(self, channel):
         channel = int(channel)
-        return self.ask("CHAN " +str(channel) + "; LNGTH?")
+        return self.ask("CHAN " + str(channel) + "; LNGTH?")
+
     def get_interval(self, channel):
         channel = int(channel)
-        return self.ask("CHAN " +str(channel) + "; INTVL?")
+        return self.ask("CHAN " + str(channel) + "; INTVL?")
+
     def set_interval(self, channel, hour, minute, second):
         channel = int(channel)
         hour = str(int(hour)).zfill(2)
         minute = str(int(minute)).zfill(2)
         second = str(int(second)).zfill(2)
-        return self.ask("CHAN "  +str(channel) + "; INTVL "+hour+":"+minute+":"+second+"; INTVL?")
+        return self.ask("CHAN " + str(channel) + "; INTVL " + hour + ":" + minute + ":" + second + "; INTVL?")
 
     def start_fill(self, channel):
         channel = int(channel)
-        return self.ask("FILL "+str(channel)+"; FILL?")
+        return self.ask("FILL " + str(channel) + "; FILL?")
+
     def fill_status(self, channel):
         channel = int(channel)
-        return self.ask("FILL? "+str(channel))
+        return self.ask("FILL? " + str(channel))
 
-
-    def set_units(self, channel, units): # options are 'cm', 'in', '%'
+    def set_units(self, channel, units):  # options are 'cm', 'in', '%'
         channel = int(channel)
-        return self.ask('CHAN '+str(channel)+'; UNITS ' + str(units) + '; UNITS?')
+        return self.ask('CHAN ' + str(channel) + '; UNITS ' + str(units) + '; UNITS?')
+
     def get_units(self, channel):
         channel = int(channel)
-        return self.ask('CHAN '+str(channel)+'; UNITS?')
+        return self.ask('CHAN ' + str(channel) + '; UNITS?')
 
-    def set_boost(self, channel, mode): # options are 'OFF', 'ON', 'SMART'
+    def set_boost(self, channel, mode):  # options are 'OFF', 'ON', 'SMART'
         channel = int(channel)
-        return self.ask('CHAN '+str(channel)+'; BOOST ' + str(mode) + '; BOOST?')
+        return self.ask('CHAN ' + str(channel) + '; BOOST ' + str(mode) + '; BOOST?')
+
     def get_boost(self, channel):
         channel = int(channel)
-        return self.ask('CHAN '+str(channel)+'; BOOST?')
+        return self.ask('CHAN ' + str(channel) + '; BOOST?')
+
 
 if __name__ == "__main__":
     i = Instrument("GPIB::7", debug=False)
-
-
-
-
-
-
-
-

@@ -21,11 +21,9 @@ for i in range(10):
     self.check_stopped_or_paused()
     print self.stopped
     print self.paused
-#while self.isStopped() == False:
-#    
+# while self.isStopped() == False:
+#
 #    #This initiates the measure sequence in datatakerthread
 #    self.read_data()
 #    time.sleep(2)
 #    self.check_stopped_or_paused()
-    
-

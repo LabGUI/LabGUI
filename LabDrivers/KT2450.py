@@ -37,13 +37,13 @@ class Instrument(KT2400.Instrument):
                                          backwardcompatible=False,
                                          **kwargs)
         answer = self.ask("*IDN?")
-        print("model: "+answer)
+        print("model: " + answer)
         if "MODEL 2450" in answer:
             lang = self.ask("*LANG?")
             if "SCPI2400" in lang:
                 self.write("*LANG SCPI")
                 print("=== Please reboot device ===")
-        elif "MODEL 2400" in answer: # will happen iff in incorrect language mode
+        elif "MODEL 2400" in answer:  # will happen iff in incorrect language mode
             try:
                 self.write("*LANG SCPI")
                 print("=== Please reboot device ===")
@@ -55,7 +55,7 @@ class Instrument(KT2400.Instrument):
     def measure(self, channel):
         if channel in self.last_measure:
 
-            #'*RST'
+            # '*RST'
             # Clear buffer before taking a measurement
 
             if channel == 'V':
@@ -64,18 +64,18 @@ class Instrument(KT2400.Instrument):
                     # to set on autorange
                     #answer = self.ask(':READ?')
                     answer = self.ask(':MEAS:VOLT?')
-                    if type(answer) is str: #incase its running in 2400 mode
+                    if type(answer) is str:  # incase its running in 2400 mode
                         if ',' in answer:
                             answer = float(answer.split(',')[0])
                         else:
                             answer = float(answer)
-                    #if not answer or answer=='\n': ONLY NEEDED FOR
+                    # if not answer or answer=='\n': ONLY NEEDED FOR
                     #    self.enable_output()
                     #    return self.measure(channel)
-                    #elif type(answer) is not str and math.isnan(answer): #answer will be nan if error
+                    # elif type(answer) is not str and math.isnan(answer): #answer will be nan if error
                     #    print("Please set Output on") # will be set by default for 2450 from above
                     #    answer = float(answer)
-                    #else:
+                    # else:
                     #    answer = float(answer.split(',')[0])
                 else:
                     answer = np.random.random()
@@ -87,18 +87,18 @@ class Instrument(KT2400.Instrument):
                     # to set on autorange
                     #answer = self.ask(':READ?')
                     answer = self.ask(':MEAS:CURR?')
-                    if type(answer) is str: #incase its running in 2400 mode
+                    if type(answer) is str:  # incase its running in 2400 mode
                         if ',' in answer:
                             answer = float(answer.split(',')[1])
                         else:
                             answer = float(answer)
-                    #if not answer or answer=='\n':
+                    # if not answer or answer=='\n':
                     #    self.enable_output()
                     #    return self.measure(channel)
-                    #elif type(answer) is not str and math.isnan(answer): #answer will be nan if error
+                    # elif type(answer) is not str and math.isnan(answer): #answer will be nan if error
                     #    print("Please set Output on")
                     #    answer = float(answer)
-                    #else:
+                    # else:
                     #    answer = float(answer.split(',')[1])
 
                 else:
@@ -139,6 +139,7 @@ class Instrument(KT2400.Instrument):
             self.write(':SOUR:VOLT:PROT PROT%r' % overvoltage)
         else:
             print("overvoltage set to " + str(overvoltage) + " on " + self.ID_name)
+
 
 if __name__ == "__main__":
     i = Instrument("GPIB0::11", debug=False)

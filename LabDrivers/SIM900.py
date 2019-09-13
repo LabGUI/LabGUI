@@ -28,11 +28,11 @@ except:
 import sys
 
 #param = {'CH1': 'V', 'CH2': 'V', 'phase': 'deg', 'Z': 'Ohm', 'Z2': 'Ohm'}
-param = {'Summing Offset Voltage':'microV'}
+param = {'Summing Offset Voltage': 'microV'}
 # 'SIM928 Voltage':'V'
 # create SIM928 on all possible channels
-for i in range(1, 9): # to add reading
-    param['SIM928 Chan %d'%i] = 'V'
+for i in range(1, 9):  # to add reading
+    param['SIM928 Chan %d' % i] = 'V'
 
 SIM928_READ_CHANNEL = 4
 
@@ -41,12 +41,20 @@ SIM928 = 4
 SIM980 = 1
 SIM910 = 1
 AVERAGING_TIME = None
+
+
 def create_SIM928_range():
-    return [str(i+1) for i in range(0, SIM928)]
+    return [str(i + 1) for i in range(0, SIM928)]
+
+
 def create_SIM910_range():
-    return [str(i+1) for i in range(0, SIM910)]
+    return [str(i + 1) for i in range(0, SIM910)]
+
+
 def create_SIM980_range():
-    return [str(i+1) for i in range(0, SIM980)]
+    return [str(i + 1) for i in range(0, SIM980)]
+
+
 def create_SIM928_properties_obj():
     ret = {
         'Channel': {
@@ -54,43 +62,45 @@ def create_SIM928_properties_obj():
             'range': '',
             'readonly': True
         },
-        'Voltage':{
-            'type':'float',
-            'range':[-120,120],
-            'unit':'V'
+        'Voltage': {
+            'type': 'float',
+            'range': [-120, 120],
+            'unit': 'V'
         },
-        'Output on':{
-            'type':'bool',
-            'range':True,
+        'Output on': {
+            'type': 'bool',
+            'range': True,
         },
 
     }
     return ret
 
+
 def create_SIM910_properties_obj():
-    ret =  {
+    ret = {
         'Channel': {
             'type': 'text',
             'range': 'empty',
             'readonly': True
         },
         'Gain': {
-            'type':'selector',
-            'range':['1','2','5','10','20','50','100']
+            'type': 'selector',
+            'range': ['1', '2', '5', '10', '20', '50', '100']
         },
-        'Coupling':{
-            'type':'selector',
-            'range':['AC','DC']
+        'Coupling': {
+            'type': 'selector',
+            'range': ['AC', 'DC']
         },
-        'Amp Input':{
-            'type':'selector',
-            'range':['A','A-B','GND']
+        'Amp Input': {
+            'type': 'selector',
+            'range': ['A', 'A-B', 'GND']
         }
     }
     return ret
 
+
 def create_SIM980_properties_obj():
-    #ret = {} multi object!
+    # ret = {} multi object!
     ret = {
         'Channel': {
             'type': 'text',
@@ -98,57 +108,58 @@ def create_SIM980_properties_obj():
             'readonly': True
         },
         'Input': {
-            'type':'multi',
-            'range':['1','2','3','4'],
-            'properties':{
-                'State':{
-                    'type':'selector',
-                    'range':['OFF','ON, POSITIVE POLARITY','ON, NEGATIVE POLARITY']
+            'type': 'multi',
+            'range': ['1', '2', '3', '4'],
+            'properties': {
+                'State': {
+                    'type': 'selector',
+                    'range': ['OFF', 'ON, POSITIVE POLARITY', 'ON, NEGATIVE POLARITY']
                 }
             }
         },
-        'Averaging Time':{
-            'type':'int',
-            'range':[0,10000],
-            'unit':'ms'
+        'Averaging Time': {
+            'type': 'int',
+            'range': [0, 10000],
+            'unit': 'ms'
         }
     }
     return ret
 
+
 properties = {
     'Voltage': {
-        'type':'float',
-        'range':[-120, 120],
-        'unit':'V'
+        'type': 'float',
+        'range': [-120, 120],
+        'unit': 'V'
     },
     'Channel': {
-        'type':'int',
-        'range':[2, 15]
+        'type': 'int',
+        'range': [2, 15]
     },
     'Output': {
-        'type':'bool',
-        'range':True
+        'type': 'bool',
+        'range': True
     },
 }
 properties = {}
 # set the properties
 if SIM910 != 0:
     properties['SIM910'] = {
-        'type':'multi',
-        'range':create_SIM910_range(),
-        'properties':create_SIM910_properties_obj()
+        'type': 'multi',
+        'range': create_SIM910_range(),
+        'properties': create_SIM910_properties_obj()
     }
 if SIM928 != 0:
     properties['SIM928'] = {
-        'type':'multi',
-        'range':create_SIM928_range(),
-        'properties':create_SIM928_properties_obj()
+        'type': 'multi',
+        'range': create_SIM928_range(),
+        'properties': create_SIM928_properties_obj()
     }
 if SIM980 != 0:
     properties['SIM980'] = {
-        'type':'multi',
-        'range':create_SIM980_range(),
-        'properties':create_SIM980_properties_obj()
+        'type': 'multi',
+        'range': create_SIM980_range(),
+        'properties': create_SIM980_properties_obj()
     }
 
 
@@ -164,31 +175,32 @@ class Instrument(Tool.MeasInstr):
                                          term_chars="\n".encode(), timeout=2, bytesize=8, parity='N', stopbits=1, xonxoff=False, dsrdtr=False, **kwargs)
         self.connections = {}
         device_temp = {}
-        self.ports = ['1','2','3','4','5','6','7','8']#,'A','B','C','D']
+        self.ports = ['1', '2', '3', '4', '5', '6', '7', '8']  # ,'A','B','C','D']
         print("Identifying devices")
         self.connected_devices = {}
         for port in self.ports:
-            resp = self.ask_channel(port,"*IDN?")
+            resp = self.ask_channel(port, "*IDN?")
             if resp == '' or resp == None:
-                print("There is no device at port "+port)
+                print("There is no device at port " + port)
             else:
                 self.connections[port] = resp.split(',')[1]
                 if self.connections[port] in self.connected_devices.keys():
                     self.connected_devices[self.connections[port]].append(port)
                 else:
                     self.connected_devices[self.connections[port]] = [port]
-                print(self.connections[port]+" detected on port "+port)
+                print(self.connections[port] + " detected on port " + port)
                 device_temp[self.connections[port]] = True
         self.devices = device_temp.keys()
 
         try:
             if 'SIM980' in self.devices:
-                #print(self.connected_devices)
-                self.SIM980_PORT = self.connected_devices['SIM980'][0] # will only take first one
+                # print(self.connected_devices)
+                self.SIM980_PORT = self.connected_devices['SIM980'][0]  # will only take first one
             else:
                 self.SIM980_PORT = None
         except:
             print("error setting 'SIM980' port")
+
     def measure(self, channel):
         if channel == 'Summing Offset Voltage':
             if self.SIM980_PORT is not None:
@@ -204,7 +216,7 @@ class Instrument(Tool.MeasInstr):
             else:
                 answer = float(answer)
         else:
-            print("invalid measurement channel: "+channel)
+            print("invalid measurement channel: " + channel)
             return -1
         self.last_measure[channel] = answer
         return answer
@@ -221,8 +233,9 @@ class Instrument(Tool.MeasInstr):
             ret['SIM928'] = self.get_SIM928_obj()
         print("ret", ret)
         return ret
+
     def set(self, data):
-        #print(data)
+        # print(data)
         try:
             for device, obj in data.items():
                 for unimportant, dat in obj.items():
@@ -233,14 +246,14 @@ class Instrument(Tool.MeasInstr):
                     elif device == 'SIM928':
                         self.set_SIM928_obj(dat)
                     else:
-                        print("Unsupported device: ",device)
+                        print("Unsupported device: ", device)
         except:
-            print("Set Error",sys.exc_info())
+            print("Set Error", sys.exc_info())
 
     def get_SIM910_obj(self):
         ret = {}
         for i in range(0, SIM910):
-            j = str(i+1)
+            j = str(i + 1)
             channel = self.connected_devices['SIM910'][i]
             ret[j] = {
                 'Channel': channel,
@@ -249,6 +262,7 @@ class Instrument(Tool.MeasInstr):
                 'Amp Input': self.get_preamplifier_input(channel)
             }
         return ret
+
     def set_SIM910_obj(self, obj):
         # assuming correct type of object
         chan = obj['Channel']
@@ -259,7 +273,7 @@ class Instrument(Tool.MeasInstr):
     def get_SIM928_obj(self):
         ret = {}
         for i in range(0, SIM928):
-            j = str(i+1)
+            j = str(i + 1)
             channel = self.connected_devices['SIM928'][i]
             ret[j] = {
                 'Channel': channel,
@@ -267,46 +281,48 @@ class Instrument(Tool.MeasInstr):
                 'Output on': self.get_output(channel),
             }
         return ret
+
     def set_SIM928_obj(self, obj):
         chan = obj['Channel']
         self.set_voltage(chan, obj['Voltage'])
         self.toggle_output(chan, obj['Output on'])
+
     def get_SIM980_obj(self):
         ret = {}
         for i in range(0, SIM980):
-            j = str(i+1)
+            j = str(i + 1)
             channel = self.connected_devices['SIM980'][i]
             # make input stuff
             inp_list = self.get_amplifier(channel)
 
             inp_options = {
-                '0':'OFF',
-                '1':'ON, POSITIVE POLARITY',
-                '-1':'ON, NEGATIVE POLARITY'
+                '0': 'OFF',
+                '1': 'ON, POSITIVE POLARITY',
+                '-1': 'ON, NEGATIVE POLARITY'
             }
             #print(inp_list, [inp_options[inp_list[q]] for q in range(0, len(inp_list))], [inp_list[q] for q in range(0, len(inp_list))])
             inp_obj = {}
-            for p in range(0,4):
-                k = str(p+1)
-                inp_obj[k] = { 'State':inp_options[inp_list[p]] }
+            for p in range(0, 4):
+                k = str(p + 1)
+                inp_obj[k] = {'State': inp_options[inp_list[p]]}
 
             ret[j] = {
                 'Channel': channel,
                 'Input': inp_obj,
-                'Averaging Time':AVERAGING_TIME
+                'Averaging Time': AVERAGING_TIME
             }
         return ret
+
     def set_SIM980_obj(self, obj):
         chan = obj['Channel']
         convert = {
-            'OFF':'0',
-            'ON, POSITIVE POLARITY':'1',
-            'ON, NEGATIVE POLARITY':'-1'
+            'OFF': '0',
+            'ON, POSITIVE POLARITY': '1',
+            'ON, NEGATIVE POLARITY': '-1'
         }
         for input, iobj in obj['Input'].items():
             self.set_amplifier_channel(chan, input, convert[iobj['State']])
         self.set_averaging_time(obj['Averaging Time'])
-
 
     def ask(self, msg):
         # custom made
@@ -316,39 +332,43 @@ class Instrument(Tool.MeasInstr):
     def write(self, msg):
         # custom made
         self.connection.write(msg.encode() + self.term_chars)
+
     def read(self):
-        return self.connection.readline().decode() # FIXES SPEED
-        #return self.connection.read(READ_BITS).decode()
+        return self.connection.readline().decode()  # FIXES SPEED
+        # return self.connection.read(READ_BITS).decode()
 
     def ask_channel(self, channel, msg):
-        #channel = int(channel) can be letter!
-        self.write("CONN "+str(channel)+", \"xyz\"")
+        # channel = int(channel) can be letter!
+        self.write("CONN " + str(channel) + ", \"xyz\"")
 
         answer = self.ask(msg)
         self.write("xyz")
-        return answer.strip('\n').strip('\r').strip('\n') # incase sandwhich or reverse order
+        return answer.strip('\n').strip('\r').strip('\n')  # incase sandwhich or reverse order
+
     def ask_channel_multiple(self, channel, *msgs):
         #channel = int(channel)
-        self.write("CONN "+str(channel)+",\"xyz\"")
+        self.write("CONN " + str(channel) + ",\"xyz\"")
         resp = []
         for msg in msgs:
             resp.append(self.ask(msg))
         self.write("xyz")
         return resp
+
     def write_channel(self, channel, msg):
-        #channel = int(channel) can be letter!
-        self.write("CONN "+str(channel)+", \"xyz\"")
+        # channel = int(channel) can be letter!
+        self.write("CONN " + str(channel) + ", \"xyz\"")
         self.write(msg)
         self.write("xyz")
+
     def write_channel_multiple(self, channel, *msgs):
         #channel = int(channel)
-        self.write("CONN "+str(channel)+",\"xyz\"")
+        self.write("CONN " + str(channel) + ",\"xyz\"")
         resp = []
         for msg in msgs:
             self.write(msg)
         self.write("xyz")
 
-    #def measure(self, channel):
+    # def measure(self, channel):
 
     def get_voltage(self, channel):
         channel = str(channel)
@@ -358,9 +378,9 @@ class Instrument(Tool.MeasInstr):
                 answer = self.ask_channel(channel, "VOLT?")
                 return float(answer)
             else:
-                print("Unsupported device: "+self.connection[channel])
+                print("Unsupported device: " + self.connection[channel])
         else:
-            print("No device connected to channel "+channel)
+            print("No device connected to channel " + channel)
         return None
 
     def set_voltage(self, channel, voltage):
@@ -369,16 +389,16 @@ class Instrument(Tool.MeasInstr):
         if the voltage 1.8889 is given, it will be unable to process it, however it would be able to process 1.889
         """
         channel = str(channel)
-        voltage = str(round(float(voltage),3))
+        voltage = str(round(float(voltage), 3))
         if channel in self.connections.keys():
             # check if SIM928
             if self.connections[channel] == 'SIM928':
-                answer = self.ask_channel(channel, "VOLT "+voltage+"; VOLT?")
+                answer = self.ask_channel(channel, "VOLT " + voltage + "; VOLT?")
                 return float(answer)
             else:
-                print("Unsupported device: "+self.connection[channel])
+                print("Unsupported device: " + self.connection[channel])
         else:
-            print("No device connected to channel "+channel)
+            print("No device connected to channel " + channel)
         return None
 
     def enable_output(self, channel):
@@ -386,17 +406,20 @@ class Instrument(Tool.MeasInstr):
         if channel in self.connections.keys():
             if self.connections[channel] == 'SIM928':
                 self.write_channel(channel, "OPON")
+
     def disable_output(self, channel):
         channel = str(channel)
         if channel in self.connections.keys():
             if self.connections[channel] == 'SIM928':
                 self.write_channel(channel, "OPOF")
+
     def toggle_output(self, channel, state):
-        state = int(state) #0 for false, 1 for true
+        state = int(state)  # 0 for false, 1 for true
         channel = str(channel)
-        if channel in self.connections.keys(): # might only befor SIM928
+        if channel in self.connections.keys():  # might only befor SIM928
             if self.connections[channel] == 'SIM928':
-                self.write_channel(channel, "EXON "+str(state))
+                self.write_channel(channel, "EXON " + str(state))
+
     def get_output(self, channel):
         channel = str(channel)
         if channel in self.connections.keys():
@@ -408,6 +431,7 @@ class Instrument(Tool.MeasInstr):
                     return True
                 else:
                     return None
+
     def set_amplifier_channel(self, channel, input, state):
         """
 
@@ -431,17 +455,18 @@ class Instrument(Tool.MeasInstr):
         elif 'pos' in state.lower():
             state = '1'
 
-        if state not in ['1','0','-1']:
-            print("Invalid state: "+state)
+        if state not in ['1', '0', '-1']:
+            print("Invalid state: " + state)
             return
         if channel in self.connections.keys():
             if self.connections[channel] == 'SIM980':
-                self.write_channel(channel, "CHAN "+input+","+state)
+                self.write_channel(channel, "CHAN " + input + "," + state)
                 return
             print("Invalid device: " + self.connections[channel])
             return None
         print("Invalid channel: " + channel)
         return None
+
     def get_amplifier_channel(self, channel, input):
         """
 
@@ -454,27 +479,27 @@ class Instrument(Tool.MeasInstr):
         if input.lower() == 'all':
             input = '0'
         elif not input.isdigit():
-            print("Invalid channel: "+input)
+            print("Invalid channel: " + input)
             return None
         if channel in self.connections.keys():
             if self.connections[channel] == 'SIM980':
                 answer = self.ask_channel(channel, "CHAN? " + input)
                 return answer
-            print("Invalid device: "+self.connections[channel])
+            print("Invalid device: " + self.connections[channel])
             return None
-        print("Invalid channel: "+channel)
+        print("Invalid channel: " + channel)
         return None
 
     def get_amplifier(self, channel):
         return self.get_amplifier_channel(channel, '0').split(',')
 
-    def read_offset_voltage(self, channel, averaging_time = None):
+    def read_offset_voltage(self, channel, averaging_time=None):
         channel = str(channel)
         if channel in self.connections.keys():
             if self.connections[channel] == 'SIM980':
                 if averaging_time is not None and averaging_time:
                     averaging_time = str(int(averaging_time))
-                    answer = self.ask_channel(channel, "READ? "+averaging_time)
+                    answer = self.ask_channel(channel, "READ? " + averaging_time)
                 else:
                     answer = self.ask_channel(channel, "READ?")
                 return answer
@@ -485,7 +510,6 @@ class Instrument(Tool.MeasInstr):
         except:
             AVERAGING_TIME = None
 
-
     def reset(self, channel):
         channel = str(channel)
         if channel in self.connections.keys():
@@ -493,19 +517,17 @@ class Instrument(Tool.MeasInstr):
 
     def set_preamplifier_gain(self, channel, gain):
         gain = str(gain)
-        allowed = ['1','2','5','10','20','50','100']
+        allowed = ['1', '2', '5', '10', '20', '50', '100']
         if gain not in allowed:
-            print("Invalid gain: "+gain)
+            print("Invalid gain: " + gain)
             return
         if channel in self.connections.keys():
             if self.connections[channel] == 'SIM910':
-                self.write_channel(channel, "GAIN "+gain)
+                self.write_channel(channel, "GAIN " + gain)
                 return
-            print("Invalid device: "+self.connections[channel])
+            print("Invalid device: " + self.connections[channel])
             return
-        print("Invalid channel: "+channel)
-
-
+        print("Invalid channel: " + channel)
 
     def set_preamplifier_coupling(self, channel, coupling):
         coupling == str(coupling)
@@ -513,18 +535,17 @@ class Instrument(Tool.MeasInstr):
             coupling = '1'
         elif coupling.lower() == 'dc':
             coupling = '2'
-        allowed = ['1','2']
+        allowed = ['1', '2']
         if coupling not in allowed:
-            print("Invalid coupling: "+coupling)
+            print("Invalid coupling: " + coupling)
             return
         if channel in self.connections.keys():
             if self.connections[channel] == 'SIM910':
-                self.write_channel(channel, "COUP "+coupling)
+                self.write_channel(channel, "COUP " + coupling)
                 return
-            print("Invalid device: "+self.connections[channel])
+            print("Invalid device: " + self.connections[channel])
             return
-        print("Invalid channel: "+channel)
-
+        print("Invalid channel: " + channel)
 
     def set_preamplifier_input(self, channel, input_mode):
         input_mode == str(input_mode)
@@ -535,18 +556,17 @@ class Instrument(Tool.MeasInstr):
         elif input_mode.lower() == 'gnd' or input_mode.lower() == 'ground':
             input_mode = '3'
 
-        allowed = ['1','2','3']
+        allowed = ['1', '2', '3']
         if input_mode not in allowed:
-            print("Invalid input mode: "+input_mode)
+            print("Invalid input mode: " + input_mode)
             return
         if channel in self.connections.keys():
             if self.connections[channel] == 'SIM910':
-                self.write_channel(channel, "INPT "+input_mode)
+                self.write_channel(channel, "INPT " + input_mode)
                 return
-            print("Invalid device: "+self.connections[channel])
+            print("Invalid device: " + self.connections[channel])
             return
-        print("Invalid channel: "+channel)
-
+        print("Invalid channel: " + channel)
 
     def get_preamplifier_gain(self, channel):
         channel = str(channel)
@@ -554,41 +574,44 @@ class Instrument(Tool.MeasInstr):
             if self.connections[channel] == 'SIM910':
                 answer = self.ask_channel(channel, "GAIN?")
                 return answer
-            print("Invalid device: "+self.connections[channel])
+            print("Invalid device: " + self.connections[channel])
             return None
-        print("Invalid channel: "+channel)
+        print("Invalid channel: " + channel)
         return None
+
     def get_preamplifier_coupling(self, channel):
         channel = str(channel)
         convert = {
-            '1':'AC',
-            '2':'DC'
+            '1': 'AC',
+            '2': 'DC'
         }
         if channel in self.connections.keys():
             if self.connections[channel] == 'SIM910':
                 answer = self.ask_channel(channel, "COUP?")
                 answer = str(answer)
                 return convert[answer]
-            print("Invalid device: "+self.connections[channel])
+            print("Invalid device: " + self.connections[channel])
             return None
-        print("Invalid channel: "+channel)
+        print("Invalid channel: " + channel)
         return None
+
     def get_preamplifier_input(self, channel):
         channel = str(channel)
         convert = {
-            '1':'A',
-            '2':'A-C',
-            '3':'GND'
+            '1': 'A',
+            '2': 'A-C',
+            '3': 'GND'
         }
         if channel in self.connections.keys():
             if self.connections[channel] == 'SIM910':
                 answer = self.ask_channel(channel, "INPT?")
                 answer = str(answer)
                 return convert[answer]
-            print("Invalid device: "+self.connections[channel])
+            print("Invalid device: " + self.connections[channel])
             return None
-        print("Invalid channel: "+channel)
+        print("Invalid channel: " + channel)
         return None
+
 
 if __name__ == "__main__":
 
@@ -601,4 +624,4 @@ if __name__ == "__main__":
     print(i.read(64).decode())
     i.write("*IDN?".encode())
     print(i.read(64).decode())
-    #print(i.ask("*IDN?",20))
+    # print(i.ask("*IDN?",20))

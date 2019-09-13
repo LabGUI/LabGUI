@@ -114,7 +114,7 @@ class LabeledData(object):
         filestream.close()
 
         # because the first instance of header_info is "" there is a leading
-        #\n character, so we remove it now
+        # \n character, so we remove it now
         header_info = header_info[1:]
 
         # the first string of the line describes whether the format of the values is complex or real

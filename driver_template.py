@@ -14,7 +14,7 @@ except:
 
 
 param = {
-    'Channel' : 'Unit'
+    'Channel': 'Unit'
 }
 
 INTERFACE = Tool.INTF_GPIB
@@ -26,6 +26,7 @@ INTF_SERIAL
 INTF_PROLOGIX
 INTF_NONE
 """
+
 
 class Instrument(Tool.MeasInstr):
     """"This class is the driver of the instrument *NAME*"""""
@@ -49,10 +50,10 @@ class Instrument(Tool.MeasInstr):
         #                                  **kwargs)
         #
         super(Instrument, self).__init__(resource_name,
-                                          name=NAME,
-                                          debug=debug,
-                                          interface=INTERFACE,
-                                          **kwargs)
+                                         name=NAME,
+                                         debug=debug,
+                                         interface=INTERFACE,
+                                         **kwargs)
 
     def measure(self, channel):
 
@@ -77,11 +78,3 @@ class Instrument(Tool.MeasInstr):
 
 if __name__ == "__main__":
     i = Instrument("GPIB::1", debug=False)
-
-
-
-
-
-
-
-

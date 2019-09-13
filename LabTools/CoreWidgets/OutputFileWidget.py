@@ -6,6 +6,7 @@ Copyright (C) 10th april 2015 Benjamin Schmidt
 License: see LICENSE.txt file
 """
 
+from LabTools.IO import IOTool
 import sys
 import re
 import logging
@@ -23,9 +24,8 @@ else:
     import PyQt4.QtGui as QtGui
     from PyQt4.QtCore import SIGNAL, Qt
 
-from LabTools.IO import IOTool
 
-#from os import path UNCOMMENT TO HAVE ABS PATH
+# from os import path UNCOMMENT TO HAVE ABS PATH
 
 
 class OutputFileWidget(QtGui.QWidget):
@@ -101,7 +101,7 @@ class OutputFileWidget(QtGui.QWidget):
                 data = self.parent.get_user_data()
                 #data_str = ""
                 for name, value in data.items():
-                    data_str += "D'%s', '%s'\n"%(name, value)
+                    data_str += "D'%s', '%s'\n" % (name, value)
         if text:
             # need space to prevent possible error
             text = "# " + text.replace("\n", "\n#") + "\n"

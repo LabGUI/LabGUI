@@ -15,6 +15,7 @@ See http://zone.ni.com/reference/en-XX/help/371361R-01/lvinstio/visa_gpib_contro
 
 """
 
+from LabTools.Display import QtTools
 import sys
 
 from types import MethodType
@@ -33,9 +34,8 @@ else:
     import PyQt4.QtGui as QtGui
     import PyQt4.QtCore as QtCore
 
-from LabTools.Display import QtTools
 
-REN_MODES = [ # index corresponds to mode for GPIB device
+REN_MODES = [  # index corresponds to mode for GPIB device
     'Deassert Remote Enable',
     'Assert Remote Enable',
     'Deassert REN, Go To Local',
@@ -84,7 +84,7 @@ class REN_Default(QtGui.QWidget):
             self.state.setText("None")
         else:
             self.btn_enable()
-            self.state.setText("REN Mode %d"%self.default)
+            self.state.setText("REN Mode %d" % self.default)
 
     def btn_click(self, *args, **kwargs):
         if self.parent is not None:
@@ -140,12 +140,12 @@ class REN_State(QtGui.QWidget):
     def set_default(self):
         if self.parent is not None:
             self.parent.set_default(self.REN, from_widget=True)
-            self.default_state(True) # this will run after parent.set_default is run
+            self.default_state(True)  # this will run after parent.set_default is run
 
     def unset_default(self):
         if self.parent is not None:
             self.parent.unset_default(self.REN, from_widget=True)
-            self.default_state(False) # this will run after parent.unset_default is run
+            self.default_state(False)  # this will run after parent.unset_default is run
 
     def toggle_default(self):
         if self.is_default:
@@ -153,7 +153,7 @@ class REN_State(QtGui.QWidget):
         else:
             self.set_default()
 
-    def default_state(self, state=False): # True or False
+    def default_state(self, state=False):  # True or False
         if state is True:
             self.is_default = True
             self.but_default.setText(UNSET_DEFAULT)
@@ -197,7 +197,7 @@ class REN_Widget(QtGui.QWidget):
             self.instr_hub = None
 
         self.deviceComboBox = QtGui.QComboBox()
-        #self.deviceComboBox.activated[str].connect(self.change_device)
+        # self.deviceComboBox.activated[str].connect(self.change_device)
 
         self.REN_Lines = []
         for i in range(len(REN_MODES)):
@@ -215,7 +215,7 @@ class REN_Widget(QtGui.QWidget):
             self.scrollarea = QtGui.QScrollArea()
             self.scrollLayout = QtGui.QVBoxLayout()
             self.scrollLayout.setSpacing(0)
-            self.scrollLayout.setContentsMargins(0,0,0,0)
+            self.scrollLayout.setContentsMargins(0, 0, 0, 0)
             for state in self.REN_Lines:
                 self.scrollLayout.addWidget(state)
             self.scrollwidget = QtGui.QWidget()
@@ -234,7 +234,7 @@ class REN_Widget(QtGui.QWidget):
         if instr is not None:
             instr.set_ren(mode)
 
-    def set_default(self, mode, from_widget = False):
+    def set_default(self, mode, from_widget=False):
         if self.default_ren != mode and self.default_ren is not None:
             self.REN_Lines[self.default_ren].default_state(False)
         self.default_ren = mode
@@ -249,7 +249,7 @@ class REN_Widget(QtGui.QWidget):
         else:
             self.save_default()
 
-    def unset_default(self, mode, from_widget = False):
+    def unset_default(self, mode, from_widget=False):
         if self.default_ren == mode:
             self.default_ren = None
             self.default_widget.set_default(None)
@@ -259,7 +259,7 @@ class REN_Widget(QtGui.QWidget):
         else:
             self.save_default()
 
-    def unset_all(self, from_widget = False):
+    def unset_all(self, from_widget=False):
         self.default_ren = None
         for state in self.REN_Lines:
             state.default_state(False)
@@ -282,10 +282,11 @@ class REN_Widget(QtGui.QWidget):
             self.default_ren = None
             self.unset_all()
         else:
-            self.set_default(int(level)) # this will automatically update default_ren, as well as unsetting all
-
+            # this will automatically update default_ren, as well as unsetting all
+            self.set_default(int(level))
 
     ##### DEVICE DROPBOX STUFF #####
+
     def enterEvent(self, event):
         # keep list updated
         self.update_devices()
@@ -310,10 +311,10 @@ class REN_Widget(QtGui.QWidget):
     def update_devices(self):
         # going need to get get_instrument_list
         self.update_instrument_list()
-        text = self.deviceComboBox.currentText() # to set back to
+        text = self.deviceComboBox.currentText()  # to set back to
         self.deviceComboBox.clear()
         for tuples in self.sanitized_list:
-            self.deviceComboBox.addItem(tuples[0]+" on "+tuples[1])
+            self.deviceComboBox.addItem(tuples[0] + " on " + tuples[1])
         # now time to set current choice if it is still in the list
         index = self.deviceComboBox.findText(text)
         if index != -1:
@@ -322,7 +323,7 @@ class REN_Widget(QtGui.QWidget):
     def current_instrument(self):
         idx = self.deviceComboBox.currentIndex()
         if 0 <= idx < len(self.sanitized_list):
-            return self.sanitized_list[idx][2] # this should be instrument
+            return self.sanitized_list[idx][2]  # this should be instrument
         else:
             return None
 
@@ -391,7 +392,7 @@ def add_widget_into_main(parent):
         parent.set_ren = MethodType(set_ren, parent, parent.__class__)
         parent.get_ren = MethodType(get_ren, parent, parent.__class__)
 
-    propDockWidget.resize(500,250)
+    propDockWidget.resize(500, 250)
     if not DEBUG:
         propDockWidget.hide()
 
@@ -403,7 +404,7 @@ if __name__ == "__main__":
         ex = REN_Widget()
         #ex = DevicePropertyWidget("AH", {}, debug=True)
         ex.show()
-        #print(ex.get_properties())
+        # print(ex.get_properties())
         sys.exit(app.exec_())
     except:
         print(sys.exc_info())

@@ -12,19 +12,19 @@ import sys
 import os
 from shutil import copyfile, rmtree
 
-os.chdir(os.path.abspath(os.path.dirname(sys.argv[0]))) # needs to be in this directory!
+os.chdir(os.path.abspath(os.path.dirname(sys.argv[0])))  # needs to be in this directory!
 
 if sys.platform == 'win32':
     START_FILE = 'StartLabGui.bat'
-    END_FILE = os.path.join('bin','LabGui.bat')
+    END_FILE = os.path.join('bin', 'LabGui.bat')
 else:
     START_FILE = 'StartLabGui.sh'
-    END_FILE = os.path.join('bin','LabGui') # changed from LabGui.sh to LabGui
+    END_FILE = os.path.join('bin', 'LabGui')  # changed from LabGui.sh to LabGui
 
 if 'install' not in sys.argv:
     try:
         os.mkdir('bin')
-    except: # already exists
+    except:  # already exists
         pass
 
     try:
@@ -45,6 +45,7 @@ def make_script():
         pass
     copyfile(START_FILE, END_FILE)
 
+
 with open('README.rst') as readme_file:
     readme = readme_file.read()
 
@@ -57,8 +58,10 @@ setup_requirements = []
 
 test_requirements = []
 
+
 class PostDevelopCommand(develop):
     """Post-installation for development mode."""
+
     def run(self):
         if QUIET:
             subprocess.check_call([sys.executable, 'setup_new.py', 'quiet'])
@@ -67,8 +70,10 @@ class PostDevelopCommand(develop):
         make_script()
         develop.run(self)
 
+
 class PostInstallCommand(install):
     """Post-installation for installation mode."""
+
     def run(self):
         if QUIET:
             subprocess.check_call([sys.executable, 'setup_new.py', 'quiet'])
@@ -76,6 +81,7 @@ class PostInstallCommand(install):
             subprocess.check_call([sys.executable, 'setup_new.py'])
         make_script()
         install.run(self)
+
 
 def test_suite():
     return TestLoader().discover('.')
@@ -96,11 +102,11 @@ setup(
         'Programming Language :: Python :: 3.7'
     ],
     description="Modular Gui to perform measurements in a low temperature physics laboratory",
-    #entry_points={
+    # entry_points={
     #    'console_scripts': [
     #        'LabGui=%s'+END_FILE,
     #    ],
-    #},
+    # },
     scripts=[os.path.abspath(END_FILE)],
     install_requires=requirements,
     license="GNU General Public License v3",
@@ -124,5 +130,5 @@ setup(
 
 try:
     rmtree('bin')
-except: # means no postdevelop/install script has been run
+except:  # means no postdevelop/install script has been run
     pass
