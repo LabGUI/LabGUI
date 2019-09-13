@@ -29,6 +29,9 @@ import sys
 
 # param = {'CH1': 'V', 'CH2': 'V', 'phase': 'deg', 'Z': 'Ohm', 'Z2': 'Ohm'}
 param = {'Summing Offset Voltage': 'microV'}
+# create SIM928 on all possible channels
+for i in range(1, 9): # to add reading
+    param['SIM928 Chan %d'%i] = 'V'
 
 # for summing offset voltage
 SIM928 = 4

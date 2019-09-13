@@ -57,8 +57,8 @@ properties = {
         'range': True,
     },
     'Heater Sensor': {
-        'type': 'int',
-        'range': [1, 3],
+        'type': 'selection',
+        'range': ['1', '2', '3'],
     },
     'Proportional Band': {
         'type': 'float',
@@ -75,6 +75,11 @@ properties = {
     'Desired Temperature': {
         'type': 'float',
         'range': [0, 99999]
+    },
+    'Heater Output': {
+        'type':'float',
+        'range':[0,100],
+        'unit':'%'
     }
 
 }
@@ -232,7 +237,12 @@ class Instrument(Tool.MeasInstr):
         # set temperature
         self.setDesiredTemperature(data['Desired Temperature'])
 
+        # set output voltage
+        self.setHeaterPercent(data['Heater Output'])
+
     def get(self):
+        self.clear(silent=True)
+
         data = {}
 
         # get control
@@ -255,6 +265,9 @@ class Instrument(Tool.MeasInstr):
 
         # get version
         data['Version'] = self.version()
+
+        # get output voltage
+        data['Heater Output'] = self.getHeaterPercent()
 
         return data
 
@@ -334,6 +347,12 @@ class Instrument(Tool.MeasInstr):
 
     def getDesiredTemperature(self):
         return float(self.ask("R0")[1:])
+
+    def setHeaterPercent(self, percent):
+        self.write("$O" + str(round(float(percent), 3)))
+
+    def getHeaterPercent(self):
+        return float(self.ask("R5")[1:])
 
     def setSweep(self, line, PointTemperature, SweepTime, HoldTime):
         line = int(line)
