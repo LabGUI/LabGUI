@@ -223,7 +223,7 @@ class Instrument(Tool.MeasInstr):
         self.setControl(data['Locked'], data['Remote'])
 
         # set heater/gas flow
-        self.setHeaterAndGas(data['Auto-Heater'], data['Auto-Gas Flow'])
+        self.setHeaterAndGas(data['Auto-Gas Flow'],data['Auto-Heater'])
 
         # set auto PID
         self.setAutoPID(data['Auto-PID'])
@@ -249,7 +249,7 @@ class Instrument(Tool.MeasInstr):
         data['Locked'], data['Remote'] = self.getControl()
 
         # get heater and gas
-        data['Auto-Heater'], data['Auto-Gas Flow'] = self.getHeaterAndGas()
+        data['Auto-Gas Flow'], data['Auto-Heater'] = self.getHeaterAndGas()
 
         # get auto PID
         data['Auto-PID'] = self.getAutoPID()
@@ -287,7 +287,7 @@ class Instrument(Tool.MeasInstr):
         code = "{0:b}".format(int(C)).zfill(2)
         return (not bool(int(code[0]))), (bool(int(code[1])))  # locked, remote
 
-    def setHeaterAndGas(self, heater_auto, gas_auto):
+    def setHeaterAndGas(self, gas_auto, heater_auto):
         # these values MUST be booleans! TODO: implement check
 
         commandcode = int(str(int(gas_auto)) + str(int(heater_auto)), 2)
@@ -297,7 +297,7 @@ class Instrument(Tool.MeasInstr):
     def getHeaterAndGas(self):
         A = self.Examine()["A"]
         code = "{0:b}".format(int(A)).zfill(2)
-        return (bool(int(code[0]))), (bool(int(code[1])))  # heater_auto, gas_auto
+        return (bool(int(code[0]))), (bool(int(code[1])))  # gas_auto, heater_auto
 
     def setAutoPID(self, AutoPID):
         self.write("$L" + str(int(AutoPID)))
