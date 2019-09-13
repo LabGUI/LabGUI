@@ -449,7 +449,7 @@ class Instrument(Tool.MeasInstr):
         """
 #        [0.002:0.002,0.01:0.01,0.1:0.1,1:1,0.005:2,0.02:20,0.2:200,2:2,0.05:50,0.5:500,5:5V]
 
-        if chan_num == None:
+        if chan_num is None:
             self.get_channel_scale(1)
             self.get_channel_scale(2)
         elif not chan_num in [1, 2]:
@@ -658,7 +658,7 @@ if __name__ == "__main__":
     # [ 1.60939999  0.0406576 ]
     # [ 1.61860003  0.02335464]
     # [ 1.61239996  0.03181566]]
-    #[[ 1.62460003  0.03182209]
+    # [[ 1.62460003  0.03182209]
     # [ 1.5994      0.04796072]
     # [ 1.61599998  0.02704064]
     # [ 1.57340002  0.01205988]]
@@ -685,11 +685,11 @@ if __name__ == "__main__":
 #
 #    data_CH1 = np.average(data_CH1, 0)
 #    data_CH2 = np.average(data_CH2, 0)
-##    print i.set_channel_scale(2,0.05)
+# print i.set_channel_scale(2,0.05)
 #
 #    Z = (i.get_peak_voltage(1) / i.get_peak_voltage(2))
 #    Z2 = (np.max(data_CH1) / np.max(data_CH2))
-##        print np.max(ch1)
+# print np.max(ch1)
 # t=np.arange(len(ch1))*dt
 ##        f = np.fft.fftfreq(t.shape[-1])
 # phase.append(np.angle(np.fft.fft(ch1))-np.angle(np.fft.fft(ch2)))
@@ -717,4 +717,4 @@ if __name__ == "__main__":
 # plt.show()
     i.close()
 
- #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

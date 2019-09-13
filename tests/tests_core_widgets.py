@@ -5,6 +5,8 @@ Created on Wed Jun 28 15:23:23 2017
 @author: admin
 """
 
+from LabTools.CoreWidgets import ScriptWidget, OutputFileWidget
+from LabTools.IO import IOTool
 import unittest
 import warnings
 
@@ -35,9 +37,6 @@ else:
 
 app = QtGui.QApplication(sys.argv)
 
-from LabTools.IO import IOTool
-
-from LabTools.CoreWidgets import ScriptWidget, OutputFileWidget
 
 TEST_CONFIG_FNAME = "config_test.txt"
 

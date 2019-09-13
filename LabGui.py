@@ -29,6 +29,7 @@ from LabTools.CoreWidgets import CommandWidget
 from LabDrivers import Tool
 
 from LocalVars import USE_PYQT5
+
 if USE_PYQT5:
 
     from PyQt5.QtWidgets import (
@@ -79,9 +80,10 @@ DDT_CODE_STARTED = "started"
 DDT_CODE_RESUMED = "resumed"
 DDT_CODE_ALREADY_RUNNING = "start_error"
 
-## Variables so Tools do not restart with LabGui
+# Variables so Tools do not restart with LabGui
 USERWIDGET_MANAGER = None
 CONFIG_MANAGER = None
+
 
 class LabGuiMain(QtGui.QMainWindow):
     """
@@ -191,7 +193,8 @@ class LabGuiMain(QtGui.QMainWindow):
 
         instrument_hub_connected = pyqtSignal("PyQt_PyObject")
 
-        EXIT_CODE_REBOOT = -12121212 #unused exit code afaik
+        EXIT_CODE_REBOOT = -12121212  # unused exit code afaik
+
     def __init__(self, argv=[]):
 
         # run the initializer of the class inherited from6
@@ -226,7 +229,6 @@ class LabGuiMain(QtGui.QMainWindow):
 
                 # user passed configfile
                 if opt == "-c":
-
                     self.config_file = arg
 
         except getopt.GetoptError:
@@ -237,7 +239,6 @@ class LabGuiMain(QtGui.QMainWindow):
         if self.config_file:
 
             if not exists(self.config_file):
-
                 logging.error(
                     "The config file you provided ('%s') doesn't \
 exist, '%s' will be used instead"
@@ -256,7 +257,6 @@ exist, '%s' will be used instead"
 
             # check whether the default config file exists or not
             if not exists(CONFIG_FILE):
-
                 logging.warning(
                     "A '%s' file has been generated for you." % (CONFIG_FILE)
                 )
@@ -375,7 +375,7 @@ have the right format, '%s' will be used instead"
         if CONFIG_MANAGER is not None:
             CONFIG_MANAGER.set_parent(self)
 
-        self.force = False # if true, it will not ask user if they are sure they want to quit
+        self.force = False  # if true, it will not ask user if they are sure they want to quit
 
         # self.cmdline.instr_hub = self.instr_hub
 
@@ -669,7 +669,8 @@ have the right format, '%s' will be used instead"
         )
 
         self.windowMenu.addAction(self.add_pdw)
-        ###### TOOL MENU SETUP #######
+
+        # TOOL MENU SETUP #
 
         self.tool_config_manager_state = QtTools.create_action(
             self,
@@ -755,7 +756,6 @@ have the right format, '%s' will be used instead"
         )
 
         if not exists(self.default_settings_fname):
-
             logging.warning(
                 "The filename '%s' wasn't found, using '%s'"
                 % (self.default_settings_fname, "settings/default_settings.txt")
@@ -843,7 +843,6 @@ have the right format, '%s' will be used instead"
         """
 
         if num_channels is None:
-
             num_channels = (
                 self.instr_hub.get_instrument_nb()
                 + self.widgets["CalcWidget"].get_calculation_nb()
@@ -1118,7 +1117,6 @@ have the right format, '%s' will be used instead"
     def stop_DTT(self):
 
         if self.datataker.isRunning():
-
             self.datataker.ask_to_stop()
 
         # just make sure the pause setting is left as false after ther run
@@ -1130,7 +1128,9 @@ have the right format, '%s' will be used instead"
         self.widgets["InstrumentWidget"].bt_connecthub.setEnabled(True)
 
         # make sure output file is actually open
-        if not hasattr(self.output_file, 'close'): # other option is, type(self.output_file) == str, or type(self.output) != io.TextIOWrapper
+        if not hasattr(self.output_file, 'close'):
+            # other option is, type(self.output_file) == str,
+            # or type(self.output) != io.TextIOWrapper
             return
         # close the output file
         self.output_file.close()
@@ -1255,7 +1255,6 @@ have the right format, '%s' will be used instead"
             else:
 
                 if window_type in PlotDisplayWindow.PLOT_WINDOW_TYPE_PAST:
-
                     # get the title of the window
                     title = str(current_window.windowTitle())
 
@@ -1407,7 +1406,6 @@ have the right format, '%s' will be used instead"
         )
 
         if not default_path:
-
             default_path = "./"
 
         if USE_PYQT5:
@@ -1427,7 +1425,6 @@ have the right format, '%s' will be used instead"
             )
 
         if fname:
-
             self.create_plw(fname)
 
     def file_print(self):
@@ -1545,6 +1542,7 @@ have the right format, '%s' will be used instead"
 
     def disconnectInstrToolbar(self):
         self.disconnect_hub.setEnabled(False)
+
     def activatePltToolbar(self):
         for action in self.action_manager.actions:
             action.setEnabled(True)
@@ -1552,6 +1550,7 @@ have the right format, '%s' will be used instead"
     def deactivePltToolbar(self):
         for action in self.action_manager.actions:
             action.setEnabled(False)
+
     def relaunch(self, force=False, **kwargs):
         self.force = force
         if hasattr(self, 'Qapp'):
@@ -1560,25 +1559,29 @@ have the right format, '%s' will be used instead"
         else:
             self.close()
             QApplication.exit(self.EXIT_CODE_REBOOT)
-        #self.exit(self.EXIT_CODE_REBOOT)
+        # self.exit(self.EXIT_CODE_REBOOT)
     #    relaunch_LabGui()
 
-################ ENABLE ERROR HANDLING #######################
+
+# ENABLE ERROR HANDLING #
 ex = None
 app = None
 
 sys._excepthook = sys.excepthook
+
+
 def error_message(value):
     global ex, app
     msg = QtGui.QMessageBox.critical(ex,
                                      "Error!",
-                                     "LabGUI failed with the following error:\n %s\n Relaunch?" % value,
+                                     "LabGUI failed with the following error:\n %s\n Relaunch?"
+                                     % value,
                                      QtGui.QMessageBox.Yes | QtGui.QMessageBox.No,
                                      QtGui.QMessageBox.Yes
                                      )
     if msg == QtGui.QMessageBox.Yes:
         for entry in QtGui.qApp.allWidgets():
-            if(type(entry).__name__ == 'LabGuiMain'):
+            if (type(entry).__name__ == 'LabGuiMain'):
                 print(entry, dir(entry), type(entry))
                 if hasattr(entry, "relaunch"):
                     entry.relaunch(True)
@@ -1587,6 +1590,8 @@ def error_message(value):
         app.exit(LabGuiMain.EXIT_CODE_REBOOT)
     else:
         sys.exit(0)
+
+
 def custom_exception_hook(exctype, value, traceback):
     # Print the error and traceback
     logging.error((exctype, value, traceback))
@@ -1594,8 +1599,11 @@ def custom_exception_hook(exctype, value, traceback):
     sys._excepthook(exctype, value, traceback)
     error_message(str(value))
 
+
 # Set the exception hook to our wrapping function
 sys.excepthook = custom_exception_hook
+
+
 ####################################################################
 def launch_LabGui():
     global ex, app
@@ -1607,8 +1615,6 @@ def launch_LabGui():
         ex.show()
         currentExitCode = app.exec_()
     sys.exit(currentExitCode)
-
-
 
 
 def test_automatic_fitting():
@@ -1689,7 +1695,6 @@ def test_user_variable_widget():
 
 
 def build_test():
-
     app = QApplication(sys.argv)
     form = LabGuiMain()
 
@@ -1726,7 +1731,6 @@ def build_test():
 
 
 def test_stop_DTT_isrunning_false():
-
     app = QApplication(sys.argv)
     form = LabGuiMain()
 

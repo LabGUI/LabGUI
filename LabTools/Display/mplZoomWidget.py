@@ -452,7 +452,7 @@ class MatplotlibZoomWidget(MatplotlibWidget):
         super(MatplotlibZoomWidget, self).wheelEvent(event)
 
     def keyPressEvent(self, event):
-        print ("hmmm")
+        print("hmmm")
         key = event.key()
         if key == QtCore.Qt.Key_Left:
             x_min, x_max = self.active_axes.get_xlim()
@@ -482,7 +482,7 @@ class MatplotlibZoomWidget(MatplotlibWidget):
         super(MatplotlibZoomWidget, self).keyEvent(event)
 
     def focusInEvent(self, event):
-        print ("focus!")
+        print("focus!")
         super(MatplotlibZoomWidget, self).focusInEvent(event)
 
     def grab_line_closest_to(self, x, y):

@@ -35,10 +35,10 @@ def concatenate_list(alist):
     """
     answer = ""
     for i, el in enumerate(alist):
-        if i == len(alist)-1:
-            answer = answer+"%s" % (el)
+        if i == len(alist) - 1:
+            answer = answer + "%s" % (el)
         else:
-            answer = answer+"%s;" % (el)
+            answer = answer + "%s;" % (el)
     return answer
 
 
@@ -139,12 +139,12 @@ def restrict_function_parameters(func, param_values):
         #        print var
 
         if not val == None:
-            old_func_cmd = old_func_cmd+", %s" % (val)
+            old_func_cmd = old_func_cmd + ", %s" % (val)
         else:
-            old_func_cmd = old_func_cmd+", %s" % (var)
-            new_func_cmd = new_func_cmd+", %s" % (var)
+            old_func_cmd = old_func_cmd + ", %s" % (var)
+            new_func_cmd = new_func_cmd + ", %s" % (var)
 
-    new_func_cmd = new_func_cmd+": "+old_func_cmd+")"
+    new_func_cmd = new_func_cmd + ": " + old_func_cmd + ")"
 #    print new_func_cmd
 
     # "%(new_func_name,var_names[0],var_names[1],var_names[0],var_names[1],var_names[2]))
@@ -199,9 +199,9 @@ class FittingData():
         # the original data is stored in the index 0 of the array
         # self.data_subset and have the value self.active_set set to -1
         self.data_subsets = [{'guess': OrderedDict([('m', None), ('h', None)]), 'phys_param': ['Slope'], 'Fit_line_idx': 1, 'limits': [], 'X_line_idx': 0, 'fit_func': 'linear', 'cov': np.array([[0.00455464, -0.02049587],
-                                                                                                                                                                                                  [-0.02049587,  0.12980716]]), 'fit_func_params': OrderedDict([('m', 1.0848484824657372), ('h', -0.58181816674964493)]), 'mode': 1, 'fix_param': OrderedDict([('m', False), ('h', False)])}, {'guess': OrderedDict([('m', None), ('h', None)]), 'phys_param': ['Slope'], 'Fit_line_idx': 1, 'limits': [], 'X_line_idx': 0, 'fit_func': 'linear', 'cov': np.array([[0.00455464, -0.02049587],
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   [-0.02049587,  0.12980716]]), 'fit_func_params': OrderedDict([('m', 1.0848484824657372), ('h', -0.58181816674964493)]), 'mode': 1, 'fix_param': OrderedDict([('m', False), ('h', False)])}, {'guess': OrderedDict([('m', None), ('h', None)]), 'phys_param': ['Slope'], 'Fit_line_idx': 1, 'limits': [], 'X_line_idx': 0, 'fit_func': 'linear', 'cov': np.array([[0.00455464, -0.02049587],
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    [-0.02049587,  0.12980716]]), 'fit_func_params': OrderedDict([('m', 1.0848484824657372), ('h', -0.58181816674964493)]), 'mode': 1, 'fix_param': OrderedDict([('m', False), ('h', False)])}]
+                                                                                                                                                                                                  [-0.02049587, 0.12980716]]), 'fit_func_params': OrderedDict([('m', 1.0848484824657372), ('h', -0.58181816674964493)]), 'mode': 1, 'fix_param': OrderedDict([('m', False), ('h', False)])}, {'guess': OrderedDict([('m', None), ('h', None)]), 'phys_param': ['Slope'], 'Fit_line_idx': 1, 'limits': [], 'X_line_idx': 0, 'fit_func': 'linear', 'cov': np.array([[0.00455464, -0.02049587],
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  [-0.02049587, 0.12980716]]), 'fit_func_params': OrderedDict([('m', 1.0848484824657372), ('h', -0.58181816674964493)]), 'mode': 1, 'fix_param': OrderedDict([('m', False), ('h', False)])}, {'guess': OrderedDict([('m', None), ('h', None)]), 'phys_param': ['Slope'], 'Fit_line_idx': 1, 'limits': [], 'X_line_idx': 0, 'fit_func': 'linear', 'cov': np.array([[0.00455464, -0.02049587],
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  [-0.02049587, 0.12980716]]), 'fit_func_params': OrderedDict([('m', 1.0848484824657372), ('h', -0.58181816674964493)]), 'mode': 1, 'fix_param': OrderedDict([('m', False), ('h', False)])}]
         self.active_set = -1
 
     def create_subset(self, fit_params, phys_param=None):
@@ -224,7 +224,7 @@ class FittingData():
             of.write(
                 "#Xrow,Yrow,fonction,line_idx,param_name,param_value,physical_param\n")
             for ds in self.data_subsets:
-                line = "%s,"*6 + "%s\n"
+                line = "%s," * 6 + "%s\n"
                 line_idx = concatenate_list(ds["limits"][0:2])
 #                print(line_idx)
                 param_name = concatenate_list(ds["fit_func_params"].keys())
@@ -284,7 +284,7 @@ if __name__ == "__main__":
 #                start = bounds[0]
 #                end = bounds[1] - 1
 #                answer = np.array(self.data_set[start:end, param])
-##                print answer
+# print answer
 #            else:
 #                answer = np.array(self.data_set[:, param])
 #        else:
@@ -815,9 +815,9 @@ def test_fit_exponential():
             answer = np.append(answer, 0.05 * (random.random() - 0.5))
             dt = np.append(dt, idx)
             idx += 1
-        for t in range(3*tau):
+        for t in range(3 * tau):
             answer = np.append(answer, exp_decay(
-                idx-t_off, Yfinal, tau, 0) * (1 + 0.05 * (random.random() - 0.5)))
+                idx - t_off, Yfinal, tau, 0) * (1 + 0.05 * (random.random() - 0.5)))
             dt = np.append(dt, idx)
             idx += 1
 
@@ -834,7 +834,7 @@ def test_fit_exponential():
     idx_s = 60
 
     fitp_val, cov = fit_nonlinear(t[idx_b:idx_s], y[idx_b:idx_s], exp_decay, guess_param=[
-                                  y[idx_b], t[idx_s]-t[idx_b], t[idx_s]])
+                                  y[idx_b], t[idx_s] - t[idx_b], t[idx_s]])
     print(fitp_val)
     plt.plot(t, y, 'b', t[idx_b:idx_s], y[idx_b:idx_s],
              'or', exp_decay(t, *fitp_val), '--k')
@@ -849,13 +849,13 @@ def test_fit_exponential_down():
         dt = np.array([])
         idx = 0
         for t in range(t_off):
-            answer = np.append(answer, (dY+Y_inf) *
+            answer = np.append(answer, (dY + Y_inf) *
                                (1 + 0.05 * (random.random() - 0.5)))
             dt = np.append(dt, idx)
             idx += 1
-        for t in range(3*tau):
+        for t in range(3 * tau):
             answer = np.append(answer, exp_decay_down(
-                idx-t_off, Y_inf, dY, tau, 0)*(1 + 0.05 * (random.random() - 0.5)))
+                idx - t_off, Y_inf, dY, tau, 0) * (1 + 0.05 * (random.random() - 0.5)))
             dt = np.append(dt, idx)
             idx += 1
 

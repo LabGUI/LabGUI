@@ -58,16 +58,12 @@ class SingleLineWidget(QtGui.QWidget):
         self.delete = QtGui.QPushButton()
         self.delete.setText("x")
         self.delete.setFixedWidth(20)
-        #self.delete.setFixedHeight(20)
+        # self.delete.setFixedHeight(20)
         #self.delete.setStyleSheet("QPushButton {background-color: red;}")
-
-
 
         # set event
 
         self.delete.clicked.connect(self.self_destruct)
-
-
 
         # make and set layout
         self.layout = QtGui.QHBoxLayout()
@@ -78,7 +74,6 @@ class SingleLineWidget(QtGui.QWidget):
         self.layout.addWidget(self.delete)
 
         self.setLayout(self.layout)
-
 
     def update_line_number(self, line):
         self.line = line
@@ -100,7 +95,6 @@ class SingleLineWidget(QtGui.QWidget):
         self.close()
 
 
-
 class UserDataWidget(QtGui.QWidget):
     """a QWidget to manage user variables
 
@@ -119,16 +113,14 @@ class UserDataWidget(QtGui.QWidget):
         super(UserDataWidget, self).__init__(parent)
 
         # important variables
-        self.lines = [] # stores SingleLineWidgets
+        self.lines = []  # stores SingleLineWidgets
         self.names = ["notes"]
-
 
         # Create
         self.create_line_layout()
         self.create_addrm_layout()
         self.create_notes_textedit()
         self.create_footer_layout()
-
 
         self.layout = QtGui.QVBoxLayout(self)
 
@@ -139,23 +131,20 @@ class UserDataWidget(QtGui.QWidget):
         self.layout.addWidget(self.notes)
         self.layout.addLayout(self.footer_layout)
 
-
         # set layout
         self.setLayout(self.layout)
-
-
 
         # size policy
         self.setSizePolicy(QtGui.QSizePolicy(QtGui.QSizePolicy.Minimum,
                                              QtGui.QSizePolicy.Minimum))
 
-    #### CREATE QT ELEMENTS
+    # CREATE QT ELEMENTS
 
     def create_line_layout(self):
         self.line_layout = QtGui.QVBoxLayout()
 
         # so its tight
-        self.line_layout.setContentsMargins(0,0,0,0)
+        self.line_layout.setContentsMargins(0, 0, 0, 0)
         self.line_layout.setSpacing(0)
 
     def create_addrm_layout(self):
@@ -172,10 +161,8 @@ class UserDataWidget(QtGui.QWidget):
         self.addrm_layout.addWidget(self.bt_add)
         self.addrm_layout.addWidget(self.bt_rm)
 
-
     def create_notes_textedit(self):
         self.notes = QtGui.QTextEdit()
-
 
         self.notes.setPlaceholderText("Notes...")
 
@@ -184,12 +171,13 @@ class UserDataWidget(QtGui.QWidget):
 
     # Create variable function
     def new_line(self):
-        text, okPressed = QtGui.QInputDialog.getText(self, "New Data", "Data Name:", QtGui.QLineEdit.Normal, "")
+        text, okPressed = QtGui.QInputDialog.getText(
+            self, "New Data", "Data Name:", QtGui.QLineEdit.Normal, "")
         if okPressed and text != "":
             ret = self.create_line(text)
             if ret is False:
-                QtGui.QMessageBox.information(self, "Unable to create new data", "Data of same name already exists!")
-
+                QtGui.QMessageBox.information(
+                    self, "Unable to create new data", "Data of same name already exists!")
 
     def create_line(self, name):
         if name not in self.names:
@@ -211,7 +199,8 @@ class UserDataWidget(QtGui.QWidget):
             del self.names[id]
             self.update_lines()
         else:
-            logging.debug("Incorrect index %s for data line"%str(id))
+            logging.debug("Incorrect index %s for data line" % str(id))
+
     def remove_line_last(self):
         self.line_layout.removeWidget(self.lines[-1])
         self.lines[-1].close()
@@ -230,14 +219,13 @@ class UserDataWidget(QtGui.QWidget):
     def update_lines(self):
         for i, widget in enumerate(self.lines):
             widget.update_line_number(i)
-    ### EVENTS
+    # EVENTS
 
     def bt_add_click(self):
         self.new_line()
 
     def bt_rm_click(self):
         self.remove_line_last()
-
 
     def get_user_data(self):
         ret = {}
@@ -257,7 +245,7 @@ class UserDataWidget(QtGui.QWidget):
                 try:
                     self.create_line(name).set_data(data)
                 except:
-                    logging.debug("Two data points of same name %s?"%name)
+                    logging.debug("Two data points of same name %s?" % name)
         self.update_lines()
 
     def set_user_data_parse(self, arr):
@@ -271,7 +259,7 @@ class UserDataWidget(QtGui.QWidget):
         self.set_user_data(obj)
 
 
-### NOT USED
+# NOT USED
 def get_user_data(parent, variables_dict):
     """
     called the method of the datataker to update the dict structure containing
@@ -287,7 +275,6 @@ def set_user_data(parent, variables_dict):
     """
     parent.datataker.update_user_variables(variables_dict)
     parent.widgets['userDataWidget'].loadUserVariables.emit(parent.datataker.user_data)
-
 
 
 def add_widget_into_main(parent):
@@ -328,7 +315,8 @@ def add_widget_into_main(parent):
     #                                       parent,
     #                                       parent.__class__)
     if USE_PYQT5:
-        parent.widgets['userDataWidget'].loadUserVariables.connect(parent.widgets['userDataWidget'].set_user_data)
+        parent.widgets['userDataWidget'].loadUserVariables.connect(
+            parent.widgets['userDataWidget'].set_user_data)
     # connect a trigger to that method
     # if USE_PYQT5:
     #

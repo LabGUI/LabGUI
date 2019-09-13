@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 #import visa
 
+import logging
 from collections import OrderedDict
 from numpy import nan
 
@@ -15,9 +16,6 @@ param = OrderedDict([('X', 'V'), ('Y', 'V'), ('R', 'V'), ('PHASE', 'degrees'),
                      ('AIN_1', 'V'), ('AIN_2', 'V'), ('AIN_3', 'V'), ('AIN_4', 'V'), ('AOUT_1', 'V'), ('AOUT_2', 'V'), ('AOUT_3', 'V'), ('AOUT_4', 'V'), ('FREQ', 'Hz')])
 
 INTERFACE = Tool.INTF_GPIB
-
-
-import logging
 
 
 class Instrument(Tool.MeasInstr):
@@ -43,9 +41,9 @@ class Instrument(Tool.MeasInstr):
         of available channels is given by the keys in param.
 
         Args:
-            channel (string): the channel to measure. 
+            channel (string): the channel to measure.
         """
-        #Note, if ordered, param.keys().index(channel) gives read number
+        # Note, if ordered, param.keys().index(channel) gives read number
         if channel in param:
             if channel == 'X':
                 answer = self.read_input(1)
@@ -83,7 +81,7 @@ class Instrument(Tool.MeasInstr):
         return answer
 
     def set_scale(self, scale):
-        """ Set the sensitivity of the input channel. Refer to SR830 
+        """ Set the sensitivity of the input channel. Refer to SR830
         documentation for the full list of settings
 
         Args:
@@ -125,8 +123,8 @@ class Instrument(Tool.MeasInstr):
     def set_freq(self, freq):
         """ Set the frequency of the reference channel.
 
-        Args: 
-            freq (float): frequency in Hertz. 
+        Args:
+            freq (float): frequency in Hertz.
         """
         self.write('FREQ ' + str(freq))
 
@@ -145,10 +143,10 @@ class Instrument(Tool.MeasInstr):
         self.write('HARM ' + str(harm))
 
     def read_aux_in(self, chan):
-        """ Reads the AuxIn voltage value of the lock-in. 
+        """ Reads the AuxIn voltage value of the lock-in.
 
-        Args: 
-            chan (int): channel to read, one of 1, 2 ,3 or 4. 
+        Args:
+            chan (int): channel to read, one of 1, 2 ,3 or 4.
         """
         if not self.debug:
             self.write('OAUX? ' + str(chan))
@@ -157,10 +155,10 @@ class Instrument(Tool.MeasInstr):
             return 1.234
 
     def read_aux_out(self, chan):
-        """ Reads the AuxOut voltage value of the lock-in. 
+        """ Reads the AuxOut voltage value of the lock-in.
 
-        Args: 
-            chan (int): channel to read, one of 1, 2 ,3 or 4. 
+        Args:
+            chan (int): channel to read, one of 1, 2 ,3 or 4.
         """
         if not self.debug:
             self.write('AUXV? ' + str(chan))
@@ -169,16 +167,16 @@ class Instrument(Tool.MeasInstr):
             return 1.234
 
     def set_aux_out(self, chan, volts):
-        """ Sets the AuxOut voltage value for the lock-in. 
+        """ Sets the AuxOut voltage value for the lock-in.
 
-        Args: 
-            chan (int): channel to read, one of 1, 2 ,3 or 4. 
+        Args:
+            chan (int): channel to read, one of 1, 2 ,3 or 4.
         """
         self.write('AUXV ' + str(chan) + ", " + str(volts))
 
     def read_input(self, num):
         """
-        Reads the specificed input of the lockin. 
+        Reads the specificed input of the lockin.
 
         Args:
             num (int): 1=x, 2=y, 3=r, 4=phase

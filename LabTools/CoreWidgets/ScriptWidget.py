@@ -6,6 +6,7 @@ Copyright (C) 10th april 2015 Benjamin Schmidt
 License: see LICENSE.txt file
 """
 
+from LabTools.IO import IOTool
 import sys
 
 from LocalVars import USE_PYQT5
@@ -19,9 +20,6 @@ else:
 
     from PyQt4.QtGui import (QWidget, QLabel, QLineEdit, QPushButton,
                              QFileDialog, QHBoxLayout, QApplication)
-
-
-from LabTools.IO import IOTool
 
 
 class ScriptWidget(QWidget):

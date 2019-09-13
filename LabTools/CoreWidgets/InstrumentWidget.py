@@ -5,6 +5,9 @@ Created on Fri Jul 19 17:19:44 2013
 Copyright (C) 10th april 2015 Benjamin Schmidt & Pierre-Francois Duc
 License: see LICENSE.txt file
 """
+from LabTools.Display.PlotPreferences import color_blind_friendly_colors
+import LabDrivers.utils
+import LabDrivers.Tool as Tool
 import sys
 import logging
 from types import MethodType
@@ -20,9 +23,6 @@ else:
     import PyQt4.QtGui as QtGui
     from PyQt4.QtCore import SIGNAL, Qt
 
-import LabDrivers.Tool as Tool
-import LabDrivers.utils
-from LabTools.Display.PlotPreferences import color_blind_friendly_colors
 
 DEFAULT_INSTR_NUMBER = 2
 
@@ -145,7 +145,7 @@ QComboBox::down-arrow {image: url(noimg); border-width: 0px;}")
             cbb.addItems(self.AVAILABLE_PARAMS['TIME'])
             cbb.setCurrentIndex(cbb.findText("dt"))
             cbb.currentIndexChanged.connect(self.combobox_unit_handler)
-            cbb.setFixedWidth(width_param*1.5)
+            cbb.setFixedWidth(width_param * 1.5)
 
         return cbb
 
@@ -477,7 +477,7 @@ class InstrumentWindow(QtGui.QWidget):
 
     def create_line(self, msg="", color=None):
 
-        self.color_set = color_blind_friendly_colors(len(self.lines)+1)
+        self.color_set = color_blind_friendly_colors(len(self.lines) + 1)
 
 #        if color==None:
 
@@ -601,8 +601,10 @@ class InstrumentWindow(QtGui.QWidget):
             else:
 
                 self.emit(SIGNAL("ConnectInstrumentHub(bool)"), True)
+
     def bt_connectHub_clickedstyle(self):
         self.bt_connecthub.setStyleSheet("background-color : '#b3e0ff'")
+
     def bt_connectHub_resetstyle(self):
         """
         This method is called when forcing a disconnect
@@ -854,6 +856,7 @@ def refresh_ports_list(parent):
 
     parent.widgets['InstrumentWidget'].refresh_cbb_port()
 
+
 def disconnect_instrument_hub(parent):
     """
         When "disconnect" is called
@@ -869,9 +872,10 @@ def disconnect_instrument_hub(parent):
     else:
 
         parent.emit(
-            SIGNAL("instrument_hub_disconnected()") )
+            SIGNAL("instrument_hub_disconnected()"))
 
     parent.widgets['InstrumentWidget'].bt_connectHub_resetstyle()
+
 
 def connect_instrument_hub(parent):
     """
@@ -934,7 +938,7 @@ def connect_instrument_hub(parent):
         print()
         logging.warning("You cannot connect a number of instrument \
 different than " + str(actual_instrument_number)
-                        + " when the datataker is running")
+            + " when the datataker is running")
         print()
 
     logging.debug("The instrument list : "
@@ -999,7 +1003,7 @@ def add_widget_into_main(parent):
                                                    parent)
 
         parent.disconnect_instrument_hub = MethodType(disconnect_instrument_hub,
-                                                   parent)
+                                                      parent)
 
     else:
 
@@ -1007,7 +1011,7 @@ def add_widget_into_main(parent):
                                                    parent, parent.__class__)
 
         parent.disconnect_instrument_hub = MethodType(disconnect_instrument_hub,
-                                                   parent, parent.__class__)
+                                                      parent, parent.__class__)
 
     if USE_PYQT5:
 

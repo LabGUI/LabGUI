@@ -11,12 +11,13 @@ Created on Thu Apr 16 15:02:46 2015
 class to talk to SCPI-compliant RF sources. Tested on Agilent E4400B
 '''
 
+
 try:
+from numpy import power
     from . import Tool
 except:
     import Tool
 
-from numpy import power
 
 param = {'V': 'V', 'P': 'mbar'}
 
@@ -60,9 +61,9 @@ class Instrument(Tool.MeasInstr):
         return answer
 #    MEASure[:VOLTage][:DC]? [{<
 # range
-#>|AUTO|MIN|MAX|DEF} [,{<
+# >|AUTO|MIN|MAX|DEF} [,{<
 # resolution
-#>|MIN|MAX|DEF}] ]
+# >|MIN|MAX|DEF}] ]
 
 
 # if run as own program
@@ -70,6 +71,6 @@ if (__name__ == '__main__'):
 
     i = Instrument('GPIB0::23')
     print(i.identify())
-    print (i.measure('V'))
+    print(i.measure('V'))
 #    print i.measure('P')
     i.close()

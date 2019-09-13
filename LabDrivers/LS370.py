@@ -48,7 +48,7 @@ class Instrument(Tool.MeasInstr):
         if channel in self.last_measure:
             if not self.DEBUG:
                 if channel == 'heater':
-                    return self.get_heater_range_value()*self.get_heater_output()*0.01
+                    return self.get_heater_range_value() * self.get_heater_output() * 0.01
                 else:
                     answer = self.read_channel(
                         CHANNELS_IDX[channel], param[channel])
@@ -243,7 +243,7 @@ above the threshold of %.3f A : %.6f A" % (MANUAL_HTR_MAX_CURRENT, current))
                 htr_range = htr_range[0]
 
             # heater output in percent
-            htr_output = np.round(100*(current/htr_range), 2)
+            htr_output = np.round(100 * (current / htr_range), 2)
 
             # set the heater output
             self.set_heater_output(htr_output)
@@ -268,7 +268,7 @@ above the threshold of %.3f A : %.6f A" % (MANUAL_HTR_MAX_CURRENT, current))
         if not self.DEBUG:
             return float(self.ask('MOUT ?'))
         else:
-            return np.round(random.random()*100, 2)
+            return np.round(random.random() * 100, 2)
 
     def auto_scan(self):
         if not self.DEBUG:

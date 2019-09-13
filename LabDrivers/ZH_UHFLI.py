@@ -43,25 +43,21 @@ except:
     import Tool
 
 
-
-
-
-
 HOSTNAME = 'localhost'
-PORT = 8004 #default for this device
-API_LEVEL = 5 # version of the API to use
-DEVICE_ID = 2279 # differs from device to device, you must obtain this from LabONE, it is the serial number
+PORT = 8004  # default for this device
+API_LEVEL = 5  # version of the API to use
+DEVICE_ID = 2279  # differs from device to device, you must obtain this from LabONE, it is the serial number
 
-param = { # sample of data that it can read
-    'X0' : 'V',
-    'Y0' : 'V',
-#    'R0' : 'V', DOES NOT APPEAR TO BE OBTAINABLE THROUGH SAMPLE
-    'Aux0in0' : 'V',
-    'Aux1in0' : 'V',
-    'Phase0' : 'Rad',
-    'Frequency0' : 'Hz',
+param = {  # sample of data that it can read
+    'X0': 'V',
+    'Y0': 'V',
+    #    'R0' : 'V', DOES NOT APPEAR TO BE OBTAINABLE THROUGH SAMPLE
+    'Aux0in0': 'V',
+    'Aux1in0': 'V',
+    'Phase0': 'Rad',
+    'Frequency0': 'Hz',
 }
-for i in range(0,8): #creates values for all modulators
+for i in range(0, 8):  # creates values for all modulators
     param['X' + str(i)] = 'V'
     param['Y' + str(i)] = 'V'
 #    param['R' + str(i)] = 'V'
@@ -70,8 +66,9 @@ for i in range(0,8): #creates values for all modulators
     param['Phase' + str(i)] = 'Rad'
     param['Frequency' + str(i)] = 'Hz'
 
-INTERFACE = Tool.INTF_NONE # will be custom
+INTERFACE = Tool.INTF_NONE  # will be custom
 NAME = 'ZH_UHFLI'
+
 
 class Instrument(Tool.MeasInstr):
     """"This class is the driver of the instrument *NAME*"""""
@@ -79,13 +76,13 @@ class Instrument(Tool.MeasInstr):
     def __init__(self, resource_name=None, debug=False, **kwargs):
 
         super(Instrument, self).__init__(resource_name,
-                                          name=NAME,
-                                          debug=debug,
-                                          interface=INTERFACE,
-                                          **kwargs)
+                                         name=NAME,
+                                         debug=debug,
+                                         interface=INTERFACE,
+                                         **kwargs)
         self.INFO = True
         # name device
-        self.dev = 'dev'+str(DEVICE_ID)
+        self.dev = 'dev' + str(DEVICE_ID)
         # make sure all required parameters are set, and make all first measured values equal zero
         for chan, u in list(param.items()):
             self.channels.append(chan)
@@ -110,12 +107,12 @@ class Instrument(Tool.MeasInstr):
 
         if channel in param:
             if 'X' in channel:
-                #get number
+                # get number
                 number = channel[1:]
-                sample = self.get_sample('/'+self.dev+'/demods/'+number+'/sample')
+                sample = self.get_sample('/' + self.dev + '/demods/' + number + '/sample')
                 answer = sample['x'][0]
             elif 'Y' in channel:
-                #get number
+                # get number
                 number = channel[1:]
                 sample = self.get_sample('/' + self.dev + '/demods/' + number + '/sample')
                 answer = sample['y'][0]
@@ -132,12 +129,12 @@ class Instrument(Tool.MeasInstr):
                 sample = self.get_sample('/' + self.dev + '/demods/' + number + '/sample')
                 answer = sample['auxin1'][0]
             elif 'Phase' in channel:
-                #get number
+                # get number
                 number = channel[5:]
                 sample = self.get_sample('/' + self.dev + '/demods/' + number + '/sample')
                 answer = sample['phase'][0]
             elif 'Frequency' in channel:
-                #get number
+                # get number
                 number = channel[9:]
                 sample = self.get_sample('/' + self.dev + '/demods/' + number + '/sample')
                 answer = sample['frequency'][0]
@@ -149,14 +146,13 @@ class Instrument(Tool.MeasInstr):
         self.last_measure[channel] = answer
         return answer
 
-
     def get_sample(self, stri):
         if not self.DEBUG:
             try:
                 return self.daq.getSample(stri)
             except:
                 time.sleep(0.1)
-                print ("Zurich has died for a moment!")
+                print("Zurich has died for a moment!")
                 try:
                     return self.daq.getSample(stri)
                 except:
@@ -170,11 +166,3 @@ class Instrument(Tool.MeasInstr):
 
 if __name__ == "__main__":
     i = Instrument()
-
-
-
-
-
-
-
-

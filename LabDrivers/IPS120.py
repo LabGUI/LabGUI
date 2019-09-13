@@ -98,7 +98,7 @@ class Instrument(Tool.MeasInstr):
         self.goto_set()
 
         still_ramping = True
-        print ("Ramping field...")
+        print("Ramping field...")
         while still_ramping:
             actual_field = self.read_field()
             # floating point numbers may be close enough but not "pre

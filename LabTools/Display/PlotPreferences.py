@@ -61,7 +61,7 @@ def generate_log_scale_tick_lines(expo, display="odd"):
                 ticks_lab.append(r"$10^{%i}$" % (e))
             else:
                 ticks_lab.append(r"")
-            ticks.append(i*pow(10, e))
+            ticks.append(i * pow(10, e))
 
     return ticks, ticks_lab
 

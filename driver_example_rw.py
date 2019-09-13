@@ -18,8 +18,8 @@ except:
 
 # what is written in param is measurable types of data, where the key represents the channel that will be passed to Instrument.measure(channel)
 param = {
-    'Name' : 'Unit',
-    'Channel' : 'Unit'
+    'Name': 'Unit',
+    'Channel': 'Unit'
 }
 """
 The following variable, 'properties', determines internally whether or not this device supports writing
@@ -28,36 +28,36 @@ This object MUST contain two fields, 'type' and 'range'. Below is an example for
 """
 properties = {
     'Selection box/Dropdown Menu': {
-        'type':'selection',
-        'range':[
+        'type': 'selection',
+        'range': [
             'option',
             'another option',
             'a third option',
             'unsurprisingly, a fourth option'
-        ] # each item in range will be a selectable item in the dropdown menu
+        ]  # each item in range will be a selectable item in the dropdown menu
     },
     'Float only': {
-        'type':'float',
-        'range':[-100, 100], # float range for QIntValidator
-        'unit':'U' # optional unit
+        'type': 'float',
+        'range': [-100, 100],  # float range for QIntValidator
+        'unit': 'U'  # optional unit
     },
     'Int only': {
-        'type':'int',
-        'range':[-100, 100], # integer range for QIntValidator
-        'unit':'U' # optional unit
+        'type': 'int',
+        'range': [-100, 100],  # integer range for QIntValidator
+        'unit': 'U'  # optional unit
     },
-    'Boolean type':{
-        'type':'bool',
-        'range':True #Can either be True or False, or disregarded
+    'Boolean type': {
+        'type': 'bool',
+        'range': True  # Can either be True or False, or disregarded
     },
-    'Text type':{
-        'type':'text',
-        'range':'Placeholder text'
+    'Text type': {
+        'type': 'text',
+        'range': 'Placeholder text'
     },
-    'Readonly type':{
-        'type':'text',
-        'range':'Still a placeholder',
-        'readonly':True
+    'Readonly type': {
+        'type': 'text',
+        'range': 'Still a placeholder',
+        'readonly': True
     },
     # the following is a 'multi type' which basically nests a set of properties of the same set with differing options
     'Multi type': {
@@ -140,8 +140,8 @@ INTF_NONE
 INTERFACE = Tool.INTF_GPIB
 
 
-#defining the actual instrument class
-class Instrument(Tool.MeasInstr): # Tool.MeasInstr is child class
+# defining the actual instrument class
+class Instrument(Tool.MeasInstr):  # Tool.MeasInstr is child class
     """"This class is the driver of the instrument *INSERT NAME HERE*"""""
 
     def __init__(self, resource_name, debug=False, **kwargs):
@@ -164,23 +164,23 @@ class Instrument(Tool.MeasInstr): # Tool.MeasInstr is child class
         #                                  **kwargs)
         #
         super(Instrument, self).__init__(resource_name,
-                                          name='insert device name here, typically the same name as the file',
-                                          debug=debug,
-                                          interface=INTERFACE,
-                                          **kwargs)
+                                         name='insert device name here, typically the same name as the file',
+                                         debug=debug,
+                                         interface=INTERFACE,
+                                         **kwargs)
         """ you may add any other important calls here """
 
     def measure(self, channel):
-        #this function is a requirement, as it is called when reading script is initialized. The only possibilities for channel is given by param.keys()
+        # this function is a requirement, as it is called when reading script is initialized. The only possibilities for channel is given by param.keys()
 
         if self.DEBUG:
             # do stuff if in debug mode is globally set
             print("Debug mode activated")
 
-        if channel in self.last_measure: # not required, but is a good idea to implement
+        if channel in self.last_measure:  # not required, but is a good idea to implement
             if not self.DEBUG:
                 if channel == 'Name':
-                    #this mean that the channel is the first in param dictionary
+                    # this mean that the channel is the first in param dictionary
                     answer = 'value'
                     """
                     You can use any of the self.ask, self.write, self.read to obtain data from the machine
@@ -242,18 +242,22 @@ class Instrument(Tool.MeasInstr): # Tool.MeasInstr is child class
         """
         ### example one ###
         default_value = 0
-        ret = dict((key,default_value) for key in properties.keys())
-        ret['specific_channel'] = self.get_value_for_specific_channel() # user written function within driver
-        ret['a_different_channel'] = self.get_value_for_a_different_channel() # another user written function within driver
+        ret = dict((key, default_value) for key in properties.keys())
+        # user written function within driver
+        ret['specific_channel'] = self.get_value_for_specific_channel()
+        # another user written function within driver
+        ret['a_different_channel'] = self.get_value_for_a_different_channel()
 
         return ret
         ### example two ###
         ret = {}
         for channel in properties.keys():
             if channel == 'specific_channel':
-                ret[channel] = self.get_value_for_specific_channel()  # user written function within driver
+                # user written function within driver
+                ret[channel] = self.get_value_for_specific_channel()
             elif channel == 'a_different_channel':
-                ret[channel] = self.get_value_for_a_different_channel()  # another user written function within driver
+                # another user written function within driver
+                ret[channel] = self.get_value_for_a_different_channel()
             elif channel == 'multi_channel':
                 ret[channel] = {
                     'option 1': self.get_multi_data('option 1'),
@@ -266,15 +270,8 @@ class Instrument(Tool.MeasInstr): # Tool.MeasInstr is child class
     # you may add any other functions here
 
 
-if __name__ == "__main__": # this mean driver is being ran alone
+if __name__ == "__main__":  # this mean driver is being ran alone
     i = Instrument("PORT", debug=False)
 
     # do stuff, like for example
     print(i.measure('Name'))
-
-
-
-
-
-
-

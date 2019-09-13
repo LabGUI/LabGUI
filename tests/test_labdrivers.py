@@ -14,7 +14,7 @@ def function_hdr(func):
     def new_function(*args, **kwargs):
         print("\n### %s ###\n" % func.__name__)
         return_value = func(*args, **kwargs)
-        print("\n### %s ###\n" % ('-'*len(func.__name__)))
+        print("\n### %s ###\n" % ('-' * len(func.__name__)))
         return return_value
     return new_function
 

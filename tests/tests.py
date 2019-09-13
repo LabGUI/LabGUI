@@ -66,6 +66,9 @@ Created on Wed Jun 28 15:23:23 2017
 #            # Verify some things
 #            print(w)
 #            assert issubclass(w[-1].category, UserWarning)
+from LabTools.IO import IOTool
+from LabGuiExceptions import DTT_Error, ScriptFile_Error
+import LabGui
 import sys
 import unittest
 import os
@@ -79,13 +82,10 @@ else:
     import PyQt4.QtGui as QtGui
     from PyQt4.QtTest import QTest
     from PyQt4.QtCore import Qt
-import LabGui
 
-from LabGuiExceptions import DTT_Error, ScriptFile_Error
 
 app = QtGui.QApplication(sys.argv)
 
-from LabTools.IO import IOTool
 
 TEST_CONFIG_FNAME = "config_test.txt"
 
@@ -99,7 +99,7 @@ def function_hdr(func):
     def new_function(*args, **kwargs):
         print("\n### %s ###\n" % func.__name__)
         return_value = func(*args, **kwargs)
-        print("\n### %s ###\n" % ('-'*len(func.__name__)))
+        print("\n### %s ###\n" % ('-' * len(func.__name__)))
         return return_value
     return new_function
 
@@ -201,9 +201,9 @@ class LabGuiTest(unittest.TestCase):
     def setUp(self):
         """Create the GUI"""
         print("")
-        print("%"*20)
+        print("%" * 20)
         print("Test setup")
-        print("%"*20)
+        print("%" * 20)
         print("")
         # create a configuration file specially for the tests
 
@@ -869,7 +869,7 @@ class LabGuiTest(unittest.TestCase):
         lines = f.readlines()
         for i in range(len(lines)):
             if "DEBUG" in lines[i]:
-                print("config.txt: "+lines[i])
+                print("config.txt: " + lines[i])
         f.close()
         print("\nChanging back debug state...")
         change_debug.trigger()
@@ -877,7 +877,7 @@ class LabGuiTest(unittest.TestCase):
         lines = f.readlines()
         for i in range(len(lines)):
             if "DEBUG" in lines[i]:
-                print("config.txt: "+lines[i])
+                print("config.txt: " + lines[i])
         f.close()
         # save_config.trigger()
 

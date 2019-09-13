@@ -16,13 +16,13 @@ from numpy import power as __power
 def exp_raise(t, Y_inf, tau, t_offset):
     """f(t) = Y_{\u221E}e<sup>{-(t-t<inf>{offset}</inf>)/\u03C4}</sup>"""
     t = __array(t, dtype=__float64)
-    return Y_inf * (1 - __exp(-((t-t_offset) / tau)))
+    return Y_inf * (1 - __exp(-((t - t_offset) / tau)))
 
 
 def exp_decay(t, Y_inf, dY, tau, t_offset):
     """f(t) = -Y_{\u221E} + \u0394 Y e^{-(t-t_{offset})/\u03C4}"""
     t = __array(t, dtype=__float64)
-    return -Y_inf + dY * __exp(-((t-t_offset) / tau))
+    return -Y_inf + dY * __exp(-((t - t_offset) / tau))
 
 
 # def integrate(x, Y):

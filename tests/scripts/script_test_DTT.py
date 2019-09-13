@@ -11,10 +11,10 @@ the namespace of DataTakerThread.
 import os
 
 print("INIT DONE")
-#print self.instruments
+# print self.instruments
 while self.isStopped() == False:
-    
-    #This initiates the measure sequence in datatakerthread
+
+    # This initiates the measure sequence in datatakerthread
 
     self.read_data()
     time.sleep(0.2)

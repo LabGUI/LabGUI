@@ -101,5 +101,6 @@ def T_to_R(T):
     resistance = np.interp(T, T_range, Res_range)
     return resistance
 
+
 if __name__ == "__main__":
     print(R_to_T(1663.49393))

@@ -15,7 +15,7 @@ class Instrument(Tool.MeasInstr):
     class to communicate with Highland Technologies T344 signal generator through RS-232
 
     Parameters
-    ----------    
+    ----------
     Name of the port (ie. COM1)
 
     """

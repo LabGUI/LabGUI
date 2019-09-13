@@ -12,11 +12,10 @@ Created on Fri Jul 19 17:19:44 2013
 @author: Ben
 """
 
+
 import sys
 from numpy import mod
-
 from LocalVars import USE_PYQT5
-
 if USE_PYQT5:
 
     from PyQt5.QtCore import Qt, pyqtSignal

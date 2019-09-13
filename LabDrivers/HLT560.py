@@ -66,7 +66,7 @@ class Instrument(Tool.MeasInstr):
             return msg + self.get_DeviceName()
         else:
             return msg + self.ID_name
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
    # Only for debugging, use the ID of a command and get the answer of the
    # instrument for a read instruction
 
@@ -181,7 +181,7 @@ class Instrument(Tool.MeasInstr):
         else:
             print(str(command_num) + " " + command_name +
                   " " + self.__command_list[1][command_name])
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
     def measure(self, channel):
         if not self.DEBUG:
@@ -203,8 +203,8 @@ class Instrument(Tool.MeasInstr):
             if dt < 10:
                 answer = 0.05 * (random.random() - 0.5)
             else:
-                answer = exp_decay(dt-10, 2, 15) * (1 + 0.05 *
-                                                    (random.random() - 0.5))
+                answer = exp_decay(dt - 10, 2, 15) * (1 + 0.05 *
+                                                      (random.random() - 0.5))
         return answer
 
     # get the lastest value of the flow and update the last measure

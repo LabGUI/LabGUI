@@ -4,6 +4,9 @@ Created on Wed Jun 28 15:23:23 2017
 
 @author: admin
 """
+from LabTools.IO import IOTool
+from LabGuiExceptions import DTT_Error, ScriptFile_Error
+import LabGui
 import sys
 import unittest
 import os
@@ -17,13 +20,10 @@ else:
     import PyQt4.QtGui as QtGui
     from PyQt4.QtTest import QTest
     from PyQt4.QtCore import Qt
-import LabGui
 
-from LabGuiExceptions import DTT_Error, ScriptFile_Error
 
 app = QtGui.QApplication(sys.argv)
 
-from LabTools.IO import IOTool
 
 TEST_CONFIG_FNAME = "config_test.txt"
 
@@ -42,7 +42,7 @@ def function_hdr(func):
     def new_function(*args, **kwargs):
         print("\n### %s ###\n" % func.__name__)
         return_value = func(*args, **kwargs)
-        print("\n### %s ###\n" % ('-'*len(func.__name__)))
+        print("\n### %s ###\n" % ('-' * len(func.__name__)))
         return return_value
     return new_function
 
@@ -74,7 +74,7 @@ def create_test_setting_file(fname="test_settings.set"):
 def create_test_load_data_file(fname=TEST_LOAD_DATA_FNAME):
 
     data_file = open(fname, "w")
-    lines=[
+    lines = [
         "#C'dt(s)', 'Roll()'\n",
         "#I'TIME[].dt', 'DICE[COM1].Roll'\n",
         "#P'dt', 'Roll'\n",
@@ -169,9 +169,9 @@ class LabGuiTest(unittest.TestCase):
     def setUp(self):
         """Create the GUI"""
         print("")
-        print("%"*20)
+        print("%" * 20)
         print("Test setup")
-        print("%"*20)
+        print("%" * 20)
         print("")
         # create a configuration file specially for the tests
 
@@ -287,7 +287,6 @@ class LabGuiTest(unittest.TestCase):
             QTest.keyClick(script, Qt.Key_Backspace)
         QTest.keyClicks(script, "%s/script_example.py" % (os.getcwd()))
 
-
     @function_hdr
     def test_load_data_not_existing_file(self):
         """test that it raises the correct exception"""
@@ -299,11 +298,11 @@ class LabGuiTest(unittest.TestCase):
         """test that it raises the correct exception"""
         self.form.create_plw(TEST_EMPTY_FILE_FNAME)
 
-
     @function_hdr
     def test_load_good_format_data_file(self):
         """test that it doesn't raises exception"""
         self.form.create_plw(TEST_LOAD_DATA_FNAME)
+
 
 if __name__ == "__main__":
 

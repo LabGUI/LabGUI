@@ -5,12 +5,14 @@ Created on Jun 7 2019
 @author: zackorenberg
 
 A widget designed to read/write properties to machine.
-"""
 
-"""
 Created for GervaisLabs
 """
 
+import io
+from collections import Iterable
+import numpy as np
+from LabTools.Display import QtTools
 import sys
 
 from types import MethodType
@@ -32,11 +34,6 @@ else:
     import PyQt4.QtGui as QtGui
     import PyQt4.QtCore as QtCore
 
-from LabTools.Display import QtTools
-
-import numpy as np
-
-from collections import Iterable
 
 try:
     from LabTools.Display import PlotDisplayWindow
@@ -46,10 +43,9 @@ except:
     print("Unable to import PlotDisplay, plotting offline. Must be run from LabGui root")
     PLOT = False
 
-import sys
-import io
 
 DEBUG = False
+
 
 class FunctionFormWidget(QtGui.QWidget):
 
@@ -81,11 +77,11 @@ class FunctionFormWidget(QtGui.QWidget):
             return
         # parse parameters
         for obj in parameters:
-            #print(obj)
+            # print(obj)
             text = obj['name']
             if 'unit' in obj.keys():
                 if obj['unit'] is not None:
-                    text = text+"("+obj['unit']+")"
+                    text = text + "(" + obj['unit'] + ")"
             elif 'units' in obj.keys():
                 if obj['units'] is not None:
                     text = text + "(" + obj['units'] + ")"
@@ -96,7 +92,7 @@ class FunctionFormWidget(QtGui.QWidget):
                 if self.required[obj['name']] == True:
                     label.setFont(self.bold_font)
             else:
-                self.required[obj['name']] = False # default
+                self.required[obj['name']] = False  # default
             # do default values
             if 'default' in obj.keys():
                 self.defaults[obj['name']] = obj['default']
@@ -118,7 +114,7 @@ class FunctionFormWidget(QtGui.QWidget):
             qtobject.setStyleSheet(self.ok_style)
             self.widgets[obj['name']] = qtobject
             self.layout.addRow(label, qtobject)
-        #self.setWidget(self.layout)
+        # self.setWidget(self.layout)
         self.setLayout(self.layout)
 
     ### FORM ITEMS ###
@@ -164,10 +160,11 @@ class FunctionFormWidget(QtGui.QWidget):
 
     ## EVENTS ##
     def change_setting(self, *args):
-        #print(args)
-        #unused for the moment:
-        i=1
+        # print(args)
+        # unused for the moment:
+        i = 1
     ### for getting input values ###
+
     def get_input(self):
         ret = {}
         flag = True
@@ -179,11 +176,11 @@ class FunctionFormWidget(QtGui.QWidget):
                     self.widgets[name].style().polish(self.widgets[name])
                     flag = False
                 else:
-                    self.widgets[name].setStyleSheet(self.ok_style) # incase it has been corrected
+                    self.widgets[name].setStyleSheet(self.ok_style)  # incase it has been corrected
                     self.widgets[name].style().unpolish(self.widgets[name])
             else:
                 if data == '':
-                    data = None # so user only needs to check if it contains value
+                    data = None  # so user only needs to check if it contains value
             ret[name] = data
         if flag:
             return ret
@@ -257,19 +254,19 @@ class DeviceFunctionWidget(QtGui.QWidget):
             self.functions = {
                 'Function 1': [
                     {
-                        'name':'TextEdit',
-                        'type':'text',
-                        'range':'Placeholder text',
-                        'units':None,
-                        'required':True
-                    }, #param for text
+                        'name': 'TextEdit',
+                        'type': 'text',
+                        'range': 'Placeholder text',
+                        'units': None,
+                        'required': True
+                    },  # param for text
                     {
-                        'name':'Integer',
-                        'type':'int',
-                        'range':[-100, 100],
+                        'name': 'Integer',
+                        'type': 'int',
+                        'range': [-100, 100],
                         'units':'Z',
                         'required':True
-                    }, #param for int
+                    },  # param for int
                     {
                         'name': 'Float',
                         'type': 'float',
@@ -281,32 +278,31 @@ class DeviceFunctionWidget(QtGui.QWidget):
                     {
                         'name': 'DropdownMenu',
                         'type': 'selector',
-                        'range':['A','B','C'],
+                        'range': ['A', 'B', 'C'],
                         'units':None,
                         'required':True
-                    }, # param for dropdown
+                    },  # param for dropdown
                     {
                         'name': 'Boolean',
-                        'type':'bool',
-                        'range':True,
-                        'units':None,
-                        'required':True # shouldnt matter
-                    } # param for boolean
+                        'type': 'bool',
+                        'range': True,
+                        'units': None,
+                        'required': True  # shouldnt matter
+                    }  # param for boolean
                 ]
-            } # debug each type
+            }  # debug each type
         else:
             self.functions = function_obj
 
         self.layout = QtGui.QGridLayout(self)
-        #self.layout
+        # self.layout
         self.prop_items = {}
         self.list_view = None
         self.stacked = QtGui.QStackedWidget(self)
         self.widgets = {}
         self.scrollareas = {}
 
-        self.current_function = None #'Voltage Pulse Sweep'
-
+        self.current_function = None  # 'Voltage Pulse Sweep'
 
         if self.device == None:
             self.layout = QtGui.QVBoxLayout(self)
@@ -324,7 +320,7 @@ class DeviceFunctionWidget(QtGui.QWidget):
         else:
             # create listview with all functions
             self.list_view = self.create_listview()
-            #self.list_view.setMaximumWidth(150)
+            # self.list_view.setMaximumWidth(150)
             # create form of items to be sent to its own scrollable widget
             # for iobj in self.functions:
             #     item = iobj['name']
@@ -349,7 +345,6 @@ class DeviceFunctionWidget(QtGui.QWidget):
             # create form with Run, Plot, and Clear
             # add functions to stacked
 
-
             # add functions
             self.addFunctions()
             # set current
@@ -363,33 +358,35 @@ class DeviceFunctionWidget(QtGui.QWidget):
             # add stuff to the layout
             self.layout.addWidget(self.list_view, 0, 0, 5, 1)
             self.layout.addWidget(self.stacked, 0, 1, 4, 4)
-            self.layout.addWidget(self.run_btn,4,1, 1, 1)
-            self.layout.addWidget(self.plot_btn,4,2, 1, 1)
-            self.layout.addWidget(self.clear_btn,4,3, 1, 1)
-            self.layout.addWidget(self.defaults_btn,4,4,1,1)
+            self.layout.addWidget(self.run_btn, 4, 1, 1, 1)
+            self.layout.addWidget(self.plot_btn, 4, 2, 1, 1)
+            self.layout.addWidget(self.clear_btn, 4, 3, 1, 1)
+            self.layout.addWidget(self.defaults_btn, 4, 4, 1, 1)
             # make the row/col stretch (aesthetics)
             for i in range(0, 5):
                 self.layout.setRowStretch(i, 1)
-                for j in range(1,5):
+                for j in range(1, 5):
                     self.layout.setColumnStretch(j, 1)
-            self.layout.setColumnStretch(0,2)
-
+            self.layout.setColumnStretch(0, 2)
 
         self.setLayout(self.layout)
 
-
     ### init helper functions ###
+
     def addFunctions(self):
         for name, obj in self.functions.items():
-            self.widgets[name] = FunctionFormWidget(self.device, name, obj, parent=self, debug=self.DEBUG)
+            self.widgets[name] = FunctionFormWidget(
+                self.device, name, obj, parent=self, debug=self.DEBUG)
             self.scrollareas[name] = QtGui.QScrollArea(self)
             self.scrollareas[name].setWidget(self.widgets[name])
             self.scrollareas[name].setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
             self.scrollareas[name].setEnabled(True)
             self.scrollareas[name].setWidgetResizable(True)
             self.stacked.addWidget(self.scrollareas[name])
-        self.widgets[None] = FunctionFormWidget(self.device, None, obj, parent=self, debug=self.DEBUG)
-        self.widgets['NotExist'] = FunctionFormWidget(self.device, 'NotExist', obj, parent=self, debug=self.DEBUG)
+        self.widgets[None] = FunctionFormWidget(
+            self.device, None, obj, parent=self, debug=self.DEBUG)
+        self.widgets['NotExist'] = FunctionFormWidget(
+            self.device, 'NotExist', obj, parent=self, debug=self.DEBUG)
         for name in [None, 'NotExist']:
             self.scrollareas[name] = QtGui.QScrollArea(self)
             self.scrollareas[name].setWidget(self.widgets[name])
@@ -398,36 +395,37 @@ class DeviceFunctionWidget(QtGui.QWidget):
             self.scrollareas[name].setWidgetResizable(True)
             self.stacked.addWidget(self.scrollareas[name])
 
-
     ### events ###
+
     def run_event(self, *args):
-        #print(args)
+        # print(args)
         #model_id = self.list_view.currentIndex()
         #funct_data = self.list_view_model.itemData(model_id)
         #name = self.list_view_model.objectName()
         #print(funct_data, name)
         data = self.widgets[self.current_function].get_input()
-        if data == None: # if there was an error from the input
+        if data == None:  # if there was an error from the input
             return
 
         if self.current_function in self.functions.keys():
             try:
                 rdata = self.parent.run_function(self.current_function, data)
             except:
-                print("Error executing function: ",sys.exc_info()[0])
+                print("Error executing function: ", sys.exc_info()[0])
                 print(sys.exc_info())
                 # add alert box maybe?
                 return
-            #print(data)
+            # print(data)
             # here is where we save the data:
             filename = IOTools.get_funct_save_name(self.device, self.current_function)
             if self.parent.save_data(filename, rdata, function=self.current_function, device=self.device, params=data):
-                print("Data saved to: "+filename)
+                print("Data saved to: " + filename)
             return rdata
 
     def clear_event(self, *args):
         self.widgets[self.current_function].clear_input()
-        #print(args)
+        # print(args)
+
     def plot_event(self, *args):
         try:
             data = self.run_event(*args)
@@ -439,27 +437,24 @@ class DeviceFunctionWidget(QtGui.QWidget):
         except:
             print(sys.exc_info())
 
-
     def defaults_event(self, *args):
         self.widgets[self.current_function].default_input()
 
-
-    def get_properties(self): # return properties to be set by another class
+    def get_properties(self):  # return properties to be set by another class
         ret = {}
-        #print(self.prop_items)
+        # print(self.prop_items)
         for name, obj in self.prop_items.items():
             ret[name] = self.extract_property(obj)
-            #print(obj.objectName())
+            # print(obj.objectName())
         return ret
 
-    def set_properties(self, data): # set properties with values provided by another class
+    def set_properties(self, data):  # set properties with values provided by another class
         for name, obj in self.prop_items.items():
-            if name in data.keys(): # this means it is valid property
+            if name in data.keys():  # this means it is valid property
                 self.write_property(data[name], obj)
-                #print("working")
+                # print("working")
 
-
-    def write_property(self, data, qtobject): #individual set type stuff
+    def write_property(self, data, qtobject):  # individual set type stuff
         typ = type(qtobject)
         if typ == QtGui.QComboBox:
             qtobject.setCurrentText(str(data))
@@ -471,10 +466,10 @@ class DeviceFunctionWidget(QtGui.QWidget):
             else:
                 qtobject.setChecked(False)
         else:
-            print("Unknown type for ",data,": ", typ)
-        return qtobject # add any other types to the if statement
+            print("Unknown type for ", data, ": ", typ)
+        return qtobject  # add any other types to the if statement
 
-    def extract_property(self, qtobject): # individual get type stuff
+    def extract_property(self, qtobject):  # individual get type stuff
         # make this check the type, and return a value based on that
         typ = type(qtobject)
         if typ == QtGui.QComboBox:
@@ -485,18 +480,19 @@ class DeviceFunctionWidget(QtGui.QWidget):
             return qtobject.isChecked()
         else:
             return "unknown type"
-        #return qtobject # If any other options are required, add em to if statement
+        # return qtobject # If any other options are required, add em to if statement
 
     ### more events ###
     def change_setting(self, *args):
         print(args)
+
     def change_function(self, current, previous):
         item = self.list_view_model.data(current)
-        #print(item)
+        # print(item)
         self.current_function = item
-        #self.stacked.setCurrentWidget(self.scrollareas[item])
+        # self.stacked.setCurrentWidget(self.scrollareas[item])
         self.change_stacked(item)
-        #print(item.data())
+        # print(item.data())
 
     def change_stacked(self, name):
         self.stacked.setCurrentWidget(self.scrollareas[name])
@@ -511,10 +507,9 @@ class DeviceFunctionWidget(QtGui.QWidget):
             item.setEditable(False)
             model.appendRow(item)
 
-
-        self.list_view_model = model # just incase
-        #self.list_view_model.itemChanged.connect(self.change_function)
-        #self.list_view_model.itemChanged()
+        self.list_view_model = model  # just incase
+        # self.list_view_model.itemChanged.connect(self.change_function)
+        # self.list_view_model.itemChanged()
         self.list_view.setModel(self.list_view_model)
         self.list_view.setWordWrap(True)
         self.list_view.selectionModel().currentChanged.connect(self.change_function)
@@ -537,7 +532,6 @@ class DeviceFunctionWidget(QtGui.QWidget):
         ret.activated[str].connect(self.change_setting)
         return ret
 
-
     def create_float(self, name, range):
         ret = QtGui.QLineEdit()
         float_validator = Qt.QDoubleValidator(range[0], range[1], 6, ret)
@@ -555,7 +549,7 @@ class DeviceFunctionWidget(QtGui.QWidget):
     def create_text(self, name, range):
         ret = QtGui.QLineEdit()
         ret.setObjectName(name)
-        if type(range) == str: #placeholder text
+        if type(range) == str:  # placeholder text
             ret.setPlaceholderText(range)
         return ret
 
@@ -571,8 +565,6 @@ class DeviceFunctionWidget(QtGui.QWidget):
         return ret
 
 
-
-
 class FunctionWidget(QtGui.QWidget):
     """This class is a TextEdit with a few extra features ;)"""
 
@@ -585,7 +577,7 @@ class FunctionWidget(QtGui.QWidget):
         else:
             self.DEBUG = debug
         self.functions = LabDrivers.utils.list_driver_functions()
-        self.plot = LabDrivers.utils.list_driver_plot_axes() # none if none
+        self.plot = LabDrivers.utils.list_driver_plot_axes()  # none if none
         self.device_layouts = {}
         self.layouts = {}
         self.ports = {}
@@ -595,47 +587,40 @@ class FunctionWidget(QtGui.QWidget):
         self.addDevices()
         # set current device
         if self.DEBUG:
-            self.currentDevice = 'NotExist' # can change to any testing device
+            self.currentDevice = 'NotExist'  # can change to any testing device
         else:
             self.currentDevice = None
         self.stacked.setCurrentWidget(self.widgets[self.currentDevice])
-        #aesthetic stuff
+        # aesthetic stuff
         self.setWindowTitle("Device Properties")
-        self.resize(500,250)
+        self.resize(500, 250)
 
-
-
-        #device dropdown
+        # device dropdown
         self.deviceComboBox = QtGui.QComboBox()
         self.deviceComboBox.activated[str].connect(self.change_device)
-        #self.deviceComboBox.s
-
+        # self.deviceComboBox.s
 
         if self.DEBUG is True:
             print("Debug")
 
-        #output console
+        # output console
         self.verticalLayout = QtGui.QVBoxLayout()
 
         self.verticalLayout.addWidget(self.deviceComboBox)
-        #self.verticalLayout.addStretch()
+        # self.verticalLayout.addStretch()
         self.verticalLayout.addWidget(self.stacked)
-        #self.verticalLayout.addStretch()
+        # self.verticalLayout.addStretch()
         #self.footer = self.create_footer()
-        #self.verticalLayout.addLayout(self.footer)
+        # self.verticalLayout.addLayout(self.footer)
 
         self.setLayout(self.verticalLayout)
 
         #self.console_text("Please enter GPIB command")
 
         self.instrument_list = {}
-        self.sanitized_list = list() # tuple, (name, port, object)
-
-
+        self.sanitized_list = list()  # tuple, (name, port, object)
 
         self.plot_window = []
-
-
 
         if parent is not None:
             self.parentClass = parent
@@ -643,24 +628,22 @@ class FunctionWidget(QtGui.QWidget):
         else:
             self.parentClass = None
             self.instr_hub = None
-        #elif self.parentClass is None:
+        # elif self.parentClass is None:
         #    self.instr_hub = None
 
         self.setSizePolicy(QtGui.QSizePolicy(
             QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Maximum))
 
-
     # create focus in override to refresh devices
+
     def enterEvent(self, event):
-        #using this enterEvent until I find a more effective way
+        # using this enterEvent until I find a more effective way
         if self.parent:
             self.update_devices()
-        #return super(CommandWidget, self).enternEvent(event)
-
-
+        # return super(CommandWidget, self).enternEvent(event)
 
     # Floored till next commit
-    #def create_layouts(self):
+    # def create_layouts(self):
     #    print("should probably delete")
         # self.prop_items = {}
         # for name, obj in self.properties.items():
@@ -693,20 +676,17 @@ class FunctionWidget(QtGui.QWidget):
         for name, widget in objs.items():
             self.stacked.addWidget(widget)
 
-
-
     def change_device(self, text):
         id = self.deviceComboBox.findText(text)
         name = self.deviceComboBox.currentData()
         if name in self.widgets.keys():
             self.stacked.setCurrentWidget(self.widgets[name])
             self.currentDevice = name
-            #self.refresh_properties()
+            # self.refresh_properties()
         else:
             self.stacked.setCurrentWidget(self.widgets["NotExist"])
             self.currentDevice = "NotExist"
-        #turns out this is not needed, as on every command it gets current device
-
+        # turns out this is not needed, as on every command it gets current device
 
         # to remove item self.deviceComboBox.removeItem(id)
     # following was REMOVED, floored till next commit
@@ -738,8 +718,7 @@ class FunctionWidget(QtGui.QWidget):
     #     ret = QtGui.QLabel(text)
     #     return ret
 
-
-    def create_footer(self): # will not be used
+    def create_footer(self):  # will not be used
         layout = QtGui.QFormLayout()
         save = QtGui.QPushButton("Save")
         refresh = QtGui.QPushButton("Refresh")
@@ -747,8 +726,8 @@ class FunctionWidget(QtGui.QWidget):
         save.clicked.connect(self.save_properties)
         refresh.clicked.connect(self.refresh_properties)
 
-        #layout.addWidget(save)
-        #layout.addWidget(refresh)
+        # layout.addWidget(save)
+        # layout.addWidget(refresh)
 
         layout.addRow(save, refresh)
 
@@ -757,7 +736,7 @@ class FunctionWidget(QtGui.QWidget):
     def run_function(self, name, arguments):
         id = self.deviceComboBox.currentIndex()
         device = self.sanitized_list[id]
-        #print(device)
+        # print(device)
         driver = device[2]
         data = driver.run(name, arguments)
         #print(name+" Data:", data)
@@ -774,25 +753,24 @@ class FunctionWidget(QtGui.QWidget):
         npdata = np.array(data)
         channels = np.size(npdata)
         device = self.deviceComboBox.currentData()
-        window_name = device + ": "+name
+        window_name = device + ": " + name
         print(channels, 1)
         if self.plot[device] is None:
             labels = []
         else:
             labels = self.plot[device]
-        pltw = PlotDisplayWindow.PlotDisplayWindow(self, npdata, window_name, default_channels=channels, labels=labels)
+        pltw = PlotDisplayWindow.PlotDisplayWindow(
+            self, npdata, window_name, default_channels=channels, labels=labels)
         self.plot_window.append(pltw)
         pltw.show()
-
-
 
     def update_instrument_list(self):
         if self.parentClass is not None:
             self.instrument_list = self.parentClass.instr_hub.get_instrument_list()
-            #print(self.instrument_list)
+            # print(self.instrument_list)
 
-            #print(self.parentClass.instr_hub.get_port_param_pairs())
-            #print(self.parentClass.instr_hub.get_instrument_nb())
+            # print(self.parentClass.instr_hub.get_port_param_pairs())
+            # print(self.parentClass.instr_hub.get_instrument_nb())
 
             z = self.instrument_list.items()
             self.ports = {}
@@ -805,7 +783,7 @@ class FunctionWidget(QtGui.QWidget):
                     instruments.append(self.instrument_list[x])
                     names.append(self.instrument_list[x].ID_name)
                     self.ports[self.instrument_list[x]] = x
-                    #print(x,self.instrument_list[x].ID_name)
+                    # print(x,self.instrument_list[x].ID_name)
             self.sanitized_list = list(zip(names, ports, instruments))
             return
         elif self.DEBUG:
@@ -815,10 +793,10 @@ class FunctionWidget(QtGui.QWidget):
     def update_devices(self):
         # going need to get get_instrument_list
         self.update_instrument_list()
-        text = self.deviceComboBox.currentText() # to set back to
+        text = self.deviceComboBox.currentText()  # to set back to
         self.deviceComboBox.clear()
         for tuples in self.sanitized_list:
-            self.deviceComboBox.addItem(tuples[0]+" on "+tuples[1], tuples[0])
+            self.deviceComboBox.addItem(tuples[0] + " on " + tuples[1], tuples[0])
         # now time to set current choice if it is still in the list
         index = self.deviceComboBox.findText(text)
         if index != -1:
@@ -832,9 +810,6 @@ class FunctionWidget(QtGui.QWidget):
             self.currentDevice = "NotExist"
         # now it should work perfectly with multiple devices
 
-
-
-
     def print_to_string(self, *args, **kwargs):
         output = io.StringIO()
         print(*args, file=output, **kwargs)
@@ -846,8 +821,7 @@ class FunctionWidget(QtGui.QWidget):
         try:
             return " ".join([str(i) for i in o])
         except:
-            return "Unable to join object: "+sys.exc_info()[0]
-
+            return "Unable to join object: " + sys.exc_info()[0]
 
     def save_data(self, fname, data, device="", function="", params={}):
         try:
@@ -863,25 +837,23 @@ class FunctionWidget(QtGui.QWidget):
                 if params != "":
                     function = function + " (" + params + ")"
                 headers.append(function)
-            elif params != "": #incase only params are passed
+            elif params != "":  # incase only params are passed
                 headers.append(params)
 
             if device != "":
                 if device in self.ports.keys():
-                    headers.append(device+"["+self.ports[device]+"]")
+                    headers.append(device + "[" + self.ports[device] + "]")
                 else:
                     headers.append(device)
             if llabels:
                 headers.append(" ".join(self.plot[device]))
             else:
-                headers.append(" ".join([str(i+1) for i in range(0, np.size(ndata,1))]))
+                headers.append(" ".join([str(i + 1) for i in range(0, np.size(ndata, 1))]))
             np.savetxt(fname, ndata, header="\n".join(headers))
             return True
         except:
-            print("Exception occured: "+sys.exc_info()[0])
+            print("Exception occured: " + sys.exc_info()[0])
             return False
-
-
 
 
 # def toggleViewAction(dock_widget, docked=True):
@@ -891,7 +863,7 @@ class FunctionWidget(QtGui.QWidget):
 #         dock_widget.widget().show()
 
 def add_widget_into_main(parent):
-    #return #we dont want this to happen yet
+    # return #we dont want this to happen yet
     """add a widget into the main window of LabGuiMain
 
     create a QDock widget and store a reference to the widget
@@ -918,11 +890,9 @@ def add_widget_into_main(parent):
     # redirect print statements to show a copy on "console"
     sys.stdout = QtTools.printerceptor(parent)
 
-    propDockWidget.resize(500,250)
-    #if not DEBUG:
+    propDockWidget.resize(500, 250)
+    # if not DEBUG:
     propDockWidget.hide()
-
-
 
     # assigning a method to the parent class
     # depending on the python version this fonction take different arguments
@@ -990,5 +960,5 @@ if __name__ == "__main__":
     ex = FunctionWidget(parent=None)
     #ex = DevicePropertyWidget("AH", {}, debug=True)
     ex.show()
-    #print(ex.get_properties())
+    # print(ex.get_properties())
     sys.exit(app.exec_())

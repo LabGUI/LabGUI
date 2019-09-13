@@ -5,14 +5,7 @@ Created on Mon Apr 03 20:24:39 2017
 @author: pfduc
 """
 
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Jun 17 23:40:40 2014
-
-Copyright (C) 10th april 2015 Pierre-Francois Duc
-License: see LICENSE.txt file
-"""
-
+from LabTools.Display import QtTools
 import sys
 
 from types import MethodType
@@ -28,8 +21,6 @@ if USE_PYQT5:
 else:
     import PyQt4.QtGui as QtGui
     import PyQt4.QtCore as QtCore
-
-from LabTools.Display import QtTools
 
 
 class ConsoleWidget(QtGui.QWidget):
@@ -110,7 +101,6 @@ def add_widget_into_main(parent):
 
         sys.stdout.print_to_console.connect(parent.update_console)
         # TODO: add logging stuff here
-
 
     else:
 

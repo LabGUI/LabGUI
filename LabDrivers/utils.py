@@ -51,10 +51,10 @@ VISA_BACKEND = IOTool.get_visa_backend_setting()
 
 INTF_NONE = 'None'
 
-PROLOGIX_COM_PORT = "COM5" # TODO: make/check dynamic
+PROLOGIX_COM_PORT = "COM5"  # TODO: make/check dynamic
 # cf section 8.2 of the manual : http://prologix.biz/downloads/PrologixGpibUsbManual-6.0.pdf
 PROLOGIX_AUTO = 'prologix_auto_opt'
-PROLOGIX_BAUD = 115200 # apparently, this is meaningless
+PROLOGIX_BAUD = 115200  # apparently, this is meaningless
 
 PROLOGIX_SEARCH_PORTS = True
 
@@ -97,7 +97,7 @@ def list_GPIB_ports():
 
     if PROLOGIX_SEARCH_PORTS:
         pc = PrologixController()
-        #if pc.connection is not None:
+        # if pc.connection is not None:
         available_ports = available_ports + pc.get_open_gpib_ports()
 #    pc = PrologixController(com_port = PROLOGIX_COM_PORT)
 #    available_ports = available_ports + pc.get_open_gpib_ports()
@@ -128,7 +128,7 @@ def list_serial_ports(max_port_num=20):
     for port in ports:
         try:
             s = serial.Serial(port, 9600, timeout=0.1)
-            logging.debug("Serial connection established with %s"%port)
+            logging.debug("Serial connection established with %s" % port)
             result.append(str(port))
             s.close()
 
@@ -266,6 +266,7 @@ COM" % device_port)
     else:
         return True
 
+
 def get_driver_list():
     """
         Returns a list of all files in driver folder, minus utils.py, Tool.py and __init__.py
@@ -289,7 +290,7 @@ def get_driver_list():
     """
     # Perhaps the implemented method is better?
     #my_path = inspect.getfile(list_drivers).rstrip('utils.py')
-    #another option would be using pathlib.Path(__file__).parent, however I believe this should work
+    # another option would be using pathlib.Path(__file__).parent, however I believe this should work
     my_path = os.path.dirname(__file__)
     driver_files = os.listdir(my_path)
     if 'Tool.py' in driver_files:
@@ -300,6 +301,7 @@ def get_driver_list():
         driver_files.remove('utils.py')
 
     return driver_files
+
 
 def list_driver_properties():
     """
@@ -340,6 +342,7 @@ def list_driver_properties():
 
     return properties
 
+
 def list_driver_functions():
     """
         This returns a dictionary of all drivers that have function dictionary in form:
@@ -379,6 +382,7 @@ def list_driver_functions():
 
     return functions
 
+
 def list_driver_plot_axes():
     """
             This returns a dictionary of all axes labels for drivers that have function dictionary in form:
@@ -387,7 +391,6 @@ def list_driver_plot_axes():
             }
         """
     interface = [INTF_VISA, INTF_PROLOGIX, INTF_SERIAL]
-
 
     plot = {}
 
@@ -445,7 +448,7 @@ def list_drivers(interface=[INTF_VISA, INTF_PROLOGIX, INTF_SERIAL, INTF_NONE]):
     for file_name in driver_files:
 
         if file_name.endswith('.py') \
-                and (not file_name == 'Tool.py' and not file_name == '__init__.py' and not file_name == 'utils.py'): #yikes
+                and (not file_name == 'Tool.py' and not file_name == '__init__.py' and not file_name == 'utils.py'):  # yikes
             name = file_name.split('.py')[0]
 
             # import the module of the instrument in the package drivers
@@ -480,7 +483,7 @@ def list_drivers(interface=[INTF_VISA, INTF_PROLOGIX, INTF_SERIAL, INTF_NONE]):
                                    file_name + ' (no param variable found)'))
 
                 # add properties if it exists
-                #if hasattr(driver, 'properties'):
+                # if hasattr(driver, 'properties'):
                 #    properties[name] = driver.properties
 
     return [instruments, params, units]
@@ -616,26 +619,27 @@ class PrologixController(object):
                 logging.error('The connection to the Prologix connector failed')
         self.assertren = None
         self.ren_level = None
+
     def __str__(self):
         return self.controller_id()
-        #print("you should not arrive at this") # to isolate error
-        #return '0'
-        #if self.connection is not None:
+        # print("you should not arrive at this") # to isolate error
+        # return '0'
+        # if self.connection is not None:
         #    self.write("++ver")
         #    return (self.connection.readline()).decode()
-        #else:
+        # else:
         #    return ''
 
-    def __getattr__(self, name): # catch-all for non-supported functions
+    def __getattr__(self, name):  # catch-all for non-supported functions
         def method(*args):
-            pstring = "%s is currently not supported under Prologix. "%name
+            pstring = "%s is currently not supported under Prologix. " % name
             if args:
-                pstring += "Called with arguments %s"%str(args)
+                pstring += "Called with arguments %s" % str(args)
             print(pstring)
         return method
 
     def controller_id(self):
-        #return self.__str__() changed as having __str__ defined was causing errors
+        # return self.__str__() changed as having __str__ defined was causing errors
         if self.connection is not None:
             self.write('++ver')
             return (self.connection.readline()).decode()
@@ -653,7 +657,7 @@ class PrologixController(object):
         else:
             logging.info("There is no prologix connection. Consider restarting LabGUI.")
 
-    def read(self, num_bit=0): # ADDED NUM_BIT==0 INVOKES READLINE LIKE IT WOULD WITH PYVISA
+    def read(self, num_bit=0):  # ADDED NUM_BIT==0 INVOKES READLINE LIKE IT WOULD WITH PYVISA
         """use serial.read"""
         if self.connection is not None:
             if num_bit == 0:
@@ -667,7 +671,7 @@ class PrologixController(object):
             return answer.decode()
         else:
             logging.info("There is no prologix connection. Consider restarting LabGUI.")
-            return '' # to fix conversion issues
+            return ''  # to fix conversion issues
 
     def readline(self):
         """use serial.readline"""
@@ -690,7 +694,7 @@ class PrologixController(object):
         else:
             return ''
 
-    def query(self, cmd): # ask to be depricated
+    def query(self, cmd):  # ask to be depricated
         return self.ask(cmd)
 
     def timeout(self, new_timeout=None):
@@ -728,7 +732,7 @@ class PrologixController(object):
                 # if it is longer than zero it is an instrument
                 # we store the GPIB address
                 if len(s) > 0:
-                    open_ports.append('GPIB0::%s::INSTR' % i) # should have INSTR for consistency
+                    open_ports.append('GPIB0::%s::INSTR' % i)  # should have INSTR for consistency
 
             # resets the timeout to its original value
             self.timeout(old_timeout)
@@ -740,11 +744,11 @@ class PrologixController(object):
 
     def close(self):
         # TODO decide on what to do for this, as I am unsure if there is a close
-        #self.write("++ifc") # interface clear
-        #self.reset()
+        # self.write("++ifc") # interface clear
+        # self.reset()
         pass
 
-    def control_ren(self, level, addr = None):
+    def control_ren(self, level, addr=None):
         """
         :param level: REN mode, integer
         :param addr: GPIB address of device. If None, it will assert for all devices
@@ -754,12 +758,12 @@ class PrologixController(object):
         """
         if level is None:
             return
-        ASSERT_REN = [1,3]
-        DEASSERT_REN = [0,2]
-        GTL = [2,6]
-        LLO = [4,5]
+        ASSERT_REN = [1, 3]
+        DEASSERT_REN = [0, 2]
+        GTL = [2, 6]
+        LLO = [4, 5]
 
-        ADDR_DEV = [3,4]
+        ADDR_DEV = [3, 4]
         logging.debug("Currently, control_ren only asserts local mode")
         #### DO ASSERTS #####
         if level in ASSERT_REN:
@@ -770,18 +774,20 @@ class PrologixController(object):
             logging.warning("Unabled to deassert REN on prologix controller")
         if level in GTL:
             if level in ADDR_DEV and addr is not None:
-                self.write('++loc %d'%addr)
+                self.write('++loc %d' % addr)
             else:
                 self.write('++loc')
         elif level in LLO:
             if level in ADDR_DEV and addr is not None:
-                self.write('++llo %d'%addr)
+                self.write('++llo %d' % addr)
             else:
                 self.write('++llo')
 
         self.ren_level = level
+
     def reset(self):
         self.write("++rst")
+
 
 def command_line_test(instrument_class):
     """
@@ -815,7 +821,7 @@ def command_line_test(instrument_class):
 
 if __name__ == "__main__":
     print(get_driver_list())
-    #print(find_prologix_ports())
-    #test_prologix_controller_creation_with_no_arg_conflict()
+    # print(find_prologix_ports())
+    # test_prologix_controller_creation_with_no_arg_conflict()
     command_line_test(PrologixController)
     pass

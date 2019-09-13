@@ -14,12 +14,12 @@ except:
 
 
 param = {
-    'Channel' : 'Unit'
+    'Channel': 'Unit'
 }
 properties = {
     'Selection box': {
-        'type':'selection',
-        'range':[
+        'type': 'selection',
+        'range': [
             'option',
             'another option',
             'a third option',
@@ -27,38 +27,38 @@ properties = {
         ]
     },
     'Float only': {
-        'type':'float',
-        'range':[-100, 100]
+        'type': 'float',
+        'range': [-100, 100]
     },
     'Int only': {
-        'type':'int',
-        'range':[-100, 100]
+        'type': 'int',
+        'range': [-100, 100]
     },
-    'Boolean type':{
-        'type':'bool',
-        'range':True
+    'Boolean type': {
+        'type': 'bool',
+        'range': True
     },
-    'Text type':{
-        'type':'text',
-        'range':'Placeholder'
+    'Text type': {
+        'type': 'text',
+        'range': 'Placeholder'
     }
 }
 functions = {
     'Function 1': [
         {
-            'name':'TextEdit',
-            'type':'text',
-            'range':'Placeholder text',
-            'units':None,
-            'required':True
-        }, #param for text
+            'name': 'TextEdit',
+            'type': 'text',
+            'range': 'Placeholder text',
+            'units': None,
+            'required': True
+        },  # param for text
         {
-            'name':'Integer',
-            'type':'int',
-            'range':[-100, 100],
+            'name': 'Integer',
+            'type': 'int',
+            'range': [-100, 100],
             'units':'Z',
             'required':True
-        }, #param for int
+        },  # param for int
         {
             'name': 'Float',
             'type': 'float',
@@ -70,17 +70,17 @@ functions = {
         {
             'name': 'DropdownMenu',
             'type': 'selector',
-            'range':['A','B','C'],
+            'range': ['A', 'B', 'C'],
             'units':None,
             'required':True
-        }, # param for dropdown
+        },  # param for dropdown
         {
             'name': 'Boolean',
-            'type':'bool',
-            'range':True, # shouldnt matter
-            'units':None,
-            'required':True
-        } # param for boolean
+            'type': 'bool',
+            'range': True,  # shouldnt matter
+            'units': None,
+            'required': True
+        }  # param for boolean
     ]
 }
 
@@ -93,6 +93,7 @@ INTF_SERIAL
 INTF_PROLOGIX
 INTF_NONE
 """
+
 
 class Instrument(Tool.MeasInstr):
     """"This class is the driver of the instrument *NAME*"""""
@@ -116,10 +117,10 @@ class Instrument(Tool.MeasInstr):
         #                                  **kwargs)
         #
         super(Instrument, self).__init__(resource_name,
-                                          name=NAME,
-                                          debug=debug,
-                                          interface=INTERFACE,
-                                          **kwargs)
+                                         name=NAME,
+                                         debug=debug,
+                                         interface=INTERFACE,
+                                         **kwargs)
 
     def measure(self, channel):
 
@@ -155,12 +156,4 @@ class Instrument(Tool.MeasInstr):
 if __name__ == "__main__":
     i = Instrument("GPIB::1", debug=False)
 
-    functions_template = Tool.generate_function_obj(funct=i.run) #some callable
-
-
-
-
-
-
-
-
+    functions_template = Tool.generate_function_obj(funct=i.run)  # some callable

@@ -32,134 +32,134 @@ param = {'V': 'V', 'I': 'A'}
 
 plot = ['Time(s)', 'Voltage(V)', 'Current(A)']
 functions = {
-    "Voltage Pulse Sweep":[
-        { # parameter 1
+    "Voltage Pulse Sweep": [
+        {  # parameter 1
             'name': 'Pulses',
             'type': 'int',
-            'range':[0, 1000],
+            'range': [0, 1000],
             'required': True,
             'units':'#'
         },
-        { # parameter 2
-            'name':'Start',
-            'type':'float',
-            'range':[-120, 120],
+        {  # parameter 2
+            'name': 'Start',
+            'type': 'float',
+            'range': [-120, 120],
             'required': True,
             'units': 'V'
         },
-        { # parameter 3
-            'name':'Stop',
-            'type':'float',
-            'range':[-120, 120],
+        {  # parameter 3
+            'name': 'Stop',
+            'type': 'float',
+            'range': [-120, 120],
             'required': True,
             'units': 'V'
         },
-        { # parameter 4
-            'name':'Pulse Width',
-            'type':'float',
-            'range':[0, 120],
+        {  # parameter 4
+            'name': 'Pulse Width',
+            'type': 'float',
+            'range': [0, 120],
             'required': True,
             'units': 's'
         },
-        { # parameter 5
-            'name':'Pulse Delay',
-            'type':'float',
-            'range':[0, 120],
+        {  # parameter 5
+            'name': 'Pulse Delay',
+            'type': 'float',
+            'range': [0, 120],
             'required': True,
             'units': 's'
         },
         {
-            'name':'Frequency of Readings',
-            'type':'float',
-            'range':[0, 120],
+            'name': 'Frequency of Readings',
+            'type': 'float',
+            'range': [0, 120],
             'required': False,
             'units': 's',
             'default':0.2
-        }, # parameter 6
+        },  # parameter 6
         {
-            'name':'Direction',
-            'type':'selector',
-            'range':['UP','DOWN','BOTH'],
+            'name': 'Direction',
+            'type': 'selector',
+            'range': ['UP', 'DOWN', 'BOTH'],
             'required': False,
             'default':'BOTH'
-        }, # parameter 7
-        { # parameter 8
-            'name':'VCompliance',
-            'type':'float',
-            'range':[0, 120],
+        },  # parameter 7
+        {  # parameter 8
+            'name': 'VCompliance',
+            'type': 'float',
+            'range': [0, 120],
             'required': False,
             'units': 'V',
             'default':1
         },
-        { # parameter 9
-            'name':'ICompliance',
-            'type':'float',
-            'range':[0, 1],
+        {  # parameter 9
+            'name': 'ICompliance',
+            'type': 'float',
+            'range': [0, 1],
             'required': False,
             'units': 'A',
             'default':1e-7
         },
     ],
-    "Voltage Staircase Sweep":[
-        { # parameter 1
+    "Voltage Staircase Sweep": [
+        {  # parameter 1
             'name': 'Steps',
             'type': 'int',
-            'range':[0, 1000],
+            'range': [0, 1000],
             'required': True,
             'units':'#'
         },
-        { # parameter 2
-            'name':'Start',
-            'type':'float',
-            'range':[-120, 120],
+        {  # parameter 2
+            'name': 'Start',
+            'type': 'float',
+            'range': [-120, 120],
             'required': True,
             'units': 'V'
         },
-        { # parameter 3
-            'name':'Stop',
-            'type':'float',
-            'range':[-120, 120],
+        {  # parameter 3
+            'name': 'Stop',
+            'type': 'float',
+            'range': [-120, 120],
             'required': True,
             'units': 'V'
         },
-        { # parameter 4
-            'name':'Pulse Width',
-            'type':'float',
-            'range':[0, 120],
+        {  # parameter 4
+            'name': 'Pulse Width',
+            'type': 'float',
+            'range': [0, 120],
             'required': True,
             'units': 's'
         },
-        { # parameter 5
-            'name':'Pulse Delay',
-            'type':'float',
-            'range':[0, 120],
+        {  # parameter 5
+            'name': 'Pulse Delay',
+            'type': 'float',
+            'range': [0, 120],
             'required': True,
             'units': 's'
         },
         {
-            'name':'Frequency of Readings',
-            'type':'float',
-            'range':[0, 120],
+            'name': 'Frequency of Readings',
+            'type': 'float',
+            'range': [0, 120],
             'required': False,
             'units': 's'
-        }, # parameter 6
+        },  # parameter 6
         {
-            'name':'Direction',
-            'type':'selector',
-            'range':['UP','DOWN','BOTH'],
+            'name': 'Direction',
+            'type': 'selector',
+            'range': ['UP', 'DOWN', 'BOTH'],
             'required': False
-        }, # parameter 7
-        { # parameter 8
-            'name':'VCompliance',
-            'type':'float',
-            'range':[0, 120],
+        },  # parameter 7
+        {  # parameter 8
+            'name': 'VCompliance',
+            'type': 'float',
+            'range': [0, 120],
             'required': False,
             'units': 'V'
         },
-        { # parameter 9
-            'name':'ICompliance',
-            'type':'float',
-            'range':[0, 1],
+        {  # parameter 9
+            'name': 'ICompliance',
+            'type': 'float',
+            'range': [0, 1],
             'required': False,
             'units': 'A'
         },
@@ -182,8 +182,6 @@ class Instrument(Tool.MeasInstr):
         name = 'KT2400'
         if "name" in kwargs:
             name = kwargs.pop("name")
-
-
 
         super(Instrument, self).__init__(resource_name,
                                          name=name,
@@ -211,11 +209,11 @@ class Instrument(Tool.MeasInstr):
                     # 0 #this is to be defined for record sweep
                     self.write('VOLT:RANG:AUTO ON')
                     answer = self.ask(self.READ)
-                    #if math.isnan(float(answer)):
-                    if not answer or answer=='\n': #incase 2450 is connected
+                    # if math.isnan(float(answer)):
+                    if not answer or answer == '\n':  # incase 2450 is connected
                         self.enable_output()
                         return self.measure(channel)
-                    elif type(answer) is not str and math.isnan(answer): #answer will be nan if error
+                    elif type(answer) is not str and math.isnan(answer):  # answer will be nan if error
                         # case where 2400 is connected but output is off
                         print("Output must be enabled")
                         self.enable_output()
@@ -233,11 +231,11 @@ class Instrument(Tool.MeasInstr):
                     # 0 #this is to be defined for record sweep
                     self.write('CURR:RANG:AUTO ON')
                     answer = self.ask(self.READ)
-                    #if math.isnan(float(answer)):
-                    if not answer or answer=='\n': #incase 2450 is connected
+                    # if math.isnan(float(answer)):
+                    if not answer or answer == '\n':  # incase 2450 is connected
                         self.enable_output()
                         return self.measure(channel)
-                    elif type(answer) is not str and math.isnan(answer): #answer will be nan if error
+                    elif type(answer) is not str and math.isnan(answer):  # answer will be nan if error
                         # case where 2400 is connected but output is off
                         print("Output must be enabled")
                         self.enable_output()
@@ -265,15 +263,15 @@ class Instrument(Tool.MeasInstr):
             items = arguments.items()
             params = {}
             names_switch = {
-                'Pulses':'pulses',
-                'Start':'start',
-                'Stop':'stop',
-                'Pulse Width':'pulse_width',
-                'Pulse Delay':'pulse_delay',
-                'Frequency of Readings':'frequency',
-                'Direction':'direction',
-                'VCompliance':'v_compliance',
-                'ICompliance':'i_compliance'
+                'Pulses': 'pulses',
+                'Start': 'start',
+                'Stop': 'stop',
+                'Pulse Width': 'pulse_width',
+                'Pulse Delay': 'pulse_delay',
+                'Frequency of Readings': 'frequency',
+                'Direction': 'direction',
+                'VCompliance': 'v_compliance',
+                'ICompliance': 'i_compliance'
             }
             for key, value in items:
                 if value is not None:
@@ -283,15 +281,15 @@ class Instrument(Tool.MeasInstr):
             items = arguments.items()
             params = {}
             names_switch = {
-                'Steps':'steps',
-                'Start':'start',
-                'Stop':'stop',
-                'Pulse Width':'pulse_width',
-                'Pulse Delay':'pulse_delay',
-                'Frequency of Readings':'frequency',
-                'Direction':'direction',
-                'VCompliance':'v_compliance',
-                'ICompliance':'i_compliance'
+                'Steps': 'steps',
+                'Start': 'start',
+                'Stop': 'stop',
+                'Pulse Width': 'pulse_width',
+                'Pulse Delay': 'pulse_delay',
+                'Frequency of Readings': 'frequency',
+                'Direction': 'direction',
+                'VCompliance': 'v_compliance',
+                'ICompliance': 'i_compliance'
             }
             for key, value in items:
                 if value is not None:
@@ -558,7 +556,7 @@ class Instrument(Tool.MeasInstr):
                 self.write(':SENS:CURR:PROT[:LIM]')
                 time.sleep(1)
 
-    def pulse_voltage_simple(self, pulses, start, stop, pulse_width, pulse_delay, frequency = 0.2, direction = "BOTH", v_compliance=1, i_compliance=1.0e-7):
+    def pulse_voltage_simple(self, pulses, start, stop, pulse_width, pulse_delay, frequency=0.2, direction="BOTH", v_compliance=1, i_compliance=1.0e-7):
         """
 
         :param pulses:
@@ -606,10 +604,10 @@ class Instrument(Tool.MeasInstr):
         self.enable_output()
         start_time = time.time()
         data = []
-        step_size = (stop-start)/pulses
+        step_size = (stop - start) / pulses
 
-        #make range depending on direction
-        rang = [i+1 for i in range(0, pulses)]
+        # make range depending on direction
+        rang = [i + 1 for i in range(0, pulses)]
         if direction == "DOWN":
             rang.reverse()
         elif direction == "BOTH":
@@ -620,22 +618,22 @@ class Instrument(Tool.MeasInstr):
             self.set_voltage(0, i_compliance, v_compliance)
             t = tnow = time.time()
             # do pulse_delay
-            while (tnow-t) < pulse_delay:
+            while (tnow - t) < pulse_delay:
                 r_time, r_data = time.time(), self.ask(self.READ)
 
-                data.append( (r_time, r_data) )
-                tnow = time.time() # to calculate sleep
+                data.append((r_time, r_data))
+                tnow = time.time()  # to calculate sleep
                 if (frequency - (tnow - r_time)) > 0:
-                    time.sleep( frequency - (tnow - r_time) )
-                tnow = time.time() # to calculate for pulse time
+                    time.sleep(frequency - (tnow - r_time))
+                tnow = time.time()  # to calculate for pulse time
 
-            #do pulse setup, some math involved here
-            self.set_voltage( (step_size * i)+start, i_compliance , v_compliance)
+            # do pulse setup, some math involved here
+            self.set_voltage((step_size * i) + start, i_compliance, v_compliance)
             t = tnow = time.time()
-            while (tnow-t) < pulse_width:
+            while (tnow - t) < pulse_width:
                 r_time, r_data = time.time(), self.ask(self.READ)
 
-                data.append( (r_time, r_data))
+                data.append((r_time, r_data))
                 tnow = time.time()  # to calculate sleep
                 if (frequency - (tnow - r_time)) > 0:
                     time.sleep(frequency - (tnow - r_time))
@@ -644,10 +642,10 @@ class Instrument(Tool.MeasInstr):
         # now do final reading for 0
         self.set_voltage(0, i_compliance, v_compliance)
         t = tnow = time.time()
-        while (tnow-t) < pulse_delay:
+        while (tnow - t) < pulse_delay:
             r_time, r_data = time.time(), self.ask(self.READ)
 
-            data.append( (r_time, r_data))
+            data.append((r_time, r_data))
             tnow = time.time()  # to calculate sleep
             if (frequency - (tnow - r_time)) > 0:
                 time.sleep(frequency - (tnow - r_time))
@@ -657,16 +655,16 @@ class Instrument(Tool.MeasInstr):
         ret = []
         for tup in data:
             splitted = tup[1].split(",")
-            ret.append( (
-                tup[0]-start_time, #relative time
-                float(splitted[0]), #convert voltage to float
-                float(splitted[1]) #convert current to float
+            ret.append((
+                tup[0] - start_time,  # relative time
+                float(splitted[0]),  # convert voltage to float
+                float(splitted[1])  # convert current to float
             ))
 
         return ret
 
     # sweep commands, as defined in the Keithley Manual
-    def sweep_voltage_bipolar_staircase(self, steps, start, stop, v_compliance = 1, i_compliance = 1e-7):
+    def sweep_voltage_bipolar_staircase(self, steps, start, stop, v_compliance=1, i_compliance=1e-7):
         def sweep_voltage_staircase(self, steps, start, stop, width=1, frequency=0.2, v_compliance=1,
                                     i_compliance=1e-7):
             """
@@ -845,14 +843,15 @@ class Instrument(Tool.MeasInstr):
         list = []
         for v in sweeps:
             self.set_voltage(v, i_compliance, v_compliance)
-            #time.sleep(sleeptime)
+            # time.sleep(sleeptime)
             list.append(self.ask(self.READ).split(","))
 
-        data = [] # 2d coordinates, (V, I)
+        data = []  # 2d coordinates, (V, I)
 
         for datapoint in list:
-            data.append( (float(datapoint[0]), float(datapoint[1])))
+            data.append((float(datapoint[0]), float(datapoint[1])))
         return data
+
     def sweep_voltage_staircase(self, steps, start, stop, direction="BOTH", width=1, frequency=0.2, v_compliance=1, i_compliance=1e-7):
         """
         :param steps: int (number)
@@ -884,14 +883,14 @@ class Instrument(Tool.MeasInstr):
         # consider rewritting
         sweep1 = np.linspace(start, stop, num=steps)
         sweep2 = np.linspace(stop, start, num=steps)
-        #sweep3 = np.linspace(start, -stop, num=steps) FOR BIPOLAR
+        # sweep3 = np.linspace(start, -stop, num=steps) FOR BIPOLAR
         #sweep4 = np.linspace(-stop, start, num=steps)
         if direction == "UP":
             sweeps = sweep1
         elif direction == "DOWN":
             sweeps = sweep2
         else:
-            sweeps = np.concatenate((sweep1, sweep2)) #, sweep3, sweep4))
+            sweeps = np.concatenate((sweep1, sweep2))  # , sweep3, sweep4))
         list = []
         self.reset()
         self.enable_output()
@@ -899,7 +898,7 @@ class Instrument(Tool.MeasInstr):
         for v in sweeps:
             t = tnow = time.time()
             self.set_voltage(v, i_compliance, v_compliance)
-            while (tnow-t) < width:
+            while (tnow - t) < width:
                 r_time, r_data = time.time(), self.ask(self.READ)
 
                 list.append((r_time, r_data))
@@ -907,14 +906,14 @@ class Instrument(Tool.MeasInstr):
                 if (frequency - (tnow - r_time)) > 0:
                     time.sleep(frequency - (tnow - r_time))
                 tnow = time.time()  # to calculate for pulse time
-            #time.sleep(sleeptime)
-            #list.append(self.ask(":READ?").split(","))
+            # time.sleep(sleeptime)
+            # list.append(self.ask(":READ?").split(","))
 
-        data = [] # 3d coordinates, (Time, Voltage, Current)
+        data = []  # 3d coordinates, (Time, Voltage, Current)
 
         for datapoint in list:
             spl = datapoint[1].split(",")
-            data.append( (datapoint[0]-start_time, float(spl[0]), float(spl[1])))
+            data.append((datapoint[0] - start_time, float(spl[0]), float(spl[1])))
         return data
     # sweep commands, as defined in the Keithley Manual
     # def sweep_current_staircase(self, steps, start, stop, direction="BOTH", v_compliance = 1, i_compliance = 1e-7):
@@ -1091,7 +1090,7 @@ if __name__ == "__main__":
     i = Instrument("GPIB0::28", debug=False)
     print((i.identify("Hello, this is ")))
     #function = Tool.generate_function_obj(pulse=i.pulse_voltage_simple, simple=i.sweep_voltage_simple)
-    #print(function)
+    # print(function)
     #i.configure_output('VOLT', 0, 1E-7)
 #    i.set_voltage(0,1E-7)
     #data = i.sweep_voltage_staircase(100, 0, 0.1, "BOTH")

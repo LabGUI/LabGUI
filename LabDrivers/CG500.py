@@ -29,7 +29,7 @@ class Instrument(Tool.MeasInstr):
         super(Instrument, self).__init__(resource_name, 'CG500',
                                          debug=debug, **kwargs)
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
     # I don't know if the values measured stack or not, if they do we should
     # probably think about this function again
@@ -75,11 +75,11 @@ class Instrument(Tool.MeasInstr):
     def set_sampling_interval(self, value_intvl):
         return self.write('INTVL ' + str(value_intvl) + ';INTVL?')
 
-    #'S' for sample/hold and 'C' for continuous
+    # 'S' for sample/hold and 'C' for continuous
     def get_mode(self):
         return self.ask('mode?')
 
-    #'S' for sample/hold and 'C' for continuous
+    # 'S' for sample/hold and 'C' for continuous
     def set_mode(self, value_mode):
         return self.write('MODE ' + str(value_mode) + ';MODE?')
 

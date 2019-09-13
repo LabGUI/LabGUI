@@ -13,17 +13,17 @@ except:
 
 
 param = {
-    'Amplitude' : 'V',
-    'MaxVolt' : 'V',
-    'MinVolt' : 'V',
-    'Frequency' : 'Hz',
-    'Offset' : 'V_DC'
+    'Amplitude': 'V',
+    'MaxVolt': 'V',
+    'MinVolt': 'V',
+    'Frequency': 'Hz',
+    'Offset': 'V_DC'
 }
 
 properties = {
     'Function': {
-        'type':'selection',
-        'range':[
+        'type': 'selection',
+        'range': [
             'sinusoid',
             'square',
             'triangle',
@@ -34,19 +34,19 @@ properties = {
         ]
     },
     'Amplitude': {
-        'type':'float',
-        'range':[-120, 120],
-        'unit':'V'
+        'type': 'float',
+        'range': [-120, 120],
+        'unit': 'V'
     },
     'Frequency': {
-        'type':'float',
-        'range':[-120, 120],
-        'unit':'Hz'
+        'type': 'float',
+        'range': [-120, 120],
+        'unit': 'Hz'
     },
     'Offset': {
-        'type':'float',
-        'range':[-120, 120],
-        'unit':'V'
+        'type': 'float',
+        'range': [-120, 120],
+        'unit': 'V'
     }
 }
 
@@ -54,6 +54,7 @@ INTERFACE = Tool.INTF_GPIB
 NAME = 'A33220A'
 
 REMOTE_LOCK = False
+
 
 class Instrument(Tool.MeasInstr):
     """"This class is the driver of the instrument *NAME*"""""
@@ -64,10 +65,10 @@ class Instrument(Tool.MeasInstr):
         else:
             itfc = INTERFACE
         super(Instrument, self).__init__(resource_name,
-                                          name=NAME,
-                                          debug=debug,
-                                          interface=itfc,
-                                          **kwargs)
+                                         name=NAME,
+                                         debug=debug,
+                                         interface=itfc,
+                                         **kwargs)
         if not REMOTE_LOCK:
             self.connection.control_ren(0)
 
@@ -143,7 +144,6 @@ class Instrument(Tool.MeasInstr):
         ret['Function'] = self.full_name(ret['Function'])
         return ret
 
-
     def reset(self):
         self.write("*RST")
 
@@ -151,18 +151,19 @@ class Instrument(Tool.MeasInstr):
         self.write("*CLS")
 
     def get_function(self):
-        resp = self.ask("APPL?")[1:-2] #enclosed by quotes then newline for some reason
+        resp = self.ask("APPL?")[1:-2]  # enclosed by quotes then newline for some reason
 
         resp = resp.split(' ')
         funct = resp[0]
-        values = resp[1].replace('\n','').split(',')
+        values = resp[1].replace('\n', '').split(',')
 
         return {
-            'Function' :funct,
-            'Frequency':float(values[0]),
-            'Amplitude':float(values[1]),
-            'Offset'   :float(values[2])
+            'Function': funct,
+            'Frequency': float(values[0]),
+            'Amplitude': float(values[1]),
+            'Offset': float(values[2])
         }
+
     def set_function(self, shape, frequency, amplitude, offset=0):
         """
         Uses APPLY command to change all at the same time
@@ -175,7 +176,8 @@ class Instrument(Tool.MeasInstr):
         # do checks
         shape = self.is_valid(shape)
         if not shape:
-            print("Invalid shape, must be of the following type: ", " ".join(self.valid_shapes_full()))
+            print("Invalid shape, must be of the following type: ",
+                  " ".join(self.valid_shapes_full()))
             return False
 
         try:
@@ -202,7 +204,8 @@ class Instrument(Tool.MeasInstr):
             else:
                 print("Invalid offset")
 
-        self.write("APPL:"+str(shape)+" "+str(frequency)+", "+str(amplitude)+", "+str(offset))
+        self.write("APPL:" + str(shape) + " " + str(frequency) +
+                   ", " + str(amplitude) + ", " + str(offset))
 
     def set_shape(self, shape):
         """
@@ -216,9 +219,10 @@ class Instrument(Tool.MeasInstr):
         # do check, return valid shape
         shape = self.is_valid(shape)
         if shape:
-            self.write("FUNC:SHAP "+str(shape))
+            self.write("FUNC:SHAP " + str(shape))
         else:
-            print("Invalid shape, must be of the following type: " + " ".join(self.valid_shapes_full()))
+            print("Invalid shape, must be of the following type: " +
+                  " ".join(self.valid_shapes_full()))
             return False
 
     def set_frequency(self, frequency):
@@ -234,10 +238,8 @@ class Instrument(Tool.MeasInstr):
         elif type(frequency) != int and type(frequency) != float:
             print("Invalid frequency")
             return False
-        self.write("FREQ "+str(frequency))
+        self.write("FREQ " + str(frequency))
         return True
-
-
 
     def set_amplitude(self, amplitude):
         """
@@ -245,7 +247,7 @@ class Instrument(Tool.MeasInstr):
         :param amplitude: in VOLTS
         :return:
         """
-        #check for upward bound?
+        # check for upward bound?
         if type(amplitude) == str:
             if not amplitude.isdigit():
                 print("Invalid amplitude")
@@ -253,7 +255,7 @@ class Instrument(Tool.MeasInstr):
         elif type(amplitude) != int and type(amplitude) != float:
             print("Invalid amplitude")
             return False
-        self.write("VOLT "+str(amplitude))
+        self.write("VOLT " + str(amplitude))
         return True
 
     def set_offset(self, offset=0):
@@ -280,7 +282,8 @@ class Instrument(Tool.MeasInstr):
             'dc',
             'user'
         ]
-    def full_name(self, wave_type:str):
+
+    def full_name(self, wave_type: str):
         valid_full = [
             'sinusoid',
             'square',
@@ -315,7 +318,8 @@ class Instrument(Tool.MeasInstr):
                     return y
             # if it reached here, invalid function
             return False
-    def is_valid(self, wave_type:str):
+
+    def is_valid(self, wave_type: str):
         valid_full = [
             'sinusoid',
             'square',
@@ -338,25 +342,19 @@ class Instrument(Tool.MeasInstr):
             return wave_type.upper()
         elif wave_type.lower() in valid_full:
             return valid_short[valid_full.index(wave_type.lower())]
-        else: #try to find best fit
+        else:  # try to find best fit
             if len(wave_type) < 2:
-                return False #otherwise it can match the wrong one, specificall sin/squ combo
+                return False  # otherwise it can match the wrong one, specificall sin/squ combo
             for x in valid_short:
                 if wave_type.upper() in x:
                     return x
-            #if it reaches here, it didnt match a short one, so check long ones
+            # if it reaches here, it didnt match a short one, so check long ones
             for y in valid_full:
                 if wave_type.lower() in y:
                     return valid_short[valid_full.index(wave_type.lower())]
-            #if it reached here, invalid function
+            # if it reached here, invalid function
             return False
+
+
 if __name__ == "__main__":
     i = Instrument("GPIB::1", debug=False)
-
-
-
-
-
-
-
-
