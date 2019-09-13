@@ -354,6 +354,39 @@ class Instrument(Tool.MeasInstr):
     def getHeaterPercent(self):
         return float(self.ask("R5")[1:])
 
+    def setMaximumHeater(self, voltage):
+        self.write("$M"+str(float(voltage)))
+
+    def getHeaterApprox(self):
+        return float(self.ask("R6")[1:])
+
+    def setHeaterApproxGivenMax(self, targetV):
+        maxV = self.getMaximumHeater()
+        if maxV is None:
+            print("Unable to set approximate heater voltage without knowing maximum")
+            return False
+        else:
+            self.setHeaterPercent( (targetV/maxV)*100 )
+
+    def setHeaterApprox(self, targetV):
+        decimal = self.getHeaterPercent() / 100
+        currentV = self.getHeaterApprox()
+        if decimal == 0 or currentV == 0:
+            print("Unable to calculate. Please turn on heater temporarily")
+            return False
+        else:
+            self.setHeaterPercent( 100*(decimal*targetV)/currentV )
+
+    def getMaximumHeater(self):
+        decimal = self.getHeaterPercent()/100
+        currentV = self.getHeaterApprox()
+        if decimal == 0 or currentV == 0:
+            print("Unable to calculate. Please turn on heater temporarily")
+            return None
+        else:
+            return currentV/decimal
+
+
     def setSweep(self, line, PointTemperature, SweepTime, HoldTime):
         line = int(line)
         if (line >= 1) and (line <= 16):
