@@ -83,6 +83,7 @@ argument_object = {
     'units': unit of parameter as a string -or- None; optional
     'required': boolean, whether it is required to call function
     'default': Optional argument to set default value
+    'parameters': Required argument for multi-types, which contains a list of argument_objects (type parameter_list)
 }
 'range' for different types:
     text :      string, placeholder text
@@ -90,6 +91,7 @@ argument_object = {
     float:      list, containing range: [min, max]
     selector:   list, containing all options for dropdown menu: ['option 1', 'option 2', etc]   
     bool :      boolean, placeholder value (overriden by default)
+    multi :     list, containing names of multiples
 
 A builtin function Tool.generate_function_obj(name=callable) can generate a function object template
 """
@@ -138,7 +140,43 @@ functions = {
             'range':True, # shouldnt matter
             'units':None,
             'required':True
-        } # param for boolean
+        }, # param for boolean
+        {
+            'name':'Multi Type',
+            'type':'multi',
+            'range':['first','second','third'], # all options must be castable to string
+            'parameters':[ # these parameters are of the same form as in the previous examples
+                {
+                    'name': 'NestedInteger',
+                    'type': 'int',
+                    'range': [-100, 100],
+                    'units': 'Z',
+                    'required': True
+                },  # param for int
+                {
+                    'name': 'NestedTextEdit',
+                    'type': 'text',
+                    'range': 'Etc',
+                    'units': None,
+                    'required': True
+                },  # param for text
+                {
+                    'name':'Nested Multi Type',
+                    'type':'multi',
+                    'range':[0,1,2], # all options must be castable to string
+                    'parameters': [ # same as all previous examples
+                        {
+                            'name': 'Nested-NestedBoolean',
+                            'type': 'bool',
+                            'range': True,
+                            'units': None,
+                            'required': True
+                        },  # param for boolean
+                    ]
+                }, # param for nested multi type
+            ]
+        } # param for multi type
+
     ]
 }
 

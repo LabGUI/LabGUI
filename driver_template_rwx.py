@@ -96,6 +96,27 @@ functions = {
             'range':'Label Text',
             'arrange':'R',
         },
+        {
+            'name':'Multi Type',
+            'type':'multi',
+            'range':['one','two','three'],
+            'parameters':[
+                {
+                    'name':'Multi Type',
+                    'type':'multi',
+                    'range':['one','two','three'],
+                    'parameters': [
+                        {
+                            'name': 'NestedNestedTextEdit',
+                            'type': 'text',
+                            'range': 'Placeholder text',
+                            'units': None,
+                            'required': True
+                        }
+                    ]
+                } # param for multi type
+            ]
+        } # param for multi type
     ]
 }
 

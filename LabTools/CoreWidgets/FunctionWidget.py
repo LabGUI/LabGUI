@@ -62,7 +62,7 @@ class MultiFunctionWidget(QtGui.QWidget):
         self.DEBUG = debug
 
         self.name = name
-        self.options = options_list
+        self.options = [str(option) for option in options_list] # all options must be of type string
         self.params = param_obj
         self.widgets = {}
         for option in self.options:
@@ -72,7 +72,7 @@ class MultiFunctionWidget(QtGui.QWidget):
         self.stacked = QtGui.QStackedWidget(self)
         for option in self.options:
             self.stacked.addWidget(self.widgets[option])
-        self.dropdown = self.create_selector(name, options_list)
+        self.dropdown = self.create_selector(name, self.options)
         self.layout = QtGui.QVBoxLayout(self)
         self.layout.addWidget(self.dropdown)
         self.layout.addWidget(self.stacked)
@@ -109,7 +109,7 @@ class MultiFunctionWidget(QtGui.QWidget):
 
     def create_selector(self, name, items):
         ret = QtGui.QComboBox()
-        ret.addItems(items)
+        ret.addItems(items) # corrects list, just incase
         ret.setObjectName(name)
         ret.activated[str].connect(self.change_setting)
         return ret
@@ -315,7 +315,8 @@ class FunctionFormWidget(QtGui.QWidget):
             else:
                 qtobject.setChecked(False)
         elif typ == MultiFunctionWidget:
-            print(data)
+            if self.DEBUG: # theoretically, this should not be reached, but if it is, suppress
+                print(data)
         else:
             print("Unknown type for ", data, ": ", typ)
         return qtobject  # add any other types to the if statement
@@ -461,6 +462,27 @@ class DeviceFunctionWidget(QtGui.QWidget):
                                 'units': None,
                                 'required': True  # shouldnt matter
                             },  # param for boolean
+                            {
+                                'name':'nested multi',
+                                'type':'multi',
+                                'range':['first','second',3],
+                                'parameters':[
+                                    {
+                                        'name': 'Float',
+                                        'type': 'float',
+                                        'range': [-100, 100],
+                                        'units': 'R',
+                                        'default': 0.05,
+                                        'required':True
+                                    },  # param for float
+                                    {
+                                        'name': 'DropdownMenu',
+                                        'type': 'selector',
+                                        'range': ['A', 'B', 'C'],
+                                        'units': None
+                                    },  # param for dropdown
+                                ]
+                            }
                         ],
                     }
                 ]
