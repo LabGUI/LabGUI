@@ -49,7 +49,79 @@ except:
 import sys
 import io
 
+from LabTools.CoreWidgets.PropertiesWidget import MultiPropertyWidget
+
 DEBUG = False
+
+class MultiFunctionWidget(QtGui.QWidget):
+    """ widget for 'multi' type """
+
+    def __init__(self, name, options_list, param_obj, parent=None, debug=False):
+        super(MultiFunctionWidget, self).__init__(parent=parent)
+
+        self.DEBUG = debug
+
+        self.name = name
+        self.options = options_list
+        self.params = param_obj
+        self.widgets = {}
+        for option in self.options:
+            self.widgets[option] = FunctionFormWidget("Multi", option, self.params, parent=parent, debug=self.DEBUG)
+            # self.stacked.addWidget(self.widgets[option])
+
+        self.stacked = QtGui.QStackedWidget(self)
+        for option in self.options:
+            self.stacked.addWidget(self.widgets[option])
+        self.dropdown = self.create_selector(name, options_list)
+        self.layout = QtGui.QVBoxLayout(self)
+        self.layout.addWidget(self.dropdown)
+        self.layout.addWidget(self.stacked)
+        self.setLayout(self.layout)
+
+        self.current_option = self.dropdown.currentText()
+        self.stacked.setCurrentWidget(self.widgets[self.current_option])
+
+
+
+    def change_setting(self, name):
+        self.current_option = self.dropdown.currentText()
+        self.stacked.setCurrentWidget(self.widgets[self.current_option])
+
+    def isMulti(self):
+        return True
+
+    def get_values(self):
+        ret = {}
+        for option in self.options:
+            ret[option] = self.widgets[option].get_input()
+        return ret
+
+    def set_values(self, obj):
+        for option in self.options:
+            #print(obj[option], type(self.widgets[option]))
+            self.widgets[option].set_properties(obj[option])
+
+    def get_value(self, option):
+        return self.widgets[option].get_properties()
+
+    def set_value(self, option, data):
+        self.widgets[option].set_properties(data)
+
+    def create_selector(self, name, items):
+        ret = QtGui.QComboBox()
+        ret.addItems(items)
+        ret.setObjectName(name)
+        ret.activated[str].connect(self.change_setting)
+        return ret
+
+    def clear_values(self):
+        for option in self.options:
+            self.widgets[option].clear_input()
+
+    def default_values(self):
+        for option in self.options:
+            self.widgets[option].default_input()
+
 
 
 class FunctionFormWidget(QtGui.QWidget):
@@ -133,6 +205,12 @@ class FunctionFormWidget(QtGui.QWidget):
                 else:
                     self.layout.addRow(qtobject)
                 continue  # we do not want to save it as an item
+            elif obj['type'] == 'multi':
+                if 'parameters' not in obj.keys():
+                    print("Error in multi type. Required 'parameters' type. We have: ", obj.keys())
+                else:
+                    label.setFont(self.bold_font)
+                    qtobject = self.create_multi(obj['name'],obj['range'],obj['parameters'])
             else:
                 qtobject = self.create_label("Error")
             qtobject.setStyleSheet(self.ok_style)
@@ -182,6 +260,9 @@ class FunctionFormWidget(QtGui.QWidget):
         ret = QtGui.QLabel(text)
         return ret
 
+    def create_multi(self, name, range, parameters):
+        ret = MultiFunctionWidget(name, range, parameters, parent=self, debug=self.DEBUG)
+        return ret
     ## EVENTS ##
     def change_setting(self, *args):
         #print(args)
@@ -205,7 +286,7 @@ class FunctionFormWidget(QtGui.QWidget):
                 if data == '':
                     data = None # so user only needs to check if it contains value
             ret[name] = data
-        if flag:
+        if flag or self.DEBUG:
             return ret
         else:
             return None
@@ -218,6 +299,8 @@ class FunctionFormWidget(QtGui.QWidget):
         for name, object in self.widgets.items():
             if self.defaults[name] is not None:
                 self.write_data(self.defaults[name], object)
+            elif type(object) == MultiFunctionWidget:
+                object.default_values()
 
     ### individual input stuff ###
     def write_data(self, data, qtobject):  # individual set type stuff
@@ -231,6 +314,8 @@ class FunctionFormWidget(QtGui.QWidget):
                 qtobject.setChecked(True)
             else:
                 qtobject.setChecked(False)
+        elif typ == MultiFunctionWidget:
+            print(data)
         else:
             print("Unknown type for ", data, ": ", typ)
         return qtobject  # add any other types to the if statement
@@ -244,6 +329,8 @@ class FunctionFormWidget(QtGui.QWidget):
             return qtobject.text()
         elif typ == QtGui.QCheckBox:
             return qtobject.isChecked()
+        elif typ == MultiFunctionWidget:
+            return qtobject.get_values()
         else:
             return "unknown type"
         # return qtobject # If any other options are required, add em to if statement
@@ -257,6 +344,8 @@ class FunctionFormWidget(QtGui.QWidget):
             qtobject.clear()
         elif typ == QtGui.QCheckBox:
             qtobject.setChecked(False)
+        elif typ == MultiFunctionWidget:
+            qtobject.clear_values()
         else:
             print("invalid type to clear")
         qtobject.setStyleSheet(self.ok_style)
@@ -310,8 +399,8 @@ class DeviceFunctionWidget(QtGui.QWidget):
                     },  # param for horizontal bar
                     {
                         'type': 'label',
-                        'range': 'Label Text Label Text Label Text Label Text Label Text Label Text Label Text',
-                        'arrange': 'None',
+                        'range': 'Label Text',
+                        'arrange': 'R',
                     },  # param for label
                     {
                         'name': 'Boolean',
@@ -319,7 +408,61 @@ class DeviceFunctionWidget(QtGui.QWidget):
                         'range':True,
                         'units':None,
                         'required':True # shouldnt matter
-                    } # param for boolean
+                    }, # param for boolean
+                    {
+                        'type':'hbar'
+                    },
+                    {
+                        'name':'Multi',
+                        'type':'multi',
+                        'range':['0','1','2','3','4','5','6','7','8'],
+                        'parameters':[
+                            {
+                                'name': 'TextEdit',
+                                'type': 'text',
+                                'range': 'Placeholder text',
+                                'units': None,
+                                'required': True
+                            },  # param for text
+                            {
+                                'name': 'Integer',
+                                'type': 'int',
+                                'range': [-100, 100],
+                                'units': 'Z',
+                                'required': True
+                            },  # param for int
+                            {
+                                'name': 'Float',
+                                'type': 'float',
+                                'range': [-100, 100],
+                                'units': 'R',
+                                'required': True,
+                                'default': 0.05
+                            },  # param for float
+                            {
+                                'name': 'DropdownMenu',
+                                'type': 'selector',
+                                'range': ['A', 'B', 'C'],
+                                'units': None,
+                                'required': True
+                            },  # param for dropdown
+                            {
+                                'type': 'hbar'
+                            },  # param for horizontal bar
+                            {
+                                'type': 'label',
+                                'range': 'Label Text',
+                                'arrange': 'R',
+                            },  # param for label
+                            {
+                                'name': 'Boolean',
+                                'type': 'bool',
+                                'range': True,
+                                'units': None,
+                                'required': True  # shouldnt matter
+                            },  # param for boolean
+                        ],
+                    }
                 ]
             } # debug each type
         else:
@@ -434,6 +577,9 @@ class DeviceFunctionWidget(QtGui.QWidget):
         #name = self.list_view_model.objectName()
         #print(funct_data, name)
         data = self.widgets[self.current_function].get_input()
+        if self.DEBUG:
+            print(data)
+            return
         if data == None: # if there was an error from the input
             return
 
@@ -782,6 +928,11 @@ class FunctionWidget(QtGui.QWidget):
         return layout
 
     def run_function(self, name, arguments):
+        if self.DEBUG:
+            print("Running function:")
+            print("Name = ",name)
+            print("Arguments = ",arguments)
+            return False
         id = self.deviceComboBox.currentIndex()
         device = self.sanitized_list[id]
         #print(device)
