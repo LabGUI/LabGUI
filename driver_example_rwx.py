@@ -53,7 +53,18 @@ properties = {
     'Text type':{
         'type':'text',
         'range':'Placeholder text'
-    }
+    },
+    'Horizontal Bar': { # name is irrelevant, however it cannot be repeated in list. Suggested: naming them 'hbar1','hbar2',etc
+        'type':'hbar',
+    },
+    'Label':{ # this places a label, who's text cannot be changed dynamically. Name is irrelevant. Suggested: naming them 'label1','label2',etc
+        'type':'label',
+        'range':'Label Text',
+        'arrange':'L', # possible values are 'L','R','None', with 'None' being the default value.
+                        # 'L' places label in first column (with names of channels)
+                        # 'R' places label in second column (with values/inputs)
+                        # 'None' places label in row without column, meaning it can span the entire line
+    },
 }
 
 """
@@ -113,6 +124,14 @@ functions = {
             'units':None,
             'required':True
         }, # param for dropdown
+        {
+            'type':'hbar'
+        }, # param for horizontal bar
+        {
+            'type':'label',
+            'range':'Label Text',
+            'arrange':'R', # either 'L', 'R', or 'None', see above
+        }, # param for label
         {
             'name': 'Boolean',
             'type':'bool',

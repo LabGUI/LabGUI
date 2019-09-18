@@ -51,11 +51,12 @@ import io
 
 DEBUG = False
 
+
 class FunctionFormWidget(QtGui.QWidget):
 
     def __init__(self, device, function, parameters, parent=None, debug=False):
         super(FunctionFormWidget, self).__init__(parent=parent)
-
+        self.DEBUG = debug
         #print(device, function, parameters)
         self.device = device
         self.function = function
@@ -82,6 +83,8 @@ class FunctionFormWidget(QtGui.QWidget):
         # parse parameters
         for obj in parameters:
             #print(obj)
+            if 'name' not in obj:
+                obj['name'] = ''
             text = obj['name']
             if 'unit' in obj.keys():
                 if obj['unit'] is not None:
@@ -109,10 +112,27 @@ class FunctionFormWidget(QtGui.QWidget):
                 qtobject = self.create_float(obj['name'], obj['range'])
             elif obj['type'] == 'int':
                 qtobject = self.create_int(obj['name'], obj['range'])
-            elif obj['type'] == 'selector':
+            elif obj['type'] == 'selector' or obj['type'] == 'selection':
                 qtobject = self.create_selector(obj['name'], obj['range'])
             elif obj['type'] == 'bool':
-                qtobject = self.create_selector(obj['name'], obj['range'])
+                qtobject = self.create_bool(obj['name'], obj['range'])
+            elif obj['type'] == 'hbar' or obj['type'] == 'hb':
+                qtobject = QtTools.QHLine()
+                self.layout.addRow(qtobject)
+                continue  # we do not want to save it as an item
+            elif obj['type'] == 'label':
+                if 'arrange' not in obj:
+                    arrange = 'None'
+                else:
+                    arrange = obj['arrange']
+                qtobject = self.create_label(obj['range'])
+                if arrange == 'L':
+                    self.layout.addRow(qtobject, None)
+                elif arrange == 'R':
+                    self.layout.addRow(None, qtobject)
+                else:
+                    self.layout.addRow(qtobject)
+                continue  # we do not want to save it as an item
             else:
                 qtobject = self.create_label("Error")
             qtobject.setStyleSheet(self.ok_style)
@@ -286,6 +306,14 @@ class DeviceFunctionWidget(QtGui.QWidget):
                         'required':True
                     }, # param for dropdown
                     {
+                        'type': 'hbar'
+                    },  # param for horizontal bar
+                    {
+                        'type': 'label',
+                        'range': 'Label Text Label Text Label Text Label Text Label Text Label Text Label Text',
+                        'arrange': 'None',
+                    },  # param for label
+                    {
                         'name': 'Boolean',
                         'type':'bool',
                         'range':True,
@@ -307,8 +335,7 @@ class DeviceFunctionWidget(QtGui.QWidget):
 
         self.current_function = None #'Voltage Pulse Sweep'
 
-
-        if self.device == None:
+        if self.device == None and not self.DEBUG:
             self.layout = QtGui.QVBoxLayout(self)
             label = QtGui.QLabel(self)
             label.setText("No device selected")
@@ -987,7 +1014,7 @@ def add_widget_into_main(parent):
 if __name__ == "__main__":
 
     app = QtGui.QApplication(sys.argv)
-    ex = FunctionWidget(parent=None)
+    ex = FunctionWidget(parent=None, debug=True)
     #ex = DevicePropertyWidget("AH", {}, debug=True)
     ex.show()
     #print(ex.get_properties())

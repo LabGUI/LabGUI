@@ -59,6 +59,17 @@ properties = {
         'range':'Still a placeholder',
         'readonly':True
     },
+    'Horizontal Bar': { # name is irrelevant, however it cannot be repeated in list. Suggested: naming them 'hbar1','hbar2',etc
+        'type':'hbar',
+    },
+    'Label':{ # this places a label, who's text cannot be changed dynamically. Name is irrelevant. Suggested: naming them 'label1','label2',etc
+        'type':'label',
+        'range':'Label Text',
+        'arrange':'L', # possible values are 'L','R','None', with 'None' being the default value.
+                        # 'L' places label in first column (with names of channels)
+                        # 'R' places label in second column (with values/inputs)
+                        # 'None' places label in row without column, meaning it can span the entire line
+    },
     # the following is a 'multi type' which basically nests a set of properties of the same set with differing options
     'Multi type': {
         'type': 'multi',
@@ -90,6 +101,13 @@ properties = {
                 'type': 'text',
                 'range': 'Placeholder'
             },
+            'Horizontal Bar': {
+                'type':'hbar',
+            },
+            'Label':{
+                'type':'label',
+                'range':'Label Text'
+            },
             'Nested Multi Type': {
                 'type': 'multi',
                 'range': ['option 1', 'option 2'],
@@ -118,6 +136,13 @@ properties = {
                     'Text type': {
                         'type': 'text',
                         'range': 'Placeholder'
+                    },
+                    'Horizontal Bar': {
+                        'type':'hbar',
+                    },
+                    'Label':{
+                        'type':'label',
+                        'range':'Label Text'
                     },
                 }
             }

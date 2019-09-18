@@ -136,6 +136,10 @@ class DevicePropertyWidget(QtGui.QWidget):
                     'type':'int',
                     'range':[-100, 100]
                 },
+                'Label':{
+                    'type':'label',
+                    'range':'Label Text'
+                },
                 'Boolean type':{
                     'type':'bool',
                     'range':True
@@ -148,6 +152,9 @@ class DevicePropertyWidget(QtGui.QWidget):
                     'type':'text',
                     'range':'Value',
                     'readonly':True
+                },
+                'Horizontal Bar':{
+                    'type':'hbar'
                 },
                 'Multi type':{
                     'type':'multi',
@@ -170,9 +177,15 @@ class DevicePropertyWidget(QtGui.QWidget):
                             'type':'int',
                             'range':[-100, 100]
                         },
+                        'Horizontal Bar 1': {
+                            'type': 'hbar'
+                        },
                         'Boolean type':{
                             'type':'bool',
                             'range':True
+                        },
+                        'Horizontal Bar 2': {
+                            'type': 'hbar'
                         },
                         'Text type':{
                             'type':'text',
@@ -262,6 +275,23 @@ class DevicePropertyWidget(QtGui.QWidget):
                     else:
                         #print(iobj['properties'])
                         qtobject = self.create_multi(item, iobj['range'], iobj['properties'])
+                elif iobj['type'] == 'hbar' or iobj['type'] == 'hb':
+                    qtobject = QtTools.QHLine()
+                    self.layout.addRow(qtobject)
+                    continue # we do not want to save it as an item
+                elif iobj['type'] == 'label':
+                    if 'arrange' not in iobj:
+                        arrange = 'None'
+                    else:
+                        arrange = iobj['arrange']
+                    qtobject = self.create_label(iobj['range'])
+                    if arrange == 'L':
+                        self.layout.addRow(qtobject, None)
+                    elif arrange == 'R':
+                        self.layout.addRow(None,qtobject)
+                    else:
+                        self.layout.addRow(qtobject)
+                    continue # we do not want to save it as an item
                 else:
                     qtobject = None
                     print("uh oh")
@@ -748,7 +778,7 @@ if __name__ == "__main__":
 
 
     app = QtGui.QApplication(sys.argv)
-    ex = PropertiesWidget()
+    ex = PropertiesWidget(debug=True)
     #ex = DevicePropertyWidget("AH", {}, debug=True)
     ex.show()
     #print(ex.get_properties())

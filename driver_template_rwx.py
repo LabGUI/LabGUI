@@ -41,7 +41,14 @@ properties = {
     'Text type':{
         'type':'text',
         'range':'Placeholder'
-    }
+    },
+    'hbar0': {
+        'type':'hbar',
+    },
+    'Label0':{
+        'type':'label',
+        'range':'Label Text'
+    },
 }
 functions = {
     'Function 1': [
@@ -80,7 +87,15 @@ functions = {
             'range':True, # shouldnt matter
             'units':None,
             'required':True
-        } # param for boolean
+        }, # param for boolean
+        {
+            'type':'hbar'
+        }, # param for horizontal bar
+        {
+            'type':'label',
+            'range':'Label Text',
+            'arrange':'R',
+        },
     ]
 }
 
