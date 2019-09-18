@@ -80,6 +80,15 @@ properties = {
         'type':'float',
         'range':[0,100],
         'unit':'%'
+    },
+    'Set Maximum Heater Output':{
+        'type':'bool',
+        'range': False,
+    },
+    'Maximum Heater Output Value':{
+        'type':'float',
+        'range':[0,9999],
+        'unit':'V',
     }
 
 }
@@ -219,6 +228,10 @@ class Instrument(Tool.MeasInstr):
     """
 
     def set(self, data):
+        # check if setting max
+        if data['Set Maximum Heater Output']:
+            self.setMaximumHeater(data['Maximum Heater Output Value'])
+
         # set control
         self.setControl(data['Locked'], data['Remote'])
 
@@ -244,6 +257,10 @@ class Instrument(Tool.MeasInstr):
         self.clear(silent=True)
 
         data = {}
+
+        # reset maximum heater
+        data['Set Maximum Heater Output'] = False
+        data['Maximum Heater Output Value'] = None
 
         # get control
         data['Locked'], data['Remote'] = self.getControl()
