@@ -29,13 +29,14 @@ WIDGETS_ID = "USER_WIDGETS"
 LOAD_DATA_FILE_ID = "DATAFILE"
 GPIB_INTF_ID = "GPIB_INTF"
 VISA_BACKEND_ID = "VISA_BACKEND"
+REN_DEFAULT_ID = "REN_LEVEL"
 
 
 
 
 VISA_BACKEND_DEFAULT = '@ni'
 VISA_BACKEND_OPTIONS = ['@ni', '@py']
-
+REN_DEFAULT = 'None'
 INTERFACE_DEFAULT = 'pyvisa'
 INTERFACE_OPTIONS = ['pyvisa','prologix']
 def create_config_file(config_path=CONFIG_FILE_PATH):
@@ -334,6 +335,8 @@ def set_config_setting(
         # open the file
         config_file = open(config_file_path, 'r')
 
+        # to check is setting exists or not
+        flag = False
         # read the lines into a list
         lines = config_file.readlines()
 
@@ -352,6 +355,8 @@ def set_config_setting(
 
                     lines[i] = "%s=%s\n" % (setting, setting_value)
 
+                    flag = True
+
             except ValueError as e:
 
                 if "need more than 1 value to unpack" in e:
@@ -364,6 +369,8 @@ def set_config_setting(
 
         config_file.close()
 
+        if not flag:
+            lines.append("%s=%s\n"%(setting, setting_value))
         # reopen the file and write the modified lines
         config_file = open(config_file_path, 'w')
         config_file.writelines(lines)
@@ -406,6 +413,18 @@ def get_script_name(**kwargs):
 
 def set_script_name(script_name, **kwargs):
     set_config_setting("SCRIPT", script_name, **kwargs)
+
+def get_REN(**kwargs):
+    level = get_config_setting(REN_DEFAULT_ID, **kwargs)
+    if level is None:
+        return 'None'
+    else:
+        return level
+
+def set_REN(level, **kwargs):
+    if level is None:
+        level = 'None'
+    set_config_setting(REN_DEFAULT_ID, str(level), **kwargs)
 
 
 def get_debug_setting(**kwargs):
@@ -833,6 +852,14 @@ CONFIG_OPTIONS = {
         "default": VISA_BACKEND_DEFAULT,
         "options": ['@ni','@py'],
         "name": "VISA Backend",
+        "type" : "selector"
+    },
+    REN_DEFAULT_ID : {
+        "get" : get_REN,
+        "set" : set_REN,
+        "default": REN_DEFAULT,
+        "options": ['None','0','1','2','3','4','5','6'],
+        "name": "Default REN Level",
         "type" : "selector"
     }
 }
