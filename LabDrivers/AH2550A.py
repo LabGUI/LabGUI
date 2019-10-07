@@ -34,6 +34,8 @@ class Instrument(Tool.MeasInstr):
                                           interface=INTERFACE,
                                           **kwargs)
 
+
+        self.connection.control_ren(2)
     def measure(self, channel):
         if channel in self.last_measure:
             if not self.DEBUG:
@@ -53,7 +55,6 @@ class Instrument(Tool.MeasInstr):
             print("you are trying to measure a non existent channel : " + channel)
             print("existing channels :", self.channels)
             answer = None
-
         self.last_measure[channel] = answer
         return answer
 
@@ -76,7 +77,6 @@ class Instrument(Tool.MeasInstr):
                     continue
                 else:
                     ret.append( float(item.split('=')[1]) )
-
 
 
         return ret # order is capacitance, loss, voltage

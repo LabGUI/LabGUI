@@ -23,3 +23,5 @@ StartLabGui*
 labgui.egg-info
 bin/
 dist*
+*.dump
+

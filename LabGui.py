@@ -778,6 +778,9 @@ have the right format, '%s' will be used instead"
                 % (self.default_settings_fname)
             )
 
+        # load default ren state
+        self.set_ren()
+
         # Create the object responsible to display information send by the
         # datataker
         self.data_displayer = DataManagement.DataDisplayer(self.datataker)
@@ -820,7 +823,6 @@ have the right format, '%s' will be used instead"
 
             # save the current settings
             self.file_save_settings(self.default_settings_fname)
-
             self.settings.setValue("windowState", self.saveState())
             self.settings.setValue("geometry", self.saveGeometry())
             self.settings.remove("script_name")
@@ -1325,6 +1327,8 @@ have the right format, '%s' will be used instead"
                 self.instrument_connexion_setting_fname,
                 self.config_file,
             )
+
+        self.save_ren()
 
     def file_save_settings(self, fname=None):
         """save the settings for the instruments and plot window into a file
