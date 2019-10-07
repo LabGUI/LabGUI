@@ -420,11 +420,15 @@ class DeviceFunctionWidget(QtGui.QWidget):
                 return
             #print(data)
             # here is where we save the data:
-            filename = IOTools.get_funct_save_name(self.device, self.current_function)
-            if self.parent.save_data(filename, rdata, function=self.current_function, device=self.device, params=data):
-                print("Data saved to: "+filename)
+            self.save_data(rdata,data)
+            #filename = IOTools.get_funct_save_name(self.device, self.current_function)
+            #if self.parent.save_data(filename, rdata, function=self.current_function, device=self.device, params=data):
+            #    print("Data saved to: "+filename)
             return rdata
-
+    def save_data(self, data, params):
+        filename = IOTools.get_funct_save_name(self.device, self.current_function)
+        if self.parent.save_data(filename, data, function=self.current_function, device=self.device, params=params):
+            print("Data saved to: " + filename)
     def clear_event(self, *args):
         self.widgets[self.current_function].clear_input()
         #print(args)
@@ -775,7 +779,7 @@ class FunctionWidget(QtGui.QWidget):
         channels = np.size(npdata)
         device = self.deviceComboBox.currentData()
         window_name = device + ": "+name
-        print(channels, 1)
+        #print(channels, 1)
         if self.plot[device] is None:
             labels = []
         else:
@@ -853,7 +857,7 @@ class FunctionWidget(QtGui.QWidget):
         try:
             ndata = np.array(data)
             params = ", ".join(["{}={}".format(key, value) for key, value in params.items()])
-            print(params)
+            #print(params)
             llabels = []
             if device in self.plot.keys():
                 llabels = self.plot[device]
@@ -872,13 +876,13 @@ class FunctionWidget(QtGui.QWidget):
                 else:
                     headers.append(device)
             if llabels:
-                headers.append(" ".join(self.plot[device]))
+                headers.append( "#C'"+("', '".join(self.plot[device]))+"'")
             else:
-                headers.append(" ".join([str(i+1) for i in range(0, np.size(ndata,1))]))
-            np.savetxt(fname, ndata, header="\n".join(headers))
+                headers.append( "# "+(" ".join([str(i+1) for i in range(0, np.size(ndata,1))])) )
+            np.savetxt(fname, ndata, header="\n".join(headers), comments='')
             return True
         except:
-            print("Exception occured: "+sys.exc_info()[0])
+            print("Exception occured: "+sys.exc_info()[1])
             return False
 
 
@@ -987,7 +991,7 @@ def add_widget_into_main(parent):
 if __name__ == "__main__":
 
     app = QtGui.QApplication(sys.argv)
-    ex = FunctionWidget(parent=None)
+    ex = FunctionWidget(parent=None, debug=True)
     #ex = DevicePropertyWidget("AH", {}, debug=True)
     ex.show()
     #print(ex.get_properties())
