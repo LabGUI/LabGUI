@@ -68,6 +68,13 @@ functions = {
             'required': True,
             'units': 's'
         },
+        { # parameter 5.5
+            'name':'Baseline',
+            'type':'float',
+            'range':[0, 120],
+            'required': False,
+            'units': 'V'
+        },
         {
             'name':'Frequency of Readings',
             'type':'float',
@@ -123,20 +130,13 @@ functions = {
             'units': 'V'
         },
         { # parameter 4
-            'name':'Pulse Width',
+            'name':'Step Width',
             'type':'float',
             'range':[0, 120],
             'required': True,
             'units': 's'
         },
         { # parameter 5
-            'name':'Pulse Delay',
-            'type':'float',
-            'range':[0, 120],
-            'required': True,
-            'units': 's'
-        },
-        {
             'name':'Frequency of Readings',
             'type':'float',
             'range':[0, 120],
@@ -260,7 +260,7 @@ class Instrument(Tool.MeasInstr):
         # yyyyy/zzzzz /a/d
 
     def run(self, channel, arguments):
-        print(channel)
+        #print(channel)
         if channel == 'Voltage Pulse Sweep':
             items = arguments.items()
             params = {}
@@ -270,11 +270,13 @@ class Instrument(Tool.MeasInstr):
                 'Stop':'stop',
                 'Pulse Width':'pulse_width',
                 'Pulse Delay':'pulse_delay',
+                'Baseline':'base',
                 'Frequency of Readings':'frequency',
                 'Direction':'direction',
                 'VCompliance':'v_compliance',
                 'ICompliance':'i_compliance'
             }
+            #print(items)
             for key, value in items:
                 if value is not None:
                     params[names_switch[key]] = value
@@ -286,8 +288,7 @@ class Instrument(Tool.MeasInstr):
                 'Steps':'steps',
                 'Start':'start',
                 'Stop':'stop',
-                'Pulse Width':'pulse_width',
-                'Pulse Delay':'pulse_delay',
+                'Step Width':'width',
                 'Frequency of Readings':'frequency',
                 'Direction':'direction',
                 'VCompliance':'v_compliance',
@@ -558,7 +559,7 @@ class Instrument(Tool.MeasInstr):
                 self.write(':SENS:CURR:PROT[:LIM]')
                 time.sleep(1)
 
-    def pulse_voltage_simple(self, pulses, start, stop, pulse_width, pulse_delay, frequency = 0.2, direction = "BOTH", v_compliance=1, i_compliance=1.0e-7):
+    def pulse_voltage_simple(self, pulses, start, stop, pulse_width, pulse_delay, frequency = 0.2, base = 0, direction = "BOTH", v_compliance=1, i_compliance=1.0e-7):
         """
 
         :param pulses:
@@ -573,6 +574,8 @@ class Instrument(Tool.MeasInstr):
             length of delay between pulses, in seconds
         :param frequency:
             how often readings should occur, in seconds
+        :param base:
+            the baseline for pulse, as in what the voltage between pulses is set to
         :param direction:
             UP, DOWN, or BOTH
         :param v_compliance:
@@ -585,19 +588,20 @@ class Instrument(Tool.MeasInstr):
         meaning in increments dictated by (stop-start)/pulses,
         and will traverse from start to stop and back to stop (depending on direction),
         pulses for pulse_width seconds,
-        stays at 0 for pulse_delay seconds, (TODO: or start?)
+        stays at 0 for pulse_delay seconds, (stays at baseline)
         returns a list of plottable points in 3 dimensions.
         """
         try:
             pulses = int(pulses)
-            start = 0
-            #start = float(start)
+            #start = 0
+            start = float(start)
             stop = float(stop)
             pulse_width = float(pulse_width)
             pulse_delay = float(pulse_delay)
             v_compliance = float(v_compliance)
             i_compliance = float(i_compliance)
             frequency = float(frequency)
+            base = float(base)
         except ValueError:
             print("Invalid data, must have steps=integer, start=float, stop=float")
             return False
@@ -617,12 +621,13 @@ class Instrument(Tool.MeasInstr):
 
         for i in rang:
             # do pulse delay setup
-            self.set_voltage(0, i_compliance, v_compliance)
+            self.set_voltage(base, i_compliance, v_compliance)
             t = tnow = time.time()
             # do pulse_delay
             while (tnow-t) < pulse_delay:
                 r_time, r_data = time.time(), self.ask(self.READ)
-
+                if self.DEBUG:
+                    r_data = "%f, %f"%(base,base)
                 data.append( (r_time, r_data) )
                 tnow = time.time() # to calculate sleep
                 if (frequency - (tnow - r_time)) > 0:
@@ -634,19 +639,21 @@ class Instrument(Tool.MeasInstr):
             t = tnow = time.time()
             while (tnow-t) < pulse_width:
                 r_time, r_data = time.time(), self.ask(self.READ)
-
+                if self.DEBUG:
+                    r_data = "%f, %f"%((step_size * i)+start,(step_size * i)+start)
                 data.append( (r_time, r_data))
                 tnow = time.time()  # to calculate sleep
                 if (frequency - (tnow - r_time)) > 0:
                     time.sleep(frequency - (tnow - r_time))
                 tnow = time.time()  # to calculate for pulse time
 
-        # now do final reading for 0
-        self.set_voltage(0, i_compliance, v_compliance)
+        # now do final reading for base
+        self.set_voltage(base, i_compliance, v_compliance)
         t = tnow = time.time()
         while (tnow-t) < pulse_delay:
             r_time, r_data = time.time(), self.ask(self.READ)
-
+            if self.DEBUG:
+                r_data = "%f, %f" % (base,base)
             data.append( (r_time, r_data))
             tnow = time.time()  # to calculate sleep
             if (frequency - (tnow - r_time)) > 0:
@@ -655,6 +662,7 @@ class Instrument(Tool.MeasInstr):
 
         # now process some data before returning
         ret = []
+
         for tup in data:
             splitted = tup[1].split(",")
             ret.append( (
@@ -901,7 +909,8 @@ class Instrument(Tool.MeasInstr):
             self.set_voltage(v, i_compliance, v_compliance)
             while (tnow-t) < width:
                 r_time, r_data = time.time(), self.ask(self.READ)
-
+                if self.DEBUG:
+                    r_data = "%f, %f"%(v,v)
                 list.append((r_time, r_data))
                 tnow = time.time()  # to calculate sleep
                 if (frequency - (tnow - r_time)) > 0:
@@ -911,6 +920,7 @@ class Instrument(Tool.MeasInstr):
             #list.append(self.ask(":READ?").split(","))
 
         data = [] # 3d coordinates, (Time, Voltage, Current)
+
 
         for datapoint in list:
             spl = datapoint[1].split(",")
