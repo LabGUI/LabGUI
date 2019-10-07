@@ -15,6 +15,7 @@ import sys
 
 from types import MethodType
 import logging
+import time
 
 import LabDrivers.utils
 
@@ -308,6 +309,7 @@ class DeviceFunctionWidget(QtGui.QWidget):
         self.current_function = None #'Voltage Pulse Sweep'
 
 
+
         if self.device == None:
             self.layout = QtGui.QVBoxLayout(self)
             label = QtGui.QLabel(self)
@@ -427,7 +429,7 @@ class DeviceFunctionWidget(QtGui.QWidget):
             return rdata
     def save_data(self, data, params):
         filename = IOTools.get_funct_save_name(self.device, self.current_function)
-        if self.parent.save_data(filename, data, function=self.current_function, device=self.device, params=params):
+        if self.parent.save_data(filename, data, self.parent.start_time, function=self.current_function, device=self.device, params=params):
             print("Data saved to: " + filename)
     def clear_event(self, *args):
         self.widgets[self.current_function].clear_input()
@@ -639,6 +641,8 @@ class FunctionWidget(QtGui.QWidget):
 
         self.plot_window = []
 
+        self.start_time = 0
+
 
 
         if parent is not None:
@@ -763,6 +767,7 @@ class FunctionWidget(QtGui.QWidget):
         device = self.sanitized_list[id]
         #print(device)
         driver = device[2]
+        self.start_time = time.time()
         data = driver.run(name, arguments)
         #print(name+" Data:", data)
         return data
@@ -800,6 +805,7 @@ class FunctionWidget(QtGui.QWidget):
 
             z = self.instrument_list.items()
             self.ports = {}
+            self.instr_dict = {}
             ports = list()
             instruments = list()
             names = list()
@@ -808,7 +814,8 @@ class FunctionWidget(QtGui.QWidget):
                     ports.append(x)
                     instruments.append(self.instrument_list[x])
                     names.append(self.instrument_list[x].ID_name)
-                    self.ports[self.instrument_list[x]] = x
+                    self.ports[self.instrument_list[x].ID_name] = x
+                    self.instr_dict[self.instrument_list[x].ID_name] = self.instrument_list[x]
                     #print(x,self.instrument_list[x].ID_name)
             self.sanitized_list = list(zip(names, ports, instruments))
             return
@@ -853,7 +860,7 @@ class FunctionWidget(QtGui.QWidget):
             return "Unable to join object: "+sys.exc_info()[0]
 
 
-    def save_data(self, fname, data, device="", function="", params={}):
+    def save_data(self, fname, data, start_time, device="", function="", params={}):
         try:
             ndata = np.array(data)
             params = ", ".join(["{}={}".format(key, value) for key, value in params.items()])
@@ -872,9 +879,11 @@ class FunctionWidget(QtGui.QWidget):
 
             if device != "":
                 if device in self.ports.keys():
-                    headers.append(device+"["+self.ports[device]+"]")
+                    headers.append("#I'"+device+"["+self.ports[device]+"]'")
                 else:
-                    headers.append(device)
+                    print(self.ports)
+                    headers.append("#I'"+device+"'")
+            headers.append("#T'%s'"%(str(start_time)))
             if llabels:
                 headers.append( "#C'"+("', '".join(self.plot[device]))+"'")
             else:
