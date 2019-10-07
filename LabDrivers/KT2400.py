@@ -296,7 +296,7 @@ class Instrument(Tool.MeasInstr):
             for key, value in items:
                 if value is not None:
                     params[names_switch[key]] = value
-            return self.pulse_voltage_simple(**params)
+            return self.sweep_voltage_staircase(**params)
 
     def reset(self):
         if not self.DEBUG:
