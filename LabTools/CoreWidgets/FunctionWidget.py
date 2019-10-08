@@ -865,29 +865,46 @@ class FunctionWidget(QtGui.QWidget):
             ndata = np.array(data)
             params = ", ".join(["{}={}".format(key, value) for key, value in params.items()])
             #print(params)
+
+            t_dev = "TIME[]"
+            if (start_time - ndata[0][0]) < 30000000:  # dif between start time n first data point < about a year
+                t_dev = t_dev + ".TIME"
+            else:
+                t_dev = t_dev + ".dt"
+
             llabels = []
+            devices = [t_dev]
             if device in self.plot.keys():
                 llabels = self.plot[device]
             headers = []
 
+
+
             if function != "":
                 if params != "":
                     function = function + " (" + params + ")"
-                headers.append(function)
+                headers.append("# "+function)
             elif params != "": #incase only params are passed
-                headers.append(params)
+                headers.append("# "+params)
 
             if device != "":
                 if device in self.ports.keys():
-                    headers.append("#I'"+device+"["+self.ports[device]+"]'")
+                    d_str = device+"["+self.ports[device]+"]"
+                    for i in range(1, np.size(ndata,1)):
+                        devices.append(d_str)
+                    # Assuming that the first column is always time (as per specs)
+
+
                 else:
                     print(self.ports)
-                    headers.append("#I'"+device+"'")
+                    for i in range(1, np.size(ndata,1)):
+                        devices.append(device)
+                headers.append("#I'" + ("', '".join(devices)) + "'")
             headers.append("#T'%s'"%(str(start_time)))
             if llabels:
                 headers.append( "#C'"+("', '".join(self.plot[device]))+"'")
             else:
-                headers.append( "# "+(" ".join([str(i+1) for i in range(0, np.size(ndata,1))])) )
+                headers.append( "#C'"+("', '".join([str(i+1) for i in range(0, np.size(ndata,1))]))+"'" )
             np.savetxt(fname, ndata, header="\n".join(headers), comments='')
             return True
         except:

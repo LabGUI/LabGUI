@@ -523,15 +523,17 @@ class SyncData(object):
 
 
 if __name__ == "__main__":
-    files = ['dat1.dat', 'dat2.dat']
-
-    ssync = SyncData([ 's'+file for file in files ])
-    ssync.symmetric_difference('sdat_symdiff.dat')
-    exit(0)
+    #files = ['dat1.dat', 'dat2.dat']
+    files = ['191008__001.dat','KT2400_VoltagePulseSweep_191008__001.dat']
     sync = SyncData(files)
+    #ssync = SyncData([ 's'+file for file in files ])
+    sync.union('union_dat.dat')
+    sync.symmetric_difference('sdat_symdiff.dat')
+    #exit(0)
+    #sync = SyncData(files)
     sync.difference(0, 'dat_diff.dat')
 
-    exit(0)
+    #exit(0)
     sync.intersect('dat_intersect.dat')
 
     exit(0)
