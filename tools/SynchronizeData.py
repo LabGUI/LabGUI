@@ -100,6 +100,27 @@ class DataSet(object):
                 self.times.append( self.rel_data[i][column] ) # still in abs time
                 self.rel_data[i][column] -= self.headers['start_time']
             self.column = column
+        else:
+            """
+             it is now imperative to determine whether or not the datafile is in absolute or relative time.
+             In order to do this, it is safe to compare the supplied time with the first datapoint from the first
+             column, which is assumed to be the time datapoints if it is not specified. The difference between these
+             times can help us determine whether or not it is relative or absolute time. NOTE: if start_time = 0,
+             then the opposite must be applied
+            """
+            temporary_boolean = math.fabs(self.headers['start_time'] - self.raw_data[0][0]) < 30000000 # aprx 1 yr
+            self.abs_data = self.raw_data.copy()
+            self.rel_data = self.raw_data.copy()
+            if self.headers['start_time'] == 0: # can still produce unexpected results
+                temporary_boolean = not temporary_boolean
+            if temporary_boolean: # must be absolute, parse it as such
+                for i, entry in enumerate(self.rel_data):
+                    self.times.append(self.rel_data[i][0])  # still in abs time
+                    self.rel_data[i][0] -= self.headers['start_time']
+            else:
+                for i, entry in enumerate(self.abs_data):
+                    self.abs_data[i][0] += self.headers['start_time']
+                    self.times.append(self.abs_data[i][0])  # needed for min/max
 
 
         # now to parse instrument list, and strip ports, leaving it in the same order as in headers
@@ -118,9 +139,15 @@ class DataSet(object):
                 self.instr_name[index] = instr
 
     def min_time(self):
-        return min(self.times)
+        try:
+            return min(self.times)
+        except:
+            return 0
     def max_time(self):
-        return max(self.times)
+        try:
+            return max(self.times)
+        except:
+            return 0
 
 class SyncData(object):
 

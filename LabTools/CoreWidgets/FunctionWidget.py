@@ -868,7 +868,7 @@ class FunctionWidget(QtGui.QWidget):
 
             t_dev = "TIME[]"
             if (start_time - ndata[0][0]) < 30000000:  # dif between start time n first data point < about a year
-                t_dev = t_dev + ".TIME"
+                t_dev = t_dev + ".Time"
             else:
                 t_dev = t_dev + ".dt"
 
