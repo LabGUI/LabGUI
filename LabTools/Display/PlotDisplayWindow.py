@@ -85,10 +85,7 @@ def xyaxis(xaxis, yaxis):
     y = yaxis.copy() # copy so it isnt masked in a seperate function call
     y[ y == np.inf ] = np.nan # disconnect graph
     return xaxis[ymask], y[ymask]
-    # removes nan values
-    dat = np.array([xaxis, yaxis]).T
-    dat = dat[~np.isnan(dat).any(axis=1)]
-    return dat[:,0], dat[:,1]
+
 
 
 VOID_NPARRAY = np.array([])

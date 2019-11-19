@@ -275,7 +275,6 @@ class SyncData(object):
             else:
                 head[0] = ABSOLUTE_TIME  # we want it all in abs, we can convert later
                 for header in dset.headers.keys():
-                    # print(header)
                     if header == "instr":
                         headers["instr"] += head[1:]
                     else:
@@ -385,7 +384,7 @@ class SyncData(object):
         # we need max of mins, and mins of maxs for itnersect
         start_time = max(
             self.start_times
-        )  # cuz it is the last one thatll be in the intersection
+        )  # cuz it is the last one that'll be in the intersection
         st_point = max(
             [
                 min(self.data_all[~np.isnan(self.data_all[:, i + 1])][:, 0])
@@ -419,7 +418,7 @@ class SyncData(object):
 
     def align_min(self, output_file):
         """
-        Intersect for the lower bound. Only thing that is ligned up is the mins (max of min)
+        Intersect for just the lower bounds; aligns the startpoints (max of mins)
         """
         if output_file is None:
             output_file = self.output_file
@@ -457,7 +456,7 @@ class SyncData(object):
 
     def align_max(self, output_file):
         """
-        Same as intersect, but it aligns the endpoints (min maxs)
+        Intersect for just the upper bounds; aligns the endpoints (min of maxs)
         """
         if output_file is None:
             output_file = self.output_file
@@ -492,6 +491,13 @@ class SyncData(object):
         return data
 
     def difference(self, A, output_file, sets=None):
+        """
+        Applies set operation A\{set} for all datasets in 'sets' list
+        :param A: Set to subtract from
+        :param output_file: File to save new data to
+        :param sets: sets to subtract from A
+        :return:
+        """
         if sets is None:
             sets = self.sets
         if A not in list(range(len(sets))):
@@ -535,12 +541,12 @@ class SyncData(object):
         """
         Computes the symmetric difference of the union and intersect.
 
-        I guess this can also be considered the intersect compliment?
+        This can also be considered the intersect compliment
         """
-        union = self.union(output_file)
+        self.union(output_file)
         uset = DataSet(output_file)
 
-        intersect = self.intersect(output_file)
+        self.intersect(output_file)
         iset = DataSet(output_file)
 
         # now to difference: union \ intersect
@@ -548,7 +554,9 @@ class SyncData(object):
         return self.difference(0, output_file, [uset, iset])
 
     def save(self, header, data, output_file=None):
-
+        """
+        this function is used in operation functions in order to save processed data
+        """
         if header["hdr"] != "":
             header_str = "# " + header["hdr"].replace("\n", "\n#") + "\n"
 
@@ -560,7 +568,6 @@ class SyncData(object):
 
         header_str += "#P" + str(header["param"]).strip("[]") + "\n"
         header_str += "#T'" + str(header["start_time"]) + "'\n"
-        # print(dat)
         np.savetxt(output_file, data, header=header_str.rstrip("\n"), comments="")
 
 
@@ -596,26 +603,3 @@ if __name__ == "__main__":
     header = sync.headers_all
     sync.save(data=dat, header=header, output_file="realtest.dat")
 
-
-""" header_str = "#C"+", ".join(header['channel_labels'])
-output_file = open('text.dat', "w")
-output_file.write(
-    "#C"
-    + str(header['channel_labels']).strip("[]")
-    + "\n"
-)
-output_file.write(
-    "#I"
-    + str(header['instr']).strip(
-        "[]"
-    )
-    + "\n"
-)
-
-
-output_file.write("#P" + str(header['param']).strip("[]") + "\n")
-output_file.write(
-    "#T'" + str(header['start_time']) + "'\n"
-)
-# print(dat)
-np.savetxt('text.dat', dat)"""
