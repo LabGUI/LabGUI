@@ -86,7 +86,7 @@ class OutputFileWidget(QtGui.QWidget):
 
         found = p.findall(fname)
 #        print(("found:" + str(found)))
-        if not found == []:
+        if not len(found) == []:
             ending = found[0]
             num = int(ending[1:4]) + 1
             fname = fname.replace(ending, "_%3.3d.dat" % num)
