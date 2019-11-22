@@ -509,7 +509,7 @@ def load_file_windows(fname, splitchar=', ', headers=True):
     ifs = open(fname, 'r')
     label = {'hdr': ""}
 
-    labels_id = ['P', 'I', 'C', 'D']
+    labels_id = ['P', 'I', 'C', 'D', 'T']
 
     lines = ifs.readlines()
 
@@ -525,6 +525,8 @@ def load_file_windows(fname, splitchar=', ', headers=True):
             #   P for parameter,
             #   I for instrument,
             #   C for channel name
+            #   D for data
+            #   T for start time in seconds since epoch
             label_id = line[1:2]
 
             # identify if we have an occurence of a label_id from LABELS_ID
@@ -564,11 +566,13 @@ def load_file_windows(fname, splitchar=', ', headers=True):
 
                     label['channel_labels'][0] = \
                         label['channel_labels'][0][1:]
-
+            elif label_id == 'T':
+                if 'start_time' not in label.keys(): # it is possible to have two, and we definitely only want the first
+                    label['start_time'] = float(line.rstrip("\n").strip("'"))
             elif label_id == 'D':
                 if 'data' not in label.keys():
                     label['data'] = []
-                label['data'].append(line.split(', '))
+                label['data'].append(line.split(splitchar)) # ', '
 
             # this is user comments we only save the ones that are
             # before the label_id, other lines will be ignored
