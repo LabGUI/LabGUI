@@ -494,7 +494,7 @@ class SyncData(object):
             self.parse_data()
 
         header = self.headers_all
-        # we need max of mins, and mins of maxs for itnersect
+        # we need max of mins, and mins of maxs for intersect
         start_time = min(self.start_times)  # WILL BE FIRST FOR THIS ONE
         sp_point = min(
             [
@@ -639,4 +639,3 @@ if __name__ == "__main__":
     dat = sync.parse_data()
     header = sync.headers_all
     sync.save(data=dat, header=header, output_file="realtest.dat")
-
