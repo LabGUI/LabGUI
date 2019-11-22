@@ -1267,9 +1267,10 @@ have the right format, '%s' will be used instead"
                     load_fname = load_fname[1]
 
                     # replace the header text by the one stored in memory
-                    self.widgets["loadPlotWidget"].header_text(
-                        self.loaded_data_header[load_fname]
-                    )
+                    if load_fname in self.loaded_data_header.keys():
+                        self.widgets["loadPlotWidget"].header_text(
+                            self.loaded_data_header[load_fname]
+                        )
 
                     # update the file information in the widget
                     self.widgets["loadPlotWidget"].load_file_name(load_fname)

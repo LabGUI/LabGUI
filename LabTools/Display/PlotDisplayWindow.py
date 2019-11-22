@@ -282,6 +282,7 @@ class PlotDisplayWindow(QtGui.QMainWindow, ui_plotdisplaywindow.Ui_PlotDisplayWi
                 if get_groupBox_purpouse(name) == "marker":
 
                     cbb_list = marker_set
+                    print(name)
 
                 elif get_groupBox_purpouse(name) == "line":
 
