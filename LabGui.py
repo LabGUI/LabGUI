@@ -1071,9 +1071,13 @@ have the right format, '%s' will be used instead"
             else:
                 # here I want to perform a check to see whether the number of instrument match
                 # open it in append mode, so it won't erase previous data
+                # DEV NOTE: it might be wise to do this check, and if it is different, fill missing instruments with nan (from before or after)
                 self.output_file = open(of_name, "a")
 
             self.datataker.initialize(is_new_file)
+
+            self.output_file.write("#T'%s'\n"%str(self.datataker.t_start)) # append it, as if using ds, it will be reset anyways
+
             self.datataker.set_script(self.widgets["ScriptWidget"].get_script_fname())
 
             # this command is specific to Qthread, it will execute whatever is defined in
