@@ -3,7 +3,24 @@ Created July 11th, 2019
 
 @author: zackorenberg
 
-This widget is meant to be used both internally/externally to synchronize independent datafiles. It will treat each data file as a set, and therefore support elementary set operations
+This widget is meant to be used both internally/externally to synchronize independent datafiles. It will treat each data
+file as a set, and therefore support elementary set operations
+
+This can be used to merge separate datafiles in such a way
+
+files = ["191008__001.dat", "KT2400_VoltagePulseSweep_191008__001.dat"] # files to load
+
+sync = SyncData(files)                                                  # creates SyncData object, which loads data from all files
+
+sync.union("union_dat.dat")                                             # performs union, saves to union_dat.dat
+
+sync.symmetric_difference("sdat_symdiff.dat")                           # performs symmetric difference on all data,
+                                                                        # saves to sdat_symdiff.dat
+
+sync.difference(0, "dat_diff.dat")                                      # performs difference of first dataset with the
+                                                                        # rest (index from 0 to n-1) and saves to dat_diff.dat
+
+sync.intersect("dat_intersect.dat")                                     # performs intersect and saves to dat_intersect.dat
 """
 
 
@@ -28,6 +45,7 @@ except:
 ABSOLUTE_TIME = "TIME[].Time"
 RELATIVE_TIME = "TIME[].dt"
 
+DEFAULT_OUTPUT = None # alternatively, you can set it to a file like "combination.dat"
 
 class DataSet(object):
     def __init__(self, file="", *args, **kwargs):
@@ -161,7 +179,7 @@ class SyncData(object):
     def __init__(
         self,
         file_list=[],
-        output_file="combination.dat",
+        output_file=DEFAULT_OUTPUT,
         default=RELATIVE_TIME,
         *args,
         **kwargs
@@ -171,7 +189,8 @@ class SyncData(object):
         :param file_list:
             list of paths to data files to sync
         :param output_file:
-            name of output file (will be default for all save functions, unless otherwise specified
+            name of output file (will be default for all save functions, unless otherwise specified)
+            if None, it will not save, only return data
         :param default:
             either RELATIVE_TIME or ABSOLUTE_TIME, will save the sync'd data in the specified format
         :param args:
@@ -352,6 +371,11 @@ class SyncData(object):
         return self.data_all
 
     def union(self, output_file=None):
+        """
+        Performs union of all data sets (merges)
+        :param output_file: place to save
+        :return: data
+        """
         if output_file is None:
             output_file = self.output_file
 
@@ -374,6 +398,11 @@ class SyncData(object):
         return data
 
     def intersect(self, output_file=None):
+        """
+        Performs intersect of all data sets, so intervals covered are present in all
+        :param output_file: place to save
+        :return: data
+        """
         if output_file is None:
             output_file = self.output_file
 
@@ -416,7 +445,7 @@ class SyncData(object):
 
         return data
 
-    def align_min(self, output_file):
+    def align_min(self, output_file=None):
         """
         Intersect for just the lower bounds; aligns the startpoints (max of mins)
         """
@@ -454,7 +483,7 @@ class SyncData(object):
 
         return data
 
-    def align_max(self, output_file):
+    def align_max(self, output_file=None):
         """
         Intersect for just the upper bounds; aligns the endpoints (min of maxs)
         """
@@ -490,14 +519,19 @@ class SyncData(object):
 
         return data
 
-    def difference(self, A, output_file, sets=None):
+    def difference(self, A, output_file=None, sets=None):
         """
-        Applies set operation A\{set} for all datasets in 'sets' list
+        Applies set operation A\{set} for all datasets in 'sets' list,
+        where A is the index of the dataset to subtract from (0..n-1)
+
+        A list of datasets can be specified to perform the operation exclusively on those datasets
         :param A: Set to subtract from
         :param output_file: File to save new data to
         :param sets: sets to subtract from A
-        :return:
+        :return: new_data
         """
+        if output_file is None:
+            output_file = self.output_file
         if sets is None:
             sets = self.sets
         if A not in list(range(len(sets))):
@@ -543,6 +577,7 @@ class SyncData(object):
 
         This can also be considered the intersect compliment
         """
+
         self.union(output_file)
         uset = DataSet(output_file)
 
@@ -557,6 +592,8 @@ class SyncData(object):
         """
         this function is used in operation functions in order to save processed data
         """
+        if output_file is None:
+            return # do not save
         if header["hdr"] != "":
             header_str = "# " + header["hdr"].replace("\n", "\n#") + "\n"
 
