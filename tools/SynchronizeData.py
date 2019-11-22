@@ -39,11 +39,17 @@ try:
 except:
     load_file_windows = None
 
+try:
+    from LabTools.DataStructure import LabeledData
+except:
+    LabeledData = None
+
 # the following should remain constant, however should any changes occur to TIME.py, such as renaming the file,
 # or any of the drivers existing channels/functionality can cause this to change
 # A cool feature would be to automatically determine which is the time driver, and find its abs/rel time (t/dt)
 ABSOLUTE_TIME = "TIME[].Time"
 RELATIVE_TIME = "TIME[].dt"
+LDAT_TIME = "Time"
 
 DEFAULT_OUTPUT = None # alternatively, you can set it to a file like "combination.dat"
 
@@ -55,13 +61,27 @@ class DataSet(object):
         self.headers = {"hdr": "","start_time":None,"instr":[],"param":[],"channel_labels":[]}
         self.instruments = []
         self.raw_data = []
+        try:
+            extension = file.split(".")[-1]
+        except:
+            extension = ""
 
         if "splitchar" in kwargs:
             splitchar = kwargs["splitchar"]
         else:
             splitchar = ", "
 
-        if load_file_windows is None:
+        if extension == "ldat" and LabeledData is not None: # must go first in order to inform user if ldat library is missing
+            lb_data = LabeledData(fname=file)
+            self.raw_data = lb_data.data
+            self.headers["param"] = lb_data.labels
+            self.headers["channel_labels"] = lb_data.labels
+
+            self.headers["hdr"] = lb_data.header_info
+            self.headers["start_time"] = 0  # should always be absolute
+        elif load_file_windows is None:
+            if extension == "ldat":
+                print("ldat library missing")
             with open(file, "r") as f:
                 for line in f.readlines():
                     if line.startswith("#"):
@@ -97,6 +117,8 @@ class DataSet(object):
 
             self.raw_data = np.loadtxt(file)
         else:
+            if extension == "ldat":
+                print("ldat library missing")
             self.raw_data, self.headers = load_file_windows(file)
 
         if "start_time" not in self.headers:
@@ -149,6 +171,16 @@ class DataSet(object):
                 for i, entry in enumerate(self.abs_data):
                     self.abs_data[i][0] += self.headers["start_time"]
                     self.times.append(self.abs_data[i][0])  # needed for min/max
+        # if ldat, convert instrument time to absolute time
+        if extension == "ldat":
+            timeidx = self.headers["param"].index(LDAT_TIME)
+            if timeidx != -1:
+                self.headers["instr"] = self.headers["param"]
+                self.headers["instr"][timeidx] = ABSOLUTE_TIME
+            else: # we should guess that it is the first
+                print("cannot find ldat time column, assuming first")
+                self.headers["instr"] = [ABSOLUTE_TIME] + self.headers["param"][1:]
+
         # now to parse instrument list, and strip ports, leaving it in the same order as in headers
         self.instruments = self.instr_name = self.headers["instr"]
 
@@ -612,7 +644,10 @@ class SyncData(object):
 
 if __name__ == "__main__":
     # files = ['dat1.dat', 'dat2.dat']
-    files = [r"C:\Users\admin\Documents\LabGUI\scratch\190711__004.dat", r"C:\Users\admin\Documents\LabGUI\scratch\KT2400_VoltagePulseSweep_191007__004.dat",r"C:\Users\admin\Documents\LabGUI\scratch\empty.txt"]
+    files = [r"C:\Users\admin\Documents\LabGUI\scratch\190711__004.dat",
+             r"C:\Users\admin\Documents\LabGUI\scratch\KT2400_VoltagePulseSweep_191007__004.dat",
+             r"C:\Users\admin\Documents\LabGUI\scratch\empty.txt",
+             r"C:\Users\admin\Documents\LabGUI\scratch\25-11-20_all.ldat"]
     sync = SyncData(files)
     # ssync = SyncData([ 's'+file for file in files ])
     sync.union("union_dat.dat")
