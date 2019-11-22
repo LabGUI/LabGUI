@@ -206,6 +206,8 @@ def create_plw(parent, load_fname=None):
     """
         add a new plot load window in the MDI area. The data and channels 
         are loaded from a file
+
+        DEV NOTE: this function can be rewritten better
     """
     # maintain the previous functionality if file name not passed in
     if not load_fname:
