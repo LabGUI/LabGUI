@@ -203,7 +203,6 @@ def get_file_name(config_file_path=CONFIG_FILE_PATH):
         config_file.close()
     except IOError:
         print("No configuration file " + config_file_path + "  found")
-
     return file_name
 
 def get_funct_save_name(device, funct, config_file_path=CONFIG_FILE_PATH):

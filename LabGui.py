@@ -1116,7 +1116,6 @@ have the right format, '%s' will be used instead"
         self.stop_DTT_action.setEnabled(True)
 
     def stop_DTT(self):
-
         if self.datataker.isRunning():
 
             self.datataker.ask_to_stop()
@@ -1148,7 +1147,7 @@ have the right format, '%s' will be used instead"
         self.output_file.write(data)
         self.output_file.close()
 
-        self.widgets["OutputFileWidget"].increment_filename()
+
 
     def DTT_script_finished(self, completed):
         """signal triggered by the completion of the script
@@ -1159,6 +1158,8 @@ have the right format, '%s' will be used instead"
         """
 
         self.stop_DTT()
+        # we should increment the file only after the datataker is stopped.
+        self.widgets["OutputFileWidget"].increment_filename()
 
     def DTT_isRunning(self):
         """indicates whether the datataker is running or not"""
