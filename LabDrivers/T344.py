@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 import time
-from . import Tool
+try:
+    from . import Tool
+except:
+    import Tool
 import random
 
 param = {'0A': 'V', '1A': 'V', '2A': 'V', '3A': 'V',
@@ -28,6 +31,29 @@ class Instrument(Tool.MeasInstr):
                                          baud_rate=38400, term_chars='\r\n', timeout=1, bytesize=8,
                                          parity='N', stopbits=1, xonxoff=False, dsrdtr=False, **kwargs)
 
+
+    def write(self, message):
+        self.connection.write(message.encode() + b'\r')
+
+    def read(self, numbytes=None):
+        if numbytes is None:
+            line = self.connection.readline().decode()
+            ret = ""
+            while line != '':
+                ret += line
+                line = self.connection.readline().decode()
+            return ret
+        else:
+            return self.connection.read(int(numbytes)).decode()
+
+    def ask(self, message):
+        self.write(message)
+        return self.read()
+
+    def readline(self):
+        return self.connection.readline().decode()
+
+
     def measure(self, channel):
         if channel in self.last_measure:
             if not self.DEBUG:
@@ -46,10 +72,11 @@ class Instrument(Tool.MeasInstr):
     def get_status(self):
         if self.DEBUG == False:
             self.write('ST')
-            s = ""
+            return self.read()
+            """s = ""
             for i in range(25):
                 s += self.read()
-            return s
+            return s"""
 
     def sync(self):
         if self.DEBUG == False:
@@ -153,6 +180,8 @@ class Instrument(Tool.MeasInstr):
 
 
 if __name__ == "__main__":
-    t = Instrument('COM1')
-    print(t.measure('Amp3'))
+    t = Instrument('COM35')
+    print(t.ask("ST"))
+    # print(t.get_amp(0))
+    # print(t.measure('Amp1'))
     t.close()
