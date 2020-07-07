@@ -267,6 +267,7 @@ user variable")
                 print("DTT stopped and complete")
             else:
                 print("DTT stopped but not complete")
+                self.instr_hub.clear()
 
         finally:
 
