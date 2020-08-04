@@ -159,7 +159,7 @@ if SIM980 != 0:
         'properties': create_SIM980_properties_obj()
     }
 
-READ_BITS = 64
+READ_BITS = 128
 NAME = 'SIM900'
 INTERFACE = Tool.INTF_SERIAL
 
@@ -168,13 +168,14 @@ class Instrument(Tool.MeasInstr):
 
     def __init__(self, resource_name, debug=False, **kwargs):
         super(Instrument, self).__init__(resource_name, NAME, debug, interface=INTERFACE, baud_rate=9600,
-                                         term_chars="\n".encode(), timeout=2, bytesize=8, parity='N', stopbits=1,
+                                         term_chars="\n".encode(), timeout=0.5, bytesize=8, parity='N', stopbits=1,
                                          xonxoff=False, dsrdtr=False, **kwargs)
         self.connections = {}
         device_temp = {}
         self.ports = ['1', '2', '3', '4', '5', '6', '7', '8']  # ,'A','B','C','D']
         print("Identifying devices")
         self.connected_devices = {}
+        self.clear(silent=True)
         mainframe = self.ask("*IDN?")  # this prevents first port as being identified as mainframe on initial connect
         for port in self.ports:
             self.clear(silent=True)  # prevents any leftover buffer from bugging identification
@@ -235,7 +236,6 @@ class Instrument(Tool.MeasInstr):
 
         if 'SIM928' in self.devices:
             ret['SIM928'] = self.get_SIM928_obj()
-        print("ret", ret)
         return ret
 
     def set(self, data):
@@ -338,15 +338,15 @@ class Instrument(Tool.MeasInstr):
         self.connection.write(msg.encode() + self.term_chars)
 
     def read(self):
-        return self.connection.readline().decode()  # FIXES SPEED
-        # return self.connection.read(READ_BITS).decode()
+        # return self.connection.readline().decode()  # FIXES SPEED # breaks read
+        return self.connection.read(READ_BITS).decode()
 
     def ask_channel(self, channel, msg):
         # channel = int(channel) can be letter!
         self.write("CONN " + str(channel) + ", \"xyz\"")
         self.write(msg)
-        self.write("xyz")
         answer = self.read()
+        self.write("xyz")
         return answer.strip('\n').strip('\r').strip('\n')  # incase sandwhich or reverse order
 
     def ask_channel_multiple(self, channel, *msgs):
