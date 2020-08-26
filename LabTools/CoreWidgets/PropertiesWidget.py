@@ -748,8 +748,8 @@ if __name__ == "__main__":
 
 
     app = QtGui.QApplication(sys.argv)
-    ex = PropertiesWidget()
-    #ex = DevicePropertyWidget("AH", {}, debug=True)
+    #ex = PropertiesWidget()
+    ex = DevicePropertyWidget("AH", {}, debug=True)
     ex.show()
     #print(ex.get_properties())
     sys.exit(app.exec_())
