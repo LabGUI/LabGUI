@@ -3,6 +3,11 @@
 Created on Mon Aug 12 16:16:02 2013
 
 @author: Sam
+
+developer note: Lower bound of current compliance limit is off by a factor of 10 from what the query 
+    ask SOUR:CURR:PROT:ULIM? MIN
+since it might be specific to the machine that we were testing on, the limit was hardcoded with the default
+value being the corrected compliance (x10)
 """
 
 
@@ -15,18 +20,19 @@ except:
     import Tool
 
 
-param = {'V': 'V'}
+param = {'V': 'V','I':'A'}
 
 INTERFACE = Tool.INTF_VISA
 
 
 class Instrument(Tool.MeasInstr):
 
-    def __init__(self, resource_name, debug=False, V_step_limit=None):
+    def __init__(self, resource_name, debug=False, V_step_limit=None, I_step_limit=None):
         super(Instrument, self).__init__(resource_name,
                                          'YOKO', debug=debug, interface=INTERFACE)
         self.standard_setup()
         self.V_step_limit = V_step_limit
+        self.I_step_limit = I_step_limit
 
     def standard_setup(self):
         if not self.DEBUG:
@@ -37,13 +43,24 @@ class Instrument(Tool.MeasInstr):
         """ This method does not measure, it asks what value is
             displayed on the screen (asks the source level) """
         if not self.DEBUG:
-            answer = float(self.ask(':SOUR:VOLT:LEV?'))
+            if channel == 'V':
+                answer = self.get_voltage()
+            elif channel == 'I':
+                answer = self.get_current()
+            else:
+                print("Invalid channel")
+                answer = float('nan')
 #            answer = float(answer.split(',', 1)[0])
         else:
             answer = random.random()
 
         return answer
-
+    
+    def get_voltage(self):
+        return float(self.ask(':SOUR:VOLT:LEV?'))
+    def get_current(self):
+        return float(self.ask(':SOUR:CURR:LEV?'))
+        
     def set_value(self, val):  # for interferometer program
         actual_voltage = self.measure()
 #        actual_range = self.ask(':SOUR:RANG?')
@@ -70,10 +87,17 @@ class Instrument(Tool.MeasInstr):
         else:
             self.set_voltage(val)
 
-    def set_voltage(self, voltage, port=0):
+    def set_voltage(self, voltage, i_compliance=1e-6, v_compliance=1, port=0):
         if not self.DEBUG:
-            prev_voltage = self.measure()
-
+            prev_voltage = self.get_voltage()
+            voltage = float(voltage)
+            i_compliance = float(i_compliance)
+            if i_compliance < 0: i_compliance = -1 * i_compliance
+            v_compliance = float(v_compliance)
+            
+            if voltage > v_compliance:
+                print("V compliance needs to be checked")
+                voltage = v_compliance
             # first check if there is a step limit, then do the math (no error if
             # self.V_step_limit is None, thanks to lazy evaluation)
             do_it = False
@@ -83,13 +107,69 @@ class Instrument(Tool.MeasInstr):
             elif abs(voltage - prev_voltage) < self.V_step_limit:
                 do_it = True
             if do_it:
-                s = ':SOUR:VOLT:LEV %f' % voltage
-                self.write(s)
+                if  1e-3 < v_compliance < 110 and 1e-7 < i_compliance < 3.2:
+                    # set compliances
+                    c = ':SOUR:VOLT:PROT:ULIM %f' % v_compliance
+                    self.write(c)
+                    c = ':SOUR:VOLT:PROT:LLIM %f' % -v_compliance
+                    self.write(c)
+                    c = ':SOUR:CURR:PROT:ULIM %f' % i_compliance
+                    self.write(c)
+                    c = ':SOUR:CURR:PROT:LLIM %f' % -i_compliance
+                    self.write(c)
+                    s = ':SOUR:VOLT:LEV %f' % voltage
+                    self.write(s)
+                else:
+                    print("Invalid compliance range, no voltage set")
+                
+                
             else:
                 print("Voltage step is too large!")
         else:
             print("voltage set to " + str(voltage) + " on " + self.ID_name)
+            
+    def set_current(self, current, i_compliance=1e-6, v_compliance=1, port=0):
+        if not self.DEBUG:
+            prev_current = self.get_current()
+            current = float(current)
+            i_compliance = float(i_compliance)
+            if i_compliance < 0: i_compliance = -1 * i_compliance
+            v_compliance = float(v_compliance)
+            if v_compliance < 0: v_compliance = -1 * v_compliance
+            
+            if current > i_compliance:
+                print("I compliance needs to be checked")
+                current = i_compliance
+            # first check if there is a step limit, then do the math (no error if
+            # self.V_step_limit is None, thanks to lazy evaluation)
+            do_it = False
 
+            if self.I_step_limit == None:
+                do_it = True
+            elif abs(current - prev_current) < self.I_step_limit:
+                do_it = True
+            if do_it:
+                if  1e-3 < v_compliance < 110 and 1e-6 < i_compliance < 3.2:
+                    # set compliances
+                    c = ':SOUR:VOLT:PROT:ULIM %f' % v_compliance
+                    self.write(c)
+                    c = ':SOUR:VOLT:PROT:LLIM %f' % -v_compliance
+                    self.write(c)
+                    c = ':SOUR:CURR:PROT:ULIM %f' % i_compliance
+                    self.write(c)
+                    c = ':SOUR:CURR:PROT:LLIM %f' % -i_compliance
+                    self.write(c)
+                    s = ':SOUR:CURR:LEV %f' % current
+                    self.write(s)
+                else:
+                    print("Invalid compliance range, no current set")
+                
+                
+            else:
+                print("current step is too large!")
+        else:
+            print("current set to " + str(current) + " on " + self.ID_name)
+            # should be good test it while im gone
     def enable_output(self):
         if not self.DEBUG:
             self.write(':OUTP 1')
