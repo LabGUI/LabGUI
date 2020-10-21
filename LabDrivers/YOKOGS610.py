@@ -20,7 +20,7 @@ except:
     import Tool
 
 
-param = {'V': 'V','I':'A'}
+param = {'V': 'V', 'I':'A'}
 
 INTERFACE = Tool.INTF_VISA
 
@@ -29,7 +29,7 @@ class Instrument(Tool.MeasInstr):
 
     def __init__(self, resource_name, debug=False, V_step_limit=None, I_step_limit=None):
         super(Instrument, self).__init__(resource_name,
-                                         'YOKO', debug=debug, interface=INTERFACE)
+                                         'YOKOGS610', debug=debug, interface=INTERFACE, timeout=0.5)
         self.standard_setup()
         self.V_step_limit = V_step_limit
         self.I_step_limit = I_step_limit
@@ -39,7 +39,7 @@ class Instrument(Tool.MeasInstr):
             self.write(':OUTP 1')
             # self.enable_output()
 
-    def measure(self, channel='V'):  # Do I nead to write the channel argument here?
+    def measure(self, channel):  # Do I nead to write the channel argument here?
         """ This method does not measure, it asks what value is
             displayed on the screen (asks the source level) """
         if not self.DEBUG:
@@ -57,9 +57,17 @@ class Instrument(Tool.MeasInstr):
         return answer
     
     def get_voltage(self):
-        return float(self.ask(':SOUR:VOLT:LEV?'))
+        func = self.ask(':SENS:FUNC?').strip("\n\r")
+        if func == 'VOLT':
+            return float(self.ask(':FETC?'))
+        else:
+            return float(self.ask(':SOUR:VOLT:LEV?'))
     def get_current(self):
-        return float(self.ask(':SOUR:CURR:LEV?'))
+        func = self.ask(':SENS:FUNC?').strip("\n\r")
+        if func == 'CURR':
+            return float(self.ask(':FETC?'))
+        else:
+            return float(self.ask(':SOUR:CURR:LEV?'))
         
     def set_value(self, val):  # for interferometer program
         actual_voltage = self.measure()
@@ -87,7 +95,7 @@ class Instrument(Tool.MeasInstr):
         else:
             self.set_voltage(val)
 
-    def set_voltage(self, voltage, i_compliance=1e-6, v_compliance=1, port=0):
+    def set_voltage(self, voltage, i_compliance=1e-6, v_compliance=10, port=0):
         if not self.DEBUG:
             prev_voltage = self.get_voltage()
             voltage = float(voltage)
@@ -119,6 +127,8 @@ class Instrument(Tool.MeasInstr):
                     self.write(c)
                     s = ':SOUR:VOLT:LEV %f' % voltage
                     self.write(s)
+                    s = ':SENS:FUNC CURR'
+                    self.write(s)
                 else:
                     print("Invalid compliance range, no voltage set")
                 
@@ -128,7 +138,7 @@ class Instrument(Tool.MeasInstr):
         else:
             print("voltage set to " + str(voltage) + " on " + self.ID_name)
             
-    def set_current(self, current, i_compliance=1e-6, v_compliance=1, port=0):
+    def set_current(self, current, i_compliance=1e-6, v_compliance=10, port=0):
         if not self.DEBUG:
             prev_current = self.get_current()
             current = float(current)
@@ -160,6 +170,8 @@ class Instrument(Tool.MeasInstr):
                     c = ':SOUR:CURR:PROT:LLIM %f' % -i_compliance
                     self.write(c)
                     s = ':SOUR:CURR:LEV %f' % current
+                    self.write(s)
+                    s = ':SENS:FUNC VOLT'
                     self.write(s)
                 else:
                     print("Invalid compliance range, no current set")
