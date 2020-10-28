@@ -17,6 +17,7 @@ except:
 
 import matplotlib.pyplot as plt
 import numpy as np
+import os
 param = {
     'Channel' : 'Unit',
     'Focused Freq':'Hz',
@@ -26,16 +27,43 @@ param = {
     'S21 Imaginary':'',
 
 }
+CHANNEL_NAMES = {
+    1:'S11',
+    2:'S12',
+    3:'S21',
+    4:'S22'
+}
 
 INTERFACE = Tool.INTF_GPIB
 NAME = 'vna'
 
+SAVE_DEFAULT = True
+SAVE_PATH_DEFAULT = os.sep
 properties = {
 
     'Focused Freq': {
         'type':'float',
         'range':[2e7, 2e10], # float range for QIntValidator
         'unit':'Hz' # optional unit
+    },
+    'Save individual measurements':{
+        'type':'bool',
+        'range':SAVE_DEFAULT #Can either be True or False, or disregarded
+    },
+    'Individual measurements save path':{
+        'type':'text',
+        'range':SAVE_PATH_DEFAULT
+    },
+    'Prefix of saved file':{
+        'type':'text',
+        'range':'VNA_Measurement'
+    },
+    'Format of saved measurements': {
+        'type':'selection',
+        'range':[
+            'Rectangular',
+            'Exponential'
+        ]
     }
 }
 
@@ -61,6 +89,10 @@ class Instrument(Tool.MeasInstr):
         #                                  **kwargs)
         #
         self.focused_freq = 2e9 #Hz
+        self.save = SAVE_DEFAULT
+        self.save_path = SAVE_PATH_DEFAULT
+        self.save_prefix = 'VNA_Measurement'
+        self.save_format = 'Rectangular'
         super(Instrument, self).__init__(resource_name,
                                           name=NAME,
                                           debug=debug,
@@ -80,11 +112,11 @@ class Instrument(Tool.MeasInstr):
                 if channel == 'Focused Freq':
                     answer = self.focused_freq
                 if channel == 'S12 Real':
-                    answer = self.ReadGraphValue(2, self.focused_freq).real
+                    answer = self.ReadGraphValue(2, self.focused_freq, enable_save=True).real
                 if channel == 'S12 Imaginary':
                     answer = self.ReadGraphValue(2, self.focused_freq).imag
                 if channel == 'S21 Real':
-                    answer = self.ReadGraphValue(3, self.focused_freq).real
+                    answer = self.ReadGraphValue(3, self.focused_freq, enable_save=True).real
                 if channel =='S21 Imaginary':
                     answer = self.ReadGraphValue(3, self.focused_freq).imag
             else:
@@ -99,7 +131,13 @@ class Instrument(Tool.MeasInstr):
         return answer
 
     def get(self):
-        return {'Focused Freq':self.focused_freq}
+        return {
+            'Focused Freq':self.focused_freq,
+            'Save individual measurements': self.save,
+            'Individual measurements save path': self.save_path,
+            'Format of saved measurements':  self.save_format,
+            'Prefix of saved file': self.save_prefix
+        }
 
     def set(self, data):
 
@@ -107,18 +145,49 @@ class Instrument(Tool.MeasInstr):
             for channel, value in data.items():
                 if channel == 'Focused Freq':
                     self.focused_freq = float(value)
+                elif channel == 'Save individual measurements':
+                    self.save = value
+                elif channel == 'Individual measurements save path':
+                    self.save_path = value
+                elif channel == 'Format of saved measurements':
+                    self.save_format = value
+                elif channel == 'Prefix of saved file': 
+                    self.save_prefix = value
                 else:
                     print("If you reached here, something went wrong: ", channel)
         else:
             print("Debug mode enabled", data)
-    def ReadGraphValue(self, channel, frequency):
+    def ReadGraphValue(self, channel, frequency, enable_save = False):
         self.write("DISP:FORM QQSP")  # show all 4 graphs
 
         xcoord = np.array([float(i) for i in self.ask("TRAC:STIM? CH%sDATA" % str(channel)).split(",")])
         ycoord = np.array([float(i) for i in self.ask("TRAC? CH%sDATA" % str(channel)).split(",")])
 
         data = ycoord[::2] + 1J * ycoord[1::2]
-
+        
+        if enable_save and self.save:
+            if self.save_format == 'Rectangular':
+                FREQ = xcoord
+                CH1 = ycoord[::2]
+                CH2 = ycoord[1::2]
+                label = 'Frequency(Hz)\t%s REAL\t%s IMAG'
+            else:
+                if self.save_format != 'Exopnential':
+                    print("Invalid save_format, using Exponential")
+                FREQ = xcoord
+                CH1 = np.abs(data)
+                CH2 = np.angle(data)
+                label = 'Frequency(Hz)\tMagnitude\tPhase'
+            file_name = self.save_prefix + "_" + CHANNEL_NAMES[channel] + "_%s.dat"
+            i = 0
+            
+            while os.path.exists(os.path.join(self.save_path, file_name%i)):
+                i += 1
+            np.savetxt(os.path.exists(os.path.join(self.save_path, file_name%i)),
+                       np.array(list(zip(FREQ,CH1,CH2))),
+                       delimiter='\t',
+                       header=label)
+            
         if frequency < xcoord.min() or frequency > xcoord.max():
             print("Frequency out of range")
             return float('nan')
