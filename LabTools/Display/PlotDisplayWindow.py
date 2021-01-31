@@ -564,8 +564,8 @@ class PlotDisplayWindow(QtGui.QMainWindow, ui_plotdisplaywindow.Ui_PlotDisplayWi
         """Update which data is used for the Y axis (both left and right)"""
         if self.chan_X is None:
             return
-        else:
-            print(self.chan_X)
+        #else:
+        #    print(self.chan_X)
         tot_label = []
 #        print "Y clicked"
         obj = self.sender()

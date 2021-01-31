@@ -39,11 +39,17 @@ try:
 except:
     load_file_windows = None
 
+try:
+    from LabTools.DataStructure import LabeledData
+except:
+    LabeledData = None
+
 # the following should remain constant, however should any changes occur to TIME.py, such as renaming the file,
 # or any of the drivers existing channels/functionality can cause this to change
 # A cool feature would be to automatically determine which is the time driver, and find its abs/rel time (t/dt)
 ABSOLUTE_TIME = "TIME[].Time"
 RELATIVE_TIME = "TIME[].dt"
+LDAT_TIME = "Time"
 
 DEFAULT_OUTPUT = None # alternatively, you can set it to a file like "combination.dat"
 
@@ -52,16 +58,30 @@ class DataSet(object):
         # this will read each file, and create the data set object.
         # the dataset object will contain a headers variable, raw_data variable
 
-        self.headers = {"hdr": ""}
+        self.headers = {"hdr": "","start_time":None,"instr":[],"param":[],"channel_labels":[]}
         self.instruments = []
         self.raw_data = []
+        try:
+            extension = file.split(".")[-1]
+        except:
+            extension = ""
 
         if "splitchar" in kwargs:
             splitchar = kwargs["splitchar"]
         else:
             splitchar = ", "
 
-        if load_file_windows is None:
+        if extension == "ldat" and LabeledData is not None: # must go first in order to inform user if ldat library is missing
+            lb_data = LabeledData(fname=file)
+            self.raw_data = lb_data.data
+            self.headers["param"] = lb_data.labels
+            self.headers["channel_labels"] = lb_data.labels
+
+            self.headers["hdr"] = lb_data.header_info
+            self.headers["start_time"] = 0  # should always be absolute
+        elif load_file_windows is None:
+            if extension == "ldat":
+                print("ldat library missing")
             with open(file, "r") as f:
                 for line in f.readlines():
                     if line.startswith("#"):
@@ -97,6 +117,8 @@ class DataSet(object):
 
             self.raw_data = np.loadtxt(file)
         else:
+            if extension == "ldat":
+                print("ldat library missing")
             self.raw_data, self.headers = load_file_windows(file)
 
         if "start_time" not in self.headers:
@@ -129,15 +151,18 @@ class DataSet(object):
              In order to do this, it is safe to compare the supplied time with the first datapoint from the first
              column, which is assumed to be the time datapoints if it is not specified. The difference between these
              times can help us determine whether or not it is relative or absolute time. NOTE: if start_time = 0,
-             then the opposite must be applied
+             then the opposite must be applied. This assumes that time is first
             """
             temporary_boolean = (
                 math.fabs(self.headers["start_time"] - self.raw_data[0][0]) < 30000000
             )  # aprx 1 yr
             self.abs_data = self.raw_data.copy()
             self.rel_data = self.raw_data.copy()
-            if self.headers["start_time"] == 0:  # can still produce unexpected results
+            if self.headers["start_time"] == 0:  # no start_time specified, can still produce unexpected results
+                print("start_time is not specified: this can produce unexpected results for relative time")
                 temporary_boolean = not temporary_boolean
+                if temporary_boolean:
+                    self.headers["start_time"] = self.raw_data[0][0]
             if temporary_boolean:  # must be absolute, parse it as such
                 for i, entry in enumerate(self.rel_data):
                     self.times.append(self.rel_data[i][0])  # still in abs time
@@ -146,6 +171,15 @@ class DataSet(object):
                 for i, entry in enumerate(self.abs_data):
                     self.abs_data[i][0] += self.headers["start_time"]
                     self.times.append(self.abs_data[i][0])  # needed for min/max
+        # if ldat, convert instrument time to absolute time
+        if extension == "ldat":
+            timeidx = self.headers["param"].index(LDAT_TIME)
+            if timeidx != -1:
+                self.headers["instr"] = self.headers["param"]
+                self.headers["instr"][timeidx] = ABSOLUTE_TIME
+            else: # we should guess that it is the first
+                print("cannot find ldat time column, assuming first")
+                self.headers["instr"] = [ABSOLUTE_TIME] + self.headers["param"][1:]
 
         # now to parse instrument list, and strip ports, leaving it in the same order as in headers
         self.instruments = self.instr_name = self.headers["instr"]
@@ -610,10 +644,14 @@ class SyncData(object):
 
 if __name__ == "__main__":
     # files = ['dat1.dat', 'dat2.dat']
-    files = ["191008__001.dat", "KT2400_VoltagePulseSweep_191008__001.dat"]
+    files = [r"C:\Users\admin\Documents\LabGUI\scratch\190711__004.dat",
+             r"C:\Users\admin\Documents\LabGUI\scratch\KT2400_VoltagePulseSweep_191007__004.dat",
+             r"C:\Users\admin\Documents\LabGUI\scratch\empty.txt",
+             r"C:\Users\admin\Documents\LabGUI\scratch\25-11-20_all.ldat"]
     sync = SyncData(files)
     # ssync = SyncData([ 's'+file for file in files ])
     sync.union("union_dat.dat")
+    exit(0)
     sync.symmetric_difference("sdat_symdiff.dat")
     # exit(0)
     # sync = SyncData(files)

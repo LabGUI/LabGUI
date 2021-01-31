@@ -206,6 +206,8 @@ def create_plw(parent, load_fname=None):
     """
         add a new plot load window in the MDI area. The data and channels 
         are loaded from a file
+
+        DEV NOTE: this function can be rewritten better
     """
     # maintain the previous functionality if file name not passed in
     if not load_fname:
@@ -221,6 +223,9 @@ def create_plw(parent, load_fname=None):
         data = lb_data.data
         labels = {}
         labels["param"] = lb_data.labels
+        labels["channel_labels"] = lb_data.labels
+        labels["hdr"] = lb_data.header_info
+        parent.widgets["loadPlotWidget"].header_text(labels['hdr'])
     else:
         try:
             data, labels = IOTool.load_file_windows(load_fname)
@@ -302,8 +307,8 @@ def create_plw(parent, load_fname=None):
         pass
 
 #        self.dataAnalyseWidget.refresh_active_set()
-
-    plw.update_labels(labels['channel_labels'])
+    if 'channel_labels' in labels.keys():
+        plw.update_labels(labels['channel_labels'])
     parent.widgets['AnalyseDataWidget'].update_data_and_fit(data)
 #        plw.update_plot(data)
     parent.zoneCentrale.addSubWindow(plw)
