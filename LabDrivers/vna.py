@@ -172,7 +172,6 @@ class Instrument(Tool.MeasInstr):
 
         xcoord = np.array([float(i) for i in self.ask("TRAC:STIM? CH%sDATA" % str(channel)).split(",")])
         ycoord = np.array([float(i) for i in self.ask("TRAC? CH%sDATA" % str(channel)).split(",")])
-
         data = ycoord[::2] + 1J * ycoord[1::2]
         if enable_save and self.save:
             time_type, time_value, time_start = self.instr_hub.last_measured_time()
@@ -184,7 +183,7 @@ class Instrument(Tool.MeasInstr):
                 CH2 = ycoord[1::2]
                 label = 'Frequency(Hz)\t%s REAL\t%s IMAG'%(CHANNEL_NAMES[channel], CHANNEL_NAMES[channel])
             else:
-                if self.save_format != 'Exopnential':
+                if self.save_format != 'Exponential':
                     print("Invalid save_format, using Exponential")
                 FREQ = xcoord
                 CH1 = np.abs(data)
