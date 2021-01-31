@@ -935,6 +935,12 @@ instrument hub. Interface passed as an argument : %s" % intf)
         return True
     def time_change(self, time):
         self.start_time = time
+    def last_measured_time(self):
+        last_measure = self.time_instrument.last_measure
+        if last_measure['Time'] != 0:
+            return ('Time', last_measure['Time'], self.start_time)
+        else:
+            return ('dt', last_measure['dt'], self.start_time)
 
     def connect_instrument(self, instr_name, device_port, param, send_signal=True):
         # device_port should contain the name of the GPIB or the COM port
@@ -994,7 +1000,7 @@ which is connected to %s " % (param, instr_name, device_port))
                 elif class_inst.INTERFACE == INTF_PROLOGIX and self.prologix_com_port is not None:
                     print("The instrument uses prologix")
                     obj = class_inst.Instrument(
-                        device_port, self.DEBUG, prologix=self.prologix_com_port)
+                        device_port, self.DEBUG, prologix=self.prologix_com_port, parent=self)
 
                 elif class_inst.INTERFACE == INTF_PROLOGIX and self.prologix_com_port is None:
 
@@ -1015,10 +1021,10 @@ which is connected to %s " % (param, instr_name, device_port))
                     #                        #as an argument for inheritance
                     #                    else:
                     obj = class_inst.Instrument(device_port,
-                                                debug=self.DEBUG)
+                                                debug=self.DEBUG, parent=self)
                 if instr_name == 'TIME':
                     obj.time_change = self.time_change # set change time function in TIME.py
-
+                    self.time_instrument = obj
                 if not self.DEBUG:
 
                     device_port = obj.resource_name

@@ -41,7 +41,6 @@ class Instrument(Tool.MeasInstr):
             if channel == 'dt':
 
                 answer = round(time.time() - self.t_start, 2)
-
             else:
 
                 answer = time.time()
@@ -50,5 +49,5 @@ class Instrument(Tool.MeasInstr):
             print(("you are trying to measure a non existent channel : " + channel))
             print(("existing channels :", self.channels))
             answer = None
-
+        self.last_measure[channel] = answer
         return answer

@@ -79,7 +79,7 @@ properties = {
 class Instrument(Tool.MeasInstr):
     """"This class is the driver of the instrument *NAME*"""""
 
-    def __init__(self, resource_name, debug=False, **kwargs):
+    def __init__(self, resource_name, debug=False, parent=None, **kwargs):
         # DYNAMIC INTERFACING/NAME
         # if "interface" in kwargs:
         #     itfc = kwargs.pop("interface")
@@ -102,6 +102,7 @@ class Instrument(Tool.MeasInstr):
         self.save_path = SAVE_PATH_DEFAULT
         self.save_prefix = 'VNA_Measurement'
         self.save_format = 'Rectangular'
+        self.instr_hub = parent
         super(Instrument, self).__init__(resource_name,
                                           name=NAME,
                                           debug=debug,
@@ -173,8 +174,8 @@ class Instrument(Tool.MeasInstr):
         ycoord = np.array([float(i) for i in self.ask("TRAC? CH%sDATA" % str(channel)).split(",")])
 
         data = ycoord[::2] + 1J * ycoord[1::2]
-        
         if enable_save and self.save:
+            time_type, time_value, time_start = self.instr_hub.last_measured_time()
             if not os.path.isdir(self.save_path):
                 os.mkdir(self.save_path)
             if self.save_format == 'Rectangular':
@@ -189,6 +190,7 @@ class Instrument(Tool.MeasInstr):
                 CH1 = np.abs(data)
                 CH2 = np.angle(data)
                 label = 'Frequency(Hz)\tMagnitude\tPhase'
+            label = ('Start_Time=%f\nTime_type=%s\tTime_value=%f\t\n'%(time_start, time_type, time_value)) + label
             file_name = self.save_prefix + "_" + CHANNEL_NAMES[channel] + "_%s.dat"
             i = 0
             while os.path.exists(os.path.join(self.save_path, file_name%i)):
