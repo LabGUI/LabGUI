@@ -15,9 +15,18 @@ try:
 except:
     import Tool
 
+
 import matplotlib.pyplot as plt
 import numpy as np
 import os
+
+try:
+    from LabTools.IO import IOTool
+    save_path = os.path.join(IOTool.get_save_file_path(),"vna")
+    if not os.path.isdir(save_path):
+        os.mkdir(save_path)
+except:
+    save_path = ".%s"%os.sep
 param = {
     'Channel' : 'Unit',
     'Focused Freq':'Hz',
@@ -38,7 +47,7 @@ INTERFACE = Tool.INTF_GPIB
 NAME = 'vna'
 
 SAVE_DEFAULT = True
-SAVE_PATH_DEFAULT = os.sep
+SAVE_PATH_DEFAULT = save_path
 properties = {
 
     'Focused Freq': {
@@ -166,11 +175,13 @@ class Instrument(Tool.MeasInstr):
         data = ycoord[::2] + 1J * ycoord[1::2]
         
         if enable_save and self.save:
+            if not os.path.isdir(self.save_path):
+                os.mkdir(self.save_path)
             if self.save_format == 'Rectangular':
                 FREQ = xcoord
                 CH1 = ycoord[::2]
                 CH2 = ycoord[1::2]
-                label = 'Frequency(Hz)\t%s REAL\t%s IMAG'
+                label = 'Frequency(Hz)\t%s REAL\t%s IMAG'%(CHANNEL_NAMES[channel], CHANNEL_NAMES[channel])
             else:
                 if self.save_format != 'Exopnential':
                     print("Invalid save_format, using Exponential")
@@ -180,10 +191,9 @@ class Instrument(Tool.MeasInstr):
                 label = 'Frequency(Hz)\tMagnitude\tPhase'
             file_name = self.save_prefix + "_" + CHANNEL_NAMES[channel] + "_%s.dat"
             i = 0
-            
             while os.path.exists(os.path.join(self.save_path, file_name%i)):
                 i += 1
-            np.savetxt(os.path.exists(os.path.join(self.save_path, file_name%i)),
+            np.savetxt(os.path.join(self.save_path, file_name%i),
                        np.array(list(zip(FREQ,CH1,CH2))),
                        delimiter='\t',
                        header=label)
@@ -204,7 +214,7 @@ class Instrument(Tool.MeasInstr):
         xcoord = np.array([float(i) for i in self.ask("TRAC:STIM? CH%sDATA"%str(channel)).split(",")])
         ycoord = np.array([float(i) for i in self.ask("TRAC? CH%sDATA"%str(channel)).split(",")])
 
-        data = ycoord[::2] + 1J*ycoord[1::2]
+        data = ycoord[::2] + 1j*ycoord[1::2]
         Re = ycoord[::2]
         Im = ycoord[1::2]
         Mag = np.abs(data)
@@ -226,13 +236,13 @@ class Instrument(Tool.MeasInstr):
         plt.scatter(Phase, Mag)
         plt.show()
 
-        Complex = Re + 1J*Im
+        Complex = Re + 1j*Im
 
         #print(Complex)
         print(len(xcoord),len(ycoord))
 
 if __name__ == "__main__":
-    i = Instrument("GPIB::1", debug=False)
+    i = Instrument("GPIB::20", debug=False)
 
 
 
