@@ -1419,7 +1419,14 @@ have the right format, '%s' will be used instead"
             self.plot_window_settings = self.widgets["InstrumentWidget"].load_settings(
                 fname
             )
-
+            self.save_current_script = self.widgets["ScriptWidget"].load_settings(fname)
+            if not self.save_current_script:
+                script_name = IOTool.get_config_setting(IOTool.SCRIPT_ID, self.config_file)
+                if script_name is None:
+                    QtGui.QMessageBox.warning(self,"Warning","No default script file is currently saved in the configuration file.", QtGui.QMessageBox.Ok)
+                else:
+                    self.widgets["ScriptWidget"].set_script(script_name)
+            self.file_save_script_set_checked(self.save_current_script)
             if self.plot_window_settings:
                 self.instrument_connexion_setting_fname = fname
 
