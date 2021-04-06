@@ -18,8 +18,6 @@ except:
 param = {
     'Channel' : 'Unit'
 }
-properties = None
-functions = None
 
 INTERFACE = Tool.INTF_GPIB
 NAME = 'VNA'
