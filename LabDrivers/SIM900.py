@@ -34,11 +34,12 @@ for i in range(1, 9): # to add reading
     param['SIM928 Chan %d'%i] = 'V'
 
 # for summing offset voltage
-SIM928 = 6
+SIM928 = 5
 SIM980 = 1
 SIM910 = 1
 AVERAGING_TIME = None
 
+MAX_ITER = 5
 
 def create_SIM928_range():
     return [str(i + 1) for i in range(0, SIM928)]
@@ -216,7 +217,7 @@ class Instrument(Tool.MeasInstr):
 
         elif channel.startswith('SIM928'):
             answer = self.get_voltage(int(channel[-1]))
-            if answer is None:
+            if answer is None or answer=='':
                 answer = float('nan')
             else:
                 answer = float(answer)
@@ -379,10 +380,13 @@ class Instrument(Tool.MeasInstr):
         if channel in self.connections.keys():
             # check if SIM928
             if self.connections[channel] == 'SIM928':
-                answer = self.ask_channel(channel, "VOLT?")
+                answer, n = self.ask_channel(channel, "VOLT?"), 0
+                while answer == '' and n < MAX_ITER:
+                    answer, n = self.ask_channel(channel, "VOLT?"), n+1
+                if answer == '': answer = 'nan'
                 return float(answer)
             else:
-                print("Unsupported device: " + self.connection[channel])
+                print("Unsupported device: " + self.connections[channel])
         else:
             print("No device connected to channel " + channel)
         return None
@@ -397,14 +401,53 @@ class Instrument(Tool.MeasInstr):
         if channel in self.connections.keys():
             # check if SIM928
             if self.connections[channel] == 'SIM928':
-                answer = self.ask_channel(channel, "VOLT " + voltage + "; VOLT?")
+                answer, n = self.ask_channel(channel, "VOLT " + voltage + "; VOLT?"), 0
+                while answer == '' and n < MAX_ITER:
+                    answer, n = self.ask_channel(channel, "VOLT?"), n+1
+                if answer == '': answer = 'nan'
                 return float(answer)
             else:
-                print("Unsupported device: " + self.connection[channel])
+                print("Unsupported device: " + self.connections[channel])
         else:
             print("No device connected to channel " + channel)
         return None
-
+        
+    def move_voltage(self, channel, p_target_voltage, step=0.01, wait=0.5):
+        channel = str(channel)
+        current_voltage, n = self.ask_channel(channel, "VOLT?"), 0
+        while current_voltage == '' and n < MAX_ITER:
+            current_voltage, n = self.ask_channel(channel, "VOLT?"), n+1
+        if current_voltage == '':
+            print("Error reading voltage")
+            return 0
+        current_voltage = float(current_voltage)
+        #current_voltage = self.get_voltage(channel)
+        # Parse move direction cases
+        if current_voltage < p_target_voltage:  # Sim928 needs to move up
+            # While the current_voltage is not within one increment of the
+            # target voltage
+            while current_voltage < p_target_voltage:
+                # Increment the current voltage by a safe amount
+                current_voltage += step
+                self.set_voltage(channel, current_voltage)
+                # Wait
+                time.sleep(wait)
+        elif current_voltage > p_target_voltage:  # If sim928 needs to move up
+            # While the current_voltage is not within one increment of the
+            # target voltage
+            while current_voltage > p_target_voltage:
+                # Increment the current voltage by a safe amount
+                current_voltage -= step
+                self.set_voltage(channel, current_voltage)
+                # Wait
+                time.sleep(wait)
+        # Correct for offset
+        self.set_voltage(channel, p_target_voltage)
+#        time.sleep(1)
+        # return success
+        print("Done moving")
+        return 1
+        
     def enable_output(self, channel):
         channel = str(channel)
         if channel in self.connections.keys():
