@@ -33,7 +33,6 @@ REN_DEFAULT_ID = "REN_LEVEL"
 
 
 
-
 VISA_BACKEND_DEFAULT = '@ni'
 VISA_BACKEND_OPTIONS = ['@ni', '@py']
 REN_DEFAULT = 'None'

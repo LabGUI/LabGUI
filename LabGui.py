@@ -216,6 +216,9 @@ class LabGuiMain(QtGui.QMainWindow):
         # variable containing the name of the instrument settings file
         self.instrument_connexion_setting_fname = ""
 
+        # boolean indicating whether or not to save current script on exit
+        self.save_current_script = False
+
         # parse the argument(s) passed inline
         try:
             # option c is to provide a name for config file
@@ -528,7 +531,6 @@ have the right format, '%s' will be used instead"
                     widget_name, package=COREWIDGETS_PACKAGE_NAME
                 )
             except ImportError:
-
                 widget_module = import_module(
                     widget_name, package=USERWIDGETS_PACKAGE_NAME
                 )
@@ -580,10 +582,22 @@ have the right format, '%s' will be used instead"
             tip="Save the setting file path, the script path and the data output path into the "
                 "config file",
         )
+        self.file_save_script_action = QtTools.create_action(
+            self,
+            "Save current script on exit",
+            slot=self.file_save_script,
+            checkable=True,
+            #checked=self.file_save_script_checked(),
+            shortcut=None,
+            icon=None,
+            tip="Load the default script saved in the configuration file",
+        )
+        self.file_save_script_action.setChecked(self.file_save_script_checked())
 
         self.fileMenu.addAction(self.file_save_settings_action)
         self.fileMenu.addAction(self.file_load_settings_action)
         self.fileMenu.addAction(self.file_load_data_action)
+        self.fileMenu.addAction(self.file_save_script_action)
         self.fileMenu.addAction(self.action_manager.saveFigAction)
         self.fileMenu.addAction(self.file_save_config_action)
 
@@ -771,6 +785,8 @@ have the right format, '%s' will be used instead"
 
             self.widgets["InstrumentWidget"].load_settings(self.default_settings_fname)
 
+            self.save_current_script = self.widgets["ScriptWidget"].load_settings(self.default_settings_fname)
+            self.file_save_script_set_checked(self.save_current_script)
         else:
 
             logging.warning(
@@ -1312,7 +1328,7 @@ have the right format, '%s' will be used instead"
         """
         this function get the actual values of parameters and save them into the config file
         """
-        script_fname = str(self.widgets["ScriptWidget"].scriptFileLineEdit.text())
+        script_fname = str(self.widgets["ScriptWidget"].get_script_fname())
         IOTool.set_config_setting(IOTool.SCRIPT_ID, script_fname, self.config_file)
 
         output_path = (
@@ -1361,7 +1377,6 @@ have the right format, '%s' will be used instead"
             # the plotdisplay window which was created when the instrument
             # hub was connected
             pdw = self.actual_pdw
-
             if pdw is not None:
                 # get the windows channel control values
                 pdw_settings = pdw.list_channels_values()
@@ -1369,9 +1384,10 @@ have the right format, '%s' will be used instead"
             else:
                 # this will do nothing
                 pdw_settings = []
-
-            self.widgets["InstrumentWidget"].save_settings(fname, pdw_settings)
-
+            if self.save_current_script:
+                self.widgets["InstrumentWidget"].save_settings(fname, pdw_settings, self.widgets["ScriptWidget"].get_script_fname())
+            else:
+                self.widgets["InstrumentWidget"].save_settings(fname, pdw_settings)
             self.instrument_connexion_setting_fname = fname
 
     def file_load_settings(self, fname=None, **kwargs):
@@ -1407,6 +1423,16 @@ have the right format, '%s' will be used instead"
             if self.plot_window_settings:
                 self.instrument_connexion_setting_fname = fname
 
+    def file_save_script(self):
+        """ This was added to load the default script file defined in the settings """
+        self.save_current_script = self.file_save_script_action.isChecked()
+
+    def file_save_script_set_checked(self, checked):
+        self.save_current_script = checked
+        self.file_save_script_action.setChecked(self.save_current_script)
+    def file_save_script_checked(self):
+        """ This was added to load the default script file defined in the settings """
+        return self.save_current_script
     def file_load_data(self):
         default_path = IOTool.get_config_setting(
             "DATAFILE", config_file_path=self.config_file
