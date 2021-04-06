@@ -251,10 +251,12 @@ class MeasInstr(object):
 
                 return msg + id_string
             elif "?*IDN?" in id_string:
-                print("Oxford")
-
+                if hasattr(self, 'identification'):
+                    return self.identification
+                else:
+                    return "Unknown instrument" \
+                           ""
             else:
-
                 return "Unknown instrument"
 
         else:
@@ -479,21 +481,31 @@ file to see which are the ones implemented" % (self.ID_name, resource_name))
 
                 logging.debug("unable to disconnect  " + self.ID_name)
 
-    def clear(self):
+    def clear(self, silent=False):
         """Clear the conneciton to the instrument"""
         if self.connection is not None:
 
             try:
 
                 if self.interface == INTF_VISA or self.interface == INTF_PROLOGIX:
-
                     self.connection.clear()
-                    print("cleared " + self.ID_name)
+                elif hasattr(self.connection, "clear"):
+                    getattr(self.connection, "clear")()
+                elif hasattr(self.connection, "reset_output_buffer"): #RS-232 to clear output
+                    getattr(self.connection, "reset_output_buffer")()
+                else:
+                    if not silent:
+                        print("functionality does not exist to clear "+self.ID_name)
+                    return False
 
+                if not silent:
+                    print("cleared " + self.ID_name)
+                return True
 
             except:
-
-                print("unable to clear  " + self.ID_name)
+                if not silent:
+                    print("unable to clear  " + self.ID_name)
+                return False
 
     def measure(self, channel):
         """
@@ -1063,6 +1075,15 @@ which is connected to %s " % (param, instr_name, device_port))
         """change the DEBUG property of the IntrumentHub instance"""
         self.DEBUG = state
         logging.debug("debug mode of InstrumentHub Object :%s" % self.DEBUG)
+
+    def clear(self):
+        """ Attempts to clear every buffer of every connected device """
+        for port, inst in list(self.instrument_list.items()):
+            if hasattr(inst, "clear"):
+                inst.clear(silent=True)
+                logging.debug("%s cleared (port %s)"%(inst, port))
+            else:
+                logging.debug("%s not cleared (port %s)"%(inst, port))
 
     def clean_up(self):
         """ closes all instruments and reset the lists and dictionnaries """

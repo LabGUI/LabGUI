@@ -324,8 +324,8 @@ class Instrument(Tool.MeasInstr):
 #
 #    def set_current_compliance(self,compliance):
 #        if not self.DEBUG:
-#            self.write(':SENS:CURR:PROT:LEV '+ str(compliance))
-#
+#            self.write(':SENS:CURR:PROT: %r'+ str(compliance))
+
 
     def configure_output(self, source_mode='VOLT', output_level=0, compliance_level=0.001):
         if not self.DEBUG:
@@ -455,7 +455,7 @@ class Instrument(Tool.MeasInstr):
 #        elif p_code == 3:
 #            return self.leaking(p_tolerance)
 
-    def move_voltage(self, p_reader, p_target_voltage, step=0.0005, wait=0.005):
+    def move_voltage(self, p_reader, p_target_voltage, step=0.0005, wait=0.05):
         #    def move_voltage(self, p_reader, p_target_voltage, step=0.001, wait=0.005):
         #        print 'Moving voltage'
         current_voltage = self.measure('V')
