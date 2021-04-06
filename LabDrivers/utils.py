@@ -527,7 +527,7 @@ class PrologixController(object):
             debug=False,
             auto=1,
             baud_rate=PROLOGIX_BAUD,
-            timeout=5,
+            timeout=0.5,
             **kwargs
     ):
 
@@ -652,7 +652,9 @@ class PrologixController(object):
             self.connection.write(cmd.encode())
         else:
             logging.info("There is no prologix connection. Consider restarting LabGUI.")
-
+    def readline(self):
+        """ temp fix cuz pyserial dumb"""
+        return self.read(128)
     def read(self, num_bit=0): # ADDED NUM_BIT==0 INVOKES READLINE LIKE IT WOULD WITH PYVISA
         """use serial.read"""
         if self.connection is not None:

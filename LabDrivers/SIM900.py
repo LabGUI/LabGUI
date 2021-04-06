@@ -34,7 +34,7 @@ for i in range(1, 9): # to add reading
     param['SIM928 Chan %d'%i] = 'V'
 
 # for summing offset voltage
-SIM928 = 4
+SIM928 = 6
 SIM980 = 1
 SIM910 = 1
 AVERAGING_TIME = None
@@ -338,7 +338,6 @@ class Instrument(Tool.MeasInstr):
         self.connection.write(msg.encode() + self.term_chars)
 
     def read(self):
-        # return self.connection.readline().decode()  # FIXES SPEED # breaks read
         return self.connection.read(READ_BITS).decode()
 
     def ask_channel(self, channel, msg):
@@ -347,6 +346,7 @@ class Instrument(Tool.MeasInstr):
         self.write(msg)
         answer = self.read()
         self.write("xyz")
+
         return answer.strip('\n').strip('\r').strip('\n')  # incase sandwhich or reverse order
 
     def ask_channel_multiple(self, channel, *msgs):
