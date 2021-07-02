@@ -203,7 +203,6 @@ def get_file_name(config_file_path=CONFIG_FILE_PATH):
         config_file.close()
     except IOError:
         print("No configuration file " + config_file_path + "  found")
-
     return file_name
 
 def get_funct_save_name(device, funct, config_file_path=CONFIG_FILE_PATH):
@@ -510,7 +509,7 @@ def load_file_windows(fname, splitchar=', ', headers=True):
     ifs = open(fname, 'r')
     label = {'hdr': ""}
 
-    labels_id = ['P', 'I', 'C', 'D']
+    labels_id = ['P', 'I', 'C', 'D', 'T']
 
     lines = ifs.readlines()
 
@@ -526,6 +525,8 @@ def load_file_windows(fname, splitchar=', ', headers=True):
             #   P for parameter,
             #   I for instrument,
             #   C for channel name
+            #   D for data
+            #   T for start time in seconds since epoch
             label_id = line[1:2]
 
             # identify if we have an occurence of a label_id from LABELS_ID
@@ -565,11 +566,13 @@ def load_file_windows(fname, splitchar=', ', headers=True):
 
                     label['channel_labels'][0] = \
                         label['channel_labels'][0][1:]
-
+            elif label_id == 'T':
+                if 'start_time' not in label.keys(): # it is possible to have two, and we definitely only want the first
+                    label['start_time'] = float(line.rstrip("\n").strip("'"))
             elif label_id == 'D':
                 if 'data' not in label.keys():
                     label['data'] = []
-                label['data'].append(line.split(', '))
+                label['data'].append(line.split(splitchar)) # ', '
 
             # this is user comments we only save the ones that are
             # before the label_id, other lines will be ignored
@@ -586,14 +589,17 @@ def load_file_windows(fname, splitchar=', ', headers=True):
     if len(label) == 1:
 
         label['param'] = ["col %i" % i for i in range(np.size(data, 1))]
+        label['instr'] = ["" for i in range(np.size(data, 1))]
+        #label['instr'] = ["" for i in range(np.size(data, 1))]
+        label['channel_labels'] = ["" for i in range(np.size(data, 1))]
+        label['start_time'] = 0
+
+        logging.warning("IOTools.load_file_windows : #P, #I or #C headers are \
+        missing, all lines starting with # are available in the second output dict")
+        #, "instr": [], "param": [], "channel_labels": []
 
     # return both the data and the header content if header is set to True
     if headers:
-        # this means there is only the 'hdr' and 'param' keys
-        if len(label) == 2:
-
-            print("IOTools.load_file_windows : #P, #I or #C headers are \
-missing, all lines starting with # are available in the second output dict")
 
         return data, label
 
@@ -624,17 +630,17 @@ def load_pset_file(fname, labels=None):
 
             pset_file.close()
         except IOError:
-            print("IOTool.load_pset_file : No file " + fname + "  found")
+            logging.debug("IOTool.load_pset_file : No file " + fname + "  found")
 
         if labels:
             for i, t in enumerate(ticks):
                 if t in labels:
                     ticks[i] = labels.index(t)
                 else:
-                    print("\n the tick " +
+                    logging.warning("\n the tick " +
                           " does not correspond to a label in the list")
-                    print(labels)
-                    print("\n")
+                    logging.warning(labels)
+                    logging.warning("\n")
         if setting == 'X':
             if len(ticks):
                 ticks = ticks[0]

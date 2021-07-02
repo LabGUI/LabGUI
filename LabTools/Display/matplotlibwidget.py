@@ -113,7 +113,8 @@ class MatplotlibWidget(Canvas):
 #=========================================================================
 if __name__ == '__main__':
     import sys
-    from PyQt4.QtGui import QMainWindow, QApplication
+    from PyQt5.Qt import QMainWindow, QApplication
+    #from PyQt4.QtGui import QMainWindow, QApplication
     from numpy import linspace
 
     class ApplicationWindow(QMainWindow):
@@ -130,8 +131,9 @@ if __name__ == '__main__':
 
         def plot(self, axes):
             x = linspace(-10, 10)
+            y = linspace(0, 10)
             axes.plot(x, x**2)
-            axes.plot(x, x**3)
+            axes.plot(y, y)
 
     app = QApplication(sys.argv)
     win = ApplicationWindow()

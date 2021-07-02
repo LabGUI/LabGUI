@@ -1071,9 +1071,13 @@ have the right format, '%s' will be used instead"
             else:
                 # here I want to perform a check to see whether the number of instrument match
                 # open it in append mode, so it won't erase previous data
+                # DEV NOTE: it might be wise to do this check, and if it is different, fill missing instruments with nan (from before or after)
                 self.output_file = open(of_name, "a")
 
             self.datataker.initialize(is_new_file)
+
+            self.output_file.write("#T'%s'\n"%str(self.datataker.t_start)) # append it, as if using ds, it will be reset anyways
+
             self.datataker.set_script(self.widgets["ScriptWidget"].get_script_fname())
 
             # this command is specific to Qthread, it will execute whatever is defined in
@@ -1116,7 +1120,6 @@ have the right format, '%s' will be used instead"
         self.stop_DTT_action.setEnabled(True)
 
     def stop_DTT(self):
-
         if self.datataker.isRunning():
 
             self.datataker.ask_to_stop()
@@ -1148,7 +1151,7 @@ have the right format, '%s' will be used instead"
         self.output_file.write(data)
         self.output_file.close()
 
-        self.widgets["OutputFileWidget"].increment_filename()
+
 
     def DTT_script_finished(self, completed):
         """signal triggered by the completion of the script
@@ -1159,6 +1162,8 @@ have the right format, '%s' will be used instead"
         """
 
         self.stop_DTT()
+        # we should increment the file only after the datataker is stopped.
+        self.widgets["OutputFileWidget"].increment_filename()
 
     def DTT_isRunning(self):
         """indicates whether the datataker is running or not"""
@@ -1266,9 +1271,10 @@ have the right format, '%s' will be used instead"
                     load_fname = load_fname[1]
 
                     # replace the header text by the one stored in memory
-                    self.widgets["loadPlotWidget"].header_text(
-                        self.loaded_data_header[load_fname]
-                    )
+                    if load_fname in self.loaded_data_header.keys():
+                        self.widgets["loadPlotWidget"].header_text(
+                            self.loaded_data_header[load_fname]
+                        )
 
                     # update the file information in the widget
                     self.widgets["loadPlotWidget"].load_file_name(load_fname)

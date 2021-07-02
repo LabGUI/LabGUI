@@ -9,6 +9,7 @@ import logging
 import py_compile
 import time
 import os
+import traceback
 
 from LabGuiExceptions import ScriptFile_Error
 from LabTools.IO import IOTool
@@ -79,6 +80,7 @@ class DataTaker(QThread):
         # in real time while the script is ran
         self.user_variables = {}
 
+        # start time, taken from instr_hub
         self.t_start = None
         # scriptize the intruments and their parameters
         self.reset_lists()
@@ -91,6 +93,8 @@ class DataTaker(QThread):
                 # there's a none object in the Instruments list, ignore it
                 if inst:
                     inst.initialize()
+        # should be written at this point
+        self.t_start = self.instr_hub.start_time
 
     def reset_lists(self):
         """
@@ -234,8 +238,9 @@ user variable")
         except Exception as e:
             logging.error("Your script file \"%s\" " % (userScriptName) +
                           "failed to run with error:\n" +
-                          type(e).__name__ + ": " + str(e) +
-                          "\nPlease review the script.\n")
+                          type(e).__name__ + ": " + str(e) + 
+                          "\n\t" + "\n\t".join(traceback.format_exc().split('\n'))[:-1] + # last entry is always(?) blank
+                          "Please review the script.\n")
         finally:
             pass
         # send a signal to indicate that the DTT is stopped
@@ -264,6 +269,7 @@ user variable")
                 print("DTT stopped and complete")
             else:
                 print("DTT stopped but not complete")
+                self.instr_hub.clear()
 
         finally:
 

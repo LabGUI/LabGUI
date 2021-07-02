@@ -722,7 +722,7 @@ class InstrumentWindow(QtGui.QWidget):
 
                     param_name = settings[0].strip()
 
-                    new_line.param_name_le.setText(param_name)
+
 
                     # For backwards compatibility with old settings files, leave
                     # this part in.
@@ -788,6 +788,8 @@ please check your connectic or your settings file\n" % port)
                         if param in self.AVAILABLE_PARAMS[instr_type]:
                             new_line.param_cbb.setCurrentIndex(
                                 new_line.param_cbb.findText(param))
+
+                    new_line.param_name_le.setText(param_name)
 
                 # check if the list isn't empty
                 if settings[4:]:

@@ -15,6 +15,7 @@ import sys
 
 from types import MethodType
 import logging
+import time
 
 import LabDrivers.utils
 
@@ -615,11 +616,15 @@ class DeviceFunctionWidget(QtGui.QWidget):
                 return
             #print(data)
             # here is where we save the data:
-            filename = IOTools.get_funct_save_name(self.device, self.current_function)
-            if self.parent.save_data(filename, rdata, function=self.current_function, device=self.device, params=data):
-                print("Data saved to: "+filename)
+            self.save_data(rdata,data)
+            #filename = IOTools.get_funct_save_name(self.device, self.current_function)
+            #if self.parent.save_data(filename, rdata, function=self.current_function, device=self.device, params=data):
+            #    print("Data saved to: "+filename)
             return rdata
-
+    def save_data(self, data, params):
+        filename = IOTools.get_funct_save_name(self.device, self.current_function)
+        if self.parent.save_data(filename, data, self.parent.start_time, function=self.current_function, device=self.device, params=params):
+            print("Data saved to: " + filename)
     def clear_event(self, *args):
         self.widgets[self.current_function].clear_input()
         #print(args)
@@ -830,6 +835,8 @@ class FunctionWidget(QtGui.QWidget):
 
         self.plot_window = []
 
+        self.start_time = 0
+
 
 
         if parent is not None:
@@ -957,10 +964,9 @@ class FunctionWidget(QtGui.QWidget):
             return False
         id = self.deviceComboBox.currentIndex()
         device = self.sanitized_list[id]
-        #print(device)
         driver = device[2]
+        self.start_time = time.time()
         data = driver.run(name, arguments)
-        #print(name+" Data:", data)
         return data
         ### This is for generated functions, not supported yet ###
         if hasattr(driver, name) and callable(getattr(driver, name)):
@@ -975,7 +981,6 @@ class FunctionWidget(QtGui.QWidget):
         channels = np.size(npdata)
         device = self.deviceComboBox.currentData()
         window_name = device + ": "+name
-        print(channels, 1)
         if self.plot[device] is None:
             labels = []
         else:
@@ -989,13 +994,11 @@ class FunctionWidget(QtGui.QWidget):
     def update_instrument_list(self):
         if self.parentClass is not None:
             self.instrument_list = self.parentClass.instr_hub.get_instrument_list()
-            #print(self.instrument_list)
 
-            #print(self.parentClass.instr_hub.get_port_param_pairs())
-            #print(self.parentClass.instr_hub.get_instrument_nb())
 
             z = self.instrument_list.items()
             self.ports = {}
+            self.instr_dict = {}
             ports = list()
             instruments = list()
             names = list()
@@ -1004,8 +1007,8 @@ class FunctionWidget(QtGui.QWidget):
                     ports.append(x)
                     instruments.append(self.instrument_list[x])
                     names.append(self.instrument_list[x].ID_name)
-                    self.ports[self.instrument_list[x]] = x
-                    #print(x,self.instrument_list[x].ID_name)
+                    self.ports[self.instrument_list[x].ID_name] = x
+                    self.instr_dict[self.instrument_list[x].ID_name] = self.instrument_list[x]
             self.sanitized_list = list(zip(names, ports, instruments))
             return
         elif self.DEBUG:
@@ -1049,49 +1052,61 @@ class FunctionWidget(QtGui.QWidget):
             return "Unable to join object: "+sys.exc_info()[0]
 
 
-    def save_data(self, fname, data, device="", function="", params={}):
+    def save_data(self, fname, data, start_time, device="", function="", params={}):
         try:
             ndata = np.array(data)
             params = ", ".join(["{}={}".format(key, value) for key, value in params.items()])
-            print(params)
+
+
+            t_dev = "TIME[]"
+            if (start_time - ndata[0][0]) < 30000000:  # dif between start time n first data point < about a year
+                t_dev = t_dev + ".Time"
+            else:
+                t_dev = t_dev + ".dt"
+
             llabels = []
+            devices = [t_dev]
             if device in self.plot.keys():
                 llabels = self.plot[device]
             headers = []
 
+
+
             if function != "":
                 if params != "":
                     function = function + " (" + params + ")"
-                headers.append(function)
+                headers.append("# "+function)
             elif params != "": #incase only params are passed
-                headers.append(params)
+                headers.append("# "+params)
 
             if device != "":
                 if device in self.ports.keys():
-                    headers.append(device+"["+self.ports[device]+"]")
+                    d_str = device+"["+self.ports[device]+"]"
+                    for i in range(1, np.size(ndata,1)):
+                        devices.append(d_str)
+                    # Assuming that the first column is always time (as per specs)
+
+
                 else:
-                    headers.append(device)
+                    print(self.ports)
+                    for i in range(1, np.size(ndata,1)):
+                        devices.append(device)
+                headers.append("#I'" + ("', '".join(devices)) + "'")
+            headers.append("#T'%s'"%(str(start_time)))
             if llabels:
-                headers.append(" ".join(self.plot[device]))
+                headers.append( "#C'"+("', '".join(self.plot[device]))+"'")
             else:
-                headers.append(" ".join([str(i+1) for i in range(0, np.size(ndata,1))]))
-            np.savetxt(fname, ndata, header="\n".join(headers))
+                headers.append( "#C'"+("', '".join([str(i+1) for i in range(0, np.size(ndata,1))]))+"'" )
+            np.savetxt(fname, ndata, header="\n".join(headers), comments='')
             return True
         except:
-            print("Exception occured: "+sys.exc_info()[0])
+            print("Exception occured: "+sys.exc_info()[1])
             return False
 
 
 
 
-# def toggleViewAction(dock_widget, docked=True):
-#     if docked:
-#         dock_widget.toggleViewAction()
-#     else:
-#         dock_widget.widget().show()
-
 def add_widget_into_main(parent):
-    #return #we dont want this to happen yet
     """add a widget into the main window of LabGuiMain
 
     create a QDock widget and store a reference to the widget
@@ -1119,76 +1134,13 @@ def add_widget_into_main(parent):
     sys.stdout = QtTools.printerceptor(parent)
 
     propDockWidget.resize(500,250)
-    #if not DEBUG:
     propDockWidget.hide()
 
 
-
-    # assigning a method to the parent class
-    # depending on the python version this fonction take different arguments
-    # if sys.version_info[0] > 2:
-    #
-    #     parent.update_console = MethodType(update_console, parent)
-    #
-    # else:
-    #
-    #     parent.update_console = MethodType(
-    #         update_console, parent, parent.__class__)
-
-    # if USE_PYQT5:
-    #
-    #     sys.stdout.print_to_console.connect(parent.update_console)
-    #
-    # else:
-    #
-    #     parent.connect(sys.stdout, QtCore.SIGNAL(
-    #         "print_to_console(PyQt_PyObject)"), parent.update_console)
-
-
-"""def update_console(parent, stri):
-
-    MAX_LINES = 50
-
-    stri = str(stri)
-    new_text = parent.widgets['ConsoleWidget'].console_text() + '\n' + stri
-
-    line_list = new_text.splitlines()
-    N_lines = min(MAX_LINES, len(line_list))
-
-    new_text = '\n'.join(line_list[-N_lines:])
-
-    parent.widgets['ConsoleWidget'].console_text(new_text)
-
-    parent.widgets['ConsoleWidget'].automatic_scroll()
-"""
-
-# def add_widget_into_main(parent):
-#     """add a widget into the main window of LabGuiMain
-#
-#     create a QDock widget and store a reference to the widget
-#     """
-#
-#     mywidget = CommandWidget(parent=parent)
-#
-#     outDockWidget = QtGui.QDockWidget("GPIB Command-Line", parent)
-#     outDockWidget.setObjectName("OutputFileDockWidget")
-#     outDockWidget.setAllowedAreas(
-#         Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea)
-#
-#     # fill the dictionnary with the widgets added into LabGuiMain
-#     parent.widgets['CommandWidget'] = mywidget
-#
-#     outDockWidget.setWidget(mywidget)
-#     parent.addDockWidget(Qt.RightDockWidgetArea, outDockWidget)
-#
-#     # Enable the toggle view action
-#     parent.windowMenu.addAction(outDockWidget.toggleViewAction())
 
 if __name__ == "__main__":
 
     app = QtGui.QApplication(sys.argv)
     ex = FunctionWidget(parent=None, debug=True)
-    #ex = DevicePropertyWidget("AH", {}, debug=True)
     ex.show()
-    #print(ex.get_properties())
     sys.exit(app.exec_())
