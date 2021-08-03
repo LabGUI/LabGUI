@@ -34,7 +34,7 @@ for i in range(1, 9): # to add reading
     param['SIM928 Chan %d'%i] = 'V'
 
 # for summing offset voltage
-SIM928 = 5
+SIM928 = 4
 SIM980 = 1
 SIM910 = 1
 AVERAGING_TIME = None
@@ -161,15 +161,15 @@ if SIM980 != 0:
     }
 
 READ_BITS = 128
-NAME = 'SIM900'
+NAME = 'SIM900_SAFE'
 INTERFACE = Tool.INTF_SERIAL
 
 
 class Instrument(Tool.MeasInstr):
 
     def __init__(self, resource_name, debug=False, **kwargs):
-        super(Instrument, self).__init__(resource_name, NAME, debug, interface=INTERFACE, baud_rate=9600,
-                                         term_chars="\n".encode(), timeout=0.5, bytesize=8, parity='N', stopbits=1,
+        super(Instrument, self).__init__(resource_name, NAME, debug, interface=INTERFACE, baud_rate=19200,
+                                         term_chars="\n".encode(), timeout=0.1, bytesize=8, parity='N', stopbits=1,
                                          xonxoff=False, dsrdtr=False, **kwargs)
         self.connections = {}
         device_temp = {}
@@ -379,15 +379,32 @@ class Instrument(Tool.MeasInstr):
     # def measure(self, channel):
 
     def get_voltage(self, channel):
+        def isfloat(s):
+            try:
+                float(s)
+                return True
+            except:
+                return False
         channel = str(channel)
         if channel in self.connections.keys():
             # check if SIM928
             if self.connections[channel] == 'SIM928':
                 answer, n = self.ask_channel(channel, "VOLT?"), 0
-                while answer == '' and n < MAX_ITER:
+                while not isfloat(answer) and n < MAX_ITER:
                     answer, n = self.ask_channel(channel, "VOLT?"), n+1
-                if answer == '': answer = 'nan'
+                if not isfloat(answer): answer = 'nan'
                 return float(answer)
+                """while not answer.isnumeric() and n < MAX_ITER:
+                    try:
+                        answer = float(self.ask_channel(channel, "VOLT?"))
+                    except:
+                        answer = ''
+                    else:
+                        break
+                    finally:
+                        n += 1
+                if not answer.isnumeric(): answer = 'nan'
+                return float(answer)"""
             else:
                 print("Unsupported device: " + self.connections[channel])
         else:
@@ -399,15 +416,21 @@ class Instrument(Tool.MeasInstr):
         voltage must be rounded to 3 decimal places, as SIM928 cannot process larger floating points. For example,
         if the voltage 1.8889 is given, it will be unable to process it, however it would be able to process 1.889
         """
+        def isfloat(s):
+            try:
+                float(s)
+                return True
+            except:
+                return False
         channel = str(channel)
         voltage = str(round(float(voltage),3))
         if channel in self.connections.keys():
             # check if SIM928
             if self.connections[channel] == 'SIM928':
                 answer, n = self.ask_channel(channel, "VOLT " + voltage + "; VOLT?"), 0
-                while answer == '' and n < MAX_ITER:
+                while not isfloat(answer) and n < MAX_ITER:
                     answer, n = self.ask_channel(channel, "VOLT?"), n+1
-                if answer == '': answer = 'nan'
+                if not isfloat(answer): answer = 'nan'
                 return float(answer)
             else:
                 print("Unsupported device: " + self.connections[channel])
@@ -415,12 +438,18 @@ class Instrument(Tool.MeasInstr):
             print("No device connected to channel " + channel)
         return None
         
-    def move_voltage(self, channel, p_target_voltage, step=0.01, wait=0.3):
+    def move_voltage(self, channel, p_target_voltage, step=0.003, wait=0.02):
+        def isfloat(s):
+            try:
+                float(s)
+                return True
+            except:
+                return False
         channel = str(channel)
         current_voltage, n = self.ask_channel(channel, "VOLT?"), 0
-        while current_voltage == '' and n < MAX_ITER:
+        while not isfloat(current_voltage) and n < MAX_ITER:
             current_voltage, n = self.ask_channel(channel, "VOLT?"), n+1
-        if current_voltage == '':
+        if not isfloat(current_voltage):
             print("Error reading voltage")
             return 0
         current_voltage = float(current_voltage)
