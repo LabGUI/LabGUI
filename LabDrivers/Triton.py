@@ -54,7 +54,7 @@ except:
     import Tool
 
 import socket
-
+import time
 
 
 INTERFACE = Tool.INTF_NONE
@@ -406,7 +406,7 @@ class Instrument(Tool.MeasInstr):
                 TIME : (float) sweep time in minutes
                 RATE : (float) sweep rate in T/min (tesla per minute)
         :param coord_sys: default CARTESIAN
-        :return: None
+        :return: Boolean, Returns TRUE if setpoint was properly set, else returns FALSE
         """
         self.set_coordsys(coord_sys)
 
@@ -422,9 +422,32 @@ class Instrument(Tool.MeasInstr):
             cmd_rvst = 'RVST:MODE:ASAP'
         else:
             cmd_rvst = 'RVST:MODE:%s:%s:%f'%(sweep_mode, sweep_mode, float(sweep_mode_param))
+        cmd = ":".join([cmd_prefix, cmd_rvst, cmd_setpoint])
+        resp = "BUSY"
+        while resp == "BUSY":
+            resp = self.ask(cmd).split(":")[-1]
+            if resp == "INVALID":
+                print("Invalid parameters for setpoint coordinates")
+                return False
+            else:
+                return True
 
-        self.write(":".join([cmd_prefix, cmd_rvst, cmd_setpoint]))
 
+
+    def force_set_setpoint(self, coords, sweep_mode, sweep_mode_param = None, coord_sys = CARTESIAN, MAX_ITER=10000):
+        """
+        Same as "set_setpoint", but it makes sure that the machine accepts the new value (USE AT OWN RISK, MAY STALL PROGRAM).
+
+        Please note, that if the setpoint coordinates are not within the range of those accepted by the machine, this command will never terminate
+        """
+        i = 0
+        setp = self.read_setpoint(coord_sys)
+        while setp != coords and i < MAX_ITER:
+            self.set_setpoint(coords, sweep_mode, sweep_mode_param, coord_sys)
+            setp = self.read_setpoint(coord_sys)
+            i += 1
+        if i == MAX_ITER: return False
+        else: return True
     def set_only_setpoint(self, coords, coord_sys = CARTESIAN):
         """
         Set only setpoint values, keeping already set sweep mode parameters
