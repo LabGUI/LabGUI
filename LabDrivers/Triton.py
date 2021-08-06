@@ -429,8 +429,7 @@ class Instrument(Tool.MeasInstr):
             if resp == "INVALID":
                 print("Invalid parameters for setpoint coordinates")
                 return False
-            else:
-                return True
+        return True
 
 
 
