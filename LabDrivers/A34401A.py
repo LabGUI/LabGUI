@@ -35,7 +35,7 @@ class Instrument(Tool.MeasInstr):
                 self.channels_names[chan] = chan_name
 
     def measure(self, channel='V'):
-        if self.last_measure.has_key(channel):
+        if channel in self.last_measure.keys():
             if not self.DEBUG:
                 if channel == 'V':
                     answer = self.get_voltage()
