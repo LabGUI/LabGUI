@@ -295,7 +295,7 @@ if __name__ == "__main__":
     # print(BPO.identify())
     # BPO.enable_output()
     # BPO.set_current(5450e-6)
-    BPO.set_current(0e-6)
+    BPO.set_current(0.000e-6)
     print('Current = %s uA'%(BPO.measure()*1e6))
 
     # range_ = 'UP'

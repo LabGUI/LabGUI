@@ -42,7 +42,8 @@ class Instrument(Tool.MeasInstr):
                     command = '*0100P3'
                 elif channel == 'TEMPERATURE':
                     command = '*0100Q3'
-                answer = self.ask(command)
+                answer = (self.ask(command))
+                print(answer)
                 answer = float(answer[5:])  # remove the first 5 characters
             else:
                 answer = random.random()

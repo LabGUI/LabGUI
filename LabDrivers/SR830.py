@@ -201,8 +201,8 @@ if (__name__ == '__main__'):
 
     command_line_test(Instrument)
     print(i.identify())
-    # i = Instrument("GPIB0::7::INSTR")
-    # i.get_amplitude()
+    i = Instrument("GPIB0::11::INSTR")
+    i.get_amplitude()
     # i.set_amplitude(0.5)
     # i.write('SENS 16')
     # i.write('OFLT 11')
