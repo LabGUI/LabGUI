@@ -4,3 +4,4 @@ numpy
 pyserial
 pyqt5
 zhinst
+pyvisa-py
