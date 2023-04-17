@@ -113,7 +113,7 @@ class Instrument(KT2400.Instrument):
         answer = float(answer)
         return answer
 
-    def set_voltage(self, voltage, i_compliance=1.0E-7, v_compliance=1):
+    def set_voltage(self, voltage, i_compliance=1.0E-6, v_compliance=1):
         if not self.DEBUG:
             voltage = float(voltage)
             i_compliance = float(i_compliance)

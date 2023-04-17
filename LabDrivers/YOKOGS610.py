@@ -95,7 +95,7 @@ class Instrument(Tool.MeasInstr):
         else:
             self.set_voltage(val)
 
-    def set_voltage(self, voltage, i_compliance=1e-6, v_compliance=10, port=0):
+    def set_voltage(self, voltage, i_compliance=20e-6, v_compliance=11, port=0):
         if not self.DEBUG:
             prev_voltage = self.get_voltage()
             voltage = float(voltage)
@@ -138,7 +138,7 @@ class Instrument(Tool.MeasInstr):
         else:
             print("voltage set to " + str(voltage) + " on " + self.ID_name)
             
-    def set_current(self, current, i_compliance=1e-6, v_compliance=10, port=0):
+    def set_current(self, current, i_compliance=20e-6, v_compliance=11, port=0):
         if not self.DEBUG:
             prev_current = self.get_current()
             current = float(current)
@@ -236,8 +236,8 @@ class Instrument(Tool.MeasInstr):
                 source_mode, source_mode, output_level, protection, compliance_level)
             self.write(s)
 
-    def move_voltage(self, p_reader, p_target_voltage, step=0.0001, wait=0.001):
-        #    def move_voltage(self, p_reader, p_target_voltage, step=0.001, wait=0.005):
+    def move_voltage(self, p_reader, p_target_voltage, step=0.002, wait=0.005):
+        #    def move_voltage(self, p_reader, p_target_voltage, step=0.0001, wait=0.001): slow
         #        print 'Moving voltage'
         current_voltage = self.measure('V')
         # Parse move direction cases

@@ -24,4 +24,4 @@ labgui.egg-info
 bin/
 dist*
 *.dump
-
+InstrumentsSettings/
