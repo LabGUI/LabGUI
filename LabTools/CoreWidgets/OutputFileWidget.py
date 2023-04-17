@@ -71,11 +71,14 @@ class OutputFileWidget(QtGui.QWidget):
 
     def on_outputFileButton_clicked(self):
 
-        fname = str(QtGui.QFileDialog.getSaveFileName(self, 'Save output file as',
+        fname = (QtGui.QFileDialog.getSaveFileName(self, 'Save output file as',
                                                       self.outputFileLineEdit.text()))
-
+        if fname and type(fname) == tuple:
+            fname,_ = fname
+        if fname and type(fname) != str:
+            fname = str(fname)
+        
         if fname:
-
             self.outputFileLineEdit.setText(fname)
 
     def increment_filename(self):
