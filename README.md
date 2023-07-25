@@ -40,21 +40,23 @@ For the time being this package is only supported in python 2.7 (but we are work
 
 ## Using pip ##
 
-Open a terminal and run 
+Setup a [virtual environement](https://virtualenv.pypa.io/en/latest/)
+
+For powershell in windows 10:
+```
+pip install virtualenv
+```
+```
+virtualenv my_venv
+```
+```
+<path to my_venv>\my_venv\Scripts\activate
+```
+
+Then run 
 
 ```
-#!python
-
 pip install -r requirements.txt
-```
-
-The requirement file contains the following lines :
-```
-PyVISA
-matplotlib
-numpy
-pyserial
-
 ```
 
 ## Using Anaconda ##
@@ -256,7 +258,7 @@ There are different steps between this stage and the stage when you collect data
 
 Ways to connect physically to the instrument through a port:
 
-- PROLOGIX GPIB to USB
+- PROLOGIX GPIB to USB ([driver here](http://prologix.biz/))
 - National Instruments GPIB to USB
 - Agilent GPIB to USB
 
