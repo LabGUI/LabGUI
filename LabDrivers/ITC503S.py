@@ -1,6 +1,5 @@
 import time
 import random
-import visa
 
 try:
     from . import Tool

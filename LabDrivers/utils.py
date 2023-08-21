@@ -31,8 +31,10 @@ except ImportError:
     print("pyserial package not installed, run 'pip install pyserial'")
 
 try:
-
-    import visa
+    try:
+        import visa
+    except:  # visa version >=1.12.0 fix
+        import pyvisa as visa
     visa_available = True
 
 except ImportError:
@@ -41,6 +43,7 @@ except ImportError:
     print("pyvisa package not installed, run 'pip install pyvisa'")
 
 from LabTools.IO import IOTool
+from LabDrivers.Tool import visa_resource_manager
 
 INTF_VISA = 'pyvisa'
 INTF_PROLOGIX = 'prologix'
@@ -60,7 +63,7 @@ PROLOGIX_SEARCH_PORTS = True
 
 LABDRIVER_PACKAGE_NAME = "LabDrivers"
 
-old_visa = True
+old_visa = False
 
 # Check for python version; required to determine whether to include
 # byte-like objects.
@@ -84,8 +87,7 @@ def list_GPIB_ports():
         if old_visa:
             available_ports = visa.get_instruments_list()
         else:
-
-            rm = visa.ResourceManager(VISA_BACKEND)
+            rm = visa_resource_manager()
             available_ports = rm.list_resources()
             temp_ports = []
             for port in available_ports:

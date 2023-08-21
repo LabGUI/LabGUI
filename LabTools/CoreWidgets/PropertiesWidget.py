@@ -32,7 +32,7 @@ else:
 
 from LabTools.Display import QtTools
 
-from collections import Iterable
+from collections.abc import Iterable
 
 import sys
 import io

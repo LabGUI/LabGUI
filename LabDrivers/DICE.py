@@ -6,7 +6,6 @@ Created on Tue Jan 05 14:02:36 2016
 """
 
 #!/usr/bin/env python
-#import visa
 from collections import OrderedDict
 import random
 import logging
