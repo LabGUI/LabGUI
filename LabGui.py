@@ -612,6 +612,8 @@ have the right format, '%s' will be used instead"
             icon="clear",
             tip="Reset the fit data to an empty array",
         )
+        
+        
 
         self.plotMenu.addAction(self.clearPlotAction)
         self.plotMenu.addAction(self.removeFitAction)

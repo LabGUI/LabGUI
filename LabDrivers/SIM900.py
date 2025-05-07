@@ -448,7 +448,7 @@ class Instrument(Tool.MeasInstr):
         self.set_voltage(channel, p_target_voltage)
 #        time.sleep(1)
         # return success
-        print("Done moving")
+        #print("Done moving")
         return 1
         
     def enable_output(self, channel):

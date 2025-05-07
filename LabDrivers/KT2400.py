@@ -327,7 +327,7 @@ class Instrument(Tool.MeasInstr):
 #            self.write(':SENS:CURR:PROT: %r'+ str(compliance))
 
 
-    def configure_output(self, source_mode='VOLT', output_level=0, compliance_level=0.001):
+    def configure_output(self, source_mode='VOLT', output_level=0, compliance_level=1):#
         if not self.DEBUG:
             # source_mode: VOLT, CURR
             # output_level: in Volts or Amps
@@ -351,11 +351,16 @@ class Instrument(Tool.MeasInstr):
 #        if not self.DEBUG:
 #            self.write (':OUTP OFF;')
 #
-
+    def set_icompliance(self, i_compliance=0.1):#100e-9
+        self.write(':SOUR:VOLT:RANG:AUTO 1')
+        c = ':SENS:CURR:PROT %r' % i_compliance
+        self.write(c)
+        
+        
     def set_value(self, val):  # for interferometer program
         self.set_voltage(val)
 
-    def set_voltage(self, voltage, i_compliance=100E-9, v_compliance=10): # for tunneling i_compliance=0.6E-6
+    def set_voltage(self, voltage, i_compliance=0.1, v_compliance=10): # i = 100E-9
         if not self.DEBUG:
             voltage = float(voltage)
             i_compliance = float(i_compliance)
@@ -559,7 +564,7 @@ class Instrument(Tool.MeasInstr):
                 self.write(':SENS:CURR:PROT[:LIM]')
                 time.sleep(1)
 
-    def pulse_voltage_simple(self, pulses, start, stop, pulse_width, pulse_delay, frequency = 0.2, base = 0, direction = "BOTH", v_compliance=1, i_compliance=1.0e-7):
+    def pulse_voltage_simple(self, pulses, start, stop, pulse_width, pulse_delay, frequency = 0.2, base = 0, direction = "BOTH", v_compliance=1, i_compliance=1):
         """
 
         :param pulses:
@@ -674,9 +679,9 @@ class Instrument(Tool.MeasInstr):
         return ret
 
     # sweep commands, as defined in the Keithley Manual
-    def sweep_voltage_bipolar_staircase(self, steps, start, stop, v_compliance = 1, i_compliance = 1e-7):
+    def sweep_voltage_bipolar_staircase(self, steps, start, stop, v_compliance = 1, i_compliance = 0.1):
         def sweep_voltage_staircase(self, steps, start, stop, width=1, frequency=0.2, v_compliance=1,
-                                    i_compliance=1e-7):
+                                    i_compliance=0.1):
             """
             :param steps: int (number)
             :param start: float (Volts)
@@ -820,7 +825,7 @@ class Instrument(Tool.MeasInstr):
     #     # return data
     #     return data
 
-    def sweep_voltage_simple(self, steps, start, stop, v_compliance=1, i_compliance=1e-7):
+    def sweep_voltage_simple(self, steps, start, stop, v_compliance=1, i_compliance=0.1):
         """
         :param steps: int
         :param start: float
@@ -861,7 +866,7 @@ class Instrument(Tool.MeasInstr):
         for datapoint in list:
             data.append( (float(datapoint[0]), float(datapoint[1])))
         return data
-    def sweep_voltage_staircase(self, steps, start, stop, direction="BOTH", width=1, frequency=0.2, v_compliance=1, i_compliance=1e-7):
+    def sweep_voltage_staircase(self, steps, start, stop, direction="BOTH", width=1, frequency=0.2, v_compliance=1, i_compliance=0.1):
         """
         :param steps: int (number)
         :param start: float (Volts)

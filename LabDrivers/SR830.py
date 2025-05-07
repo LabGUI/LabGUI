@@ -193,7 +193,101 @@ class Instrument(Tool.MeasInstr):
                 return nan
         else:
             return 1.23e-4
-
+    
+    def auto_sensitivity(self):
+        """
+        Performs the "Auto Gain" function of the lockin. Will wait for execution to finish before returning
+        """
+        if not self.DEBUG:
+            try:
+                self.write("AGAN") # Instruct lockin to perform autogain
+                while int(self.ask('*STB? 1')): # Check status bit, waiting for it to read 0 when no command is executing
+                    print("Auto Gain Running")
+                    time.sleep(0.05)
+                return True
+            except Exception as e:
+                print(e)
+                return False
+        else:
+            return True
+    
+    def get_sensitivity(self, voltage_mode = True):
+        """
+        Determines the current sensitivity
+        """
+        if not self.DEBUG:
+            try:
+                sensitivity_mode = self.ask('SENS?')
+                coef, unitV, unitA = Sensitivity[int(sensitivity_mode)]
+                if voltage_mode:
+                    return coef * UnitsMultiplier[unitV] # We are always in voltage mode
+                else:
+                    return coef * UnitsMultiplier[unitA] # Incase for whatever reason we are in current mode. TODO: Determine this automatically through commands?
+            except Exception as e:
+                print(e)
+                return nan
+        else:
+            return 1.23e-4
+    
+    def increase_sensitivity(self):
+        """
+        Increases the sensitivity. This function is equivalent to pressing the up arrow on the lockin.
+        
+        Additionally, a check is performed to determine whether or not the sensitivity was actually raised.
+        """
+        if not self.DEBUG:
+            try:
+                current_sensitivity = int(self.ask('SENS?'))
+                if current_sensitivity < max(Sensitivity.keys()):
+                    self.write(f'SENS {current_sensitivity+1}')
+                    return int(self.ask('SENS?')) == (current_sensitivity+1)
+                else:
+                    return False
+            except Exception as e:
+                print(e)
+                return nan
+        else:
+            return True
+            
+    def decrease_sensitivity(self):
+        """
+        Decreases the sensitivity. This function is equivalent to pressing the down arrow on the lockin.
+        
+        Additionally, a check is performed to determine whether or not the sensitivity was actually lowered.
+        """
+        if not self.DEBUG:
+            try:
+                current_sensitivity = int(self.ask('SENS?'))
+                if current_sensitivity > 0:
+                    self.write(f'SENS {current_sensitivity-1}')
+                    return int(self.ask('SENS?')) == (current_sensitivity-1)
+                else:
+                    return False
+            except Exception as e:
+                print(e)
+                return nan
+        else:
+            return True
+    
+    def determine_signal_sensitivity_percentage(self):
+        """
+        Determines where the current signal lies within the current range.
+        
+        This function effectively returns the position at which the range indicator under the lockin screen is, for both x and y
+        
+        This function returns a tuple (Xpercentage, Ypercentage), including the sign of the signal. If the voltage is negative, the return percentage will also be negative.
+        """
+        if not self.DEBUG:
+            try:
+                sensitivity = self.get_sensitivity()
+                X = float(self.ask('OUTP? 1'))
+                Y = float(self.ask('OUTP? 2'))
+                return X / sensitivity, Y / sensitivity
+            except Exception as e:
+                print(e)
+                return nan, nan
+        else:
+            return 1.23e-4, 1.23e-4
 
 if (__name__ == '__main__'):
 
