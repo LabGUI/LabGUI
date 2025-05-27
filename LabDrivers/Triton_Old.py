@@ -165,144 +165,35 @@ class Instrument(Tool.MeasInstr):
             'RATE':SWEEPMODE_RATE
         }
         ## determine channels
-        
-        self.sock = None
         pass
 
-    def _socket_connect(self):
-        self._socket_close()
-        try:
-            self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.sock.connect(self.address)
-            self.sock.settimeout(self.timeout)
-            return True
-        except socket.error as e:
-            print(f"Triton socket connection failed: {e}")
-            self.sock = None
-            return False
-    
-    def _socket_close(self):
-        if self.sock:
-            try:
-                self.sock.close()
-            except Exception as e:
-                print(f"Triton socket failed to close: {e}")
-            self.sock = None
-    def _socket_ensure_connection(self):
-        if self.sock is None:
-            return self._socket_connect()
-        return True
-            
-    def write(self, msg, retries=1):
-        msg = msg.strip("\n").strip("\r").strip("\n")
-        
-        for attempt in range(retries+1):
-            self._socket_ensure_connection()
-            try:
-                self.sock.sendall((msg + self.termchar).encode())
-            except (socket.error, BrokenPipeError, ConnectionAbortedError, ConnectionResetError) as e:
-                self._socket_connect()
-                continue
-            status = self.sock.recv(self.bytes_to_read).decode().strip('\n').strip('\r').strip('\n').split(":")[-1]
-            return status
-        
-        print(f"Triton socket write failed after {retries+1} tries.")
-        return False
-        
-        """
-        
-        for attempt in range(retries+1):
-            self._socket_ensure_connection()
-            try:
-                self.sock.sendall((msg + self.termchar).encode())
-                return
-            except (socket.error, BrokenPipeError, ConnectionAbortedError, ConnectionResetError) as e:
-                print(f"Triton socket write failed with {e}. Retrying...")
-                self._socket_connect()
-        print(f"Triton socket write failed after {retries+1} tries.")
-        """
-        #with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        #    s.connect(self.address)
-        #    s.settimeout(self.timeout)
-        #    s.sendall((msg + self.termchar).encode())
 
-    def read(self, numbytes = None, retries=1):
+    def write(self, msg):
+        msg = msg.strip("\n").strip("\r").strip("\n")
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.connect(self.address)
+            s.settimeout(self.timeout)
+            s.sendall((msg + self.termchar).encode())
+
+    def read(self, numbytes = None):
         if numbytes is None:
             numbytes = self.bytes_to_read
-        
-        #self._socket_ensure_connection()
-        #response = self.sock.recv(numbytes).decode()
-        #return response.strip('\n').strip('\r').strip('\n')
-        
-        
-        for attempt in range(retries+1):
-            self._socket_ensure_connection()
-            try:
-                response = self.sock.recv(numbytes).decode()
-                return response.strip('\n').strip('\r').strip('\n')
-            except (socket.error, BrokenPipeError, ConnectionAbortedError, ConnectionResetError) as e:
-                print(f"Triton socket read failed with {e}. Retrying...")
-                self._socket_connect()
-            except socket.timeout:
-                print(f"Triton socket hit timeout, nothing to read.")
-                return ''
-        print(f"Triton socket read failed after {retries+1} tries.")
-        #with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        #    s.connect(self.address)
-        #    s.settimeout(self.timeout)
-        #    response = s.recv(numbytes).decode()
-        #return response.strip('\n').strip('\r').strip('\n')
-    def ask(self, msg, retries=1):
-        msg = msg.strip("\n").strip("\r").strip("\n")
-        
-        for attempt in range(retries+1):
-            self._socket_ensure_connection()
-            try:
-                self.sock.sendall((msg + self.termchar).encode())
-                break
-            except (socket.error, BrokenPipeError, ConnectionAbortedError, ConnectionResetError) as e:
-                print(f"Triton socket ask failed with {e}. Retrying...")
-                self._socket_connect()
-        for attempt in range(retries+1):
-            self._socket_ensure_connection()
-            try:
-                response = self.sock.recv(self.bytes_to_read).decode()
-                return response.strip('\n').strip('\r').strip('\n')
-            except (socket.error, BrokenPipeError, ConnectionAbortedError, ConnectionResetError) as e:
-                print(f"Triton socket ask failed with {e}. Retrying...")
-                self._socket_connect()
-        
-        
-        print(f"Triton socket ask failed after {retries+1} tries.")
-        print(msg)
-        return ''
-        
-        """
-        
-        for attempt in range(retries+1):
-            self._socket_ensure_connection()
-            try:
-                self.sock.sendall((msg + self.termchar).encode())
-                response = self.sock.recv(self.bytes_to_read).decode()
-                return response.strip('\n').strip('\r').strip('\n')
-            except (socket.error, BrokenPipeError, ConnectionAbortedError, ConnectionResetError) as e:
-                print(f"Triton socket ask failed with {e}. Retrying...")
-                self._socket_connect()
-        print(f"Triton socket ask failed after {retries+1} tries.")
-        """
-        
-        
-        #try:
-        #    msg = msg.strip("\n").strip("\r").strip("\n")
-        #    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        #        s.connect(self.address)
-        #        s.settimeout(self.timeout)
-        #        s.sendall((msg + self.termchar).encode())
-        #        response = s.recv(self.bytes_to_read).decode()
-        #    return response.strip('\n').strip('\r').strip('\n')
-        #except (ConnectionResetError, ConnectionAbortedError):
-        #    return self.ask(msg)
-        
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.connect(self.address)
+            s.settimeout(self.timeout)
+            response = s.recv(numbytes).decode()
+        return response.strip('\n').strip('\r').strip('\n')
+    def ask(self, msg):
+        try:
+            msg = msg.strip("\n").strip("\r").strip("\n")
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                s.connect(self.address)
+                s.settimeout(self.timeout)
+                s.sendall((msg + self.termchar).encode())
+                response = s.recv(self.bytes_to_read).decode()
+            return response.strip('\n').strip('\r').strip('\n')
+        except (ConnectionResetError, ConnectionAbortedError):
+            return self.ask(msg)
     def query(self,msg):
         return self.ask(msg)
     def identify(self):
@@ -587,100 +478,9 @@ class Instrument(Tool.MeasInstr):
         self.set_setpoint(coords, sweep_mode, sweep_param, coord_sys)
     
     def get_action(self):
-        resp = self.ask('READ:SYS:VRM:ACTN').split(":")[-1]
+        resp = self.ask('READ:SYS:VRM:ACTN')
         # todo: process response
         return resp
-        
-    ########################################### PID Commands!
-    
-    ###### Ramping commands
-    def PID_is_set_to_ramp(self, UID:int=8):
-        resp = self.ask(f"READ:DEV:T{UID}:TEMP:LOOP:RAMP:ENAB")
-        return resp.split(":")[-1]
-    
-    def PID_enable_ramping(self, UID:int=8):
-        resp = self.ask(f"SET:DEV:T{UID}:TEMP:RAMP:ENAB:ON")
-        return resp.split(":")[-1]
-        
-    def PID_disable_ramping(self, UID:int=8):
-        resp = self.ask(f"SET:DEV:T{UID}:TEMP:RAMP:ENAB:OFF")
-        return resp.split(":")[-1]
-    
-    def PID_set_ramping(self, on, UID:int=8):
-        if on:
-            return self.PID_enable_ramping(UID=UID)
-        else:
-            return self.PID_disable_ramping(UID=UID)
-        return resp.split(":")[-1]
-  
-    
-    def PID_is_ramping(self, UID:int=8):
-        resp = self.ask(f"READ:DEV:T{UID}:TEMP:RAMP:RAMPING")
-        return resp.split(":")[-1]
-    
-    def PID_read_ramp_rate(self, UID:int=8):
-        resp = self.ask(f"READ:DEV:T{UID}:TEMP:RAMP:RATE")
-        return resp.split(":")[-1]
-    def PID_set_ramp_rate(self, ramp_rate, UID:int=8):
-        resp = self.ask(f"SET:DEV:T{UID}:TEMP:RAMP:RATE:{ramp_rate:.4f}")
-        return resp.split(":")[-1]
-    
-    
-    ###### Temperature Commands
-    def PID_read_current_temperature(self, UID:int=8):
-        resp = self.ask(f"READ:DEV:T{UID}:TEMP:SIG:TEMP")
-        return resp.split(":")[-1]
-        
-    def PID_read_setpoint_temperature(self, UID:int=8):
-        resp = self.ask(f"READ:DEV:T{UID}:TEMP:LOOP:TSET")
-        return resp.split(":")[-1]
-        
-    def PID_set_setpoint_temperature(self, temperature, UID:int=8):
-        resp = self.ask(f"SET:DEV:T{UID}:TEMP:LOOP:TSET:{temperature:.4f}")
-        return resp.split(":")[-1]
-    
-    ###### Closed Loop Control Commands
-    
-    def PID_is_enabled(self, UID:int=8):
-        resp = self.ask(f"READ:DEV:T{UID}:TEMP:LOOP:MODE")
-        return resp.split(":")[-1]
-    
-    def PID_enable(self, UID:int=8):
-        resp = self.ask(f"SET:DEV:T{UID}:TEMP:LOOP:MODE:ON")
-        return resp.split(":")[-1]
-    def PID_disable(self, UID:int=8):
-        resp = self.ask(f"SET:DEV:T{UID}:TEMP:LOOP:MODE:OFF")
-        return resp.split(":")[-1]
-    
-    ##### Heater and thermometry functions
-    
-    def PID_read_heater_range(self, UID:int=8): #### TEST!!!
-        resp = self.ask(f"READ:DEV:T{UID}:TEMP:LOOP:RANGE")
-        return resp.split(":")[-1]
-    def PID_set_heater_range(self, heater_current, UID:int=8): #### TEST!!!
-        print(heater_current)
-        print(f"SET:DEV:T{UID}:TEMP:LOOP:RANGE:{heater_current}")
-        return
-        resp = self.ask(f"SET:DEV:T{UID}:TEMP:LOOP:RANGE:{heater_current}")
-        return resp.split(":")[-1]
-    
-    def PID_read_heater_output(self, UID:int=8): #### TEST!!!!
-        # Get heater channel
-        heater = self.ask(f"READ:DEV:T{UID}:TEMP:LOOP:HTR").split(":")[-1]
-        resp = self.ask(f"READ:DEV:{heater}:HTR:SIG:CURR")
-        return resp.split(":")[-1]
-    
-    def PID_set_pid_thermometer(self, UID:int=8): ### This is to ensure that the right thermometer is being used
-        resp = self.ask(f"SET:DEV:T{UID}:TEMP:LOOP:CHAN:T{UID}")
-        return resp.split(":")[-1]
-        
-    def PID_read_pid_thermometer(self, UID:int=8):
-        resp = self.ask(f"READ:DEV:T{UID}:TEMP:LOOP:CHAN")
-        return resp.split(":")[-1]
-    
-    def PID_read_pid_thermometer_from_htr(self):
-        resp = self.ask("READ:DEV:H1:HTR:LOOP:SENS") ## From the manual page A-8
-        return resp.split(":")[-1]
     
 if __name__ == "__main__":
     i = Instrument("127.0.0.1", debug=False)
