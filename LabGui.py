@@ -522,7 +522,6 @@ have the right format, '%s' will be used instead"
         for widget in widgets_list:
 
             widget_name = widget
-
             try:
                 widget_module = import_module(
                     widget_name, package=COREWIDGETS_PACKAGE_NAME

@@ -35,6 +35,8 @@ class Instrument(Tool.MeasInstr):
     def measure(self, channel='Time'):
 
         logging.debug("TIME measure %s" % (channel))
+        if self.t_start == 0:  # For some reason t_start doesnt get set to 0 sometimes
+            self.t_start = time.time()
 
         if channel in self.last_measure:
 

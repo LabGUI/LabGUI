@@ -81,11 +81,13 @@ except:
 def list_GPIB_ports():
     """ Load VISA resource list for use in combo boxes """
     try:
+
         if old_visa:
             available_ports = visa.get_instruments_list()
         else:
 
             rm = visa.ResourceManager(VISA_BACKEND)
+
             available_ports = rm.list_resources()
             temp_ports = []
             for port in available_ports:
@@ -105,7 +107,7 @@ def list_GPIB_ports():
     return available_ports
 
 
-def list_serial_ports(max_port_num=20):
+def list_serial_ports(max_port_num=30):
     """ Lists serial port names from COM1 to COM20 in windows platform and 
     lists all serial ports on linux platform
 

@@ -317,12 +317,17 @@ class MatplotlibZoomWidget(MatplotlibWidget):
                     ax = self.axes
                     ax.set_xlim(x_min, x_max)
                     ax.set_ylim(y_min, y_max)
-
-                    self.zoom_rectangle.remove()
+                    try:
+                        self.zoom_rectangle.remove()
+                    except:
+                        pass
                     self.figure.canvas.draw()
 
                 elif self.mouseMode == self.SELECT_MODE:
-                    self.zoom_rectangle.remove()
+                    try:
+                        self.zoom_rectangle.remove()
+                    except:
+                        pass
                     self.select_rectangle.set_bounds(
                         x_min, y_min, x_max - x_min, y_max - y_min)
                     if not self.selection_showing:

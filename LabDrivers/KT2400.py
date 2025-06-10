@@ -210,6 +210,7 @@ class Instrument(Tool.MeasInstr):
                 if not self.DEBUG:
                     # 0 #this is to be defined for record sweep
                     self.write('VOLT:RANG:AUTO ON')
+
                     answer = self.ask(self.READ)
                     #if math.isnan(float(answer)):
                     if not answer or answer=='\n': #incase 2450 is connected
@@ -316,6 +317,7 @@ class Instrument(Tool.MeasInstr):
             # VOLT,CURR RES
             s = ':%s:RANG:AUTO ON' % sensor
             print(s)
+
             self.write(s)
 #
 #    def configure_voltage_source(self):
@@ -355,7 +357,7 @@ class Instrument(Tool.MeasInstr):
     def set_value(self, val):  # for interferometer program
         self.set_voltage(val)
 
-    def set_voltage(self, voltage, i_compliance=1.0E-7, v_compliance=1):
+    def set_voltage(self, voltage, i_compliance=100.0E-6, v_compliance=5):
         if not self.DEBUG:
             voltage = float(voltage)
             i_compliance = float(i_compliance)
@@ -455,7 +457,7 @@ class Instrument(Tool.MeasInstr):
 #        elif p_code == 3:
 #            return self.leaking(p_tolerance)
 
-    def move_voltage(self, p_reader, p_target_voltage, step=0.0005, wait=0.05):
+    def move_voltage(self, p_reader, p_target_voltage, step=0.01, wait=0.005):
         #    def move_voltage(self, p_reader, p_target_voltage, step=0.001, wait=0.005):
         #        print 'Moving voltage'
         current_voltage = self.measure('V')

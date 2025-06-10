@@ -15,16 +15,16 @@ except:
     import Tool
 
 
-param = {'V/I': 'V/I'}
+param = {'V': 'V'}
 
-INTERFACE = Tool.INTF_GPIB
+INTERFACE = Tool.INTF_VISA
 
 
 class Instrument(Tool.MeasInstr):
 
-    def __init__(self, resource_name, debug=False, V_step_limit=None, **kwargs):
-        super(Instrument, self).__init__(resource_name, 'YOKO',
-                                         debug=debug, interface=INTERFACE, **kwargs)
+    def __init__(self, resource_name, debug=False, V_step_limit=None):
+        super(Instrument, self).__init__(resource_name,'YOKO', debug=debug, interface=INTERFACE)
+        self.debug = self.DEBUG
         self.standard_setup()
         self.V_step_limit = V_step_limit
 
@@ -33,12 +33,11 @@ class Instrument(Tool.MeasInstr):
             self.write(':OUTP 1')
             # self.enable_output()
 
-    def measure(self, channel='V/I'):  # Do I nead to write the channel argument here?
+    def measure(self, channel='V'):
         """ This method does not measure, it asks what value is
             displayed on the screen (asks the source level) """
         if not self.DEBUG:
             answer = self.ask(':SOUR:LEV?')
-            print(answer)
             answer = float(answer.split(',', 1)[0])
         else:
             answer = random.random()
@@ -84,25 +83,48 @@ class Instrument(Tool.MeasInstr):
             elif abs(voltage - prev_voltage) < self.V_step_limit:
                 do_it = True
             if do_it:
-                s = ':SOUR:FUNC VOLT;:SOUR:LEV %f;:SOUR:PROT:CURR 1E-3;' % voltage
+                s = ':SOUR:FUNC VOLT;:SOUR:LEV %f' % voltage
+#                s = ':SOUR:FUNC VOLT;:SOUR:LEV %f;:SOUR:PROT:CURR 1E-3;' % voltage
                 self.write(s)
             else:
                 print("Voltage step is too large!")
         else:
             print("voltage set to " + str(voltage) + " on " + self.ID_name)
 
+    def set_current(self, current):
+        if not self.debug:
+            s = ':SOUR:FUNC CURR;:SOUR:LEV %f' % current
+#                s = ':SOUR:FUNC VOLT;:SOUR:LEV %f;:SOUR:PROT:CURR 1E-3;' % voltage
+            self.write(s)
+
+        else:
+            print("current set to " + str(current) + " on " + self.ID_name)
+
     def enable_output(self):
-        if not self.DEBUG:
+        if not self.debug:
             self.write(':OUTP 1')
 
     def disable_output(self):
-        if not self.DEBUG:
+        if not self.debug:
             self.write(':OUTP 0')
 
 
+    def get_level(self):
+        if not self.debug:
+            s = ':SOUR:LEV?'
+            val = self.ask(s)
+            return float(val)
+
+    def get_current(self):
+        if "CURR" in self.ask(':SOUR:FUNC?'):
+            return self.get_level()
+
+    def get_voltage(self):
+        if "VOLT" in self.ask(':SOUR:FUNC?'):
+            return self.get_level()
 #    def measure(self,channel='V'):
 #        if self.last_measure.has_key(channel):
-#            if not self.DEBUG:
+#            if not self.debug:
 #                answer=self.ask(':READ?') #  0 #this is to be defined for record sweep
 #                answer = float(answer.split(',',1)[0])
 #
@@ -119,33 +141,37 @@ class Instrument(Tool.MeasInstr):
             # yyyyy/zzzzz /a/d
 
     def reset(self):
-        if not self.DEBUG:
+        if not self.debug:
             self.write('*RST')
             time.sleep(1)
         # Resets the instrument
 
     def configure_measurement(self, sensor):
-        if not self.DEBUG:
+        if not self.debug:
             # VOLT,CURR RES
             s = ':%s:RANG:AUTO ON' % sensor
             print(s)
             self.write(s)
 
     def configure_output(self, source_mode='VOLT', output_level=0, compliance_level=0.001):
-        if not self.DEBUG:
-            # source_mode: VOLT, CURR
-            # output_level: in Volts or Amps
-            # compliance level: in Amps or Vol
+        if not self.debug:
+            #source_mode: VOLT, CURR
+            #output_level: in Volts or Amps
+            #compliance level: in Amps or Vol
             if source_mode == 'CURR':
+                assert(output_level <= 0.070)
                 protection = 'VOLT'
             else:
                 protection = 'CURR'
 
-            s = ':SOUR:FUNC %s;:SOUR:%s %f;:%s:PROT %r;' % (
-                source_mode, source_mode, output_level, protection, compliance_level)
+            s = ':SOUR:FUNC %s;:SOUR:LEV %f;:SOUR:PROT:%s %e;' % (
+                source_mode, output_level, protection, compliance_level)
+            print(s)
+
             self.write(s)
 
-    def move_voltage(self, p_target_voltage, step=0.0001, wait=0.001):
+
+    def move_voltage(self, p_reader, p_target_voltage, step=0.0001, wait=0.001):
         #    def move_voltage(self, p_reader, p_target_voltage, step=0.001, wait=0.005):
         #        print 'Moving voltage'
         current_voltage = self.measure('V')
@@ -155,9 +181,9 @@ class Instrument(Tool.MeasInstr):
             # target voltage
             while current_voltage < p_target_voltage:
                 # Stop if it needs to
-                #                if p_reader.isStopped():
-                #                    print "Stopping"
-                #                    return 0
+                if p_reader.isStopped():
+                    print("Stopping")
+                    return 0
                 # Increment the current voltage by a safe amount
                 current_voltage += step
                 self.set_voltage(current_voltage)
@@ -168,9 +194,9 @@ class Instrument(Tool.MeasInstr):
             # target voltage
             while current_voltage > p_target_voltage:
                 # Stop if it needs to
-                #                if p_reader.isStopped():
-                #                    print "Stopping"
-                #                    return 0
+                if p_reader.isStopped():
+                    print("Stopping")
+                    return 0
                 # Decrement the current voltage by a safe amount
                 current_voltage -= step
                 self.set_voltage(current_voltage)
@@ -187,22 +213,22 @@ class Instrument(Tool.MeasInstr):
 """ BUNCH OF COMMENTED FUNCTIONS FROM THE ORIGINAL KT2400 DRIVER"""
 
 #    def operation_complete(self):
-#        if not self.DEBUG:
+#        if not self.debug:
 #            self.write('*OPC')
 #        # Returns a 1 after all the commands are complete
 #
 #
 #    def configure_voltage_source(self):
-#        if not self.DEBUG:
+#        if not self.debug:
 #            self.write(':SOUR:FUNC:MODE VOLT')
 #
 #    def set_current_compliance(self,compliance):
-#        if not self.DEBUG:
+#        if not self.debug:
 #            self.write(':SENS:CURR:PROT:LEV '+ str(compliance))
 #
 #
 #    def close(self):
-#        if not self.DEBUG:
+#        if not self.debug:
 #            self.disable_output()
 #            self.write('*RST')
 #            self.write('*CLS')
@@ -210,12 +236,12 @@ class Instrument(Tool.MeasInstr):
 #            super(Instrument,self).close()
 #
 #    def configure_multipoint(self,sample_count=1,trigger_count=1,output_mode='FIX'):
-#        if not self.DEBUG:
+#        if not self.debug:
 #            s = ':ARM:COUN %d;:TRIG:COUN %d;:SOUR:VOLT:MODE %s;:SOUR:CURR:MODE %s;' % (sample_count,trigger_count,output_mode,output_mode)
 #            self.write(s)
 #
 #    def configure_trigger(self,arming_source='IMM',timer_setting=0.01,trigger_source='IMM',trigger_delay=0.0):
-#        if not self.DEBUG:
+#        if not self.debug:
 #            # arming source: IMM,BUS,TIM,MAN,TLIN,NST,PST,BST
 #                # Immediate Arming
 #                # Software Trigger Signal
@@ -231,7 +257,7 @@ class Instrument(Tool.MeasInstr):
 #                self.write(s)
 #
 #    def initiate(self):
-#        if not self.DEBUG:
+#        if not self.debug:
 #            # Clears the trigger, then initiates
 #            s = ':TRIG:CLE;:INIT;'
 #            self.write(s)
@@ -239,16 +265,46 @@ class Instrument(Tool.MeasInstr):
 #            # delay to replace OPC
 #
 #    def wait_for_OPC(self):
-#        if not self.DEBUG:
+#        if not self.debug:
 #            self.write('*OPC;')
 #
 #    def fetch_measurements(self):
-#        if not self.DEBUG:
+#        if not self.debug:
 #            print self.ask(':FETC')
 
 if __name__ == "__main__":
 
     BPO = Instrument("GPIB0::19")
     print(BPO.identify())
-    BPO.set_voltage(-1)
-    print(BPO.measure('V'))
+    print(BPO.get_current())
+    #BPO.disable_output()
+    #BPO.enable_output()
+    #BPO.enable_output()
+
+
+
+    # current_value = 0.000
+    # end = 0.002
+    # dx = 0.0001
+    # import time
+    # last_time = 0
+    # while True:
+    #     if time.time() - last_time > 5*60:
+    #         current_value += dx
+    #         BPO.configure_output('CURR', current_value, 1.5)
+    #         last_time = time.time()
+    #     if current_value >= end:
+    #         break
+    #     time.sleep(10)
+
+    BPO.configure_output('CURR', 0.00, 1.5)
+    # BPO.enable_output()
+    # print(BPO.get_current())
+    #
+    BPO.disable_output()
+
+
+    #BPO.set_current(0)
+    # 4    #BPO.enable_output()
+    #BPO.set_current(0.00)
+#    print(BPO.measure('V'))

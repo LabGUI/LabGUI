@@ -162,15 +162,19 @@ if SIM980 != 0:
 
 READ_BITS = 128
 NAME = 'SIM900'
-INTERFACE = Tool.INTF_SERIAL
+INTERFACE = Tool.INTF_GPIB #Tool.INTF_SERIAL
 
 
 class Instrument(Tool.MeasInstr):
 
     def __init__(self, resource_name, debug=False, **kwargs):
-        super(Instrument, self).__init__(resource_name, NAME, debug, interface=INTERFACE, baud_rate=9600,
-                                         term_chars="\n".encode(), timeout=0.5, bytesize=8, parity='N', stopbits=1,
-                                         xonxoff=False, dsrdtr=False, **kwargs)
+        if INTERFACE == Tool.INTF_SERIAL:
+            super(Instrument, self).__init__(resource_name, NAME, debug, interface=INTERFACE, baud_rate=9600,
+                                             term_chars="\n".encode(), timeout=0.5, bytesize=8, parity='N', stopbits=1,
+                                             xonxoff=False, dsrdtr=False, **kwargs)
+        else:
+            super(Instrument, self).__init__(resource_name, NAME, debug, interface=INTERFACE,
+                                             timeout=0.5, **kwargs)
         self.connections = {}
         device_temp = {}
         self.ports = ['1', '2', '3', '4', '5', '6', '7', '8']  # ,'A','B','C','D']
@@ -336,19 +340,34 @@ class Instrument(Tool.MeasInstr):
 
     def write(self, msg):
         # custom made
-        self.connection.write(msg.encode() + self.term_chars)
+        if INTERFACE == Tool.INTF_SERIAL:
+            self.connection.write(msg.encode() + self.term_chars)
+        else:
+            try:
+                self.connection.write(msg)
+            except Exception as e:
+                print("Exception encountered while writing: %s"%str(e))
 
     def read(self):
-        return self.connection.read(READ_BITS).decode()
+        if INTERFACE == Tool.INTF_SERIAL:
+            return self.connection.read(READ_BITS).decode()
+        else:
+            try:
+                return self.connection.read()
+            except Exception as e:
+                print("Exception encountered while reading: %s"%str(e))
 
     def ask_channel(self, channel, msg):
         # channel = int(channel) can be letter!
-        self.write("CONN " + str(channel) + ", \"xyz\"")
-        self.write(msg)
-        answer = self.read()
-        self.write("xyz")
+        try:
+            self.write("CONN " + str(channel) + ", \"xyz\"")
+            self.write(msg)
+            answer = self.read()
+            self.write("xyz")
 
-        return answer.strip('\n').strip('\r').strip('\n')  # incase sandwhich or reverse order
+            return answer.strip('\n').strip('\r').strip('\n')  # incase sandwhich or reverse order
+        except Exception as e:
+            print("Exception encountered while asking channel %s: %s"%(str(channel),str(e)))
 
     def ask_channel_multiple(self, channel, *msgs):
         # channel = int(channel)

@@ -910,7 +910,7 @@ instrument hub. Interface passed as an argument : %s" % intf)
                 self.connect_instrument(
                     instr_name, device_port, param, send_signal=False)
             except OSError as e:
-                print("Unable to connect to device %s on port %s"%(instr_name, device_port))
+                print("Unable to connect to device %s on port %s"%(instr_name, device_port), str(e))
                 self.disconnect_hub()
                 return False
         if self.parent is not None:

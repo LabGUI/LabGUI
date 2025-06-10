@@ -18,7 +18,7 @@ except:
 
 from numpy import power
 
-param = {'V': 'V', 'P': 'mbar'}
+param = {'V': 'V', 'P': 'mbar', 'I': 'A'}
 
 INTERFACE = Tool.INTF_GPIB
 
@@ -29,7 +29,13 @@ class Instrument(Tool.MeasInstr):
         super(Instrument, self).__init__(resource_name, 'A34401A', debug=debug,
                                          interface=INTERFACE, **kwargs)
         if not self.DEBUG:
-            chan_names = ['Voltage', 'Pressure']
+            chan_names = ['Voltage', 'Pressure', 'Current']
+            self.channels = ['V', 'P', 'I']
+            # configure for current measurement
+            #self.ask("CONF:VOLT:DC 10,0.003")
+            #self.ask("TRIG:SOUR BUS")
+            #self.ask("READ?")
+
             for chan, chan_name in zip(self.channels, chan_names):
                 self.last_measure[chan] = 0
                 self.channels_names[chan] = chan_name
@@ -44,6 +50,8 @@ class Instrument(Tool.MeasInstr):
                     # source
                     # http://www.nist.gov/pml/div685/grp01/unit_conversions.cfm
                     answer = power(10, self.get_voltage() - 5) * 1.333224
+                elif channel == 'I':
+                    answer = self.get_current()
             else:
                 answer = 1337
             self.last_measure[channel] = answer
@@ -56,6 +64,16 @@ class Instrument(Tool.MeasInstr):
     def get_voltage(self):
         v = self.ask("MEAS:VOLT:DC?")
         #print(v)
+        mantissa, exponent = v.split("E")
+        answer = float(mantissa) * power(10, float(exponent))
+        return answer
+
+    def get_current(self):
+        #self.ask("TRIG:SOUR IMM")
+        #self.ask("INIT")
+        #v = self.ask("*TRG")
+        v = self.ask("MEAS:CURR:DC?")
+        # print(v)
         mantissa, exponent = v.split("E")
         answer = float(mantissa) * power(10, float(exponent))
         return answer

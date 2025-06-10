@@ -27,6 +27,7 @@ class Instrument(Tool.MeasInstr):
                                          'YOKO', debug=debug, interface=INTERFACE)
         self.standard_setup()
         self.V_step_limit = V_step_limit
+        self.debug = self.DEBUG
 
     def standard_setup(self):
         if not self.DEBUG:
@@ -150,8 +151,11 @@ class Instrument(Tool.MeasInstr):
             else:
                 protection = 'CURR'
 
-            s = ':SOUR:FUNC %s;:SOUR:%s %f;:%s:PROT %r;' % (
-                source_mode, source_mode, output_level, protection, compliance_level)
+            s = ':SOUR:FUNC %s;:SOUR:LEV %f;:SOUR:PROT:%s %r;' % (
+                source_mode, output_level, protection, compliance_level)
+            #s = ':SOUR:FUNC %s;:SOUR:%s %f;:%s:PROT %r;' % (
+            #    source_mode, source_mode, output_level, protection, compliance_level)
+
             self.write(s)
 
     def move_voltage(self, p_reader, p_target_voltage, step=0.0001, wait=0.001):
@@ -259,5 +263,12 @@ if __name__ == "__main__":
 
     BPO = Instrument("GPIB0::19")
     print(BPO.identify())
-    BPO.set_voltage(0)
+    BPO.enable_output()
+
+
+    exit(0)
+    BPO.disable_output()
+    BPO.configure_output('CURR', 0.001, 1)
+    BPO.enable_output()
+    #BPO.set_current(0)
 #    print(BPO.measure('V'))

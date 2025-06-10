@@ -9,10 +9,10 @@ except:
     import Tool
 
 CHANNELS_IDX = {"50K flange": 1, "4K flange": 2, "Magnet": 3, "Still flange": 5,
-                "T MXC flange": 6, "R MXC flange": 6, "T_CH7": 7, "R_CH7": 7, "T_CH8": 8, "R_CH8": 8}
+                "T MXC flange": 6, "R MXC flange": 6, "CH7": 7, "T_CH8": 8, "R_CH8": 8}
 
 param = {'heater': 'A', "50K flange": "K", "4K flange": "K", "Magnet": "K", "Still flange": "K",
-         "T MXC flange": "K", "R MXC flange": "Ohm", "T_CH7": "K", "R_CH7": "Ohm", "T_CH8": "K", "R_CH8": "Ohm"}
+         "T MXC flange": "K", "R MXC flange": "Ohm", "CH7": "Ohm", "T_CH8": "K", "R_CH8": "Ohm"}
 
 TEMP_CONTROL_PARAM = ['channel', 'filter', 'units',
                       'delay', 'current/power', 'htr limit', 'htr resistance']
@@ -21,7 +21,7 @@ HEATER_RANGE = ['Off', '31.6uA', '100uA', '316uA',
                 '1mA', '3.16mA', '10mA', '31.6mA', '100mA']
 HEATER_RANGE_VAL = [0, 31.6e-6, 100e-6, 316e-6,
                     1e-3, 3.16e-3, 10e-3, 31.6e-3, 100e-3]
-INTERFACE = Tool.INTF_GPIB
+INTERFACE = Tool.INTF_SERIAL
 
 HEATER_RESISTANCE = 120
 MANUAL_HTR_MAX_CURRENT = 0.091
@@ -41,8 +41,19 @@ class Instrument(Tool.MeasInstr):
 
             interface = INTERFACE
 
-        super(Instrument, self).__init__(resource_name, 'LS370', debug=debug,
-                                         interface=interface, **kwargs)
+        super(Instrument, self).__init__(resource_name, 'LS370_Serial', debug=debug,
+                                         interface=interface, baud_rate=9600,
+                                        term_chars="\n".encode(), parity='N', **kwargs)
+
+    def write(self, msg):
+        return self.connection.write((msg+'\r\n').encode())
+    def write_multiple(self, msgs):
+        return self.connection.write(('\r\n'.join(msgs)+'\r\n').encode())
+    def read(self):
+        return self.connection.readline().decode()
+    def ask(self, msg):
+        self.write(msg)
+        return self.read()
 
     def measure(self, channel):
         if channel in self.last_measure:

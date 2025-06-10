@@ -163,7 +163,7 @@ class Instrument(Tool.MeasInstr):
             'Amplitude':float(values[1]),
             'Offset'   :float(values[2])
         }
-    def set_function(self, shape, frequency, amplitude, offset=0):
+    def set_function(self, shape, frequency, amplitude, offset):
         """
         Uses APPLY command to change all at the same time
         :param shape: Shape, conforming to same as set_shape

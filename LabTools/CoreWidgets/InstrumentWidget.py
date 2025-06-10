@@ -987,7 +987,6 @@ def add_widget_into_main(parent):
     parent.widgets['InstrumentWidget'] = mywidget
 
     parent.refresh_ports_list()
-
     # Enable the toggle view action
     parent.windowMenu.addAction(instDockWidget.toggleViewAction())
 
