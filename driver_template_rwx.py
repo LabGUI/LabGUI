@@ -41,7 +41,14 @@ properties = {
     'Text type':{
         'type':'text',
         'range':'Placeholder'
-    }
+    },
+    'hbar0': {
+        'type':'hbar',
+    },
+    'Label0':{
+        'type':'label',
+        'range':'Label Text'
+    },
 }
 functions = {
     'Function 1': [
@@ -80,7 +87,36 @@ functions = {
             'range':True, # shouldnt matter
             'units':None,
             'required':True
-        } # param for boolean
+        }, # param for boolean
+        {
+            'type':'hbar'
+        }, # param for horizontal bar
+        {
+            'type':'label',
+            'range':'Label Text',
+            'arrange':'R',
+        },
+        {
+            'name':'Multi Type',
+            'type':'multi',
+            'range':['one','two','three'],
+            'parameters':[
+                {
+                    'name':'Multi Type',
+                    'type':'multi',
+                    'range':['one','two','three'],
+                    'parameters': [
+                        {
+                            'name': 'NestedNestedTextEdit',
+                            'type': 'text',
+                            'range': 'Placeholder text',
+                            'units': None,
+                            'required': True
+                        }
+                    ]
+                } # param for multi type
+            ]
+        } # param for multi type
     ]
 }
 
