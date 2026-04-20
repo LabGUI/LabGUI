@@ -177,7 +177,6 @@ class Instrument(Tool.MeasInstr):
         print("Identifying devices")
         self.connected_devices = {}
         self.clear(silent=True)
-        #self.write("BRDT FLSH")
         mainframe = self.ask("*IDN?")  # this prevents first port as being identified as mainframe on initial connect
         for port in self.ports:
             self.clear(silent=True)  # prevents any leftover buffer from bugging identification
@@ -340,7 +339,6 @@ class Instrument(Tool.MeasInstr):
         self.connection.write(msg.encode() + self.term_chars)
 
     def read(self):
-        #return self.connection.readline().decode()  # FIXES SPEED
         return self.connection.read(READ_BITS).decode()
 
     def ask_channel(self, channel, msg):
@@ -349,8 +347,7 @@ class Instrument(Tool.MeasInstr):
         self.write(msg)
         answer = self.read()
         self.write("xyz")
-        #self.write("SNDT " + str(channel) + ", \""+msg+"\"")
-        
+
         return answer.strip('\n').strip('\r').strip('\n')  # incase sandwhich or reverse order
 
     def ask_channel_multiple(self, channel, *msgs):
@@ -415,7 +412,7 @@ class Instrument(Tool.MeasInstr):
             print("No device connected to channel " + channel)
         return None
         
-    def move_voltage(self, channel, p_target_voltage, step=0.01, wait=0.3):
+    def move_voltage(self, channel, p_target_voltage, step=0.01, wait=0.5):
         channel = str(channel)
         current_voltage, n = self.ask_channel(channel, "VOLT?"), 0
         while current_voltage == '' and n < MAX_ITER:
