@@ -19,7 +19,6 @@ param = {
     'Channel' : 'Unit'
 }
 
-
 INTERFACE = Tool.INTF_GPIB
 NAME = 'VNA'
 

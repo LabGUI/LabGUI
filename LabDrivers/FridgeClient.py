@@ -12,8 +12,12 @@ from . import Tool
 #from fridgemonitor import data_server
 from collections import OrderedDict
 
-param = OrderedDict([('LS1', 'ohms'), ('LS2', 'ohms'), ('LS3', 'ohms'), ('LS4', 'ohms'),
-                     ('LS5', 'ohms'), ('LS9', 'ohms'), ('CMN', 'H'), ('CMN_T', 'mK')])
+# if Janis:
+# param = OrderedDict([('LS1', 'ohms'), ('LS2', 'ohms'), ('LS3', 'ohms'), ('LS4', 'ohms'),
+#                      ('LS5', 'ohms'), ('LS9', 'ohms'), ('CMN', 'H'), ('CMN_T', 'mK')])
+# if BF:
+param = OrderedDict([('50K flange', 'K'), ('4K flange', 'K'), ('Magnet', 'K'), ('Still flange', 'K'),
+                     ('T MXC flange', 'K'), ('R MXC flange', 'Ohm')])
 
 INTERFACE = Tool.INTF_NONE
 
@@ -33,7 +37,7 @@ class Instrument(Tool.MeasInstr):
     def connect(self, resource_name=None):
         pass
 
-    def measure(self, channel='LS1'):
+    def measure(self, channel='50K flange'):
 
         if not self.DEBUG:
             if channel in self.last_measure:
@@ -65,6 +69,7 @@ class Instrument(Tool.MeasInstr):
 
         except IOError:
             print("connection to fridge monitor failed")
+            print("get_fridge_data fails!")
             return 0
 
     def change_setpoint(self, val):

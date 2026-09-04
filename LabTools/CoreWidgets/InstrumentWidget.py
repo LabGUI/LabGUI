@@ -712,6 +712,7 @@ class InstrumentWindow(QtGui.QWidget):
 
                 # file format is comma-separated list of settings for each channel
                 setting_line = setting_line.strip()
+                if setting_line[0] == "#": continue
                 settings = setting_line.split(',')
 
                 if settings[0] and settings[0] != 'CALC':
@@ -809,12 +810,13 @@ please check your connectic or your settings file\n" % port)
 
             return window_settings
 
-    def save_settings(self, fname, window_settings):
+    def save_settings(self, fname, window_settings, script_file = None):
         """Generates a settings file that can be read with load_settings."""
 
         settings_file = open(fname, 'w')
         logging.info("Settings saved in " + fname)
-
+        if script_file is not None:
+            settings_file.write("#script,%s\n"%script_file)
         # write the text of each line object into a line of text file
         for i, line in enumerate(self.lines):
 

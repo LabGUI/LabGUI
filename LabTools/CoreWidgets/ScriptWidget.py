@@ -25,7 +25,7 @@ try:
 except:
     PATHLIB=False
 
-
+import logging
 from LabTools.IO import IOTool
 import os
 
@@ -113,11 +113,11 @@ QComboBox::down-arrow {image: url(noimg); border-width: 0px;}")
 
     def fill_combobox(self):
         directory = os.path.dirname(self.fname)
-        files = os.listdir(directory)
+        #files = os.listdir(directory)
 
         self.scriptFileComboBox.clear()
         self.scriptFileComboBox.addItems(
-            [ os.path.join(directory, file) for file in files if file[-3:] == '.py']
+            [os.path.join(d, f) for d,_,files in os.walk(directory) for f in files if f[-3:].lower() == ".py"]
         )
         self.scriptFileComboBox.setCurrentText(self.fname)
 
@@ -131,6 +131,33 @@ QComboBox::down-arrow {image: url(noimg); border-width: 0px;}")
             self.scriptFileLineEdit.setText(self.fname)
         else:
             self.fill_combobox()
+
+    def load_settings(self, fname):
+        """ Loads last script if saved to device settings"""
+
+        try:
+            settings_file = open(fname, 'r')
+            settings_file_ok = True
+        except IOError:
+
+            settings_file_ok = False
+
+        if not settings_file_ok:
+
+            return []
+
+        else:
+            for setting_line in settings_file:
+
+                # file format is comma-separated list of settings for each channel
+                setting_line = setting_line.strip()
+                if setting_line[0] != "#": continue
+
+                line = setting_line[1:].strip().split(",")
+                if line[0] == "script":
+                    self.set_script(line[1])
+                    return True
+        return False
 
 
 def add_widget_into_main(parent):
@@ -151,8 +178,12 @@ def add_widget_into_main(parent):
 if __name__ == "__main__":
 
     app = QApplication(sys.argv)
-    ex = ScriptWidget(LEGACY=True)
+    ex = ScriptWidget(legacy=True)
+    directory = os.path.dirname(ex.fname)
+    print(directory)
+    for a, b, c in os.walk(directory):
+        print(a,b,c)
     ex.show()
-    ex2 = ScriptWidget(LEGACY=False)
+    ex2 = ScriptWidget(legacy=False)
     ex2.show()
     sys.exit(app.exec_())

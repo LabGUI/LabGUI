@@ -14,8 +14,10 @@ try:
 except:
     import Tool
 
+import logging
 
-param = {'V': 'V'}
+
+param = {'V': 'V', 'I':'A'}
 
 INTERFACE = Tool.INTF_VISA
 
@@ -90,28 +92,60 @@ class Instrument(Tool.MeasInstr):
                 print("Voltage step is too large!")
         else:
             print("voltage set to " + str(voltage) + " on " + self.ID_name)
-
+    def get_voltage(self):
+        if not self.DEBUG:
+            s = ':SOUR:FUNC VOLT;:SOUR:LEV?'
+            try:
+                return float(self.ask(s))
+            except Exception as e:
+                logging.error("Error reading voltage on YOKO: "+str(e))
+                return float("nan")
+        else:
+            print("voltage read on "+self.ID_name)
     def set_current(self, current):
-        if not self.debug:
+        if not self.DEBUG:
             s = ':SOUR:FUNC CURR;:SOUR:LEV %f' % current
 #                s = ':SOUR:FUNC VOLT;:SOUR:LEV %f;:SOUR:PROT:CURR 1E-3;' % voltage
             self.write(s)
 
         else:
-            print("current set to " + str(voltage) + " on " + self.ID_name)
+            print("current set to " + str(current) + " on " + self.ID_name)
+
+    def get_current(self):
+            if not self.DEBUG:
+                s = ':SOUR:FUNC CURR;:SOUR:LEV?'
+                #                s = ':SOUR:FUNC VOLT;:SOUR:LEV %f;:SOUR:PROT:CURR 1E-3;' % voltage
+                try:
+                    return float(self.ask(s))
+                except Exception as e:
+                    logging.error("Error reading voltage on YOKO: "+str(e))
+                    return float("nan")
+            else:
+                print("reading current on " + self.ID_name)
+
+    def set_range(self, value=1e-3):
+        if value in [1e-3, 10e-3, 100e-3, 200e-3, 1e0, 10e0, 30e0, 'UP', 'DOWN', 'MIN', 'MAX']:
+            if not self.DEBUG:
+                # print('The present source range is %s' % self.ask(':SOUR:RANG?'))
+                self.write(':SOUR:RANG %s' % value)
+                print('The new source range is %s' % self.ask(':SOUR:RANG?'))
+            else:
+                print('The new source range is %s' % value)
+        else:
+            print('The value provided: %s is invalid!' % value)
 
     def enable_output(self):
-        if not self.debug:
+        if not self.DEBUG:
             self.write(':OUTP 1')
 
     def disable_output(self):
-        if not self.debug:
+        if not self.DEBUG:
             self.write(':OUTP 0')
 
 
 #    def measure(self,channel='V'):
 #        if self.last_measure.has_key(channel):
-#            if not self.debug:
+#            if not self.DEBUG:
 #                answer=self.ask(':READ?') #  0 #this is to be defined for record sweep
 #                answer = float(answer.split(',',1)[0])
 #
@@ -128,20 +162,20 @@ class Instrument(Tool.MeasInstr):
             # yyyyy/zzzzz /a/d
 
     def reset(self):
-        if not self.debug:
+        if not self.DEBUG:
             self.write('*RST')
             time.sleep(1)
         # Resets the instrument
 
     def configure_measurement(self, sensor):
-        if not self.debug:
+        if not self.DEBUG:
             # VOLT,CURR RES
             s = ':%s:RANG:AUTO ON' % sensor
             print(s)
             self.write(s)
 
     def configure_output(self, source_mode='VOLT', output_level=0, compliance_level=0.001):
-        if not self.debug:
+        if not self.DEBUG:
             # source_mode: VOLT, CURR
             # output_level: in Volts or Amps
             # compliance level: in Amps or Vol
@@ -156,7 +190,7 @@ class Instrument(Tool.MeasInstr):
 
     def move_voltage(self, p_reader, p_target_voltage, step=0.0001, wait=0.001):
         #    def move_voltage(self, p_reader, p_target_voltage, step=0.001, wait=0.005):
-        #        print 'Moving voltage'
+        #        print ('Moving voltage')
         current_voltage = self.measure('V')
         # Parse move direction cases
         if current_voltage < p_target_voltage:  # If keithley needs to move up
@@ -189,7 +223,7 @@ class Instrument(Tool.MeasInstr):
         self.set_voltage(p_target_voltage)
     #        time.sleep(1)
         # return success
-    #        print "Done moving"
+    #        print ("Done moving")
         return 1
 
 
@@ -258,6 +292,12 @@ class Instrument(Tool.MeasInstr):
 if __name__ == "__main__":
 
     BPO = Instrument("GPIB0::19")
-    print(BPO.identify())
-    BPO.set_voltage(0)
-#    print(BPO.measure('V'))
+    # print(BPO.identify())
+    # BPO.enable_output()
+    # BPO.set_current(5450e-6)
+    BPO.set_current(0e-6)
+    print('Current = %s uA'%(BPO.measure()*1e6))
+
+    # range_ = 'UP'
+    # BPO.set_range(range_)
+    # BPO.disable_output()
