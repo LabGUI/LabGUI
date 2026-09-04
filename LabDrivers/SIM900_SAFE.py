@@ -34,8 +34,8 @@ for i in range(1, 9): # to add reading
     param['SIM928 Chan %d'%i] = 'V'
 
 # for summing offset voltage
-SIM928 = 4
-SIM980 = 1
+SIM928 = 5
+SIM980 = 2
 SIM910 = 1
 AVERAGING_TIME = None
 
@@ -160,7 +160,7 @@ if SIM980 != 0:
         'properties': create_SIM980_properties_obj()
     }
 
-READ_BITS = 128
+READ_BITS = 256
 NAME = 'SIM900_SAFE'
 INTERFACE = Tool.INTF_SERIAL
 
@@ -212,7 +212,10 @@ class Instrument(Tool.MeasInstr):
         if channel == 'Summing Offset Voltage':
             if self.SIM980_PORT is not None:
                 answer = self.read_offset_voltage(self.SIM980_PORT, AVERAGING_TIME)
-                answer = float(answer)
+                try:
+                    answer = float(answer)
+                except:
+                    answer = float('nan')
             else:
                 answer = None
 

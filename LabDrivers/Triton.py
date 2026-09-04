@@ -425,7 +425,8 @@ class Instrument(Tool.MeasInstr):
             return float(resp[:-1])
 
     def magnetic_field(self, coord_sys = CARTESIAN):
-        self.set_coordsys(coord_sys)
+        # TODO: REENABLE IF USING DIFFERENT COORDSYS
+        #self.set_coordsys(coord_sys)
         resp = self.ask('READ:SYS:VRM:VECT').split(":")[-1]
         if resp == 'INVALID' or resp == 'communication timeout':
             print("VRM is off")
@@ -599,11 +600,11 @@ class Instrument(Tool.MeasInstr):
         return resp.split(":")[-1]
     
     def PID_enable_ramping(self, UID:int=8):
-        resp = self.ask(f"SET:DEV:T{UID}:TEMP:RAMP:ENAB:ON")
+        resp = self.ask(f"SET:DEV:T{UID}:TEMP:LOOP:RAMP:ENAB:ON")
         return resp.split(":")[-1]
         
     def PID_disable_ramping(self, UID:int=8):
-        resp = self.ask(f"SET:DEV:T{UID}:TEMP:RAMP:ENAB:OFF")
+        resp = self.ask(f"SET:DEV:T{UID}:TEMP:LOOP:RAMP:ENAB:OFF")
         return resp.split(":")[-1]
     
     def PID_set_ramping(self, on, UID:int=8):
@@ -615,14 +616,16 @@ class Instrument(Tool.MeasInstr):
   
     
     def PID_is_ramping(self, UID:int=8):
-        resp = self.ask(f"READ:DEV:T{UID}:TEMP:RAMP:RAMPING")
+        resp = self.ask(f"READ:DEV:T{UID}:TEMP:LOOP:RAMP:RAMPING")
         return resp.split(":")[-1]
     
     def PID_read_ramp_rate(self, UID:int=8):
-        resp = self.ask(f"READ:DEV:T{UID}:TEMP:RAMP:RATE")
+        resp = self.ask(f"READ:DEV:T{UID}:TEMP:LOOP:RAMP:RATE")
         return resp.split(":")[-1]
+        
     def PID_set_ramp_rate(self, ramp_rate, UID:int=8):
-        resp = self.ask(f"SET:DEV:T{UID}:TEMP:RAMP:RATE:{ramp_rate:.4f}")
+        ramp_rate = float(ramp_rate)
+        resp = self.ask(f"SET:DEV:T{UID}:TEMP:LOOP:RAMP:RATE:{ramp_rate:.4f}")
         return resp.split(":")[-1]
     
     
@@ -636,6 +639,7 @@ class Instrument(Tool.MeasInstr):
         return resp.split(":")[-1]
         
     def PID_set_setpoint_temperature(self, temperature, UID:int=8):
+        temperature=float(temperature)
         resp = self.ask(f"SET:DEV:T{UID}:TEMP:LOOP:TSET:{temperature:.4f}")
         return resp.split(":")[-1]
     
@@ -660,7 +664,6 @@ class Instrument(Tool.MeasInstr):
     def PID_set_heater_range(self, heater_current, UID:int=8): #### TEST!!!
         print(heater_current)
         print(f"SET:DEV:T{UID}:TEMP:LOOP:RANGE:{heater_current}")
-        return
         resp = self.ask(f"SET:DEV:T{UID}:TEMP:LOOP:RANGE:{heater_current}")
         return resp.split(":")[-1]
     
@@ -681,10 +684,16 @@ class Instrument(Tool.MeasInstr):
     def PID_read_pid_thermometer_from_htr(self):
         resp = self.ask("READ:DEV:H1:HTR:LOOP:SENS") ## From the manual page A-8
         return resp.split(":")[-1]
-    
+        
+    def __del__(self):
+        self._socket_close()
+        
+        
 if __name__ == "__main__":
     i = Instrument("127.0.0.1", debug=False)
     x, y, z = i.magnetic_field(i.CARTESIAN)
+    i = Instrument("127.0.0.1", debug=False)
+    i = Instrument("127.0.0.1", debug=False)
     print(i.temperature(8))
 
 
