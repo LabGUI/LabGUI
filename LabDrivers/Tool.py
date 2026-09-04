@@ -18,7 +18,11 @@ try:
     from LabTools.IO import IOTool
     VISA_BACKEND = IOTool.get_visa_backend_setting()
 except:
-    VISA_BACKEND = '@ni' # current default
+    try:
+        VISA_BACKEND = f'@{visa.highlevel.list_backends()[0]}'
+    except:
+        from LabTools.IOTool import VISA_BACKEND_DEFAULT
+        VISA_BACKEND = VISA_BACKEND_DEFAULT # set to default
 
 import logging
 logging.basicConfig(level=logging.DEBUG)
@@ -404,13 +408,13 @@ with the instrument %s" % self.ID_name)
 
                     logging.debug("using pyvisa version higher than 1.6")
                     try:
-                        self.connection = self.resource_manager.get_instrument(
-                            resource_name, **keyw)
-                    except:
                         self.connection = self.resource_manager.open_resource(
                             resource_name, **keyw
                         )
-                        logging.debug("using pyvisa version higher than 1.12.0")
+                    except:
+                        self.connection = self.resource_manager.get_instrument(
+                            resource_name, **keyw)
+                        logging.debug("using pyvisa version lower than 1.12.0")
 
                 # keep track of the port used with the instrument
                 self.resource_name = resource_name
