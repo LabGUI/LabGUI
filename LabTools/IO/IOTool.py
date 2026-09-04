@@ -33,8 +33,15 @@ REN_DEFAULT_ID = "REN_LEVEL"
 
 
 
-VISA_BACKEND_DEFAULT = '@ni'
-VISA_BACKEND_OPTIONS = ['@ni', '@py']
+
+VISA_BACKEND_DEFAULT = '@ivi'
+try:
+    from pyvisa import highlevel
+    VISA_BACKEND_OPTIONS = [f'@{backend}' for backend in highlevel.list_backends()]
+except:
+    VISA_BACKEND_OPTIONS = []
+if len(VISA_BACKEND_OPTIONS) == 0:
+    VISA_BACKEND_OPTIONS = ['@ivi', '@ni', '@py']
 REN_DEFAULT = 'None'
 INTERFACE_DEFAULT = 'pyvisa'
 INTERFACE_OPTIONS = ['pyvisa','prologix']
@@ -460,7 +467,8 @@ def get_visa_backend_setting(**kwargs):
     backend = get_config_setting(VISA_BACKEND_ID, **kwargs)
     if backend is None:
         backend = VISA_BACKEND_DEFAULT
-
+    
+    # TODO Future Feature: Detect if path of dll is specified, if so, do not add @ symbol 
     if not backend.startswith('@'):
         backend = '@' + backend.lower()
 
@@ -855,7 +863,7 @@ CONFIG_OPTIONS = {
         "get" : get_visa_backend_setting,
         "set" : set_visa_backend_settings,
         "default": VISA_BACKEND_DEFAULT,
-        "options": ['@ni','@py'],
+        "options": VISA_BACKEND_OPTIONS,
         "name": "VISA Backend",
         "type" : "selector"
     },

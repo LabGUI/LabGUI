@@ -73,6 +73,24 @@ class printerceptor(QtCore.QObject):
         self.old_stdout.flush()
 
 
+class QHLine(QtGui.QFrame):
+    """
+    Small class that creates horizontal bar
+    """
+    def __init__(self, *args, **kwargs):
+        super(QHLine, self).__init__(*args, **kwargs)
+        self.setFrameShape(QtGui.QFrame.HLine)
+        self.setFrameShadow(QtGui.QFrame.Sunken)
+
+class QVLine(QtGui.QFrame):
+    """
+    Small class that creates vertical bar
+    """
+    def __init__(self, *args, **kwargs):
+        super(QHLine, self).__init__(*args, **kwargs)
+        self.setFrameShape(QtGui.QFrame.VLine)
+        self.setFrameShadow(QtGui.QFrame.Sunken)
+
 def create_action(parent, text, slot=None, shortcut=None, icon=None, tip=None, checkable=False, signal="triggered()"):
     """
         Create a QAction, which can be used to trigger a reation when clicking

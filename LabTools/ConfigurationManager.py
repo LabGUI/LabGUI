@@ -408,7 +408,7 @@ class ConfigurationManager(QtGui.QWidget):
         super(ConfigurationManager, self).__init__(**kwargs)
 
         self.parent = parent
-        self.title = "User Widget Manager"
+        self.title = "Configuration Manager"
         if "LabTools" in os.getcwd():
             # we are in LabTools
             widget_path = os.path.dirname(__file__)

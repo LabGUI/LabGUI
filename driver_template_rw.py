@@ -42,6 +42,13 @@ properties = {
         'type':'text',
         'range':'Placeholder'
     },
+    'hbar0': {
+        'type':'hbar',
+    },
+    'Label0':{
+        'type':'label',
+        'range':'Label Text'
+    },
     'Multi type': {
         'type': 'multi',
         'range': ['option 1', 'option 2'],
@@ -106,46 +113,7 @@ properties = {
         }
     }
 }
-functions = {
-    'Function 1': [
-        {
-            'name':'TextEdit',
-            'type':'text',
-            'range':'Placeholder text',
-            'units':None,
-            'required':True
-        }, #param for text
-        {
-            'name':'Integer',
-            'type':'int',
-            'range':[-100, 100],
-            'units':'Z',
-            'required':True
-        }, #param for int
-        {
-            'name': 'Float',
-            'type': 'float',
-            'range': [-100, 100],
-            'units': 'R',
-            'required': True,
-            'default': 0.05
-        },  # param for float
-        {
-            'name': 'DropdownMenu',
-            'type': 'selector',
-            'range':['A','B','C'],
-            'units':None,
-            'required':True
-        }, # param for dropdown
-        {
-            'name': 'Boolean',
-            'type':'bool',
-            'range':True, # shouldnt matter
-            'units':None,
-            'required':True
-        } # param for boolean
-    ]
-}
+
 
 INTERFACE = Tool.INTF_GPIB
 NAME = 'name'
