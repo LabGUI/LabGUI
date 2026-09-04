@@ -337,10 +337,9 @@ class PlotDisplayWindow(QtGui.QMainWindow, ui_plotdisplaywindow.Ui_PlotDisplayWi
                 self.channel_objects[name].append(
                     QtGui.QPushButton(self.groupBoxes[name]))
                 if len(self.color_set) == 0:
-                    color = []
+                    color = '#4477aa'  # matplotlib default color
                 else:
                     color = self.color_set[np.mod(i, len(self.color_set))]
-
                 line1.set_color(color)
                 line2.set_color(color)
 

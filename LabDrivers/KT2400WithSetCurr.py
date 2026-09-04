@@ -209,7 +209,7 @@ class Instrument(Tool.MeasInstr):
             if channel == 'V':
                 if not self.DEBUG:
                     # 0 #this is to be defined for record sweep
-                    self.write('VOLT:RANG:AUTO ON')
+                    self.write('VOLT:RANG 10')# Never use auto range (:AUTO ON) when measuring voltage only
                     answer = self.ask(self.READ)
                     #if math.isnan(float(answer)):
                     if not answer or answer=='\n': #incase 2450 is connected
@@ -355,7 +355,7 @@ class Instrument(Tool.MeasInstr):
     def set_value(self, val):  # for interferometer program
         self.set_voltage(val)
 
-    def set_voltage(self, voltage, i_compliance=100E-9, v_compliance=10): # for tunneling i_compliance=0.6E-6
+    def set_voltage(self, voltage, i_compliance=0.6E-6, v_compliance=11):
         if not self.DEBUG:
             voltage = float(voltage)
             i_compliance = float(i_compliance)
@@ -363,7 +363,7 @@ class Instrument(Tool.MeasInstr):
             if voltage > v_compliance:
                 print("V compliance needs to be checked")
                 voltage = v_compliance
-            self.write(':SOUR:VOLT:RANG:AUTO 1')######################  This sets the Current measurement range. Normal setting: RANG:AUTO 1 , Other values :RANG 1E-6
+            self.write(':SOUR:VOLT:RANG 1E-6')######################  This sets the Current measurement range. Normal setting: RANG:AUTO 1 , Other values :RANG 1E-6
             # set autorange on source
 
             c = ':SENS:CURR:PROT %r' % i_compliance
@@ -373,6 +373,33 @@ class Instrument(Tool.MeasInstr):
             self.write(c)
 
             s = ':SOUR:FUNC VOLT;:SOUR:VOLT %f' % voltage
+
+            self.write(s)
+        else:
+            print("voltage set to " + str(voltage) + " on " + self.ID_name)
+            
+            
+    def set_current(self, current, i_compliance=0.6E-6, v_compliance=10):
+    # This function is added to be able to measure-only the voltage (Not using the keithley as a source measure)
+        if not self.DEBUG:
+            current = float(current)
+            i_compliance = float(i_compliance)
+            v_compliance = float(v_compliance)
+            if current > i_compliance:
+                print("i compliance needs to be checked")
+                current = i_compliance
+                
+            # set autorange on source
+            self.write(':SOUR:CURR:RANG MIN')######################  This sets the Current measurement range. Normal setting: RANG:AUTO 1 , Other values :RANG 1E-6
+            
+            # set compliance
+            c = ':SENS:CURR:PROT %r' % i_compliance
+            self.write(c)
+            
+            c = ':SENS:VOLT:PROT %r' % v_compliance
+            self.write(c)
+
+            s = ':SOUR:FUNC CURR;:SOUR:CURR %f' % current
 
             self.write(s)
         else:
@@ -455,7 +482,7 @@ class Instrument(Tool.MeasInstr):
 #        elif p_code == 3:
 #            return self.leaking(p_tolerance)
 
-    def move_voltage(self, p_reader, p_target_voltage, step=0.002, wait=0.05):
+    def move_voltage(self, p_reader, p_target_voltage, step=0.0005, wait=0.05):
         #    def move_voltage(self, p_reader, p_target_voltage, step=0.001, wait=0.005):
         #        print 'Moving voltage'
         current_voltage = self.measure('V')

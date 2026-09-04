@@ -145,7 +145,7 @@ QComboBox::down-arrow {image: url(noimg); border-width: 0px;}")
             cbb.addItems(self.AVAILABLE_PARAMS['TIME'])
             cbb.setCurrentIndex(cbb.findText("dt"))
             cbb.currentIndexChanged.connect(self.combobox_unit_handler)
-            cbb.setFixedWidth(width_param*1.5)
+            cbb.setFixedWidth(int(width_param*1.5))
 
         return cbb
 
