@@ -1,0 +1,8 @@
+# test
+#C'dt(s)', 'X(V)', '50K flange(K)'
+#I'TIME[].dt', 'SR830[GPIB0::10::INSTR].X', 'LS370[GPIB0::12::INSTR].50K flange'
+#P'dt', 'X', '50K flange'
+#T'1657120319.0118282'
+0.01  nan  nan
+4.01  nan  nan
+8.01  nan  nan

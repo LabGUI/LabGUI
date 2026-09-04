@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Created on Wed May 13 13:31:59 2013
-This is the driver for PFEIFER Smart_Test leakdetector serial number:21255069 
+This is the driver for PFEIFER Smart_Test leakdetector serial number:21255069
 the serial address is chosen in front panel of smart test as 030 out of 255 possible
 @author: PF
 
@@ -86,13 +86,12 @@ class Instrument(Tool.MeasInstr):
         if not self.DEBUG:
             #            print 'Execute : ' +msg
             #            answer = self.ask(msg)
-            self.connection.write(msg)
+            self.connection.write(msg.encode())
             answer = ""
-            c = self.connection.read(1)
+            c = self.connection.read(1).decode()
             while c != '\r':
                 answer = answer + c
-                c = self.connection.read(1)
-
+                c = self.connection.read(1).decode()
             if self.watchdog:
                 self.__communication_watchdog(msg, answer)
 
@@ -477,7 +476,7 @@ def checksum(string):
 if (__name__ == '__main__'):
 
     print(__file__.strip("HLT560.py"))
-    myInst = Instrument("COM3")
+    myInst = Instrument("/dev/tty.usbserial-A105H5BS1")
 #    print(myInst.identify())
     print(myInst.measure("FLOW"))
 #    print(myInst.get_MotorTMP())
