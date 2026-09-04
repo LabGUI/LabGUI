@@ -18,7 +18,11 @@ try:
     from LabTools.IO import IOTool
     VISA_BACKEND = IOTool.get_visa_backend_setting()
 except:
-    VISA_BACKEND = '@ni' # current default
+    try:
+        VISA_BACKEND = f'@{visa.highlevel.list_backends()[0]}'
+    except:
+        from LabTools.IOTool import VISA_BACKEND_DEFAULT
+        VISA_BACKEND = VISA_BACKEND_DEFAULT # set to default
 
 import logging
 logging.basicConfig(level=logging.DEBUG)
@@ -33,7 +37,10 @@ except ImportError:
     print("pyserial package not installed")
 
 try:
-    import visa
+    try:
+        import visa
+    except:  # visa version >=1.12.0 fix
+        import pyvisa as visa
     visa_available = True
 
 except ImportError:
@@ -43,7 +50,11 @@ except ImportError:
 
 
 def visa_resource_manager():
-    return visa.ResourceManager(VISA_BACKEND)
+    try:
+        return visa.ResourceManager(VISA_BACKEND)
+    except:
+        logging.debug("Unable to initialize visa backend %s, using default instead"%VISA_BACKEND)
+        return visa.ResourceManager()
 
 
 import socket
@@ -396,8 +407,14 @@ with the instrument %s" % self.ID_name)
                 else:
 
                     logging.debug("using pyvisa version higher than 1.6")
-                    self.connection = self.resource_manager.get_instrument(
-                        resource_name, **keyw)
+                    try:
+                        self.connection = self.resource_manager.open_resource(
+                            resource_name, **keyw
+                        )
+                    except:
+                        self.connection = self.resource_manager.get_instrument(
+                            resource_name, **keyw)
+                        logging.debug("using pyvisa version lower than 1.12.0")
 
                 # keep track of the port used with the instrument
                 self.resource_name = resource_name

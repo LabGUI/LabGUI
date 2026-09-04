@@ -37,7 +37,7 @@ from LabTools.Display import QtTools
 
 import numpy as np
 
-from collections import Iterable
+from collections.abc import Iterable
 
 try:
     from LabTools.Display import PlotDisplayWindow
