@@ -10,7 +10,7 @@ fs = 35
 fsl = 25
 marker_size = 18
 
-marker_set = ["None", "o", "v", "^", ">",
+marker_set = ["None", ".", "o", "v", "^", ">",
               "<", "s", "d", "h", "x", "+", "|", "_"]
 line_set = ['-', '--', '-.', ':', 'None']
 
