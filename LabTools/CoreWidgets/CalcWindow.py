@@ -276,6 +276,7 @@ class CalcWindow(QtGui.QWidget):
                 # file format is comma-separated list of settings for each channel
                 # but commas may also occur in the python line, so only split
                 # on the first two
+                if line[0] == "#": continue
                 settings = line.split(',', 2)
                 instr_type = settings[0].strip()
 
